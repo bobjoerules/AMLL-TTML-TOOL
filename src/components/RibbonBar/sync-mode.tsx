@@ -104,6 +104,94 @@ const EmptyBeatField = () => {
 	);
 };
 
+export const RibbonSyncProgressWidget = () => {
+	const syncProgress = useSyncProgress();
+	const { t } = useTranslation();
+
+	if (!syncProgress.hasLyrics) {
+		return (
+			<Flex align="center" justify="center" px="3" py="1">
+				<Text size="1" color="gray">
+					{t("ribbonBar.syncMode.noLyrics", "No Lyrics")}
+				</Text>
+			</Flex>
+		);
+	}
+
+	return (
+		<Flex align="center" gap="3" px="2" py="1">
+			<Box
+				style={{
+					position: "relative",
+					width: 32,
+					height: 32,
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					flexShrink: 0,
+				}}
+			>
+				<svg
+					width="32"
+					height="32"
+					viewBox="0 0 36 36"
+					style={{ transform: "rotate(-90deg)", display: "block" }}
+				>
+					<circle
+						cx="18"
+						cy="18"
+						r="14"
+						stroke="var(--gray-a4)"
+						strokeWidth="3.5"
+						fill="none"
+					/>
+					<circle
+						cx="18"
+						cy="18"
+						r="14"
+						stroke={
+							syncProgress.linePercent === 100
+								? "var(--green-9)"
+								: "var(--accent-9)"
+						}
+						strokeWidth="3.5"
+						fill="none"
+						strokeDasharray={2 * Math.PI * 14}
+						strokeDashoffset={
+							2 * Math.PI * 14 * (1 - syncProgress.linePercent / 100)
+						}
+						strokeLinecap="round"
+						style={{ transition: "stroke-dashoffset 0.3s ease" }}
+					/>
+				</svg>
+				<Text
+					size="1"
+					weight="bold"
+					style={{
+						position: "absolute",
+						fontSize: "10px",
+						color:
+							syncProgress.linePercent === 100
+								? "var(--green-11)"
+								: "var(--accent-11)",
+					}}
+				>
+					{syncProgress.linePercent}%
+				</Text>
+			</Box>
+			<Flex direction="column" gap="0" style={{ lineHeight: 1.2 }}>
+				<Text size="1" weight="bold" style={{ color: "var(--gray-12)" }}>
+					{syncProgress.timedLines} / {syncProgress.totalLines}{" "}
+					{t("ribbonBar.syncMode.lines", "Lines")}
+				</Text>
+				<Text size="1" color="gray" style={{ fontSize: "11px" }}>
+					{syncProgress.wordPercent}% {t("ribbonBar.syncMode.words", "Words")}
+				</Text>
+			</Flex>
+		</Flex>
+	);
+};
+
 export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	HTMLDivElement,
 	{ isSidebar?: boolean }
@@ -146,6 +234,17 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 
 	return (
 		<RibbonFrame ref={ref} isSidebar={isSidebar}>
+			<RibbonSection
+				isSidebar={isSidebar}
+				label={
+					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
+						<Timer16Regular style={{ width: "12px", height: "12px" }} />
+						<span>{t("ribbonBar.syncMode.syncProgress", "Sync Progress")}</span>
+					</Flex>
+				}
+			>
+				<RibbonSyncProgressWidget />
+			</RibbonSection>
 			{showAdvanced && (
 				<RibbonSection
 					isSidebar={isSidebar}

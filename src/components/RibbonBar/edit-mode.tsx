@@ -92,6 +92,7 @@ import { msToTimestamp, parseTimespan } from "$/utils/timestamp.ts";
 import { buildLineRomanization, getPhoneticSyllables } from "$/utils/phonetic";
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
+import { RibbonSyncProgressWidget } from "./sync-mode.tsx";
 
 export const LineTimingTools = () => {
 	const { t } = useTranslation();
@@ -1218,6 +1219,17 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 
 	return (
 		<RibbonFrame ref={ref} isSidebar={isSidebar} reserveControlRows={3}>
+			<RibbonSection
+				isSidebar={isSidebar}
+				label={
+					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
+						<Timer24Regular style={{ width: "12px", height: "12px" }} />
+						<span>{t("ribbonBar.syncMode.syncProgress", "Sync Progress")}</span>
+					</Flex>
+				}
+			>
+				<RibbonSyncProgressWidget />
+			</RibbonSection>
 			<RibbonSection
 				label={
 					<Flex gap="1" align="center">
