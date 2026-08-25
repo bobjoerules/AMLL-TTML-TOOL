@@ -2,6 +2,7 @@ import {
 	Button,
 	Card,
 	Flex,
+	Grid,
 	Box,
 	SegmentedControl,
 	Slider,
@@ -19,6 +20,7 @@ import {
 	ArrowUndo24Regular,
 	PlugConnected24Regular,
 	VideoBackgroundEffect24Regular,
+	Link24Regular,
 } from "@fluentui/react-icons";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useRef, useState } from "react";
@@ -44,6 +46,7 @@ import {
 	discordPrivacyPresetAtom,
 	discordShowProgressTimerAtom,
 	discordGeneralActivityTextAtom,
+	discordActivityTypeAtom,
 } from "$/modules/settings/states";
 import { currentUserAtom } from "$/modules/cloud/states";
 import {
@@ -159,6 +162,7 @@ export function DiscordPresenceSettings() {
 	const [generalActivityText, setGeneralActivityText] = useAtom(
 		discordGeneralActivityTextAtom,
 	);
+	const [activityType, setActivityType] = useAtom(discordActivityTypeAtom);
 
 	const [detailsDraft, setDetailsDraft] = useState(detailsTemplate);
 	const [stateDraft, setStateDraft] = useState(stateTemplate);
@@ -370,7 +374,9 @@ export function DiscordPresenceSettings() {
 							fontSize: "11px",
 						}}
 					>
-						Listening to AMLL TTML Tool
+						{activityType === "listening"
+							? "Listening to AMLL TTML Tool"
+							: "Playing AMLL TTML Tool"}
 					</Text>
 					<Flex gap="3" align="center">
 						<Box
@@ -498,6 +504,25 @@ export function DiscordPresenceSettings() {
 							)}
 						</Flex>
 					</Flex>
+
+					{/* Buttons in Discord Preview Card */}
+					{showRepositoryButton && (
+						<Flex direction="column" gap="2" mt="3">
+							<Box
+								style={{
+									background: "#2b2d31",
+									padding: "8px",
+									borderRadius: "4px",
+									textAlign: "center",
+									fontSize: "13px",
+									fontWeight: 500,
+									color: "#dbdee1",
+								}}
+							>
+								View repository
+							</Box>
+						</Flex>
+					)}
 				</Box>
 			</Box>
 
@@ -576,11 +601,11 @@ export function DiscordPresenceSettings() {
 									onClick={() =>
 										updateTemplate(
 											"state",
-											"[[{{artist}} • ]]🎯 {{syncPercentage}} Synced • {{totalLines}} lines",
+											"[[{{artist}} • ]] {{syncPercentage}} Synced • {{totalLines}} lines",
 										)
 									}
 								>
-									🎯 Sync % & Lines
+									Sync % & Lines
 								</Button>
 								<Button
 									size="1"
@@ -588,23 +613,11 @@ export function DiscordPresenceSettings() {
 									onClick={() =>
 										updateTemplate(
 											"state",
-											"[[{{artist}} • ]]🎯 {{syncPercentage}} Synced • {{lineProgress}}",
+											"[[{{artist}}]]",
 										)
 									}
 								>
-									🎯 Sync % & Progress
-								</Button>
-								<Button
-									size="1"
-									variant="outline"
-									onClick={() =>
-										updateTemplate(
-											"state",
-											"{{fileName}} • 🎯 {{syncPercentage}} Synced",
-										)
-									}
-								>
-									📁 File + %
+									Artist
 								</Button>
 								<Button
 									size="1"
@@ -683,11 +696,11 @@ export function DiscordPresenceSettings() {
 									onClick={() =>
 										updateTemplate(
 											"bottomLine",
-											"🎯 {{syncPercentage}} Synced ({{timedLines}}/{{totalLines}} lines)",
+											"{{syncPercentage}} Synced ({{timedLines}}/{{totalLines}} lines)",
 										)
 									}
 								>
-									🎯 Full Sync Stats
+									Full Sync Stats
 								</Button>
 							</Flex>
 						</Flex>
@@ -862,9 +875,11 @@ export function DiscordPresenceSettings() {
 					>
 						{t("settings.discord.stateTextsSection", "State Texts")}
 					</Text>
-					<Card style={{ padding: "0 16px" }}>
-						<Flex align="center" justify="between" gap="4" py="3">
-							<Flex align="center" gap="3" flexGrow="1" style={{ minWidth: 0 }}>
+
+					{/* General Activity Text */}
+					<Card style={{ padding: "16px" }}>
+						<Flex align="center" justify="between" gap="4">
+							<Flex align="center" gap="3" style={{ minWidth: 0 }}>
 								<Box
 									style={{
 										color: "var(--accent-9)",

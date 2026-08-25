@@ -56,6 +56,23 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.0.2
+							</Heading>
+							<Flex direction="column" gap="3">
+								<Text size="2">
+									<strong>Dedicated Sync Progress Toolbar Widget:</strong> Added an integrated synchronization progress widget directly in the main ribbon bar featuring an animated SVG circular progress wheel, line sync counter (<code>timedLines / totalLines Lines</code>), and word count (<code>timedWords / totalWords Words</code>).
+								</Text>
+								<Text size="2">
+									<strong>Discord Rich Presence Status Controls:</strong> Added support for switching between <code>Playing</code> (interactive repository button enabled) and <code>Listening</code> activity status types.
+								</Text>
+								<Text size="2">
+									<strong>Performance & Stability Fixes:</strong> Optimized component rendering, corrected toolbar import bindings, and streamlined RPC activity dispatching.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.1
 							</Heading>
 							<Flex direction="column" gap="3">

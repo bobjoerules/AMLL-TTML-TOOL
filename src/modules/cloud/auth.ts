@@ -418,7 +418,10 @@ export async function fetchUserProfileData(uid: string): Promise<{
 	photoURL?: string;
 } | null> {
 	// 1. Try local cache first for instant render
-	let cachedProfile: { displayName?: string; photoURL?: string } | null = null;
+	let cachedProfile: {
+		displayName?: string;
+		photoURL?: string;
+	} | null = null;
 	try {
 		const cached = localStorage.getItem(`amll_profile_${uid}`);
 		if (cached) {

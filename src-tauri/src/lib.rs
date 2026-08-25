@@ -15,6 +15,7 @@ struct DiscordActivityPayload {
     details: Option<String>,
     state: Option<String>,
     playing: bool,
+    activity_type: Option<String>,
     show_repository_button: bool,
     start_timestamp: Option<i64>,
     end_timestamp: Option<i64>,
@@ -100,9 +101,15 @@ fn set_discord_activity(
         assets = assets.small_text(small_image_text);
     }
 
+    let activity_type = match payload.activity_type.as_deref() {
+        Some("listening") => activity::ActivityType::Listening,
+        Some("watching") => activity::ActivityType::Watching,
+        Some("competing") => activity::ActivityType::Competing,
+        _ => activity::ActivityType::Playing,
+    };
+
     let mut rich_presence = activity::Activity::new()
-        .activity_type(activity::ActivityType::Listening)
-        .status_display_type(activity::StatusDisplayType::Details)
+        .activity_type(activity_type)
         .assets(assets);
 
     if let Some(details) = payload.details.as_deref() {
@@ -111,6 +118,7 @@ fn set_discord_activity(
     if let Some(state) = payload.state.as_deref() {
         rich_presence = rich_presence.state(state);
     }
+
     if payload.show_repository_button {
         rich_presence = rich_presence.buttons(vec![activity::Button::new(
             "View repository",

@@ -18,6 +18,7 @@ import {
 	discordSmallImageModeAtom,
 	discordGeneralActivityTextAtom,
 	discordShowProgressTimerAtom,
+	discordActivityTypeAtom,
 } from "$/modules/settings/states";
 import { currentUserAtom } from "$/modules/cloud/states";
 import {
@@ -68,6 +69,7 @@ export function DiscordPresence() {
 	const smallImageMode = useAtomValue(discordSmallImageModeAtom);
 	const generalActivityText = useAtomValue(discordGeneralActivityTextAtom);
 	const showProgressTimer = useAtomValue(discordShowProgressTimerAtom);
+	const activityType = useAtomValue(discordActivityTypeAtom);
 	const projectId = useAtomValue(projectIdAtom);
 	const [inactive, setInactive] = useState(false);
 	const trackerRef = useRef<ProjectTimeTracker | null>(null);
@@ -89,37 +91,33 @@ export function DiscordPresence() {
 		const markActivity = (event: Event) => {
 			if (!shouldResetInactivity(event.isTrusted, document.visibilityState))
 				return;
-			timer.activity();
+			timer.reset();
+			if (inactive) {
+				setInactive(false);
+				tracker.setPaused(false);
+			}
 		};
-		const markFocused = (event: Event) => markActivity(event);
-		const eventOptions = { passive: true } as const;
-		window.addEventListener("keydown", markActivity);
-		window.addEventListener("pointerdown", markActivity, eventOptions);
-		window.addEventListener("touchstart", markActivity, eventOptions);
-		window.addEventListener("wheel", markActivity, eventOptions);
-		window.addEventListener("focus", markFocused);
-		timer.start();
+		window.addEventListener("pointerdown", markActivity, { passive: true });
+		window.addEventListener("keydown", markActivity, { passive: true });
 		return () => {
-			timer.stop();
-			window.removeEventListener("keydown", markActivity);
+			timer.cancel();
 			window.removeEventListener("pointerdown", markActivity);
-			window.removeEventListener("touchstart", markActivity);
-			window.removeEventListener("wheel", markActivity);
-			window.removeEventListener("focus", markFocused);
+			window.removeEventListener("keydown", markActivity);
 		};
-	}, [idleTimeoutMinutes, tracker]);
+	}, [idleTimeoutMinutes, inactive, tracker]);
 
 	useEffect(() => {
-		tracker.switchProject(projectId);
-		const flush = () => tracker.flush();
-		const timer = window.setInterval(flush, 10_000);
-		window.addEventListener("pagehide", flush);
+		if (!isTauri || !enabled) return;
+		const interval = window.setInterval(() => {
+			if (!inactive) {
+				tracker.touch(projectId);
+			}
+		}, 1000);
 		return () => {
-			window.clearInterval(timer);
-			window.removeEventListener("pagehide", flush);
-			flush();
+			window.clearInterval(interval);
+			tracker.flush();
 		};
-	}, [projectId, tracker]);
+	}, [projectId, tracker, enabled, inactive]);
 
 	const publish = useCallback(() => {
 		const positionSeconds = audioEngine.musicCurrentTime || 0;
@@ -166,24 +164,29 @@ export function DiscordPresence() {
 				selectedLineIds,
 				selectedWordIds,
 			});
-			invoke("set_discord_activity", {
-				payload: inactive
-					? createInactiveDiscordActivity(generalActivityText)
-					: formatNativeDiscordActivity(snapshot, context, {
-							detailsTemplate: safeDetailsTemplate,
-							stateTemplate: safeStateTemplate,
-							bottomLineTemplate: safeBottomLineTemplate,
-							showPlaybackTimeline,
-							showProjectElapsed,
-							showRepositoryButton,
-							showStatusBadge,
-							privacyPreset,
-							largeImageMode,
-							smallImageMode,
-							generalActivityText,
-							showProgressTimer,
-						}),
-			}).catch((error) => log("Unable to update Discord presence", error));
+			const payload = inactive
+				? createInactiveDiscordActivity(generalActivityText)
+				: formatNativeDiscordActivity(snapshot, context, {
+						detailsTemplate: safeDetailsTemplate,
+						stateTemplate: safeStateTemplate,
+						bottomLineTemplate: safeBottomLineTemplate,
+						showPlaybackTimeline,
+						showProjectElapsed,
+						showRepositoryButton,
+						activityType,
+						showStatusBadge,
+						privacyPreset,
+						largeImageMode,
+						smallImageMode,
+						generalActivityText,
+						showProgressTimer,
+					});
+
+			log("Discord RPC Activity Payload:", payload);
+
+			invoke("set_discord_activity", { payload }).catch((error) =>
+				log("Unable to update Discord presence", error),
+			);
 		}
 	}, [
 		enabled,
@@ -202,6 +205,7 @@ export function DiscordPresence() {
 		showPlaybackTimeline,
 		showProjectElapsed,
 		showRepositoryButton,
+		activityType,
 		showStatusBadge,
 		tracker,
 		privacyPreset,

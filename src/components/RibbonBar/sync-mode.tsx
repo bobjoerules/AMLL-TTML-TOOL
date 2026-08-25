@@ -10,6 +10,7 @@
  */
 
 import {
+	Box,
 	Checkbox,
 	Flex,
 	Grid,
@@ -24,6 +25,7 @@ import { useSetImmerAtom } from "jotai-immer";
 import { type FC, forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useCurrentLocation } from "$/modules/lyric-editor/utils/lyric-states.ts";
+import { useSyncProgress } from "$/hooks/useSyncProgress";
 import {
 	displayRomanizationInSyncAtom,
 	enableManualTimestampEditAtom,
@@ -185,7 +187,8 @@ export const RibbonSyncProgressWidget = () => {
 					{t("ribbonBar.syncMode.lines", "Lines")}
 				</Text>
 				<Text size="1" color="gray" style={{ fontSize: "11px" }}>
-					{syncProgress.wordPercent}% {t("ribbonBar.syncMode.words", "Words")}
+					{syncProgress.timedWords} / {syncProgress.totalWords}{" "}
+					{t("ribbonBar.syncMode.words", "Words")}
 				</Text>
 			</Flex>
 		</Flex>

@@ -70,6 +70,7 @@ export interface DiscordActivityPayload {
 	details?: string;
 	state?: string;
 	playing: boolean;
+	activityType?: string;
 	showRepositoryButton: boolean;
 	startTimestamp?: number;
 	endTimestamp?: number;
@@ -89,6 +90,7 @@ export interface DiscordActivityOptions {
 	showPlaybackTimeline: boolean;
 	showProjectElapsed: boolean;
 	showRepositoryButton: boolean;
+	activityType?: string;
 	showStatusBadge: boolean;
 	privacyPreset: "rich" | "minimal" | "none";
 	largeImageMode: "icon" | "artwork" | "state" | "tab" | "profile" | "none";
@@ -473,6 +475,7 @@ export function formatNativeDiscordActivity(
 		...(details ? { details } : {}),
 		...(state ? { state } : {}),
 		playing: snapshot.playing,
+		...(options.activityType ? { activityType: options.activityType } : {}),
 		showRepositoryButton,
 		largeImage,
 		largeImageText,
