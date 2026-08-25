@@ -1,0 +1,22 @@
+locales:
+    - zh-CN
+    - en-US
+    - cs-CZ
+    - da-DK
+    - en-UD
+    - es-ES
+    - fi-FI
+    - fr-FR
+    - id-ID
+    - it-IT
+    - lolcat
+    - lol-US
+    - nl-NL
+    - pl-PL
+    - pt-BR
+    - ro-RO
+    - ru-RU
+    - sk-SK
+    - tr-TR
+pluralSeparator: false
+output: src/i18n/locales/$LOCALE/$NAMESPACE.json

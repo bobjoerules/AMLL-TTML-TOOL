@@ -1,0 +1,58 @@
+{
+	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+	"productName": "AMLL TTML Tool",
+	"version": "1.0.0",
+	"identifier": "com.bobjoerules.amll-ttml-tool",
+	"build": {
+		"frontendDist": "../dist",
+		"devUrl": "http://localhost:5173",
+		"beforeDevCommand": "npm run dev",
+		"beforeBuildCommand": "npm run build"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "",
+				"label": "main",
+				"width": 800,
+				"height": 600,
+				"resizable": true,
+				"devtools": true,
+				"fullscreen": false,
+				"dragDropEnabled": false,
+				"visible": false
+			}
+		],
+		"security": {
+			"csp": null,
+			"headers": {
+				"Cross-Origin-Opener-Policy": "same-origin",
+				"Cross-Origin-Embedder-Policy": "require-corp"
+			},
+			"assetProtocol": {
+				"enable": true,
+				"scope": []
+			}
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": "all",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"createUpdaterArtifacts": true
+	},
+	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlFQ0JEM0UwQzBBREQyN0MKUldSODBxM0E0TlBMbnM5c3BWTDlkQzF6QkJ2UlhKSHduSldZeE8vOFVvWk8yaXAyWDR4cWVxb20K",
+			"endpoints": [
+				"https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest/download/latest.json"
+			]
+		}
+	}
+}

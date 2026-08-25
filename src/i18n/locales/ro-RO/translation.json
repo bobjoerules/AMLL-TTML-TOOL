@@ -1,0 +1,1192 @@
+{
+  "app": {
+    "error": {
+      "title": "Ups, a apărut o eroare!",
+      "description": "A apărut o eroare la rularea AMLL TTML Tools",
+      "checkDevTools": "Detalii pot fi găsite în Developer Tools",
+      "saveLyrics": "Încercați să salvați Lyric-urile curente",
+      "tryRestart": "Încercați să reîncărcați aplicația",
+      "details": "Informații eroare aproximativă:"
+    },
+    "update": {
+      "updateAvailable": "Actualizare disponibilă: {version}",
+      "installError": "Eroare la instalarea actualizării"
+    },
+    "empty": {
+      "title": "Fără linii de lyric-uri",
+      "description": "Adăugați noi linii de text în panoul de sus sau deschideți/importați versuri existente din meniu"
+    }
+  },
+  "amll": {
+    "noLyrics": "No lyrics available in store"
+  },
+  "confirmDialog": {
+    "cancel": "Anulează",
+    "confirm": "Confirma",
+    "useMetadataName": {
+      "title": "Folosește numele metadatei?",
+      "description": "Folosiți \"{name}\" ca nume de fișier?"
+    },
+    "newFile": {
+      "title": "Confirmare fișier nou",
+      "description": "Aveți modificări nesalvate. Dacă continuați, aceste modificări vor fi pierdute. Sigur doriți să creați un fișier nou?"
+    },
+    "untimedLyrics": {
+      "title": "Untimed Lyrics Detected",
+      "description": "There is an untimed line or word in your lyrics. Would you like to fix it or export anyway?",
+      "exportAnyway": "Export Anyway",
+      "fixIt": "Fix It"
+    },
+    "syncLineTimestamps": {
+      "title": "Confirmă sincronizarea marcajelor de timp",
+      "description": "Această acțiune va sincroniza automat orele de început și de sfârșit ale tuturor liniilor pe baza marcajelor de timp ale fiecărui cuvânt din linie, potrivire cu timpii de început și de sfârșit ai primului și ultimelor silabe. Ești sigur că vrei să continui?"
+    },
+    "openFile": {
+      "title": "Confirmați deschiderea fișierului",
+      "description": "Aveți modificări nesalvate. Dacă continuați, aceste modificări vor fi pierdute. Sigur doriți să deschideți un fișier nou?"
+    },
+    "importFile": {
+      "title": "Confirmă importarea lyric-urilor",
+      "description": "Aveți modificări nesalvate. Dacă continuați, aceste modificări vor fi pierdute. Sigur doriți să importați lyric-uri noi?"
+    },
+    "noSongwriter": {
+      "description": "Cântecul nu are autori de melodii. Doriți să continuați să salvați?"
+    }
+  },
+  "experimentalFeatures": {
+    "geniusCategorization": {
+      "dialogTitle": "Genius Headers Detected!",
+      "dialogDesc": "We've detected section headers in your lyrics. Would you like to enable the experimental 'Genius Header Categorization' feature to help with your workflow?",
+      "usageInfo": "Once enabled, section headers will be styled differently in the editor. You can click on them to access specialized tools like 'Copy Previous Timing' and 'Snap to Playhead'.",
+      "maybeLater": "Maybe Later",
+      "enableNow": "Enable Now",
+      "title": "Genius Header Categorization",
+      "description": "Detect, normalize, review, navigate, collapse, validate, and edit Genius-style song sections while preserving them in TTML exports.",
+      "snapToPlayhead": "Snap to Playhead",
+      "noPreviousFound": "No previous identical header found with timing.",
+      "copyPrevious": "Copy Previous Timing",
+      "headersRestored": "Section headers restored."
+    },
+    "title": "Experimental Features",
+    "description": "These features are currently in development and may be unstable. Use with caution."
+  },
+  "common": {
+    "close": "Inchide",
+    "autoDetect": "Auto Detect",
+    "about": "Despre",
+    "resultsFound": "{count} rezultate găsite",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "search": "Caută",
+    "success": "Restaurare reușită",
+    "error": "Date corupte sau pierdute",
+    "edit": "Edit",
+    "apply": "Aplică",
+    "confirm": "Confirmare",
+    "back": "Back",
+    "deleteSuccess": "Ștergere reușită",
+    "time": "Timp",
+    "restore": "Restaurează",
+    "loading": "Loading...",
+    "sync": "Sincronizare",
+    "remove": "Elimină",
+    "clickToSet": "Clic pentru setare ",
+    "move": "Move",
+    "copy": "Copy"
+  },
+  "dialog": {
+    "mp3Conversion": {
+      "title": "Convertește MP3 în FLAC?",
+      "description": "Importați un fișier MP3: {fileName}",
+      "warning": "Fișierele MP3 pot cauza desincronizarea audio în această aplicație. Conversia în FLAC este recomandată pentru o compatibilitate mai bună.",
+      "dontShowAgain": "Nu mai arăta acest avertisment",
+      "skip": "Utilizează MP3",
+      "convert": "Convertește în FLAC",
+      "converting": "Conversia MP3 în FLAC...",
+      "success": "Convertire reușită",
+      "failed": "Conversie eșuată: {error}"
+    }
+  },
+  "ribbonBar": {
+    "editMode": {
+      "grammarCheck": "Verificare gramaticală",
+      "multipleValues": "Valori multiple",
+      "duration": "持续时间",
+      "showTranslation": "Arată linia de traducere",
+      "showRomanization": "Arată linia de Romanizare",
+      "showWordRomanizationInput": "Arată Romanizarea Per-Word",
+      "phonetic": {
+        "noSelection": "Vă rugăm să selectaţi mai întâi liniile sau cuvintele",
+        "success": "Teletica preluata cu succes",
+        "error": "Nu s-a reușit preluarea telefonului"
+      },
+      "romanization": {
+        "section": "Romanization",
+        "info": {
+          "title": "About Romanization",
+          "canDo": "✓ Can do: Auto-generate Romaji (JA), Pinyin (ZH), and Romaji (KO). Supports Kanji!",
+          "cannotDo": "✗ Cannot do: 100% accuracy for rare Kanji or proper names. CJK only. Minor errors may occur."
+        },
+        "ja": "Japanese (Romaji)",
+        "zh": "Chinese (Pinyin)",
+        "yue": "Cantonese (Jyutping)",
+        "ko": "Korean (Romaji)",
+        "autoFetch": "Romanize"
+      },
+      "new": "Nou",
+      "lyricLine": "Linie Lyric",
+      "lineTiming": "Sincronizare linie",
+      "startTime": "Timpul de începere",
+      "endTime": "Timpul de sfârșit",
+      "lineProperties": "Proprietăți linie",
+      "bgLyric": "Vocal de fundal",
+      "duetLyric": "Vocal de duet",
+      "ignoreSync": "Ignoră sincronizarea",
+      "wordTiming": "Sincronizare Cuvânt",
+      "emptyBeatCount": "Număr de beat gol",
+      "wordProperties": "Proprietățile Cuvântului",
+      "wordContent": "Conținutul Cuvântului",
+      "romanWord": "Romanizarea Cuvântului",
+      "obscene": "Obscen",
+      "secondaryContent": "Conținut secundar",
+      "translatedLyric": "Translație",
+      "romanLyric": "Romanizare",
+      "layoutMode": "Aranjare",
+      "auxiliaryLineDisplay": "Afișare Auxiliara a Liniei",
+      "tools": "Verificare",
+      "previewPanel": "Panou de Previzualizare"
+    },
+    "previewMode": {
+      "mode": "Mod",
+      "amllDeprecated": "AMLL mode is deprecated, please use Standard mode",
+      "standard": "Standard",
+      "timing": "Sincronizare",
+      "spicy": "Spicy",
+      "simpleLyrics": "Simple lyrics",
+      "forceLineRendering": "Force line rendering",
+      "background": "Background",
+      "backgroundAnimated": "Animated",
+      "backgroundColor": "Color",
+      "backgroundStatic": "Static",
+      "lyrics": "Lyric-uri",
+      "showTranslation": "Afișare traducere",
+      "showRoman": "Arată Romanizarea",
+      "maskObsceneWords": "Maschează Cuvintele Obscene",
+      "word": "Cuvânt",
+      "fadeWidth": "Lățime estompare",
+      "instantFade": "即时淡出",
+      "render": "Render",
+      "dev": "Dev",
+      "showFps": "Show FPS"
+    },
+    "syncMode": {
+      "currentEmptyBeat": "Beat gol",
+      "syncAdjustment": "Ajustarea timpului",
+      "timeOffset": "Diferența timp",
+      "commitOffset": "Commit Offset",
+      "syncLevel": "Nivel de Sincronizare",
+      "syncLevelWord": "Sincronizare Cuvânt",
+      "syncLevelLine": "Sincronizare Linie",
+      "assistSettings": "Setări Asistent",
+      "showTimestampUpdate": "Afișare Actualizări ale timestamp-ului",
+      "touchSyncPanel": "Panou de sincronizare atingere",
+      "bgLyricIgnoreSync": "Ignoră Vocalele de fundal",
+      "quickFixes": "Fixări Rapide",
+      "manualTimestampEdit": "Editare Manual Timestamp",
+      "displayOptions": "Opțiuni de Afișare",
+      "showTimestamps": "Arata Timestamp-urile",
+      "highlightActiveWord": "Evidențiază Cuvântul activ",
+      "enableGlowAnimation": "Activează animația Glow",
+      "highlightErrors": "Erori de Evidențiere",
+      "showPerWordRomanization": "Arată Romanizarea Per-Cuvânt",
+      "keyBindingReference": "Fisa Hotkey",
+      "startSync": "Marchează începutul",
+      "continuousSync": "Comite",
+      "endSync": "Marchează Sfârșitul",
+      "manageQuickFixExclusions": {
+        "title": "Manage Quick Fix Exclusions",
+        "description": "Add words to ignore in quick fixes.",
+        "placeholder": "Enter word to ignore"
+      }
+    },
+    "experimentalFeatures": "Experimental Features",
+    "loading": "面板载入中..."
+  },
+  "settings": {
+    "common": {
+      "enabled": "Activat",
+      "layoutModeOptions": {
+        "simple": "Mod Simplu",
+        "advance": "Modul Avansat"
+      },
+      "disabled": "Dezactivat",
+      "language": "Limba Interfeței",
+      "languageDesc": "Selectaţi limba pentru interfaţă",
+      "helpTranslate": "Ajută la traducerea aplicației",
+      "layoutMode": "Mod Aspect Editor",
+      "layoutModeDesc": {
+        "line1": "Aspectul simplu satisface cele mai multe nevoi de bază",
+        "line2": "Comută la Modul Avansat dacă ai nevoie de sincronizare mai eficientă"
+      },
+      "compactBGInSync": "Vocale Fundal Compact (Modul Sync)",
+      "compactBGInSyncDesc": "Comprimă automat spațiul vertical pentru liniile vocale de fundal în timpul sincronizării.",
+      "syncJudgeMode": "Mod Judecare Timestamp",
+      "syncJudgeModeDesc": "Setați modul în care sunt judecate marcajele de timp atunci când sincronizați. Implicit este 'Prima tasta jos'.",
+      "syncJudgeModeOptions": {
+        "firstKeyDown": "Timpul primului buton jos",
+        "lastKeyUp": "Ultimul timp pentru taste",
+        "middleKey": "Mijloc de taste jos si sus",
+        "firstKeyDownLegacy": "Prima tasta jos timp (moștenit)"
+      },
+      "keyBindingTrigger": "Declanșare unire tasta",
+      "keyBindingTriggerDesc": "Determină dacă scurtăturile sunt declanşate atunci când o tasta este apăsată sau eliberată.",
+      "keyBindingTriggerOptions": {
+        "keyDown": "Declanșare la tasta jos",
+        "keyUp": "Declanșare la taste sus"
+      },
+      "syncTimeOffset": "Global Sync Time Offset (ms)",
+      "syncTimeOffsetDesc": "Adjust all sync timestamps by this amount to compensate for audio latency.",
+      "syncCommitOffset": "Commit Input Offset (ms)",
+      "syncCommitOffsetDesc": "Specific offset for the 'Commit' action to fix delayed audio issues.",
+      "smartFirstWord": "Primul Cuvânt Inteligent",
+      "smartFirstWordDesc": "La sincronizarea primului cuvânt al unei linii, prima apăsare a tastei își setează ora de pornire, fără a-și seta imediat ora de sfârșit.",
+      "smartLastWord": "Ultimul cuvânt inteligent",
+      "smartLastWordDesc": "La sincronizarea ultimului cuvânt al unei linii, apăsarea tastei setează ora de sfârșit fără a seta automat ora de începere a primului cuvânt al liniei următoare.",
+      "enableUpcomingWordHighlight": "Activează Word Pre-Highlight Viitor",
+      "enableUpcomingWordHighlightDesc": "Fadează într-o culoare evidențiată cu puțin timp înainte ca un cuvânt să se redea în timpul modului de sincronizare pentru a îmbunătăți precizia.",
+      "upcomingWordHighlightThreshold": "Prag de timp pre-evidențiere (ms)",
+      "upcomingWordHighlightColor": "Culoare evidențiere (valoare CSS)",
+      "volume": "Volumul muzicii",
+      "playbackRate": "Viteză de redare",
+      "autosave": {
+        "enable": "Activare autosalvare",
+        "interval": "Salvează Interval (minute)",
+        "limit": "Salvari de păstrat"
+      },
+      "customBackground": "Imagine de fundal personalizată",
+      "customBackgroundDesc": "Alege o imagine pentru a fi folosită ca fundal.",
+      "customBackgroundPick": "Alegeți Imagine",
+      "customBackgroundClear": "Goliți",
+      "customBackgroundOpacity": "Opacitate",
+      "customBackgroundOpacityWarning": "Dacă această valoare este prea mare, conținutul paginii poate fi greu de citit.",
+      "customBackgroundMask": "Mască",
+      "customBackgroundBlur": "Rază estompare",
+      "customBackgroundBrightness": "Luminozitate",
+      "customBackgroundEnabled": "Set de fundal",
+      "customBackgroundManage": "Setări"
+    },
+    "about": {
+      "update": "Actualizare",
+      "newVersion": "Versiune nouă",
+      "updateNow": "Actualizați acum",
+      "downloading": "Se descarcă actualizările...",
+      "ready": "Actualizarea este gata. Reporniți aplicația pentru ca aceasta să aibă efect.",
+      "restart": "Reporniţi"
+    },
+    "appearance": {
+      "mode": {
+        "basic": "Basic Editor",
+        "advanced": "Advanced Editor",
+        "none": "Niciunul",
+        "image": "Imagine",
+        "gradient": "Gradient"
+      },
+      "presets": {
+        "title": "Appearance Presets",
+        "namePlaceholder": "Theme Name...",
+        "save": "Save Current",
+        "empty": "No saved presets yet."
+      },
+      "theme": "Tema",
+      "useCustomAccent": "Culoare personalizată de accent",
+      "useCustomAccentDesc": "Setare culoare accent",
+      "glass": "Glassmorphism",
+      "glassBlur": "Glass Intensity",
+      "glassBlurDesc": "Adjust the background blur effect for glassmorphic elements.",
+      "background": "Context",
+      "useCustomGradient": "Culoare Gradient personalizată",
+      "useCustomGradientDesc": "Generează un gradient dintr-o singură culoare.",
+      "syncGradientToAccent": "Sincronizează prima culoare cu Accent",
+      "addGradientColor": "Adaugă culoare",
+      "gradientType": "Tip Gradient",
+      "type": {
+        "linear": "Liniară",
+        "radial": "Radial",
+        "conic": "Conic"
+      },
+      "gradientOpacity": "Opacitate Gradient",
+      "gradientSize": "Dimensiune Gradient",
+      "gradientPositionSettings": "Centrul & Unghiul",
+      "gradientCenterX": "Centrul X (Orizontal)",
+      "gradientCenterY": "Centrul Y (Vertical)",
+      "gradientAngle": "Unghiul",
+      "font": "Fontul aplicației",
+      "currentFont": "Font Curent",
+      "changeFont": "Change Font...",
+      "advanced": {
+        "projectColors": "Project Colors",
+        "primaryText": "Primary Text Color",
+        "primaryTextDesc": "Global primary text override.",
+        "secondaryText": "Secondary Text Color",
+        "workspace": "Workspace Theme",
+        "titlebarBackground": "Titlebar Background",
+        "sidebarBackground": "Sidebar Background",
+        "activeItemHighlight": "Active Item Highlight",
+        "menuHoverColor": "Menu Hover Color",
+        "editor": "Editor Layout",
+        "editorCanvas": "Editor Canvas",
+        "activeLineHighlight": "Active Line Highlight",
+        "lineHoverEffect": "Line Hover Effect",
+        "selectionHighlight": "Selection Highlight",
+        "chipBorderRadius": "Chip Border Radius",
+        "chipSpacing": "Chip Spacing (Gap)",
+        "chipPaddingVertical": "Chip Padding (V)",
+        "chipPaddingHorizontal": "Chip Padding (H)",
+        "audioVisuals": "Playback & Visuals",
+        "audioBarColor": "Audio Bar Color",
+        "audioBarText": "Audio Bar Text",
+        "waveformInactive": "Waveform Inactive",
+        "waveformProgress": "Waveform Progress",
+        "global": "Global Design System",
+        "masterResetNote": "This will reset all 20+ granular overrides.",
+        "resetMaster": "Master Reset Advanced Config"
+      },
+      "secondaryDesc": "Translations & Metadata.",
+      "layout": {
+        "title": "Application Layout",
+        "order": "Element Order",
+        "orderDesc": "Drag to reorder elements. Some positions may be limited by constraints.",
+        "titlebar": "Title Bar",
+        "ribbonbar": "Toolbar (Ribbon)",
+        "editor": "Main Editor Area",
+        "audio": "Audio Controls",
+        "ribbonPos": "Toolbar Orientation",
+        "pos": {
+          "top": "Top",
+          "bottom": "Bottom",
+          "left": "Left",
+          "right": "Right"
+        },
+        "sidebarWarning": "Note: Sidebar mode is experimental and may look different."
+      },
+      "fontImportSuccess": "Font importat cu succes!",
+      "fontLibrary": "Librărie de fonturi",
+      "fontWeight": "Greutate font",
+      "weight": {
+        "regular": "Normală",
+        "bold": "Bold"
+      },
+      "fontStyle": "Stil font",
+      "style": {
+        "normal": "Normală",
+        "italic": "Italic"
+      },
+      "importFont": "Importă fișierul font",
+      "customFontActive": "FONTUL PERSONAL LOCAL",
+      "defaultFonts": "Scaruri standard",
+      "systemFonts": "Fonturi Sistem",
+      "googleFonts": "Librărie de fonturi Google"
+    },
+    "group": {
+      "assistant": "Asistent",
+      "display": "Afişare",
+      "timing": "Sincronizare",
+      "timingHighlight": "Cue de sincronizare vizuală (Sync)",
+      "playback": "Redare",
+      "autosave": "Salvare automată"
+    },
+    "assistant": {
+      "quickFixes": "Fixe Rapide (Gramaticale)",
+      "quickFixesDesc": "Permite sugestii pentru cuvinte repetate și erori comune de transcriere.",
+      "manualTimestampEdit": "Modificare Manual Timestamp",
+      "manualTimestampEditDesc": "Permite click pe marcajele de timp din modul Sincronizare pentru a tasta manual valorile.",
+      "visualizeTimestampUpdate": "Vizualizare actualizări fus orar",
+      "visualizeTimestampUpdateDesc": "Arată un scurt flash pe marcajele de timp atunci când sunt actualizate prin comenzi rapide.",
+      "highlightErrors": "Evidențiere erori de sincronizare",
+      "highlightErrorsDesc": "Marchează vizual cuvintele atunci când ora de începere este mai mare decât ora de sfârșit."
+    },
+    "audio": {
+      "equalizer": "Egalizator audio",
+      "eqDescription": "Ajustați câștigurile pentru diferite frecvențe pentru a vă optimiza experiența audio.",
+      "preset": "Presetări",
+      "standardPresets": "Standard",
+      "presets": {
+        "custom": "Manual"
+      },
+      "customPresets": "Personalizat",
+      "reset": "Reset",
+      "newPresetName": "Nume nou de presetare",
+      "save": "Salvează presetarea",
+      "mp3Conversion": "MP3 la FLAC",
+      "mp3ConversionDesc": "Convertește MP3 la FLAC atunci când imporți pentru o sincronizare mai bună",
+      "mp3ConversionAsk": "Întreabă",
+      "mp3ConversionAlways": "Automat",
+      "mp3ConversionNever": "Dezactivat"
+    },
+    "backup": {
+      "category": {
+        "settings": "Settings",
+        "keybindings": "Keybindings",
+        "assets": "Appearance assets",
+        "projects": "Projects & history",
+        "plugins": "Plugins"
+      },
+      "hint": {
+        "settings": "{count} stored values",
+        "keybindings": "{count} keybindings",
+        "assetsSet": "Custom background image set",
+        "assetsNone": "No custom background image",
+        "projects": "{count} projects",
+        "plugins": "{count} plugins"
+      },
+      "exportSuccess": "Backup exported",
+      "exportFailed": "Failed to export backup",
+      "newerVersion": "This backup was created by a newer version of the app",
+      "invalidFile": "Invalid or corrupted backup file",
+      "importSuccess": "Backup imported, reloading…",
+      "importFailed": "Failed to import backup. Some data may have been partially applied.",
+      "exportTitle": "Export",
+      "exportDesc": "Save your settings and data to a file you can restore later or move to another device.",
+      "exportButton": "Export backup",
+      "importTitle": "Import",
+      "importDesc": "Restore settings and data from a backup file. Existing values will be replaced.",
+      "importButton": "Choose backup file…",
+      "confirmTitle": "Confirm import",
+      "exportedAt": "Exported",
+      "confirmReplaceWarning": "Imported values will replace your current ones. The app will reload after importing.",
+      "cancelButton": "Cancel",
+      "applyButton": "Import & reload"
+    },
+    "dev": {
+      "previewPerformance": "Preview Performance",
+      "showFps": "Show FPS Counter in Preview",
+      "wasmPlugins": {
+        "title": "Sistem de Plugin Comunitar (WASM)",
+        "description": "Gestionați și încărcați plugin-uri WebAssembly personalizate pentru a extinde capacitățile de import și export ale instrumentului."
+      },
+      "debugInfo": {
+        "title": "Informații depanare"
+      }
+    },
+    "spectrogram": {
+      "palette": "Paletă de culori",
+      "paletteCustom": "Personalizat",
+      "gradientEditorDesc": "O valoare Pos de 0.0 corespunde celei mai liniștite părți, iar 1.0 corespunde părții cele mai puternice. Se recomandă utilizarea unor culori mai bune pentru valorile Pos mai mari.",
+      "addStop": "Adaugă Oprire culoare"
+    }
+  },
+  "timingOverview": {
+    "start": "Start",
+    "end": "End",
+    "duration": "Duration",
+    "emptyBeat": "Empty Beat",
+    "romanization": "Roman",
+    "backgroundVocal": "BG",
+    "title": "Technical Timing Overview",
+    "lines": "Lines",
+    "words": "Words",
+    "lyricsAndTimings": "Lyrics & Word Timings"
+  },
+  "topBar": {
+    "modeBtns": {
+      "edit": "Editare",
+      "sync": "Timp",
+      "preview": "Previzualizare"
+    },
+    "boykisser": "Poponar",
+    "appName": "Unealta TTML cu versuri asemănătoare cu Apple",
+    "menu": {
+      "undo": "Anulează",
+      "redo": "Reface",
+      "selectAllLines": "Selectează toate liniile",
+      "unselectAllLines": "Deselectează toate liniile",
+      "invertSelectAllLines": "Inversează selecțiile de linii",
+      "selectWordsOfMatchedSelection": "Selectați cuvintele care corespund selecției",
+      "timeShift": "Schimbare de timp...",
+      "timeStretch": "时间伸缩...",
+      "editMetadata": "Editare metadate versuri…",
+      "edit": "Editare",
+      "newLyric": "Versuri noi",
+      "openLyric": "Versuri deschise",
+      "openFromClipboard": "Deschide TTML din clipboard",
+      "saveLyric": "Salvează lyric-urile",
+      "restoreFromHistory": "Restaurează istoricul…",
+      "saveLyricToClipboard": "Salvează TTML în clipboard",
+      "uploadToAMLLDB": "Încărcare în baza de date (doar CN)",
+      "file": "Fişier",
+      "helpDoc": "Documentație (NC)",
+      "help": "Ajutor",
+      "segmentationTools": "Instrumente de segregare",
+      "autoSegment": "Segment automat",
+      "rubySegment": "Segmentarea Rubilor",
+      "advancedSegment": "Segment avansat...",
+      "learnedSplits": "Learned Splits...",
+      "syncLineTimestamps": "Sincronizare marcaje de timp",
+      "tool": "Unelte",
+      "importLyric": {
+        "import": "Importă lyric-uri",
+        "fromPlainText": "Importă din textul simplu…",
+        "fromLRCLIB": "Importă din LRCLIB...",
+        "fromLyrically": "Importă din Lyrically...",
+        "fromGenius": "Importă din Genius…",
+        "fromLyRiC": "Importă din fişierul LyRiC…",
+        "fromESLyRiC": "Importă din fişierul ESLyRiC…",
+        "fromQRC": "Importă din fișierul QRC…",
+        "fromYRC": "Importă din fișierul YRC…",
+        "fromLrcfySylb": "Importă din fişierul Sylable… Lyricify"
+      },
+      "exportLyric": {
+        "export": "Exportă versuri",
+        "toLyRiC": "Exportă în LyRiC",
+        "toESLyRiC": "Exportă în ESLyRiC",
+        "toQRC": "Exportă în QRC",
+        "toYRC": "Export în YRC",
+        "toLrcfySylb": "Exportă în Sylable Lyricify",
+        "toASS": "Exportă în subtitrări ASS"
+      }
+    }
+  },
+  "header": {
+    "status": {
+      "autoSavedAt": "Autosalvat la {time}"
+    }
+  },
+  "contextMenu": {
+    "deleteWords": "Ștergere {count} cuvinte",
+    "bgLyric": "Linie de fundal",
+    "duetLyric": "Linie Duet",
+    "moveLineToPlayhead": "Move line to playhead",
+    "insertLineBefore": "Introduceți o linie nouă înainte de",
+    "insertLineAfter": "Introduceți o linie nouă după",
+    "copyLine": "Duplicate {count} line(s)",
+    "duplicateTo": "Duplică lui...",
+    "combineLine": "Combină linii",
+    "deleteLine": "Ștergere {count} linie",
+    "splitWord": "Împarte cuvântul…",
+    "noSyllablesFound": "No multiple syllables found.",
+    "splitIntoSyllables": "Split into Syllables (Romanized)",
+    "replaceWord": "Înlocuiește cuvântul…",
+    "combineWords": "Combina cuvinte",
+    "moveFollowingWordToNewLine": "Mutați următoarele pe noua linie",
+    "moveWordToNewLine": "Mutați {count} cuvinte pe linia nouă"
+  },
+  "settingsDialog": {
+    "title": "Preferințe",
+    "common": {
+      "latencyTest": "Testul de latență audio/intrare"
+    },
+    "keybindings": {
+      "newFile": "Fișier nou",
+      "openFile": "Deschide fișier",
+      "saveFile": "Salveaza fisier",
+      "undo": "Anulează",
+      "redo": "Reface",
+      "selectAll": "Selectează tot",
+      "unselectAll": "Deselectează tot",
+      "selectInverted": "Inversează selecția",
+      "selectWordsOfMatchedSelection": "Selectaţi cuvinte similare",
+      "deleteSelection": "Șterge selecția",
+      "autoSegment": "",
+      "switchEditMode": "Comutator mod - Comutați la Editare Mod",
+      "switchSyncMode": "Comutator mod - Comutați la modul cronometrare",
+      "switchPreviewMode": "Comutator mod - comută la modul de previzualizare",
+      "moveNextWord": "Sincronizare - Mutare la următorul cuvânt",
+      "movePrevWord": "Sincronizare - Mutare la cuvântul anterior",
+      "moveNextLine": "Sincronizare - Mutare la începutul liniei următoare",
+      "movePrevLine": "Sincronizare - Mutare la începutul liniei anterioare",
+      "movePrevWordAndPlay": "Sincronizare - Mutare la cuvintele anterioare și redare",
+      "moveNextWordAndPlay": "Sincronizare - Mutare la următorul cuvânt și redare",
+      "syncStart": "Sincronizare - Marcare început",
+      "syncNext": "Sincronizare - Angajament",
+      "syncEnd": "Sincronizare - Marcare sfarsit",
+      "toggleWordHighlight": "Sincronizare - Evidențiere cuvinte active",
+      "urbanDictionary": "Editare - Caută în Urban Dictionary",
+      "urbanDictionarySync": "Sincronizare - Căutare în Urban Dictionary",
+      "moveFirstWordAndPlay": "Sincronizare - Mutare în primul cuvânt și redare",
+      "moveLastWordAndPlay": "Sincronizare - Mutare la ultimul cuvânt și redare",
+      "playPause": "Redare - Redare/pauză",
+      "seekForward": "Redare - Caută înainte 5s",
+      "seekBackward": "Redare - Caută înapoi 5 secunde",
+      "volumeUp": "Redare - volum în sus",
+      "volumeDown": "Redare - volum în jos",
+      "playbackRateUp": "Redare - Viteză mărită",
+      "playbackRateDown": "Redare - Micșorare viteză",
+      "playbackRateReset": "Redare - Resetare viteză",
+      "duplicatePaste": "Edit - Duplicate to current time",
+      "auditionSelectionBefore": "Spectrograma - Selectarea versiunii (500ms înainte)",
+      "auditionSelection": "Spectrograma - Selectarea versiunii",
+      "auditionSelectionAfter": "Spectrograma - Selectarea versiunii (500 ms după)",
+      "category": {
+        "File": "Fişier",
+        "Edit": "Editare",
+        "View": "Vizualizare",
+        "Sync": "Sincronizare",
+        "Audio": "Audio",
+        "Spectrogram": "Spectrograma"
+      },
+      "autoSegmentOptions": "Auto Segment",
+      "autoSegmentDoublePress": "Require double press",
+      "autoSegmentDoublePressDesc": "Run Auto Segment only after pressing its shortcut twice quickly."
+    },
+    "tab": {
+      "common": "Generalități",
+      "assistant": "Asistent",
+      "appearance": "Aspectul",
+      "audio": "Audio",
+      "keybindings": "Legături cheie",
+      "spectrogram": "Spectrograma",
+      "backup": "Backup",
+      "dev": "Dev"
+    }
+  },
+  "autoSegmentApplied": "Auto-segmented with {engine}",
+  "error": {
+    "unsupportedFileFormat": "Format de fișier nesuportat: {ext}",
+    "openFileFailed": "Nu s-a putut deschide fișierul",
+    "audioNotLoaded": "Fișierul nu a fost încărcat. Asigurați-vă că se redă un fișier audio."
+  },
+  "audio": {
+    "marker": "Marker",
+    "markerLabel": "Label (e.g. Verse 1 Start)",
+    "markerDescription": "Description...",
+    "deleteMarker": "Delete Marker",
+    "waveform": "Audio Waveform",
+    "status": {
+      "transcoding": "Decodare eșuata, încercând sa transcod audio-ul...",
+      "loading": "Se încarcă audio...",
+      "processing": "Procesând..."
+    },
+    "error": {
+      "workerError": "Eroare la procesarea audio"
+    }
+  },
+  "audioPanel": {
+    "volume": "Volum",
+    "playbackRate": "Viteza de redare",
+    "preservesPitch": "Păstrează Pitch",
+    "clickToLoadMusic": "Faceți clic pe iconiță pentru a încărca muzica",
+    "playPause": "Redare / pauză muzică",
+    "expandSpectrogram": "Extindere / colaps spectrogramă"
+  },
+  "latencyTestDialog": {
+    "title": "Test de latență Offset",
+    "latencyDisplay": {
+      "fastest": "Cea Mai Rapidă",
+      "current": {
+        "none": "Nu e măsurat",
+        "fast": "Devreme",
+        "slow": "Târzie",
+        "perfect": "Perfect"
+      },
+      "slowest": "Cel Mai Încet"
+    },
+    "bpmInputLabel": "Tempo (BPM)",
+    "button": {
+      "stop": "Stop",
+      "start": "Start"
+    }
+  },
+  "metadataDialog": {
+    "fetchSongwriters": {
+      "error": "Nu s-a reușit preluarea compozitorilor ale melodiilor",
+      "noSongwriters": "Nu s-au înregistrat creditele de scriere a melodiilor pentru această melodie",
+      "findingRealName": "Se găsește numele real pentru {name} ({current}/{total})...",
+      "success": "Comercianți luați cu succes din Genius",
+      "setupTitle": "Configurare cheie API Genius",
+      "setupDesc": "Pentru a folosi această caracteristică, vă rugăm să configurați Cheia API Genius (mai exact, aveți nevoie de \"CLIENT ACCESS TOKEN\"). Puteți genera una din ",
+      "setupDescEnd": " portal dezvoltator.",
+      "keyPlaceholder": "Introduceţi TOKEN ACCESUL CLIENT",
+      "button": "Preia compozitori din Genius",
+      "tryFindRealNames": "Încercați să găsiți nume reale (nume juridice)",
+      "searchError": "Căutare eșuată: {error}",
+      "fetchError": "Nu s-au putut prelua versurile: {error}",
+      "noLyricsError": "Nu sunt lyric-uri de importat.",
+      "importSuccess": "Importat {count} de linii din Geniu."
+    },
+    "openLink": "Deschide link-ul",
+    "duplicateMsg": "S-au găsit valori de metadate duplicate",
+    "addValue": "Adăugare",
+    "builtinOptions": {
+      "musicName": "Numele piesei",
+      "artists": "Urmărește artiști",
+      "artistsInvalidMsg": "Dacă există mai mulţi artişti, vă rugăm să adăugaţi această cheie de mai multe ori în loc să utilizaţi delimitari; dacă numele artistului conţine delimitari, vă rugăm să ignoraţi acest mesaj",
+      "songwriter": "Compozitor",
+      "songwriterInvalidMsg": "Dacă există mai mulți autori de melodii, vă rugăm să adăugați această cheie de mai multe ori în loc să folosiți delimitări",
+      "album": "Nume album",
+      "coverArt": "URL de copertă",
+      "ncmMusicId": "ID-ul muzicii NetEase",
+      "ncmMusicIdInvalidMsg": "ID-ul de muzică NetEase trebuie să fie numeric",
+      "qqMusicId": "ID Muzică QQ",
+      "qqMusicIdInvalidMsg": "QQ Music ID trebuie să fie alfanumeric",
+      "spotifyId": "ID piesă Spotify",
+      "spotifyIdInvalidMsg": "Spotify Track ID ar trebui să fie alfanumeric",
+      "appleMusicId": "Apple Music Track ID",
+      "appleMusicIdInvalidMsg": "Apple Music Track ID trebuie să fie numeric",
+      "isrc": "Urmărește codul ISRC",
+      "isrcInvalidMsg": "Formatul codului ISRC trebuie să fie CC-XXX-YY-NNNNN",
+      "ttmlAuthorGithub": "ID autor versuri",
+      "ttmlAuthorGithubInvalidMsg": "ID-ul GitHub ar trebui să fie numeric",
+      "ttmlAuthorGithubLogin": "Utilizator GitHub Autor Versuri",
+      "ttmlAuthorGithubLoginInvalidMsg": "Numele de utilizator GitHub ar trebui să fie alfanumeric sau cratime, până la 39 de caractere"
+    },
+    "title": "Editor de metadate",
+    "key": "Cheie",
+    "value": "Valoare",
+    "empty": "Fără metadate",
+    "addKeyValue": "Adaugă o nouă valoare-cheie-cheie",
+    "customKey": "Cheie personalizată",
+    "addPresets": "Adăugați toate cheile presetate",
+    "clear": "Curăță"
+  },
+  "lrclib": {
+    "placeholder": "Artist titlu...",
+    "notFound": "Nici un rezultat găsit, vă rugăm să încercaţi diferite cuvinte cheie",
+    "noResult": "Introduceți cuvintele cheie pentru a începe căutarea",
+    "title": "Importă Lyric din LRCLIB"
+  },
+  "lyricEditor": {
+    "locate": "Localizare",
+    "lineSpectrogram": {
+      "title": "Aliniere la linie",
+      "desc": "Reglaţi punctele de început şi de sfârşit ale acestei linii folosind spectrograma. Durata liniei va fi împărțită proporțional cu cuvintele sale în funcție de numărul de caractere.",
+      "startTime": "Pornire:",
+      "endTime": "Sfârșit:",
+      "duration": "Durată:",
+      "playPause": "Redare/pauză"
+    }
+  },
+  "lyricLineView": {
+    "translatedLabel": "Traducere:",
+    "romanLabel": "Romanizare:",
+    "empty": "Niciunul",
+    "duplicateLinesHere": "Duplică {count} linie selectată aici",
+    "insertLine": "Introduceți o linie nouă aici",
+    "insertWord": "Introduceți cuvântul…"
+  },
+  "lyricWordView": {
+    "empty": "Golire",
+    "spaceCount": "Spaţiu x{count}",
+    "removeWord": "Elimină Cuvânt Duplicat",
+    "editingWordTitle": "Editarea Cuvântului",
+    "editingWordDesc": "Editați cuvântul sau aplicați remediile rapide sugerate.",
+    "correctedWordPlaceholder": "Type the corrected word",
+    "noSuggestions": "Fără sugestii"
+  },
+  "sectionActions": {
+    "categorizeSelected": "Categorize selected {count, plural, one {line} other {lines}}",
+    "categorizeTitle": "Categorize selected lines",
+    "categorize": "Categorize",
+    "expand": "Expand section",
+    "collapse": "Collapse section",
+    "editTitle": "Edit section",
+    "vocalist": "Vocalist / role",
+    "notes": "Notes",
+    "manage": "Manage sections",
+    "goPrevious": "Go to previous section",
+    "goNext": "Go to next section",
+    "editMetadata": "Edit metadata",
+    "split": "Split at selected line",
+    "mergePrevious": "Merge with previous",
+    "mergeNext": "Merge with next",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "linkPrevious": "Link to previous {category}",
+    "unlinkRepeat": "Unlink repeat",
+    "removeHeader": "Remove header (keep lyrics)",
+    "addToPrevious": "Add unassigned lines to previous section",
+    "addToNext": "Add unassigned lines to next section",
+    "section": "Section"
+  },
+  "touchSyncPanel": {
+    "prevWord": "Sari peste Cuvântul Precedent",
+    "nextWord": "Sari la următorul cuvânt"
+  },
+  "grammarCheck": {
+    "ambiguous": "Possible grammar issue",
+    "repeatedWord": "Repeated word",
+    "capitalization": "Cuvântul ar trebui să fie capitalizat",
+    "capitalInMiddle": "Cuvântul are majuscule în mijloc",
+    "title": "Grammar & Spelling Check",
+    "issues": "Probleme",
+    "history": "Istoric",
+    "ignoredWords": "Cuvinte ignorate",
+    "noIssues": "Nicio problemă găsită!",
+    "issuesFound": "probleme găsite",
+    "undoLast": "Anulează ultimul",
+    "clearHistory": "Curăță Istoria",
+    "noHistory": "Nicio modificare făcută încă",
+    "fixed": "fix",
+    "ignored": "ignorat",
+    "line": "Linie",
+    "clearIgnoredWords": "Șterge tot",
+    "noIgnoredWords": "Nu sunt cuvinte ignorate",
+    "noIssuesMessage": "Nu s-au găsit probleme! Versurile tale arată bine.",
+    "applyFix": "Apply suggested fix",
+    "ignoreSession": "Ignore this word in this session",
+    "ignoreAlways": "Always ignore this word"
+  },
+  "urbanDictionary": {
+    "title": "Urban Dictionary",
+    "slang": "dicționar slang",
+    "noDefinitions": "Nu au fost găsite definiții pentru „{word}”",
+    "by": "De către",
+    "viewOnline": "Vezi pe web"
+  },
+  "replaceWordDialog": {
+    "title": "Înlocuiește Cuvântul",
+    "description": "Cuvânt nou:",
+    "placeholder": "Cuvânt nou",
+    "applyToAll": "Aplică această înlocuire tuturor cuvintelor identice",
+    "caseSensitive": "Potrivire majusculă (potrivire exactă)"
+  },
+  "timeShiftDialog": {
+    "title": "Schimbare timp",
+    "amount": "Compensare (ms)",
+    "direction": "Direcție",
+    "advance": "Avans (-)",
+    "delay": "Întârziere (+)",
+    "scopeLabel": "Domeniu",
+    "scope": {
+      "all": "Toate liniile licurice",
+      "selected": "Linii lirice selectate",
+      "selectedFollowing": "Selectate și urmatoare",
+      "custom": "Interval personalizat"
+    },
+    "fromLine": "De la linia",
+    "toLine": "la linia",
+    "line": "",
+    "snapToPlayhead": "Snap start of affected lines to current playback time"
+  },
+  "timeStretchDialog": {
+    "durationPlaceholder": "MM:SS.mmm or seconds",
+    "useCurrentSong": "Use current song",
+    "audioReadError": "Could not read the selected audio file's duration.",
+    "invalidDuration": "Enter a valid duration.",
+    "positiveDuration": "Duration must be greater than zero.",
+    "title": "Time Stretch",
+    "description": "Stretch or squeeze every TTML timestamp to fit a new song duration.",
+    "oldDuration": "Old song duration",
+    "readingAudio": "Reading audio...",
+    "chooseAudio": "Upload audio...",
+    "newDuration": "New song duration",
+    "noChange": "The durations match; no timing change is needed.",
+    "scaleFactor": "Scale factor: {factor}×",
+    "scopeLabel": "Apply to",
+    "scope": {
+      "all": "All lines",
+      "selected": "Selected lines",
+      "selectedFollowing": "Selected lines and following",
+      "custom": "Custom range"
+    },
+    "fromLine": "From",
+    "toLine": "to",
+    "line": "lines"
+  },
+  "lyrically": {
+    "noLyricsLabel": "Nu sunt disponibile versuri pentru această piesă.",
+    "previewTitle": "Versuri - Previzualizare versuri",
+    "editingRawText": "Editing Raw Text",
+    "backToPreview": "Back to Preview",
+    "manualEdit": "Manual Edit",
+    "importTitle": "Importă versuri în siguranță prin Lyrically (Nu CORS prin punctul final API)",
+    "source": "Source: "
+  },
+  "genius": {
+    "setupTitle": "Configurare cheie API Genius",
+    "setupDesc": "Pentru a importa versuri din Geniu aveţi nevoie de un CLIENT ACCESS TOKEN. Puteţi genera unul din portalul de dezvoltare Genius.",
+    "keyPlaceholder": "Lipiți CLIENT ACCESS TOKEN aici…",
+    "previewTitle": "Geniu - Previzualizare versuri",
+    "back": "Înapoi",
+    "previewSubtitle": "Puteţi edita versurile de mai jos înainte de import.",
+    "linesCount": "{count} linii",
+    "importButton": "Importă versuri",
+    "importTitle": "Importă versuri din Genius",
+    "searchPlaceholder": "Artist – Titlul melodiei…",
+    "notFound": "Niciun rezultat găsit. Încearcă cuvinte cheie diferite.",
+    "noResult": "Introdu un nume de melodie sau un artist pentru a începe."
+  },
+  "textImportDialog": {
+    "processLyrics": "Procesare versuri",
+    "processedSuccess": "Versuri automate pentru sincronizare silențioasă.",
+    "title": "Importa versuri din text simplu",
+    "tab": {
+      "import": "Importă"
+    },
+    "guides": "Ghiduri",
+    "actionButton": "Importă",
+    "contentMode": {
+      "caption": "Conținut text",
+      "lyric": "Doar versuri",
+      "withTranslation": "Versuri cu traducere",
+      "withRoman": "Versuri cu romanizare",
+      "withBoth": "Versuri cu ambele"
+    },
+    "separationMode": {
+      "caption": "Format traducere/Romanizare",
+      "multipleLine": "Linii multiple interscurtate",
+      "sameLine": "Aceeași linie separată"
+    },
+    "separator": "Separator linie",
+    "swapTransAndRoman": "Schimbă liniile de traducere și romanizare",
+    "wordSeparator": "Separator cuvânt",
+    "enableSpecialPrefix": "Activează prefixul special",
+    "bgLyricPrefix": "Prefix Lyric de fundal",
+    "duetLyricPrefix": "Prefix Lyric Duet",
+    "enableEmptyBeat": "Activează bătăi goale",
+    "emptyBeatSymbol": "Simbol bătăi goale",
+    "guide": {
+      "prepare": {
+        "title": "1. Pregătiți versurile",
+        "desc": "Este recomandat să utilizaţi unealta Lyrprep pentru a pregăti versurile. Puteţi căuta melodii, selecta o versiune şi copia textul de ieşire."
+      },
+      "import": {
+        "title": "2. Importă în unealta TTML",
+        "desc": "Lipiți textul pregătit în editorul din stânga. Asigurați-vă că selectați corect \"Modul de import\" în funcție de formatul dvs. de text. Dacă textul dvs. conține prefixe speciale (cum ar fi marcajele vocale de fundal), asigurați-vă că este activat \"Prefix special\"."
+      },
+      "sync": {
+        "title": "3. Începe sincronizarea",
+        "desc": "După ce faceți clic pe \"Import\", comutați la modul \"Ora\" (Sync). Utilizați tastele rapide pentru aliniere precisă:",
+        "f": "Setați ora începerii cuvântului",
+        "g": "Seteaza sfarsit cuvant si incepe urmatorul",
+        "h": "Seteaza doar sfarsit cuvant",
+        "ad": "Comutați între cuvinte"
+      },
+      "community": {
+        "title": "Ghiduri comunitare & foi de parcurs",
+        "desc": "Resurse utile din partea comunității pentru anumite limbi și genuri."
+      }
+    },
+    "guidesMenu": {
+      "full": "Ghidul complet TTML"
+    }
+  },
+  "sectionImportReview": {
+    "title": "Review detected sections",
+    "description": "Check normalized categories and metadata before replacing the lyrics.",
+    "sourceLyrics": "Source lyrics",
+    "structure": "Structure",
+    "sectionCount": "{count} sections",
+    "vocalist": "Vocalist / role",
+    "color": "Section color",
+    "notes": "Notes",
+    "lineCount": "{count} lyric lines",
+    "import": "Import reviewed lyrics"
+  },
+  "pluginManager": {
+    "trigger": "Plugins",
+    "title": "Plugin Management",
+    "description": "Extend your lyric editing capabilities",
+    "installed": "Installed",
+    "store": "Plugin Store",
+    "empty": "No plugins installed",
+    "browse": "Browse Store",
+    "techniques": "Techniques",
+    "usage": "Usage",
+    "sideload": "Sideload .wasm plugin",
+    "loading": "Loading community plugins...",
+    "install": "Install"
+  },
+  "globalDragOverlay": {
+    "title": "Eliberați pentru a încărca"
+  },
+  "historyRestoreDialog": {
+    "loadError": "Nu s-a putut încărca istoricul",
+    "confirm": {
+      "title": "Confirmați Restabilirea",
+      "description": "Aceasta va suprascrie tot conţinutul din editorul curent. Sunteţi sigur că doriţi să restauraţi acest instantaneu?"
+    },
+    "deleteProject": {
+      "title": "Ștergeți istoricul proiectului",
+      "description": "Sunteţi sigur că doriţi să ştergeţi toate înregistrările autosalvate pentru acest proiect? Această acţiune nu poate fi anulată."
+    },
+    "projects": "Proiecte recente",
+    "noProjects": "Nicio înregistrare nu a fost salvată automat.",
+    "latestState": "Ultima versiune",
+    "restoreLatest": "Restaurează această versiune",
+    "historyVersions": "Alte versiuni",
+    "noHistory": "Nici un istoric disponibil",
+    "selectProject": "Vă rugăm să selectaţi un element din panoul din stânga"
+  },
+  "autosave": {
+    "legacyProjectName": "Instantanee moștenite",
+    "untitledProjectName": "Proiect fără titlu"
+  },
+  "time": {
+    "daysAgo": "{count} zile acum",
+    "hoursAgo": "{count} ore în urmă",
+    "minutesAgo": "{count} minute în urmă",
+    "justNow": "Chiar acum"
+  },
+  "metadata": {
+    "title": "Metadate"
+  },
+  "submitToAMLLDB": {
+    "validation": {
+      "missingMusicName": "Numele piesei lipsă",
+      "missingArtists": "Metadate lipsă artiști de piese",
+      "missingAlbum": "Numele albumului lipsă pentru metadate",
+      "missingMusicId": "Metadate lipsă ID de platformă"
+    },
+    "defaultReason": "Prezentare versuri noi",
+    "errors": {
+      "validation": "Validarea trimiterii a eșuat:\n{errors}",
+      "noLyrics": "Încă nu există conținut de versuri?",
+      "uploadFailed": "Nu s-a putut solicita încărcarea versurilor: {status} {statusText}",
+      "submitFailed": "Trimiterea a eșuat, verifică consola din motiv!"
+    },
+    "labels": {
+      "submit": "Versuri Trimitere/Corecție"
+    },
+    "issueTitle": "[Versuri Submit/Fix] {name}",
+    "unknownTitle": "Titlu necunoscut",
+    "unknownArtist": "Artist Necunoscut",
+    "description": "Trimite versurile în baza de date AMLL versuri",
+    "title": "Trimite versurile în baza de date AMLL (doar pentru utilizatorii chinezi simplificați)",
+    "chineseOnlyWarning": "Această caracteristică este disponibilă doar utilizatorilor chinezi simplificați ai bazei de date cu versuri AMLL. Dacă editezi versuri pentru a le folosi în alt software, te rugăm să urmezi modul software-ului de a trimite versuri!",
+    "thankYou": "În primul rând, vă mulțumesc pentru contribuția generoasă a versurilor!",
+    "cc0Agreement": "Prin trimiterea ta ești de acord cu",
+    "cc0Rights": "utilizează licența CC0 și renunță în întregime la dreptul de proprietate asupra versurilor",
+    "andSubmit": "şi trimite la baza de date versuri!",
+    "futureUse": "Iar versurile vor fi folosite ca sursă TTML implicită de către sistemele AMLL în viitor!",
+    "rightsWarning": "Dacă apreciați păstrarea proprietății, vă rugăm să NU trimiteți!",
+    "submitInstructions": "Introduceți următoarele informații și apoi săriți pe pagina GitHub de prezentare a emisiunilor!",
+    "closeWarning": "Închide mesajul de avertizare",
+    "uploadDbType": "Lyrics Database Type",
+    "uploadDbTypeOfficial": "Official Database",
+    "uploadDbTypeUser": "User Database",
+    "uploadDbTypeBoth": "Both Databases",
+    "officialDesc": "Submitting to the official database requires manual review to ensure lyrics quality and synchronization. This is recommended for high-quality contributions.",
+    "userDesc": "Submitting to the user database only requires bot verification. It is faster but doesn't guarantee the same level of performance quality.",
+    "bothDesc": "This will open submission pages for both repositories. Please create an issue in each manually.",
+    "genFromName": "Generate from metadata",
+    "musicName": "Track Title",
+    "musicNameDesc": "Recommended format: Artist - Song Title",
+    "submitReason": "Reason",
+    "submitReasonNew": "New lyrics submission",
+    "submitReasonFix": "Fix existing lyrics",
+    "comment": "Comment",
+    "commentPlaceholder": "Anything else you want to add?",
+    "issueFoundTitle": "Please fix the following issues before submitting:",
+    "submitBtn": "Upload and Create Issue"
+  },
+  "splitWordDialog": {
+    "spaceCount": "Spaţiu x{count}",
+    "empty": "Golire",
+    "title": "Divide Cuvântul",
+    "tip": "După divizare, cuvintele noi vor împărți uniform timpul de pornire/sfârșit al cuvântului original. Bătăile goale vor fi șterse.",
+    "syllableSplit": "Divizare Sylable",
+    "applyToAll": "Aplică această împărțire tuturor cuvintelor identice",
+    "remember": "Remember this split",
+    "ignoreCase": "Ignoră carcasa",
+    "actionButton": "Confirmare"
+  },
+  "advancedSegmentDialog": {
+    "test": {
+      "outputError": "Eroare de previzualizare împărțită",
+      "title": "Încercare de separare",
+      "input": "Introduceți o linie sau un cuvânt pentru a testa...",
+      "output": "Previzualizați rezultatul:"
+    },
+    "title": "Segmentare avansată",
+    "scope": {
+      "title": "Domeniul de aplicare",
+      "all": "Toate liniile licurice",
+      "range": {
+        "from": "De la linia",
+        "to": "la linia",
+        "end": ""
+      }
+    },
+    "rules": {
+      "title": "Reguli de segregare automată",
+      "cjk": "Împarte caracterele CJK",
+      "syllable": "Împărțiți cuvintele occidentale cu silabe"
+    },
+    "engine": {
+      "select": "Choose a syllabification engine:"
+    },
+    "tip": "După divizare, durata totală a cuvântului original va fi redistribuită în funcție de numărul de caractere și greutatea lor.",
+    "postProcess": {
+      "title": "Post-prelucrare",
+      "punct": {
+        "caption": "Manipulare punctuală:",
+        "merge": "Îmbinare în silozul adiacent",
+        "standalone": "Setează ca segment standalone",
+        "weight": "Greutatea timpului punctual:"
+      },
+      "empty": "Elimină segmentele goale"
+    },
+    "custom": {
+      "title": "Reguli de Segmentare personalizate",
+      "input": "Introduceți cuvântul pentru divizare manuală...",
+      "add": "Adaugă la reguli personalizate",
+      "list": "Listă de reguli personalizate:"
+    },
+    "ignore": {
+      "title": "Ignoră lista",
+      "placeholder": "Un cuvânt pe linie, cuvintele din această listă nu vor fi auto-segmentate"
+    },
+    "learned": {
+      "title": "Learned Split Rules",
+      "description": "These rules match any casing and ignore surrounding punctuation.",
+      "input": "Enter a word to teach the splitter...",
+      "saveHint": "Saving replaces the existing rule for this word.",
+      "save": "Save learned split",
+      "saved": "Saved rules ({count})",
+      "clear": "Clear all",
+      "search": "Search saved rules...",
+      "noResults": "No matching learned splits.",
+      "clearTitle": "Clear all learned splits?",
+      "clearDescription": "This permanently removes every learned split rule from this device."
+    }
+  },
+  "autoSegmentDialog": {
+    "title": "Auto Segment",
+    "description": "Choose a syllabification engine for all lyric lines.",
+    "suggested": "Suggested from lyrics:",
+    "applyAll": "Apply to all lines"
+  },
+  "suggestedSplits": {
+    "title": "Suggested Splits",
+    "description": "Choose a suggested split pattern for this {type}.",
+    "apply": "Apply Suggestion",
+    "noSuggestions": "No automated split suggestions available for this content."
+  },
+  "aboutModal": {
+    "appName": "Unealta TTML cu versuri asemănătoare cu Apple",
+    "description": "Un text cu cuvânt TTML Editarea și Timeline Tool pentru versuri asemănătoare Apple",
+    "maintainers": "Fork Maintainers",
+    "maintainersDesc": "This fork is maintained and developed by:",
+    "forkMaintainer": "Fork maintainer & contributor",
+    "visitWebsite": "Visit website",
+    "credits": "Credits & Third-Party Notices",
+    "creditsIntro": "This project includes work adapted from the following open-source projects.",
+    "community": "Community & Contributions",
+    "communityDesc": "Help us make the tool better by contributing code, reporting issues, or providing translations.",
+    "github": "GitHub Repository",
+    "crowdin": "Help Translate in Crowdin",
+    "buildDate": "Data compilării: {date}",
+    "gitCommit": "Git Commit: {commit}"
+  },
+  "spectrogram": {
+    "invalidEndTime": "Nu se poate selecta acest timp de sfârșit",
+    "noAudioLoaded": "Vă rugăm să încărcați un fișier audio pentru a reda spectrograma",
+    "loadAudio": "Load audio file",
+    "showUnselectedLines": "Arată liniile neselectate",
+    "settings": "Spectrogram Settings",
+    "fftSize": "FFT Size",
+    "resolution": "FFT Resolution",
+    "fftSizeOption": {
+      "512": "512 (Fast)",
+      "1024": "1024 (Normal)",
+      "2048": "2048 (Better Freq)",
+      "4096": "4096 (High Res)"
+    },
+    "height": "Display Height"
+  },
+  "pwa": {
+    "offlineReady": "Site-ul a fost memorat cu succes pentru utilizare offline",
+    "updateRefresh": "Site actualizat, reîmprospătează pentru a folosi ultima versiune!",
+    "refresh": "Împrospătează"
+  }
+}

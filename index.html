@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <link color="#18a058" href="./src/assets/logo.svg" rel="mask-icon">
+    <meta
+        content="width=device-width, height=device-height, interactive-widget=resizes-content, initial-scale=1.0, minimum-scale = 1, maximum-scale = 1, user-scalable = no, minimal-ui"
+        name="viewport" />
+    <meta content="AMLL TTML Tool" name="apple-mobile-web-app-title" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta content="#FFFFFF" media="(prefers-color-scheme: light)" name="apple-mobile-web-app-status-bar-style" />
+    <meta content="#101211" media="(prefers-color-scheme: dark)" name="apple-mobile-web-app-status-bar-style" />
+    <meta
+        content="default-src * data: blob: filesystem: about: ws: wss: ipc: 'unsafe-inline' 'unsafe-eval'; worker-src * data: blob: ;  script-src * data: blob: 'unsafe-inline' 'unsafe-eval';  connect-src * ipc: data: blob: 'unsafe-inline';  img-src * data: blob: 'unsafe-inline';  frame-src * data: blob: ;  style-src * data: blob: 'unsafe-inline'; font-src * data: blob: 'unsafe-inline';"
+        http-equiv="Content-Security-Policy" />
+    <link href="./favicon-32x32.png?v=2" rel="icon" type="image/png" sizes="32x32">
+    <link href="./favicon-16x16.png?v=2" rel="icon" type="image/png" sizes="16x16">
+    <link href="./favicon.ico?v=2" rel="shortcut icon" type="image/x-icon">
+    <link href="./apple-touch-icon.png?v=2" rel="apple-touch-icon" sizes="180x180">
+    <link href="./site.webmanifest" rel="manifest">
+    <meta content="#FFFFFF" media="(prefers-color-scheme: light)" name="theme-color">
+    <meta content="#101211" media="(prefers-color-scheme: dark)" name="theme-color">
+    <title>AMLL TTML Tool</title>
+    <meta name="darkreader-lock">
+    <style>
+        * {
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        #root {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #loading-holder {
+                background-color: #101211;
+                color: #fff;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root">
+        <div id="loading-holder"
+            style="display: flex; flex-direction: column; height: 100vh; text-align: center; align-items: center;justify-content: center;">
+            <div>Loading AMLL TTML Tool...</div>
+            <div>Resource files are quite big, please be patient...</div>
+        </div>
+    </div>
+    <script defer src="/src/main.tsx" type="module"></script>
+</body>
+
+</html>

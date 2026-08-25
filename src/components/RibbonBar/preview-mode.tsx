@@ -1,0 +1,377 @@
+/*
+ * Copyright 2023-2025 Steve Xiao (stevexmh@qq.com) and contributors.
+ *
+ * 本源代码文件是属于 AMLL TTML Tool 项目的一部分。
+ * This source code file is a part of AMLL TTML Tool project.
+ * 本项目的源代码的使用受到 GNU GENERAL PUBLIC LICENSE version 3 许可证的约束，具体可以参阅以下链接。
+ * Use of this source code is governed by the GNU GPLv3 license that can be found through the following link.
+ *
+ * https://github.com/bobjoerules/AMLL-TTML-TOOL/blob/main/LICENSE
+ */
+
+import {
+	Checkbox,
+	Flex,
+	Grid,
+	SegmentedControl,
+	Switch,
+	Text,
+	TextField,
+} from "@radix-ui/themes";
+import { useAtom } from "jotai";
+import { type FC, forwardRef } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import {
+	Play24Regular,
+	Fire24Regular,
+	TextT24Regular,
+	TextAlignLeft24Regular,
+	FastForward24Regular,
+	Wrench24Regular,
+	Settings24Regular,
+	DocumentText16Regular,
+	Apps16Regular,
+	MusicNote216Regular,
+	Fire16Regular,
+	Timer16Regular,
+	LocalLanguage16Regular,
+	Warning16Regular,
+	FontSpaceTrackingOut16Regular,
+	Flash16Regular,
+	ArrowSync16Regular,
+	TopSpeed16Regular,
+} from "@fluentui/react-icons";
+import {
+	hideObsceneWordsAtom,
+	instantHighlightFadeAtom,
+	lyricWordFadeWidthAtom,
+	PreviewModeType,
+	previewModeTypeAtom,
+	showFpsCounterAtom,
+	showRomanLinesAtom,
+	showTranslationLinesAtom,
+	spicyBackgroundModeAtom,
+	spicyForceLineSyncedAtom,
+	spicySimpleLyricsModeAtom,
+	vsyncAtom,
+} from "$/modules/settings/states/preview";
+import { RibbonFrame, RibbonSection } from "./common";
+import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
+
+export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
+	HTMLDivElement,
+	{ isSidebar?: boolean }
+>(({ isSidebar }, ref) => {
+	const [previewModeType, setPreviewModeType] = useAtom(previewModeTypeAtom);
+	const [showTranslationLine, setShowTranslationLine] = useAtom(
+		showTranslationLinesAtom,
+	);
+	const [showRomanLine, setShowRomanLine] = useAtom(showRomanLinesAtom);
+	const [hideObsceneWords, setHideObsceneWords] = useAtom(hideObsceneWordsAtom);
+	const [lyricWordFadeWidth, setLyricWordFadeWidth] = useAtom(
+		lyricWordFadeWidthAtom,
+	);
+	const [instantFade, setInstantFade] = useAtom(instantHighlightFadeAtom);
+	const [vsync, setVsync] = useAtom(vsyncAtom);
+	const [showFps, setShowFps] = useAtom(showFpsCounterAtom);
+	const [spicySimpleMode, setSpicySimpleMode] = useAtom(
+		spicySimpleLyricsModeAtom,
+	);
+	const [spicyForceLineSynced, setSpicyForceLineSynced] = useAtom(
+		spicyForceLineSyncedAtom,
+	);
+	const [spicyBackgroundMode, setSpicyBackgroundMode] = useAtom(
+		spicyBackgroundModeAtom,
+	);
+	const { t } = useTranslation();
+	const [showAdvanced, setShowAdvanced] = useAtom(advancedRibbonControlsAtom);
+
+	return (
+		<RibbonFrame ref={ref} isSidebar={isSidebar}>
+			<RibbonSection
+				isSidebar={isSidebar}
+				label={
+					<Flex gap="1" align="center">
+						<Play24Regular />
+						{t("ribbonBar.previewMode.mode", "模式")}
+					</Flex>
+				}
+			>
+				<SegmentedControl.Root
+					value={previewModeType}
+					onValueChange={(v) => {
+						if (v === PreviewModeType.AMLL) {
+							toast.warn(
+								t(
+									"ribbonBar.previewMode.amllDeprecated",
+									"AMLL 模式已弃用，请使用标准模式",
+								),
+							);
+							return;
+						}
+						setPreviewModeType(v as PreviewModeType);
+					}}
+				>
+					<SegmentedControl.Item value={PreviewModeType.Standard}>
+						<Flex gap="1" align="center">
+							<DocumentText16Regular />
+							{t("ribbonBar.previewMode.standard", "标准")}
+						</Flex>
+					</SegmentedControl.Item>
+					<SegmentedControl.Item
+						value={PreviewModeType.AMLL}
+						style={{ opacity: 0.5 }}
+					>
+						<Flex gap="1" align="center">
+							<Apps16Regular />
+							{"AMLL"}
+						</Flex>
+					</SegmentedControl.Item>
+					<SegmentedControl.Item value={PreviewModeType.Toxi}>
+						<Flex gap="1" align="center">
+							<MusicNote216Regular />
+							{"Toxi"}
+						</Flex>
+					</SegmentedControl.Item>
+					<SegmentedControl.Item value={PreviewModeType.Spicy}>
+						<Flex gap="1" align="center">
+							<Fire16Regular />
+							{"Spicy"}
+						</Flex>
+					</SegmentedControl.Item>
+					<SegmentedControl.Item value={PreviewModeType.Timing}>
+						<Flex gap="1" align="center">
+							<Timer16Regular />
+							{t("ribbonBar.previewMode.timing", "时轴")}
+						</Flex>
+					</SegmentedControl.Item>
+				</SegmentedControl.Root>
+			</RibbonSection>
+			{previewModeType === PreviewModeType.Spicy && (
+				<RibbonSection
+					isSidebar={isSidebar}
+					label={
+						<Flex gap="1" align="center">
+							<Fire24Regular />
+							{t("ribbonBar.previewMode.spicy", "Spicy")}
+						</Flex>
+					}
+				>
+					<Grid
+						columns="max-content auto"
+						gap="2"
+						gapY="1"
+						flexGrow="1"
+						align="center"
+					>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							{t("ribbonBar.previewMode.simpleLyrics", "Simple lyrics")}
+						</Text>
+						<Checkbox
+							checked={spicySimpleMode}
+							onCheckedChange={(v) => setSpicySimpleMode(!!v)}
+						/>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							{t(
+								"ribbonBar.previewMode.forceLineRendering",
+								"Force line rendering",
+							)}
+						</Text>
+						<Checkbox
+							checked={spicyForceLineSynced}
+							onCheckedChange={(v) => setSpicyForceLineSynced(!!v)}
+						/>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							{t("ribbonBar.previewMode.background", "Background")}
+						</Text>
+						<SegmentedControl.Root
+							value={spicyBackgroundMode}
+							onValueChange={(v) =>
+								setSpicyBackgroundMode(v as typeof spicyBackgroundMode)
+							}
+							size="1"
+						>
+							<SegmentedControl.Item value="animated">
+								{t("ribbonBar.previewMode.backgroundAnimated", "Animated")}
+							</SegmentedControl.Item>
+							<SegmentedControl.Item value="color">
+								{t("ribbonBar.previewMode.backgroundColor", "Color")}
+							</SegmentedControl.Item>
+							<SegmentedControl.Item value="static">
+								{t("ribbonBar.previewMode.backgroundStatic", "Static")}
+							</SegmentedControl.Item>
+						</SegmentedControl.Root>
+					</Grid>
+				</RibbonSection>
+			)}
+			<RibbonSection
+				isSidebar={isSidebar}
+				label={
+					<Flex gap="1" align="center">
+						<TextT24Regular />
+						{t("ribbonBar.previewMode.lyrics", "歌词")}
+					</Flex>
+				}
+			>
+				<Grid
+					columns="max-content auto"
+					gap="2"
+					gapY="1"
+					flexGrow="1"
+					align="center"
+				>
+					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+						<Flex gap="1" align="center">
+							<LocalLanguage16Regular />
+							{t("ribbonBar.previewMode.showTranslation", "显示翻译")}
+						</Flex>
+					</Text>
+					<Checkbox
+						checked={showTranslationLine}
+						onCheckedChange={(v) => setShowTranslationLine(!!v)}
+					/>
+					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+						<Flex gap="1" align="center">
+							<LocalLanguage16Regular />
+							{t("ribbonBar.previewMode.showRoman", "显示音译")}
+						</Flex>
+					</Text>
+					<Checkbox
+						checked={showRomanLine}
+						onCheckedChange={(v) => setShowRomanLine(!!v)}
+					/>
+					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+						<Flex gap="1" align="center">
+							<Warning16Regular />
+							{t("ribbonBar.previewMode.maskObsceneWords", "屏蔽不雅用语")}
+						</Flex>
+					</Text>
+					<Checkbox
+						checked={hideObsceneWords}
+						onCheckedChange={(v) => setHideObsceneWords(!!v)}
+					/>
+				</Grid>
+			</RibbonSection>
+			<RibbonSection
+				isSidebar={isSidebar}
+				label={
+					<Flex gap="1" align="center">
+						<TextAlignLeft24Regular />
+						{t("ribbonBar.previewMode.word", "单词")}
+					</Flex>
+				}
+			>
+				<Grid
+					columns="max-content auto"
+					gap="2"
+					gapY="1"
+					flexGrow="1"
+					align="center"
+				>
+					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+						<Flex gap="1" align="center">
+							<FontSpaceTrackingOut16Regular />
+							{t("ribbonBar.previewMode.fadeWidth", "过渡宽度")}
+						</Flex>
+					</Text>
+					<TextField.Root
+						min={0}
+						step={0}
+						size="1"
+						style={{
+							width: "4em",
+						}}
+						defaultValue={lyricWordFadeWidth}
+						onBlur={(e) => {
+							const value = Number.parseFloat(e.target.value);
+							if (Number.isFinite(value)) {
+								setLyricWordFadeWidth(value);
+							}
+						}}
+					/>
+					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+						<Flex gap="1" align="center">
+							<Flash16Regular />
+							{t("ribbonBar.previewMode.instantFade", "即时淡出")}
+						</Flex>
+					</Text>
+					<Checkbox
+						checked={instantFade}
+						onCheckedChange={(v) => setInstantFade(!!v)}
+					/>
+				</Grid>
+			</RibbonSection>
+			{showAdvanced && (
+				<RibbonSection
+					isSidebar={isSidebar}
+					label={
+						<Flex gap="1" align="center">
+							<FastForward24Regular />
+							{t("ribbonBar.previewMode.render", "渲染")}
+						</Flex>
+					}
+				>
+					<Grid
+						columns="max-content auto"
+						gap="2"
+						gapY="1"
+						flexGrow="1"
+						align="center"
+					>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							<Flex gap="1" align="center">
+								<ArrowSync16Regular />
+								{"V-Sync"}
+							</Flex>
+						</Text>
+						<Checkbox checked={vsync} onCheckedChange={(v) => setVsync(!!v)} />
+					</Grid>
+				</RibbonSection>
+			)}
+			{showAdvanced && (
+				<RibbonSection
+					isSidebar={isSidebar}
+					label={
+						<Flex gap="1" align="center">
+							<Wrench24Regular />
+							{t("ribbonBar.previewMode.dev", "Dev")}
+						</Flex>
+					}
+				>
+					<Grid
+						columns="max-content auto"
+						gap="2"
+						gapY="1"
+						flexGrow="1"
+						align="center"
+					>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							<Flex gap="1" align="center">
+								<TopSpeed16Regular />
+								{t("ribbonBar.previewMode.showFps", "Show FPS")}
+							</Flex>
+						</Text>
+						<Checkbox
+							checked={showFps}
+							onCheckedChange={(v) => setShowFps(!!v)}
+						/>
+					</Grid>
+				</RibbonSection>
+			)}
+			<RibbonSection
+				label={
+					<Flex gap="1" align="center">
+						<Settings24Regular />
+						{t("ribbonBar.advanced", "Advanced")}
+					</Flex>
+				}
+				isSidebar={isSidebar}
+			>
+				<Switch checked={showAdvanced} onCheckedChange={setShowAdvanced} />
+			</RibbonSection>
+		</RibbonFrame>
+	);
+});
+
+export default PreviewModeRibbonBar;
