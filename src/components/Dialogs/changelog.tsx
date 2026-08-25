@@ -56,6 +56,20 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.0.3
+							</Heading>
+							<Flex direction="column" gap="3">
+								<Text size="2">
+									<strong>Smooth Virtual Scrolling in Timing Copy Mode:</strong> Fixed an issue where the editor could not be scrolled when "Copy timings to…" was active by wrapping virtual line items in unified DOM containers for accurate virtual height measurement.
+								</Text>
+								<Text size="2">
+									<strong>Timing Copy Banner & Escape Key Cancel:</strong> Added a sticky top status banner when copying line timings with a one-click Cancel action, alongside native <code>Esc</code> key dismissal.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.2
 							</Heading>
 							<Flex direction="column" gap="3">

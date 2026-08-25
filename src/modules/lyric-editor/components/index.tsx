@@ -146,6 +146,21 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 		input.click();
 	}, [openFile]);
 
+	const [timingCopyPlacement, setTimingCopyPlacement] = useAtom(
+		timingCopyPlacementAtom,
+	);
+
+	useEffect(() => {
+		if (!timingCopyPlacement) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") {
+				setTimingCopyPlacement(null);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [timingCopyPlacement, setTimingCopyPlacement]);
+
 	useEffect(() => {
 		if (toolMode === ToolMode.Preview) {
 			store.set(timingCopyPlacementAtom, null);
@@ -570,6 +585,36 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 			<SectionMetadataDialog />
 			<SectionManagerDialog />
 			<CategorizeSelectionDialog />
+			{timingCopyPlacement && (
+				<Flex
+					align="center"
+					justify="between"
+					px="3"
+					py="2"
+					style={{
+						background: "var(--accent-a3)",
+						borderBottom: "1px solid var(--accent-a6)",
+						flexShrink: 0,
+						zIndex: 5,
+					}}
+				>
+					<Text size="2" weight="medium" style={{ color: "var(--accent-11)" }}>
+						{t("lyricLineView.copyTimingsBanner", {
+							count: timingCopyPlacement.snapshots.length,
+							defaultValue:
+								`Copying ${timingCopyPlacement.snapshots.length} line timing(s). Click "Apply timings starting here" above target line.`,
+						})}
+					</Text>
+					<Button
+						size="1"
+						variant="soft"
+						color="gray"
+						onClick={() => setTimingCopyPlacement(null)}
+					>
+						{t("common.cancel", "Cancel")} (Esc)
+					</Button>
+				</Flex>
+			)}
 			<Box
 				flexGrow="1"
 				style={{

@@ -16,6 +16,7 @@ import {
 	VideoBackgroundEffectFilled,
 } from "@fluentui/react-icons";
 import {
+	Box,
 	Button,
 	ContextMenu,
 	Flex,
@@ -673,7 +674,7 @@ export const LyricLineView: FC<{
 	);
 
 	return (
-		<>
+		<Box style={{ width: "100%" }}>
 			{lineSelected && (
 				<LyricLineScroller
 					lineAtom={lineAtom}
@@ -1318,6 +1319,6 @@ export const LyricLineView: FC<{
 						: t("lyricLineView.insertLine", "在此插入新行")}
 				</Button>
 			)}
-		</>
+		</Box>
 	);
 });
