@@ -1,0 +1,185 @@
+.dialogContent {
+	width: min(980px, calc(100vw - 32px));
+	height: min(760px, 88vh);
+	padding: 0;
+	overflow: hidden;
+}
+
+.settingsLayout {
+	display: grid;
+	grid-template-columns: 220px minmax(0, 1fr);
+	height: 100%;
+	min-height: 0;
+}
+
+.sidebar {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: var(--space-4) var(--space-2);
+	background: var(--gray-a3) !important;
+	backdrop-filter: blur(24px) saturate(160%) !important;
+	-webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+	border-right: 1px solid var(--gray-a4);
+}
+
+.sidebarTitle {
+	margin: 0 var(--space-3) var(--space-3);
+	font-size: var(--font-size-3);
+	font-weight: 700;
+	letter-spacing: -0.3px;
+}
+
+.navigation {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 2px;
+	box-shadow: none;
+}
+
+.navigation::before {
+	display: none;
+}
+
+.navigationItem {
+	position: relative;
+	display: flex;
+	justify-content: flex-start;
+	gap: var(--space-2);
+	width: 100%;
+	min-height: 32px;
+	padding: 0 var(--space-3) !important;
+	border-radius: 6px !important;
+	color: var(--gray-11) !important;
+	font-weight: 500;
+	font-size: 13px;
+	transition: background 0.1s ease, color 0.1s ease;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	cursor: pointer !important;
+}
+
+.navigationItem::before,
+.navigationItem::after {
+	display: none !important;
+	content: none !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.navigation .navigationItem[data-state="active"]::before,
+.navigation .navigationItem[data-state="active"]::after {
+	content: none !important;
+	display: none !important;
+}
+
+.navigationItem svg {
+	width: 16px;
+	height: 16px;
+	flex: 0 0 auto;
+	opacity: 0.85;
+}
+
+.navigationItem :global(.rt-TabsTriggerInner),
+.navigationItem :global(.rt-TabsTriggerInnerHidden) {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: flex-start !important;
+	gap: var(--space-2) !important;
+	width: 100% !important;
+	background: transparent !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+.navigationItem :global(.rt-TabsTriggerInner)::before,
+.navigationItem :global(.rt-TabsTriggerInner)::after {
+	display: none !important;
+	content: none !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.navigationItem:hover {
+	background: var(--gray-a4) !important;
+	color: var(--gray-12) !important;
+	outline: none !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.navigationItem:focus,
+.navigationItem:focus-visible {
+	outline: none !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.navigationItem[data-state="active"] {
+	color: var(--accent-contrast, #ffffff) !important;
+	background: var(--accent-9) !important;
+	outline: none !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.navigationItem[data-state="active"]:hover {
+	background: var(--accent-10) !important;
+	color: var(--accent-contrast, #ffffff) !important;
+}
+
+.contentPane {
+	min-width: 0;
+	overflow-y: auto;
+	padding: var(--space-5);
+}
+
+.tabContent {
+	outline: none;
+}
+
+.page {
+	max-width: 760px;
+	margin: 0 auto;
+}
+
+.page :global(.rt-Card) {
+	padding: 16px !important;
+	border: 1px solid var(--gray-a4) !important;
+	background-color: var(--gray-a2) !important;
+	box-shadow: none !important;
+	border-radius: 8px !important;
+	margin-bottom: 12px;
+}
+
+.page :global(.rt-Heading) {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: var(--gray-11) !important;
+	margin-top: 18px;
+	margin-bottom: 8px;
+	text-transform: none;
+	letter-spacing: -0.1px;
+}
+
+@media (max-width: 720px) {
+	.settingsLayout {
+		grid-template-columns: 168px minmax(0, 1fr);
+	}
+
+	.navigationItem {
+		padding-inline: var(--space-2);
+		font-size: var(--font-size-1);
+	}
+
+	.contentPane {
+		padding: var(--space-3);
+	}
+}

@@ -1,0 +1,539 @@
+/*
+ * Copyright 2023-2025 Steve Xiao (stevexmh@qq.com) and contributors.
+ *
+ * 本源代码文件是属于 AMLL TTML Tool 项目的一部分。
+ * This source code file is a part of AMLL TTML Tool project.
+ * 本项目的源代码的使用受到 GNU GENERAL PUBLIC LICENSE version 3 许可证的约束，具体可以参阅以下链接。
+ * Use of this source code is governed by the GNU GPLv3 license that can be found through the following link.
+ *
+ * https://github.com/bobjoerules/AMLL-TTML-TOOL/blob/main/LICENSE
+ */
+
+/**
+ * @fileoverview
+ * 用于将内部歌词数组对象导出成 TTML 格式的模块
+ * 但是可能会有信息会丢失
+ */
+
+import type { LyricLine, LyricWord, TTMLLyric } from "../../../types/ttml.ts";
+import {
+	type LyricTextNormalizationOptions,
+	normalizeLyricText,
+} from "../../../utils/apostrophe-normalization.ts";
+import { log } from "../../../utils/logging.ts";
+import { msToTimestamp } from "../../../utils/timestamp.ts";
+
+export function shouldExportAsLineSynced(line: LyricLine): boolean {
+	if (!line.isLineSynced) return false;
+
+	return line.words.filter((word) => word.word.trim().length > 0).length <= 1;
+}
+
+export default function exportTTMLText(
+	ttmlLyric: TTMLLyric,
+	normalization?: LyricTextNormalizationOptions,
+): string {
+	if (normalization) ttmlLyric = normalizeLyricText(ttmlLyric, normalization);
+	const params: LyricLine[][] = [];
+	const lyric = ttmlLyric.lyricLines;
+
+	let tmp: LyricLine[] = [];
+	for (const line of lyric) {
+		if (line.words.length === 0 && tmp.length > 0) {
+			params.push(tmp);
+			tmp = [];
+		} else {
+			tmp.push(line);
+		}
+	}
+
+	if (tmp.length > 0) {
+		params.push(tmp);
+	}
+
+	const TTML_NS = "http://www.w3.org/ns/ttml";
+	const TTM_NS = "http://www.w3.org/ns/ttml#metadata";
+	const TTS_NS = "http://www.w3.org/ns/ttml#styling";
+	const AMLL_NS = "http://www.example.com/ns/amll";
+	const ITUNES_NS = "http://music.apple.com/lyric-ttml-internal";
+
+	const doc =
+		typeof document !== "undefined" && document.implementation?.createDocument
+			? document.implementation.createDocument(TTML_NS, "tt", null)
+			: new Document();
+
+	let ttRoot = doc.documentElement;
+	if (!ttRoot) {
+		ttRoot = doc.createElementNS(TTML_NS, "tt");
+		doc.appendChild(ttRoot);
+	}
+
+	function createEl(tagName: string): Element {
+		if (tagName.startsWith("ttm:")) {
+			return doc.createElementNS(TTM_NS, tagName);
+		}
+		if (tagName.startsWith("tts:")) {
+			return doc.createElementNS(TTS_NS, tagName);
+		}
+		if (tagName.startsWith("amll:")) {
+			return doc.createElementNS(AMLL_NS, tagName);
+		}
+		if (
+			tagName.startsWith("itunes:") ||
+			tagName === "iTunesMetadata" ||
+			tagName === "songwriters" ||
+			tagName === "songwriter" ||
+			tagName === "transliterations" ||
+			tagName === "transliteration" ||
+			tagName === "text"
+		) {
+			return doc.createElementNS(ITUNES_NS, tagName);
+		}
+		return doc.createElementNS(TTML_NS, tagName);
+	}
+
+	function createRubyWordElement(word: LyricWord): Element {
+		const container = createEl("span");
+		container.setAttribute("tts:ruby", "container");
+		if (word.obscene) container.setAttribute("amll:obscene", "true");
+		if (word.emptyBeat)
+			container.setAttribute("amll:empty-beat", `${word.emptyBeat}`);
+		const base = createEl("span");
+		base.setAttribute("tts:ruby", "base");
+		base.appendChild(doc.createTextNode(word.word));
+		container.appendChild(base);
+		const textContainer = createEl("span");
+		textContainer.setAttribute("tts:ruby", "textContainer");
+		for (const rubyWord of word.ruby ?? []) {
+			const rubySpan = createEl("span");
+			rubySpan.setAttribute("tts:ruby", "text");
+			rubySpan.setAttribute("begin", msToTimestamp(rubyWord.startTime));
+			rubySpan.setAttribute("end", msToTimestamp(rubyWord.endTime));
+			rubySpan.appendChild(doc.createTextNode(rubyWord.word));
+			textContainer.appendChild(rubySpan);
+		}
+		container.appendChild(textContainer);
+		return container;
+	}
+
+	function hasRuby(word: LyricWord): boolean {
+		return Array.isArray(word.ruby) && word.ruby.length > 0;
+	}
+
+	function createWordElement(word: LyricWord): Element {
+		if (Array.isArray(word.ruby) && word.ruby.length > 0) {
+			return createRubyWordElement(word);
+		}
+		const span = createEl("span");
+		span.setAttribute("begin", msToTimestamp(word.startTime));
+		span.setAttribute("end", msToTimestamp(word.endTime));
+		if (word.obscene) span.setAttribute("amll:obscene", "true");
+		if (word.emptyBeat)
+			span.setAttribute("amll:empty-beat", `${word.emptyBeat}`);
+		span.appendChild(doc.createTextNode(word.word));
+		return span;
+	}
+
+	function findFirstTextNode(node: Node): Text | null {
+		if (node.nodeType === Node.TEXT_NODE) return node as Text;
+		for (const child of Array.from(node.childNodes)) {
+			const found = findFirstTextNode(child);
+			if (found) return found;
+		}
+		return null;
+	}
+
+	function findLastTextNode(node: Node): Text | null {
+		if (node.nodeType === Node.TEXT_NODE) return node as Text;
+		const children = Array.from(node.childNodes);
+		for (let i = children.length - 1; i >= 0; i--) {
+			const found = findLastTextNode(children[i]);
+			if (found) return found;
+		}
+		return null;
+	}
+
+	function addWrapperToElement(el: Element, prefix: string, suffix: string) {
+		if (!prefix && !suffix) return;
+		const first = findFirstTextNode(el);
+		const last = findLastTextNode(el);
+		if (!first) return;
+		if (first === last) {
+			first.nodeValue = `${prefix}${first.nodeValue ?? ""}${suffix}`;
+			return;
+		}
+		if (prefix) {
+			first.nodeValue = `${prefix}${first.nodeValue ?? ""}`;
+		}
+		if (last && suffix) {
+			last.nodeValue = `${last.nodeValue ?? ""}${suffix}`;
+		}
+	}
+
+	function createRomanizationSpan(word: LyricWord): Element {
+		const span = createEl("span");
+		span.setAttribute("begin", msToTimestamp(word.startTime));
+		span.setAttribute("end", msToTimestamp(word.endTime));
+		span.appendChild(doc.createTextNode(word.romanWord));
+		return span;
+	}
+
+	ttRoot.setAttribute("xmlns", "http://www.w3.org/ns/ttml");
+	ttRoot.setAttribute("xmlns:ttm", "http://www.w3.org/ns/ttml#metadata");
+	ttRoot.setAttribute("xmlns:tts", "http://www.w3.org/ns/ttml#styling");
+	ttRoot.setAttribute("xmlns:amll", "http://www.example.com/ns/amll");
+	ttRoot.setAttribute(
+		"xmlns:itunes",
+		"http://music.apple.com/lyric-ttml-internal",
+	);
+
+	// Determine itunes:timing mode for Spicylyrics compatibility
+	// Word = at least one line has 2+ non-blank words (dynamic/per-word timing)
+	// Line = has lyric lines but every line has 0 or 1 non-blank word
+	// None = no timed words at all
+	const nonBlankWordCountsPerLine = lyric.map(
+		(l) => l.words.filter((w) => w.word.trim().length > 0).length,
+	);
+	const totalNonBlankWords = nonBlankWordCountsPerLine.reduce(
+		(sum, v) => sum + v,
+		0,
+	);
+	const hasAnyTiming = lyric.some((l) =>
+		l.words.some((w) => w.word.trim().length > 0 && w.endTime > w.startTime),
+	);
+	let timingMode: "Word" | "Line" | "None";
+	if (totalNonBlankWords === 0 || !hasAnyTiming) timingMode = "None";
+	else if (nonBlankWordCountsPerLine.some((c) => c > 1)) timingMode = "Word";
+	else timingMode = "Line";
+	ttRoot.setAttribute("itunes:timing", timingMode);
+
+	const head = createEl("head");
+
+	ttRoot.appendChild(head);
+
+	const body = createEl("body");
+	const hasOtherPerson = !!lyric.find((v) => v.isDuet);
+
+	const metadataEl = createEl("metadata");
+	const mainPersonAgent = createEl("ttm:agent");
+	mainPersonAgent.setAttribute("type", "person");
+	mainPersonAgent.setAttribute("xml:id", "v1");
+
+	metadataEl.appendChild(mainPersonAgent);
+
+	if (hasOtherPerson) {
+		const otherPersonAgent = createEl("ttm:agent");
+		otherPersonAgent.setAttribute("type", "other");
+		otherPersonAgent.setAttribute("xml:id", "v2");
+
+		metadataEl.appendChild(otherPersonAgent);
+	}
+
+	// Extract songwriter metadata to emit in iTunes format (Spicylyrics compatibility)
+	const songwriterMeta = ttmlLyric.metadata.find(
+		(m) => m.key === "songwriter" && m.value.some((v) => v.trim().length > 0),
+	);
+
+	if (songwriterMeta) {
+		const iTunesMetadata = createEl("iTunesMetadata");
+		iTunesMetadata.setAttribute(
+			"xmlns",
+			"http://music.apple.com/lyric-ttml-internal",
+		);
+		const songwritersEl = createEl("songwriters");
+		for (const name of songwriterMeta.value) {
+			const trimmed = name.trim();
+			if (!trimmed) continue;
+			const swEl = createEl("songwriter");
+			swEl.appendChild(doc.createTextNode(trimmed));
+			songwritersEl.appendChild(swEl);
+		}
+		if (songwritersEl.childNodes.length > 0) {
+			iTunesMetadata.appendChild(songwritersEl);
+			metadataEl.appendChild(iTunesMetadata);
+		}
+	}
+
+	// Append remaining metadata entries (skip songwriter since it's in iTunes format)
+	for (const metadata of ttmlLyric.metadata) {
+		if (metadata.key === "songwriter") continue;
+		if (metadata.key === "amll:marks") continue; // We'll handle this separately
+		for (const value of metadata.value) {
+			const metaEl = createEl("amll:meta");
+			metaEl.setAttribute("key", metadata.key);
+			metaEl.setAttribute("value", value);
+			metadataEl.appendChild(metaEl);
+		}
+	}
+
+	if (ttmlLyric.marks && ttmlLyric.marks.length > 0) {
+		for (const mark of ttmlLyric.marks) {
+			const metaEl = createEl("amll:meta");
+			metaEl.setAttribute("key", "amll:marks");
+			metaEl.setAttribute("value", JSON.stringify(mark));
+			metadataEl.appendChild(metaEl);
+		}
+	}
+
+	if (ttmlLyric.sections && ttmlLyric.sections.length > 0) {
+		const metaEl = createEl("amll:meta");
+		metaEl.setAttribute("key", "amll:sections");
+		metaEl.setAttribute(
+			"value",
+			JSON.stringify({ version: 1, sections: ttmlLyric.sections }),
+		);
+		metadataEl.appendChild(metaEl);
+	}
+
+	head.appendChild(metadataEl);
+
+	let i = 0;
+
+	const romanizationMap = new Map<
+		string,
+		{ main: LyricWord[]; bg: LyricWord[] }
+	>();
+
+	const guessDuration = lyric[lyric.length - 1]?.endTime ?? 0;
+	body.setAttribute("dur", msToTimestamp(guessDuration));
+	const isDynamicLyric = lyric.some(
+		(line) => line.words.filter((v) => v.word.trim().length > 0).length > 1,
+	);
+
+	for (const param of params) {
+		const paramDiv = createEl("div");
+		const beginTime = param[0]?.startTime ?? 0;
+		const endTime = param[param.length - 1]?.endTime ?? 0;
+
+		paramDiv.setAttribute("begin", msToTimestamp(beginTime));
+		paramDiv.setAttribute("end", msToTimestamp(endTime));
+
+		for (let lineIndex = 0; lineIndex < param.length; lineIndex++) {
+			const line = param[lineIndex];
+			const lineP = createEl("p");
+			const beginTime = line.startTime ?? 0;
+			const endTime = line.endTime;
+
+			lineP.setAttribute("begin", msToTimestamp(beginTime));
+			lineP.setAttribute("end", msToTimestamp(endTime));
+
+			lineP.setAttribute("ttm:agent", line.isDuet ? "v2" : "v1");
+
+			const itunesKey = `L${++i}`;
+			lineP.setAttribute("itunes:key", itunesKey);
+			if (line.sectionId) {
+				lineP.setAttribute("amll:section", line.sectionId);
+			}
+
+			const mainWords = line.words;
+			let bgWords: LyricWord[] = [];
+
+			if (shouldExportAsLineSynced(line)) {
+				lineP.appendChild(
+					doc.createTextNode(line.words.map((word) => word.word).join("")),
+				);
+			} else if (isDynamicLyric) {
+				let beginTime = Number.POSITIVE_INFINITY;
+				let endTime = 0;
+				for (const word of line.words) {
+					if (word.word.trim().length === 0 && !hasRuby(word)) {
+						lineP.appendChild(doc.createTextNode(word.word));
+					} else {
+						const span = createWordElement(word);
+						lineP.appendChild(span);
+						beginTime = Math.min(beginTime, word.startTime);
+						endTime = Math.max(endTime, word.endTime);
+					}
+				}
+				lineP.setAttribute("begin", msToTimestamp(line.startTime));
+				lineP.setAttribute("end", msToTimestamp(line.endTime));
+			} else {
+				const word = line.words[0];
+				if (word.word.trim().length === 0 && !hasRuby(word)) {
+					lineP.appendChild(doc.createTextNode(word.word));
+				} else {
+					lineP.appendChild(createWordElement(word));
+				}
+				lineP.setAttribute("begin", msToTimestamp(word.startTime));
+				lineP.setAttribute("end", msToTimestamp(word.endTime));
+			}
+
+			const nextLine = param[lineIndex + 1];
+			if (nextLine?.isBG) {
+				lineIndex++;
+				const bgLine = nextLine;
+				bgWords = bgLine.words;
+
+				const bgLineSpan = createEl("span");
+				bgLineSpan.setAttribute("ttm:role", "x-bg");
+
+				if (shouldExportAsLineSynced(bgLine)) {
+					bgLineSpan.appendChild(
+						doc.createTextNode(
+							`(${bgLine.words.map((word) => word.word).join("")})`,
+						),
+					);
+				} else if (isDynamicLyric) {
+					let beginTime = Number.POSITIVE_INFINITY;
+					let endTime = 0;
+
+					const firstWordIndex = bgLine.words.findIndex(
+						(w) => w.word.trim().length > 0,
+					);
+					const lastWordIndex = bgLine.words
+						.map((w) => w.word.trim().length > 0)
+						.lastIndexOf(true);
+
+					for (
+						let wordIndex = 0;
+						wordIndex < bgLine.words.length;
+						wordIndex++
+					) {
+						const word = bgLine.words[wordIndex];
+						if (word.word.trim().length === 0 && !hasRuby(word)) {
+							bgLineSpan.appendChild(doc.createTextNode(word.word));
+						} else {
+							const span = createWordElement(word);
+
+							const prefix = wordIndex === firstWordIndex ? "(" : "";
+							const suffix = wordIndex === lastWordIndex ? ")" : "";
+							addWrapperToElement(span, prefix, suffix);
+
+							bgLineSpan.appendChild(span);
+							beginTime = Math.min(beginTime, word.startTime);
+							endTime = Math.max(endTime, word.endTime);
+						}
+					}
+					bgLineSpan.setAttribute("begin", msToTimestamp(beginTime));
+					bgLineSpan.setAttribute("end", msToTimestamp(endTime));
+				} else {
+					const word = bgLine.words[0];
+					if (word.word.trim().length === 0 && !hasRuby(word)) {
+						bgLineSpan.appendChild(doc.createTextNode(`(${word.word})`));
+					} else {
+						const span = createWordElement(word);
+						addWrapperToElement(span, "(", ")");
+						bgLineSpan.appendChild(span);
+					}
+					bgLineSpan.setAttribute("begin", msToTimestamp(word.startTime));
+					bgLineSpan.setAttribute("end", msToTimestamp(word.endTime));
+				}
+
+				if (bgLine.translatedLyric) {
+					const span = createEl("span");
+					span.setAttribute("ttm:role", "x-translation");
+					span.setAttribute("xml:lang", "zh-CN");
+					span.appendChild(doc.createTextNode(bgLine.translatedLyric));
+					bgLineSpan.appendChild(span);
+				}
+
+				if (bgLine.romanLyric) {
+					const span = createEl("span");
+					span.setAttribute("ttm:role", "x-roman");
+					span.appendChild(doc.createTextNode(bgLine.romanLyric));
+					bgLineSpan.appendChild(span);
+				}
+
+				lineP.appendChild(bgLineSpan);
+			}
+
+			if (line.translatedLyric) {
+				const span = createEl("span");
+				span.setAttribute("ttm:role", "x-translation");
+				span.setAttribute("xml:lang", "zh-CN");
+				span.appendChild(doc.createTextNode(line.translatedLyric));
+				lineP.appendChild(span);
+			}
+
+			if (line.romanLyric) {
+				const span = createEl("span");
+				span.setAttribute("ttm:role", "x-roman");
+				span.appendChild(doc.createTextNode(line.romanLyric));
+				lineP.appendChild(span);
+			}
+
+			const hasRoman =
+				mainWords.some((w) => w.romanWord && w.romanWord.trim().length > 0) ||
+				bgWords.some((w) => w.romanWord && w.romanWord.trim().length > 0);
+
+			if (hasRoman) {
+				romanizationMap.set(itunesKey, { main: mainWords, bg: bgWords });
+			}
+
+			paramDiv.appendChild(lineP);
+		}
+
+		body.appendChild(paramDiv);
+	}
+
+	if (romanizationMap.size > 0) {
+		const itunesMeta = createEl("iTunesMetadata");
+		itunesMeta.setAttribute(
+			"xmlns",
+			"http://music.apple.com/lyric-ttml-internal",
+		);
+
+		const transliterations = createEl("transliterations");
+		const transliteration = createEl("transliteration");
+
+		for (const [key, { main, bg }] of romanizationMap.entries()) {
+			const textEl = createEl("text");
+			textEl.setAttribute("for", key);
+
+			for (const word of main) {
+				if (word.romanWord && word.romanWord.trim().length > 0) {
+					textEl.appendChild(createRomanizationSpan(word));
+				} else if (word.word.trim().length === 0 && textEl.hasChildNodes()) {
+					textEl.appendChild(doc.createTextNode(word.word));
+				}
+			}
+
+			const hasBgRoman = bg.some(
+				(w) => w.romanWord && w.romanWord.trim().length > 0,
+			);
+			if (hasBgRoman) {
+				const bgSpan = createEl("span");
+				bgSpan.setAttribute("ttm:role", "x-bg");
+
+				const romanBgWords = bg.filter(
+					(w) => w.romanWord && w.romanWord.trim().length > 0,
+				);
+
+				for (let wordIndex = 0; wordIndex < romanBgWords.length; wordIndex++) {
+					const word = romanBgWords[wordIndex];
+					const span = createRomanizationSpan(word);
+
+					if (wordIndex === 0 && span.firstChild) {
+						span.firstChild.nodeValue = `(${span.firstChild.nodeValue}`;
+					}
+					if (wordIndex === romanBgWords.length - 1 && span.firstChild) {
+						span.firstChild.nodeValue = `${span.firstChild.nodeValue})`;
+					}
+
+					bgSpan.appendChild(span);
+
+					const originalIndex = bg.indexOf(word);
+					if (originalIndex > -1 && originalIndex < bg.length - 1) {
+						const nextWord = bg[originalIndex + 1];
+						if (nextWord && nextWord.word.trim().length === 0) {
+							bgSpan.appendChild(doc.createTextNode(nextWord.word));
+						}
+					}
+				}
+				textEl.appendChild(bgSpan);
+			}
+
+			transliteration.appendChild(textEl);
+		}
+
+		transliterations.appendChild(transliteration);
+		itunesMeta.appendChild(transliterations);
+
+		metadataEl.appendChild(itunesMeta);
+	}
+
+	ttRoot.appendChild(body);
+	log("ttml document built", ttRoot);
+
+	return new XMLSerializer().serializeToString(doc);
+}
