@@ -180,3 +180,16 @@ export const editingTimeFieldAtom = atom<EditingTimeFieldState | null>(null);
 export const requestFocusAtom = atom<string | null>(null);
 
 export const isGlobalFileDraggingAtom = atom(false);
+
+export interface CopiedTimingsData {
+	startTime: number;
+	endTime: number;
+	duration: number;
+	wordTimings?: {
+		relativeStart: number;
+		duration: number;
+		emptyBeat?: number;
+	}[];
+}
+
+export const copiedTimingsAtom = atom<CopiedTimingsData | null>(null);

@@ -8,7 +8,6 @@ import {
 import { lazy } from "$/utils/lazy.ts";
 
 const AMLLWrapper = lazy(() => import("$/components/AMLLWrapper"));
-const AMLL = lazy(() => import("$/components/AMLLWrapper/AMLL"));
 const TimingOverview = lazy(() => import("$/components/TimingOverview"));
 const SpicyLyrics = lazy(() => import("$/components/SpicyLyrics"));
 
@@ -17,10 +16,10 @@ export const PreviewModeSwitcher = () => {
 
 	return (
 		<Suspense fallback={<SuspensePlaceHolder />}>
-			{previewModeType === PreviewModeType.Standard && (
+			{(previewModeType === PreviewModeType.Standard ||
+				previewModeType === PreviewModeType.AMLL) && (
 				<AMLLWrapper variant="standard" />
 			)}
-			{previewModeType === PreviewModeType.AMLL && <AMLL />}
 			{previewModeType === PreviewModeType.Toxi && (
 				<AMLLWrapper variant="toxi" />
 			)}

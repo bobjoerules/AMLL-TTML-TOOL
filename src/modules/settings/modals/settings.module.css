@@ -21,6 +21,7 @@
 	backdrop-filter: blur(24px) saturate(160%) !important;
 	-webkit-backdrop-filter: blur(24px) saturate(160%) !important;
 	border-right: 1px solid var(--gray-a4);
+	overflow-y: auto;
 }
 
 .sidebarTitle {

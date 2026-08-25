@@ -56,9 +56,9 @@ import {
 	showPreviewPanelAtom,
 } from "$/states/main.ts";
 import { KeyBinding } from "../KeyBinding/index.tsx";
-
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
+import { LineTimingTools } from "./edit-mode.tsx";
 import {
 	Clock24Regular,
 	List24Regular,
@@ -162,67 +162,69 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					</Grid>
 				</RibbonSection>
 			)}
-			<RibbonSection
-				isSidebar={isSidebar}
-				label={
-					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
-						<Clock24Regular style={{ width: "12px", height: "12px" }} />
-						<span>{t("ribbonBar.syncMode.syncAdjustment", "打轴调整")}</span>
-					</Flex>
-				}
-			>
-				<Grid
-					columns="max-content auto"
-					gap="4"
-					gapY="1"
-					flexGrow="1"
-					align="center"
+			{showAdvanced && (
+				<RibbonSection
+					isSidebar={isSidebar}
+					label={
+						<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
+							<Clock24Regular style={{ width: "12px", height: "12px" }} />
+							<span>{t("ribbonBar.syncMode.syncAdjustment", "打轴调整")}</span>
+						</Flex>
+					}
 				>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<Timer16Regular />
-							{t("ribbonBar.syncMode.timeOffset", "时间戳位移")}
-						</Flex>
-					</Text>
-					<TextField.Root
-						type="number"
-						step={1}
-						size="1"
-						style={{
-							width: "8em",
-						}}
-						value={syncTimeOffset}
-						onChange={(e) => setSyncTimeOffset(e.target.valueAsNumber)}
+					<Grid
+						columns="max-content auto"
+						gap="4"
+						gapY="1"
+						flexGrow="1"
+						align="center"
 					>
-						<TextField.Slot />
-						<TextField.Slot>
-							<Text>ms</Text>
-						</TextField.Slot>
-					</TextField.Root>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<Timer16Regular />
-							{t("ribbonBar.syncMode.commitOffset", "Commit Offset")}
-						</Flex>
-					</Text>
-					<TextField.Root
-						type="number"
-						step={1}
-						size="1"
-						style={{
-							width: "8em",
-						}}
-						value={syncCommitOffset}
-						onChange={(e) => setSyncCommitOffset(e.target.valueAsNumber)}
-					>
-						<TextField.Slot />
-						<TextField.Slot>
-							<Text>ms</Text>
-						</TextField.Slot>
-					</TextField.Root>
-					<EmptyBeatField />
-				</Grid>
-			</RibbonSection>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							<Flex gap="1" align="center">
+								<Timer16Regular />
+								{t("ribbonBar.syncMode.timeOffset", "时间戳位移")}
+							</Flex>
+						</Text>
+						<TextField.Root
+							type="number"
+							step={1}
+							size="1"
+							style={{
+								width: "8em",
+							}}
+							value={syncTimeOffset}
+							onChange={(e) => setSyncTimeOffset(e.target.valueAsNumber)}
+						>
+							<TextField.Slot />
+							<TextField.Slot>
+								<Text>ms</Text>
+							</TextField.Slot>
+						</TextField.Root>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							<Flex gap="1" align="center">
+								<Timer16Regular />
+								{t("ribbonBar.syncMode.commitOffset", "Commit Offset")}
+							</Flex>
+						</Text>
+						<TextField.Root
+							type="number"
+							step={1}
+							size="1"
+							style={{
+								width: "8em",
+							}}
+							value={syncCommitOffset}
+							onChange={(e) => setSyncCommitOffset(e.target.valueAsNumber)}
+						>
+							<TextField.Slot />
+							<TextField.Slot>
+								<Text>ms</Text>
+							</TextField.Slot>
+						</TextField.Root>
+						<EmptyBeatField />
+					</Grid>
+				</RibbonSection>
+			)}
 			<RibbonSection
 				isSidebar={isSidebar}
 				label={
@@ -477,24 +479,23 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					</Grid>
 				</Flex>
 			</RibbonSection>
+
 			{showAdvanced && (
 				<RibbonSection
 					isSidebar={isSidebar}
 					label={
 						<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
-							<Beaker24Regular style={{ width: "12px", height: "12px" }} />
-							<span>{t("ribbonBar.editMode.previewPanel", "预览面板")}</span>
+							<Timer16Regular style={{ width: "12px", height: "12px" }} />
+							<span>{t("ribbonBar.editMode.tools", "Timing Tools")}</span>
 						</Flex>
 					}
 				>
-					<Flex direction="column" align="center" gap="1">
-						<Switch
-							checked={showPreviewPanel}
-							onCheckedChange={setShowPreviewPanel}
-						/>
+					<Flex direction="column" align="center" gap="2">
+						<LineTimingTools />
 					</Flex>
 				</RibbonSection>
 			)}
+
 			<RibbonSection
 				label={
 					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>

@@ -1,4 +1,11 @@
-import { Flex, IconButton, SegmentedControl, Text } from "@radix-ui/themes";
+import {
+	Button,
+	Flex,
+	IconButton,
+	SegmentedControl,
+	Text,
+	Tooltip,
+} from "@radix-ui/themes";
 import { useAtom, useSetAtom } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
 import { type FC, useCallback, useMemo } from "react";
@@ -14,6 +21,8 @@ import {
 	Edit24Regular,
 	Timer24Regular,
 	Play24Regular,
+	PanelRight24Regular,
+	PanelRight24Filled,
 } from "@fluentui/react-icons";
 import {
 	keySwitchEditModeAtom,
@@ -23,6 +32,7 @@ import {
 import {
 	selectedLinesAtom,
 	selectedWordsAtom,
+	showPreviewPanelAtom,
 	ToolMode,
 	toolModeAtom,
 } from "$/states/main.ts";
@@ -32,6 +42,7 @@ import styles from "./index.module.css";
 
 export const TitleBar: FC = () => {
 	const [toolMode, setToolMode] = useAtom(toolModeAtom);
+	const [showPreviewPanel, setShowPreviewPanel] = useAtom(showPreviewPanelAtom);
 	const setSelectedLines = useSetImmerAtom(selectedLinesAtom);
 	const setSelectedWords = useSetImmerAtom(selectedWordsAtom);
 	const { t } = useTranslation();
@@ -73,7 +84,6 @@ export const TitleBar: FC = () => {
 				<SegmentedControl.Root
 					value={toolMode}
 					onValueChange={(v) => setToolMode(v as ToolMode)}
-					// size="1"
 				>
 					<SegmentedControl.Item value={ToolMode.Edit}>
 						<Flex align="center" gap="1">
@@ -96,40 +106,66 @@ export const TitleBar: FC = () => {
 				</SegmentedControl.Root>
 			}
 			endChildren={
-				!import.meta.env.TAURI_ENV_PLATFORM && (
-					<Flex align="center" gap="2" mr="2">
-						{isUnlocked &&
-							!window.location.href.includes("spicylyrics.org") && (
-								<button
-									type="button"
-									style={{
-										display: "none",
-										width: "6px",
-										height: "6px",
-										borderRadius: "50%",
-										background: "var(--accent-9)",
-										border: "none",
-										cursor: "pointer",
-										opacity: 0.2,
-										transition: "opacity 0.2s",
-										outline: "none",
-										marginRight: "4px",
-									}}
-									onClick={() => setBoykisserMode(!boykisserMode)}
-									title={t("topBar.boykisser", "boykisser")}
-								/>
-							)}
-						<IconButton
-							variant="ghost"
-							color="gray"
-							onClick={() => setExperimentalDialogOpen(true)}
-							title={t(
-								"ribbonBar.experimentalFeatures",
-								"Experimental Features",
-							)}
+				<Flex align="center" gap="2" mr="2">
+					{toolMode !== ToolMode.Preview && (
+						<Tooltip
+							content={
+								showPreviewPanel
+									? t("topBar.menu.hidePreviewPanel", "Hide Side Preview Panel")
+									: t("topBar.menu.showPreviewPanel", "Show Side Preview Panel")
+							}
 						>
-							<Beaker24Regular />
-						</IconButton>
+							<Button
+								size="1"
+								variant={showPreviewPanel ? "solid" : "soft"}
+								color={showPreviewPanel ? "indigo" : "gray"}
+								onClick={() => setShowPreviewPanel((prev) => !prev)}
+								style={{ cursor: "pointer", fontWeight: 500 }}
+							>
+								{showPreviewPanel ? (
+									<PanelRight24Filled style={{ width: "14px", height: "14px" }} />
+								) : (
+									<PanelRight24Regular style={{ width: "14px", height: "14px" }} />
+								)}
+								<span>{t("topBar.sidePreview", "Preview Panel")}</span>
+							</Button>
+						</Tooltip>
+					)}
+
+					{isUnlocked && !window.location.href.includes("spicylyrics.org") && (
+						<button
+							type="button"
+							style={{
+								display: "none",
+								width: "6px",
+								height: "6px",
+								borderRadius: "50%",
+								background: "var(--accent-9)",
+								border: "none",
+								cursor: "pointer",
+								opacity: 0.2,
+								transition: "opacity 0.2s",
+								outline: "none",
+								marginRight: "4px",
+							}}
+							onClick={() => setBoykisserMode(!boykisserMode)}
+							title={t("topBar.boykisser", "boykisser")}
+						/>
+					)}
+
+					<IconButton
+						variant="ghost"
+						color="gray"
+						onClick={() => setExperimentalDialogOpen(true)}
+						title={t(
+							"ribbonBar.experimentalFeatures",
+							"Experimental Features",
+						)}
+					>
+						<Beaker24Regular />
+					</IconButton>
+
+					{!import.meta.env.TAURI_ENV_PLATFORM && (
 						<Flex
 							direction="column"
 							align="end"
@@ -149,8 +185,8 @@ export const TitleBar: FC = () => {
 								Forked by NaeNae
 							</Text>
 						</Flex>
-					</Flex>
-				)
+					)}
+				</Flex>
 			}
 			onSpacerClicked={() => {
 				setSelectedLines((o) => o.clear());

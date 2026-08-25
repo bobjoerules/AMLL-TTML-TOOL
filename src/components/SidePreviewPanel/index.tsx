@@ -27,8 +27,6 @@ export const SidePreviewPanel = memo(() => {
 		switch (previewModeType) {
 			case PreviewModeType.Spicy:
 				return "Preview: SpicyLyrics";
-			case PreviewModeType.AMLL:
-				return "Preview: AMLL";
 			case PreviewModeType.Toxi:
 				return "Preview: Toxi";
 			case PreviewModeType.Timing:
@@ -75,7 +73,7 @@ export const SidePreviewPanel = memo(() => {
 						>
 							<Flex align="center" gap="2">
 								<MusicNote216Regular />
-								<Text>Standard (AMLL)</Text>
+								<Text>Standard</Text>
 							</Flex>
 						</DropdownMenu.Item>
 						<DropdownMenu.Item
@@ -92,14 +90,6 @@ export const SidePreviewPanel = memo(() => {
 							<Flex align="center" gap="2">
 								<MusicNote216Regular />
 								<Text>Toxi (Apple Style)</Text>
-							</Flex>
-						</DropdownMenu.Item>
-						<DropdownMenu.Item
-							onSelect={() => setPreviewModeType(PreviewModeType.AMLL)}
-						>
-							<Flex align="center" gap="2">
-								<MusicNote216Regular />
-								<Text>Pure AMLL</Text>
 							</Flex>
 						</DropdownMenu.Item>
 						<DropdownMenu.Item

@@ -32,7 +32,19 @@ export const RibbonSection: FC<PropsWithChildren<{ label: ReactNode; isSidebar?:
 				{children}
 			</Flex>
 			{!isSidebar && (
-				<Flex align="center" justify="center" px="2" style={{ color: "var(--accent-11)", fontSize: "var(--font-size-1)", whiteSpace: "nowrap" }}>
+				<Flex
+					align="center"
+					justify="center"
+					px="2"
+					style={{
+						color: "var(--accent-11)",
+						fontSize: "var(--font-size-1)",
+						whiteSpace: "nowrap",
+						lineHeight: "1.4",
+						minHeight: "18px",
+						paddingBottom: "2px",
+					}}
+				>
 					{label}
 				</Flex>
 			)}
@@ -93,49 +105,20 @@ export const RibbonFrame = forwardRef<
 			const frame = frameRef.current;
 			if (!frame || isSidebar) return;
 
-			let scrollTarget = frame.scrollLeft;
-			let isAnimating = false;
-
 			const handleWheel = (e: WheelEvent) => {
-				if (e.deltaY !== 0) {
-					const isScrollable = frame.scrollWidth > frame.clientWidth;
-					if (isScrollable) {
-						e.preventDefault();
-						scrollTarget += e.deltaY;
-						scrollTarget = Math.max(
-							0,
-							Math.min(scrollTarget, frame.scrollWidth - frame.clientWidth),
-						);
+				const isScrollable = frame.scrollWidth > frame.clientWidth;
+				if (!isScrollable) return;
 
-						if (!isAnimating) {
-							isAnimating = true;
-							const animate = () => {
-								const diff = scrollTarget - frame.scrollLeft;
-								if (Math.abs(diff) > 0.5) {
-									frame.scrollLeft += diff * 0.15;
-									requestAnimationFrame(animate);
-								} else {
-									frame.scrollLeft = scrollTarget;
-									isAnimating = false;
-								}
-							};
-							requestAnimationFrame(animate);
-						}
-					}
-				}
-			};
-
-			const handleScroll = () => {
-				if (!isAnimating) {
-					scrollTarget = frame.scrollLeft;
+				// If the user is scrolling vertically with mouse wheel, translate to horizontal scroll
+				if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY !== 0) {
+					e.preventDefault();
+					frame.scrollLeft += e.deltaY;
 				}
 			};
 
 			frame.addEventListener("wheel", handleWheel, { passive: false });
-			frame.addEventListener("scroll", handleScroll);
 			return () => {
 				frame.removeEventListener("wheel", handleWheel);
-				frame.removeEventListener("scroll", handleScroll);
 			};
 		}, [isSidebar]);
 
@@ -147,11 +130,14 @@ export const RibbonFrame = forwardRef<
 				align={isSidebar ? "stretch" : "center"}
 				style={{
 					overflowX: isSidebar ? "hidden" : "auto",
-					overflowY: isSidebar ? "auto" : "clip",
+					overflowY: isSidebar ? "auto" : "hidden",
 					height: "100%",
 					width: isSidebar ? undefined : "100%",
+					minWidth: 0,
 					scrollbarWidth: "thin",
 					scrollbarColor: "var(--gray-a8) transparent",
+					WebkitOverflowScrolling: "touch",
+					overscrollBehaviorX: "contain",
 				}}
 				className="ribbon-scrollbar"
 				asChild
@@ -159,7 +145,6 @@ export const RibbonFrame = forwardRef<
 				initial={isSidebar ? { y: 10, opacity: 0 } : { x: 10, opacity: 0 }}
 				animate={isSidebar ? { y: 0, opacity: 1 } : { x: 0, opacity: 1 }}
 				exit={isSidebar ? { y: -10, opacity: 0 } : { x: -10, opacity: 0 }}
-				layout
 				ref={frameRef}
 			>
 					{!isSidebar && reserveControlRows && (

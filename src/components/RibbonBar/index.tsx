@@ -30,8 +30,9 @@ export const RibbonBar = memo(
 				data-guide-target="ribbon"
 				style={{
 					minHeight: isSidebar ? "100%" : "fit-content",
-					minWidth: isSidebar ? "240px" : undefined,
-					maxWidth: isSidebar ? "240px" : undefined,
+					minWidth: isSidebar ? "240px" : 0,
+					maxWidth: isSidebar ? "240px" : "100%",
+					width: "100%",
 					flexShrink: "0",
 					borderRadius: 0,
 					borderLeft: position === "right" ? "1px solid var(--gray-5)" : "none",
@@ -44,13 +45,14 @@ export const RibbonBar = memo(
 				}}
 				ref={ref}
 			>
-				<Inset>
+				<Inset style={{ minWidth: 0 }}>
 					<div
 						style={{
-							height: "100%",
 							width: "100%",
-							overflowY: isSidebar ? "auto" : "clip",
-							overflowX: isSidebar ? "clip" : "visible",
+							minWidth: 0,
+							overflowY: isSidebar ? "auto" : "visible",
+							overflowX: isSidebar ? "hidden" : "auto",
+							paddingBottom: isSidebar ? 0 : "4px",
 						}}
 					>
 						<AnimatePresence mode="wait">

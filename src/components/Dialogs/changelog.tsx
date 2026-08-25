@@ -56,6 +56,32 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.0.1
+							</Heading>
+							<Flex direction="column" gap="3">
+								<Text size="2">
+									<strong>Dedicated Preview Panel Button:</strong> Added an easily accessible Preview Panel toggle button directly on the right side of the top toolbar for one-click access on both desktop and web.
+								</Text>
+								<Text size="2">
+									<strong>New Line Timing Tools:</strong> Added quick-action timing tools to Copy line/word timings, Paste timings onto selected target lines with proportional word preservation, and Snap timings directly to the current audio playhead.
+								</Text>
+								<Text size="2">
+									<strong>Advanced Timing Adjustment:</strong> Moved time and commit offset controls into the Advanced options panel for a cleaner, streamlined synchronization toolbar.
+								</Text>
+								<Text size="2">
+									<strong>Toolbar Layout & Smooth Scrolling:</strong> Resolved container clipping to ensure bottom section labels are never cut off, and enhanced native trackpad horizontal scrolling with responsive resizing when the preview panel is opened.
+								</Text>
+								<Text size="2">
+									<strong>Streamlined Preview Engines:</strong> Cleaned up preview mode options to focus on high-fidelity Standard, Toxi, SpicyLyrics, and Timing Overview engines.
+								</Text>
+								<Text size="2">
+									<strong>Dynamic Sync Progress Wheel:</strong> Restored the real-time animated circular progress ring in the header status badge.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.0
 							</Heading>
 							<Flex direction="column" gap="3">

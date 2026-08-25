@@ -218,7 +218,35 @@ export const HeaderFileInfo = () => {
 								style={{ width: "12px", height: "12px", color: "var(--green-9)" }}
 							/>
 						) : (
-							<span></span>
+							<svg
+								width="12"
+								height="12"
+								viewBox="0 0 16 16"
+								style={{ transform: "rotate(-90deg)", flexShrink: 0 }}
+							>
+								<circle
+									cx="8"
+									cy="8"
+									r="6"
+									stroke="var(--gray-a6)"
+									strokeWidth="2.4"
+									fill="none"
+								/>
+								<circle
+									cx="8"
+									cy="8"
+									r="6"
+									stroke="currentColor"
+									strokeWidth="2.4"
+									fill="none"
+									strokeDasharray={2 * Math.PI * 6}
+									strokeDashoffset={
+										2 * Math.PI * 6 * (1 - syncProgress.linePercent / 100)
+									}
+									strokeLinecap="round"
+									style={{ transition: "stroke-dashoffset 0.3s ease" }}
+								/>
+							</svg>
 						)}
 						<span>{syncProgress.linePercent}%</span>
 					</Badge>
