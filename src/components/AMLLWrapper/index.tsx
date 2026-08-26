@@ -41,19 +41,40 @@ const displayTimeAtom = atom(0);
  */
 const wordRegistry = new Map<string, { el: HTMLSpanElement; word: any }>();
 
+const isWordTimed = (word: any) =>
+	Boolean(word && word.endTime > word.startTime && (word.startTime > 0 || word.endTime > 0));
+
+const isLineTimed = (line: any) =>
+	Boolean(
+		line &&
+			(line.startTime > 0 ||
+				line.endTime > 0 ||
+				(line.words && line.words.some((w: any) => isWordTimed(w)))),
+	);
+
 // A single word span - static version (no time subscription)
-const StaticWord = memo(({ word }: { word: any }) => (
-	<span className={styles.wordStatic}>{word.word}</span>
-));
+const StaticWord = memo(({ word }: { word: any }) => {
+	const timed = isWordTimed(word);
+	return (
+		<span
+			className={classNames(
+				styles.wordStatic,
+				!timed && styles.wordUnsynced,
+			)}
+		>
+			{word.word}
+		</span>
+	);
+});
 
 // A single word span - active version (subscribes to time at a lower frequency)
 const ActiveWord = memo(({ word, onWordClick }: { word: any; onWordClick: (t: number) => void }) => {
 	const currentTime = useAtomValue(displayTimeAtom);
 	const spanRef = useRef<HTMLSpanElement>(null);
 	
-	const isWordTimed = word.endTime > word.startTime && (word.startTime > 0 || word.endTime > 0);
-	const isWordActive = isWordTimed && currentTime >= word.startTime && currentTime <= word.endTime;
-	const isWordPast = isWordTimed && currentTime > word.endTime;
+	const timed = isWordTimed(word);
+	const isWordActive = timed && currentTime >= word.startTime && currentTime <= word.endTime;
+	const isWordPast = timed && currentTime > word.endTime;
 	const fadeWidth = useAtomValue(lyricWordFadeWidthAtom);
 
 	// Register the element for high-frequency direct DOM updates
@@ -75,7 +96,12 @@ const ActiveWord = memo(({ word, onWordClick }: { word: any; onWordClick: (t: nu
 	return (
 		<span
 			ref={spanRef}
-			className={classNames(styles.word, isWordActive && styles.wordActive, isWordPast && styles.wordPast)}
+			className={classNames(
+				styles.word,
+				isWordActive && styles.wordActive,
+				isWordPast && styles.wordPast,
+				!timed && styles.wordUnsynced,
+			)}
 			data-active={isWordActive}
 			style={{ 
 				"--progress": `${progressPercent}%`,
@@ -96,32 +122,74 @@ interface LineGroup {
 	bg: any[];
 }
 
-const StaticLineGroup = memo(({ group, isPast }: { group: LineGroup; isPast: boolean }) => (
-	<div className={classNames(styles.lineGroup, isPast && styles.lineGroupPast, group.main.isDuet && styles.lineGroupDuet)}>
-		{/* Main / duet line */}
-		<div className={classNames(styles.line, group.main.isDuet && styles.lineDuetR)}>
-			<div className={styles.wordsContainer}>
-				{group.main.words.map((w: any, i: number) => <StaticWord key={i} word={w} />)}
-			</div>
-		</div>
-		{/* BG lines */}
-		{group.bg.map((bgLine, i) => (
-			<div key={bgLine.id || i} className={classNames(styles.line, styles.lineBG, bgLine.isDuet && styles.lineDuetR)}>
+const StaticLineGroup = memo(({ group, isPast }: { group: LineGroup; isPast: boolean }) => {
+	const mainTimed = isLineTimed(group.main);
+	return (
+		<div
+			className={classNames(
+				styles.lineGroup,
+				isPast && styles.lineGroupPast,
+				group.main.isDuet && styles.lineGroupDuet,
+				!mainTimed && styles.lineGroupUnsynced,
+			)}
+		>
+			{/* Main / duet line */}
+			<div
+				className={classNames(
+					styles.line,
+					group.main.isDuet && styles.lineDuetR,
+					!mainTimed && styles.lineUnsynced,
+				)}
+			>
 				<div className={styles.wordsContainer}>
-					{bgLine.words.map((w: any, wi: number) => <StaticWord key={w.id || wi} word={w} />)}
+					{group.main.words.map((w: any, i: number) => <StaticWord key={i} word={w} />)}
 				</div>
 			</div>
-		))}
-	</div>
-));
+			{/* BG lines */}
+			{group.bg.map((bgLine, i) => {
+				const bgTimed = isLineTimed(bgLine);
+				return (
+					<div
+						key={bgLine.id || i}
+						className={classNames(
+							styles.line,
+							styles.lineBG,
+							bgLine.isDuet && styles.lineDuetR,
+							!bgTimed && styles.lineUnsynced,
+						)}
+					>
+						<div className={styles.wordsContainer}>
+							{bgLine.words.map((w: any, wi: number) => <StaticWord key={w.id || wi} word={w} />)}
+						</div>
+					</div>
+				);
+			})}
+		</div>
+	);
+});
 
 const ActiveLineGroup = memo(({ group, onWordClick }: { group: LineGroup; onWordClick: (t: number) => void }) => {
 	const showTranslation = useAtomValue(showTranslationLinesAtom);
 	const showRoman = useAtomValue(showRomanLinesAtom);
+	const mainTimed = isLineTimed(group.main);
 	return (
-		<div className={classNames(styles.lineGroup, styles.lineGroupActive, group.main.isDuet && styles.lineGroupDuet)}>
+		<div
+			className={classNames(
+				styles.lineGroup,
+				styles.lineGroupActive,
+				group.main.isDuet && styles.lineGroupDuet,
+				!mainTimed && styles.lineGroupUnsynced,
+			)}
+		>
 			{/* Main / duet line */}
-			<div className={classNames(styles.line, styles.lineActive, group.main.isDuet && styles.lineDuetR)}>
+			<div
+				className={classNames(
+					styles.line,
+					styles.lineActive,
+					group.main.isDuet && styles.lineDuetR,
+					!mainTimed && styles.lineUnsynced,
+				)}
+			>
 				<div className={styles.wordsContainer}>
 					{group.main.words.map((w: any, i: number) => (
 						<ActiveWord key={w.id || i} word={w} onWordClick={onWordClick} />
@@ -131,15 +199,27 @@ const ActiveLineGroup = memo(({ group, onWordClick }: { group: LineGroup; onWord
 				{showRoman && group.main.romanLyric && <span className={styles.extraLine}>{group.main.romanLyric}</span>}
 			</div>
 			{/* BG lines - also highlight when group is active */}
-			{group.bg.map((bgLine, i) => (
-				<div key={bgLine.id || i} className={classNames(styles.line, styles.lineBG, styles.lineBGActive, bgLine.isDuet && styles.lineDuetR)}>
-					<div className={styles.wordsContainer}>
-						{bgLine.words.map((w: any, wi: number) => (
-							<ActiveWord key={w.id || wi} word={w} onWordClick={onWordClick} />
-						))}
+			{group.bg.map((bgLine, i) => {
+				const bgTimed = isLineTimed(bgLine);
+				return (
+					<div
+						key={bgLine.id || i}
+						className={classNames(
+							styles.line,
+							styles.lineBG,
+							styles.lineBGActive,
+							bgLine.isDuet && styles.lineDuetR,
+							!bgTimed && styles.lineUnsynced,
+						)}
+					>
+						<div className={styles.wordsContainer}>
+							{bgLine.words.map((w: any, wi: number) => (
+								<ActiveWord key={w.id || wi} word={w} onWordClick={onWordClick} />
+							))}
+						</div>
 					</div>
-				</div>
-			))}
+				);
+			})}
 		</div>
 	);
 });

@@ -4,15 +4,20 @@ export interface TTMLChecklistEntry {
 	id: string;
 	song: string;
 	artist: string;
+	album?: string;
+	coverArt?: string;
 	notes: string;
 	completed: boolean;
 	createdAt: number;
 }
 
-export type TTMLChecklistEntryInput = Pick<
-	TTMLChecklistEntry,
-	"song" | "artist" | "notes"
->;
+export type TTMLChecklistEntryInput = {
+	song: string;
+	artist?: string;
+	album?: string;
+	coverArt?: string;
+	notes?: string;
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -33,6 +38,9 @@ export function normalizeChecklistEntries(
 					typeof item.id === "string" && item.id ? item.id : `legacy-${index}`,
 				song,
 				artist: typeof item.artist === "string" ? item.artist.trim() : "",
+				album: typeof item.album === "string" ? item.album.trim() : undefined,
+				coverArt:
+					typeof item.coverArt === "string" ? item.coverArt.trim() : undefined,
 				notes: typeof item.notes === "string" ? item.notes.trim() : "",
 				completed: item.completed === true,
 				createdAt:
@@ -57,8 +65,10 @@ export function createChecklistEntry(
 	return {
 		id,
 		song: input.song.trim(),
-		artist: input.artist.trim(),
-		notes: input.notes.trim(),
+		artist: input.artist?.trim() ?? "",
+		album: input.album?.trim() || undefined,
+		coverArt: input.coverArt?.trim() || undefined,
+		notes: input.notes?.trim() ?? "",
 		completed: false,
 		createdAt,
 	};
@@ -85,9 +95,11 @@ export function updateChecklistEntry(
 			entry.id === id
 				? {
 						...entry,
-						song: input.song,
-						artist: input.artist,
-						notes: input.notes,
+						song: input.song.trim(),
+						artist: input.artist?.trim() ?? "",
+						album: input.album?.trim() || undefined,
+						coverArt: input.coverArt?.trim() || undefined,
+						notes: input.notes?.trim() ?? "",
 					}
 				: entry,
 		),

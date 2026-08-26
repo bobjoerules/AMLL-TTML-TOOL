@@ -859,6 +859,9 @@ export const SpicyLyrics = memo(() => {
 	) => {
 		const key = keyFor(line, word, wordIndex);
 		const letters = word.letters;
+		const isWordTimed =
+			word.endTime > word.startTime &&
+			(word.startTime > 0 || word.endTime > 0);
 		const className = letters ? styles.letterGroup : styles.word;
 		return (
 			<span
@@ -871,6 +874,7 @@ export const SpicyLyrics = memo(() => {
 					className,
 					wordBoundary && styles.wordBoundary,
 					word.allowInternalWrap && styles.breakableToken,
+					!isWordTimed && styles.tokenUnsynced,
 				)}
 				dir={isRtl(word.text) ? "rtl" : undefined}
 			>
@@ -940,24 +944,38 @@ export const SpicyLyrics = memo(() => {
 					hasDuetLines && styles.hasDuetLines,
 				)}
 			>
-				{lines.map((line) => (
-					<div
-						key={line.id}
-						ref={(node) => {
-							if (node) lineNodes.current.set(line.id, node);
-							else lineNodes.current.delete(line.id);
-						}}
-						className={classNames(
-							styles.line,
-							line.isDotLine && styles.dotLine,
-						line.isLineSynced && styles.lineSynced,
-						line.isRtl && styles.rtl,
-							line.isBackground && styles.backgroundLine,
-							line.isDuet && styles.duet,
-					)}
-					dir={line.isRtl ? "rtl" : undefined}
-						onClick={() => seek(line.startTime)}
-					>
+				{lines.map((line) => {
+					const isLineTimed =
+						line.isDotLine ||
+						line.startTime > 0 ||
+						line.endTime > 0 ||
+						Boolean(
+							line.words &&
+								line.words.some(
+									(w) =>
+										w.endTime > w.startTime &&
+										(w.startTime > 0 || w.endTime > 0),
+								),
+						);
+					return (
+						<div
+							key={line.id}
+							ref={(node) => {
+								if (node) lineNodes.current.set(line.id, node);
+								else lineNodes.current.delete(line.id);
+							}}
+							className={classNames(
+								styles.line,
+								line.isDotLine && styles.dotLine,
+								line.isLineSynced && styles.lineSynced,
+								line.isRtl && styles.rtl,
+								line.isBackground && styles.backgroundLine,
+								line.isDuet && styles.duet,
+								!isLineTimed && styles.lineUnsynced,
+							)}
+							dir={line.isRtl ? "rtl" : undefined}
+							onClick={() => seek(line.startTime)}
+						>
 						{line.isDotLine ? (
 							<div className={styles.dotGroup}>
 								{line.words.map((word, wi) => {
@@ -1007,7 +1025,8 @@ export const SpicyLyrics = memo(() => {
 							<span className={styles.translation}>{line.translation}</span>
 						) : null}
 					</div>
-				))}
+				);
+			})}
 			</div>
 		</div>
 	);

@@ -62,6 +62,10 @@ const FileMenuItems = () => {
 				</Trans>
 			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
+			<DropdownMenu.Item onSelect={menu.onOpenMetadataEditor}>
+				<Trans i18nKey="metadataDialog.title">Metadata Editor</Trans>
+			</DropdownMenu.Item>
+			<DropdownMenu.Separator />
 			<ImportExportLyric />
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={menu.onSubmitToAMLLDB}>

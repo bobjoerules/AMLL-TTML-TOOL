@@ -153,7 +153,6 @@ export const TopMenu: FC = () => {
 				"menu-settings": () => menuRef.current.onOpenSettings(),
 				"menu-latency-test": () => menuRef.current.onOpenLatencyTest(),
 				"menu-checklist": () => menuRef.current.onOpenTTMLChecklist(),
-				"menu-wiki": () => menuRef.current.onOpenWiki(),
 			};
 
 			for (const [event, action] of Object.entries(mappings)) {

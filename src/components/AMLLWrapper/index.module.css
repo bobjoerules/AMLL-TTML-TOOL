@@ -313,3 +313,36 @@
 	transition: none !important;
 	filter: none !important;
 }
+
+/* ── Non-synced words & lines (Red Tint) ──────────────────── */
+.wordUnsynced {
+	color: rgba(255, 110, 110, 0.55) !important;
+	text-shadow: 0 0 10px rgba(255, 60, 60, 0.3);
+}
+
+.wordStatic.wordUnsynced {
+	color: rgba(255, 115, 115, 0.45) !important;
+	text-shadow: 0 0 8px rgba(255, 60, 60, 0.25);
+}
+
+.lineUnsynced .wordStatic,
+.lineUnsynced .word {
+	color: rgba(255, 115, 115, 0.5) !important;
+	text-shadow: 0 0 10px rgba(255, 50, 50, 0.3);
+}
+
+.lineUnsynced .word:hover,
+.wordUnsynced:hover {
+	color: rgba(255, 145, 145, 0.95) !important;
+	text-shadow: 0 0 16px rgba(255, 70, 70, 0.6);
+}
+
+.isToxi .wordUnsynced {
+	color: rgba(255, 120, 120, 0.45) !important;
+	text-shadow: 0 0 8px rgba(255, 60, 60, 0.25);
+}
+
+.isToxi .lineUnsynced .wordStatic,
+.isToxi .lineUnsynced .word {
+	color: rgba(255, 120, 120, 0.45) !important;
+}

@@ -440,3 +440,24 @@
 		transform: translate3d(6%, 5%, 0) scale(1.12);
 	}
 }
+
+/* ── Non-synced words & lines (Red Tint) ──────────────────── */
+.lineUnsynced {
+	opacity: 0.65 !important;
+}
+
+.lineUnsynced.lineSynced,
+.lineUnsynced .word,
+.lineUnsynced .letter,
+.tokenUnsynced,
+.tokenUnsynced .letter {
+	background: linear-gradient(
+		90deg,
+		rgba(255, 120, 120, 0.85) var(--gradient-position, -20%),
+		rgba(255, 90, 90, 0.55) calc(var(--gradient-position, -20%) + 20%)
+	) !important;
+	-webkit-background-clip: text !important;
+	background-clip: text !important;
+	color: transparent !important;
+	text-shadow: 0 0 8px rgba(255, 50, 50, 0.35) !important;
+}

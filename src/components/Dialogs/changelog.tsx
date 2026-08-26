@@ -56,6 +56,23 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.0.4
+							</Heading>
+							<Flex direction="column" gap="3">
+								<Text size="2">
+									<strong>Red Tint for Non-Synced Words & Lines:</strong> Untimed words and lines across Standard, Toxi, and SpicyLyrics preview modes and Technical Timing Overview now clearly display a subtle red tint and glow to quickly identify unsynced parts.
+								</Text>
+								<Text size="2">
+									<strong>Upgraded TTML Checklist with Cover Art Support:</strong> The TTML Checklist now supports song album cover art previews and uploads, 1-click import from the current project's metadata & audio, search filtering, and progress tracking.
+								</Text>
+								<Text size="2">
+									<strong>Cleaned App & File Menus:</strong> Moved the TTML Checklist to the Tools dropdown menu, added Metadata Editor to the File menu, and cleaned up unnecessary system window hooks from the App menu.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.3
 							</Heading>
 							<Flex direction="column" gap="3">

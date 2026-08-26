@@ -12,7 +12,8 @@ import styles from "./index.module.css";
 
 const WordPill = memo(({ word, currentTime, isGrouped }: { word: any, currentTime: number, isGrouped?: boolean }) => {
 	const { t } = useTranslation();
-	const isWordActive = currentTime >= word.startTime && currentTime <= word.endTime;
+	const isWordTimed = word.endTime > word.startTime && (word.startTime > 0 || word.endTime > 0);
+	const isWordActive = isWordTimed && currentTime >= word.startTime && currentTime <= word.endTime;
 	const wordDur = word.endTime - word.startTime;
 	const isWhitespace = !word.word || word.word.trim() === "";
 
@@ -25,7 +26,8 @@ const WordPill = memo(({ word, currentTime, isGrouped }: { word: any, currentTim
 			styles.wordPill, 
 			isWordActive && styles.wordPillActive, 
 			isWhitespace && styles.whitespacePill,
-			isGrouped && styles.groupedWordPill
+			isGrouped && styles.groupedWordPill,
+			!isWordTimed && !isWhitespace && styles.wordPillUnsynced,
 		)}>
 			<Text className={styles.wordText}>
 				{isWhitespace ? (word.word || <span className={styles.emptyBeat}>∅</span>) : word.word}
@@ -91,8 +93,9 @@ const LineRow = memo(({ line, index, currentTime, totalDuration, onRowClick }: {
 	onRowClick: (line: any) => void
 }) => {
 	const { t } = useTranslation();
-	const isActive = currentTime >= line.startTime && currentTime <= line.endTime;
-	const duration = line.endTime - line.startTime;
+	const isLineTimed = line.startTime > 0 || line.endTime > 0 || Boolean(line.words && line.words.some((w: any) => w.startTime > 0 || w.endTime > 0));
+	const isActive = isLineTimed && currentTime >= line.startTime && currentTime <= line.endTime;
+	const duration = Math.max(0, line.endTime - line.startTime);
 	const durationPercent = totalDuration ? (duration / totalDuration) * 100 : 0;
 
 	const wordGroups = useMemo(() => {
@@ -119,7 +122,7 @@ const LineRow = memo(({ line, index, currentTime, totalDuration, onRowClick }: {
 
 	return (
 		<div
-			className={classNames(styles.row, isActive && styles.activeRow)}
+			className={classNames(styles.row, isActive && styles.activeRow, !isLineTimed && styles.rowUnsynced)}
 			onClick={() => onRowClick(line)}
 			style={{ display: "flex", borderBottom: "1px solid var(--gray-4)" }}
 		>

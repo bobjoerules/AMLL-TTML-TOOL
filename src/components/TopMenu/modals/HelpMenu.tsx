@@ -51,9 +51,6 @@ const HelpMenuItems = () => {
 				{t("beginnerGuide.menu", "Start Guide")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenGitHub}>GitHub</DropdownMenu.Item>
-			<DropdownMenu.Item onSelect={menu.onOpenWiki}>
-				{t("topBar.menu.helpDoc", "使用说明")}
-			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => setWhatsNewOpen(true)}>
 				What's New

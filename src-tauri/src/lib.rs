@@ -301,10 +301,6 @@ pub fn run() {
                 let settings_item = MenuItem::with_id(app, "menu-settings", "Settings...", true, Some("CmdOrCtrl+,"))?;
                 app_menu.append(&settings_item)?;
                 app_menu.append(&PredefinedMenuItem::separator(app)?)?;
-                app_menu.append(&PredefinedMenuItem::hide(app, None)?)?;
-                app_menu.append(&PredefinedMenuItem::hide_others(app, None)?)?;
-                app_menu.append(&PredefinedMenuItem::show_all(app, None)?)?;
-                app_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 app_menu.append(&PredefinedMenuItem::quit(app, None)?)?;
 
                 // 2. File menu
@@ -314,12 +310,15 @@ pub fn run() {
                 let open_cloud_item = MenuItem::with_id(app, "menu-cloud-open", "Open from Cloud...", true, None::<&str>)?;
                 let save_file_item = MenuItem::with_id(app, "menu-save-file", "Save File", true, Some("CmdOrCtrl+S"))?;
                 let save_cloud_item = MenuItem::with_id(app, "menu-cloud-save", "Save to Cloud...", true, None::<&str>)?;
+                let metadata_item = MenuItem::with_id(app, "menu-metadata", "Metadata Editor...", true, None::<&str>)?;
                 file_menu.append(&new_file_item)?;
                 file_menu.append(&open_file_item)?;
                 file_menu.append(&open_cloud_item)?;
                 file_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 file_menu.append(&save_file_item)?;
                 file_menu.append(&save_cloud_item)?;
+                file_menu.append(&PredefinedMenuItem::separator(app)?)?;
+                file_menu.append(&metadata_item)?;
                 file_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 file_menu.append(&PredefinedMenuItem::close_window(app, None)?)?;
 
@@ -342,21 +341,17 @@ pub fn run() {
                 let segment_item = MenuItem::with_id(app, "menu-quick-segment", "Quick Segment", true, Some("CmdOrCtrl+L"))?;
                 let time_shift_item = MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
                 let time_stretch_item = MenuItem::with_id(app, "menu-time-stretch", "Time Stretch...", true, None::<&str>)?;
-                let metadata_item = MenuItem::with_id(app, "menu-metadata", "Metadata Editor...", true, None::<&str>)?;
+                let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, None::<&str>)?;
                 tools_menu.append(&segment_item)?;
                 tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&time_shift_item)?;
                 tools_menu.append(&time_stretch_item)?;
-                tools_menu.append(&metadata_item)?;
+                tools_menu.append(&checklist_item)?;
 
                 // 5. Help menu
                 let help_menu = Submenu::new(app, "Help", true)?;
                 let latency_item = MenuItem::with_id(app, "menu-latency-test", "Latency Test...", true, None::<&str>)?;
-                let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, None::<&str>)?;
-                let wiki_item = MenuItem::with_id(app, "menu-wiki", "Open Wiki", true, None::<&str>)?;
                 help_menu.append(&latency_item)?;
-                help_menu.append(&checklist_item)?;
-                help_menu.append(&wiki_item)?;
 
                 let menu = Menu::with_items(app, &[
                     &app_menu,
