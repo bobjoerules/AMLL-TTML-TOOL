@@ -11,7 +11,9 @@ import {
   Maximize2,
   X,
   Flame,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import { GithubIcon } from '../components/GithubIcon';
 
@@ -105,10 +107,22 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
         <div className="hero-buttons">
           <a
-            href="https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest"
+            href="https://ttmleditor.bobjoerules.com"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary"
+            style={{ padding: '12px 28px' }}
+          >
+            <Globe size={18} />
+            <span>Open in Browser</span>
+            <ExternalLink size={14} style={{ opacity: 0.8 }} />
+          </a>
+
+          <a
+            href="https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
           >
             <Download size={18} />
             <span>Download Desktop App</span>

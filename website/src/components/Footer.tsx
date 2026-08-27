@@ -33,6 +33,16 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
             Spicy Player
           </button>
           <a
+            href="https://ttmleditor.bobjoerules.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-link"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+          >
+            <ExternalLink size={13} />
+            Web App (Browser)
+          </a>
+          <a
             href="https://github.com/bobjoerules/AMLL-TTML-TOOL"
             target="_blank"
             rel="noopener noreferrer"
