@@ -12,9 +12,11 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
       <div className="container footer-content">
         <div className="footer-info">
           <div className="nav-brand" onClick={() => onSelectTab('home')}>
-            <div className="nav-logo-icon" style={{ width: 28, height: 28 }}>
-              <Music size={16} color="white" />
-            </div>
+            <img
+              src="/logo.svg"
+              alt="AMLL TTML Tool Logo"
+              style={{ width: 26, height: 26, objectFit: 'contain' }}
+            />
             <span style={{ fontSize: 17 }}>AMLL TTML Tool</span>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>

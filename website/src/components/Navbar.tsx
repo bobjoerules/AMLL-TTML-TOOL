@@ -12,9 +12,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
     <header className="navbar">
       <div className="container nav-content">
         <div className="nav-brand" onClick={() => onSelectTab('home')}>
-          <div className="nav-logo-icon">
-            <Music size={20} color="white" />
-          </div>
+          <img
+            src="/logo.svg"
+            alt="AMLL TTML Tool Logo"
+            style={{ width: 32, height: 32, objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(250, 45, 72, 0.4))' }}
+          />
           <span>AMLL TTML Tool</span>
         </div>
 
