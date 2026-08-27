@@ -102,10 +102,10 @@ fn set_discord_activity(
     }
 
     let activity_type = match payload.activity_type.as_deref() {
-        Some("listening") => activity::ActivityType::Listening,
+        Some("playing") => activity::ActivityType::Playing,
         Some("watching") => activity::ActivityType::Watching,
         Some("competing") => activity::ActivityType::Competing,
-        _ => activity::ActivityType::Playing,
+        _ => activity::ActivityType::Listening,
     };
 
     let mut rich_presence = activity::Activity::new()

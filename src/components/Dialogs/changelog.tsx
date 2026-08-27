@@ -56,6 +56,26 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.0.5
+							</Heading>
+							<Flex direction="column" gap="3">
+								<Text size="2">
+									<strong>TTML Checklist Provider Search & 1-Click Import:</strong> Search and import songs directly from Genius, LRCLIB, and Lyrically inside the checklist, complete with cover art, album details, and 1-click lyric importing that skips manual search retyping.
+								</Text>
+								<Text size="2">
+									<strong>Checklist on Empty State:</strong> Added a quick-access "TTML Checklist" button directly to the editor's empty state ("No lyric lines") screen.
+								</Text>
+								<Text size="2">
+									<strong>Audio Engine Resiliency & Sleep Recovery:</strong> Proactively refreshes the audio context after system sleep or prolonged inactivity, preventing WebKit CoreAudio dropouts.
+								</Text>
+								<Text size="2">
+									<strong>Companion Website:</strong> Added the official companion website featuring app showcases, community finished TTML downloads via Firebase, and a dedicated Spicy Player hub.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.4
 							</Heading>
 							<Flex direction="column" gap="3">

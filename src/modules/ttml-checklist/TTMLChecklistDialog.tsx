@@ -6,6 +6,7 @@ import {
 	Delete16Regular,
 	Dismiss16Regular,
 	Edit16Regular,
+	Globe16Regular,
 	Image16Regular,
 	MusicNote2Filled,
 	Search16Regular,
@@ -21,17 +22,28 @@ import {
 	Progress,
 	ScrollArea,
 	SegmentedControl,
+	Select,
+	Spinner,
 	Text,
 	TextArea,
 	TextField,
 	Tooltip,
 } from "@radix-ui/themes";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { audioCoverArtAtom } from "$/modules/audio/states";
-import { customBackgroundImageAtom } from "$/modules/settings/modals/customBackground";
-import { ttmlChecklistDialogAtom } from "$/states/dialogs.ts";
+import { GeniusApi } from "$/modules/genius/api/client";
+import { LrcLibApi } from "$/modules/lrclib/api/client";
+import { LyricallyApi } from "$/modules/lyrically/api/client";
+import { geniusApiKeyAtom } from "$/modules/settings/states/index.ts";
+import {
+	geniusImportLyricsDialogAtom,
+	importFromLRCLIBDialogAtom,
+	importLyricsPrefillAtom,
+	lyricallyImportLyricsDialogAtom,
+	ttmlChecklistDialogAtom,
+} from "$/states/dialogs.ts";
 import { lyricLinesAtom, projectIdentityAtom } from "$/states/main.ts";
 import {
 	addChecklistEntry,
@@ -43,6 +55,15 @@ import {
 	updateChecklistEntry,
 } from "./logic";
 import { ttmlChecklistAtom } from "./states";
+
+type ProviderSearchResult = {
+	id: string | number;
+	name: string;
+	artist: string;
+	album?: string;
+	cover?: string;
+	source: "genius" | "lyrically" | "lrclib";
+};
 
 type EntryFormProps = {
 	initial?: TTMLChecklistEntry;
@@ -56,18 +77,42 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	const [artist, setArtist] = useState(initial?.artist ?? "");
 	const [album, setAlbum] = useState(initial?.album ?? "");
 	const [coverArt, setCoverArt] = useState(initial?.coverArt ?? "");
+	const [source, setSource] = useState<"genius" | "lyrically" | "lrclib" | undefined>(
+		initial?.source ?? "genius",
+	);
+	const [sourceId, setSourceId] = useState<string | number | undefined>(
+		initial?.sourceId,
+	);
+	const [sourceUrl, setSourceUrl] = useState<string | undefined>(
+		initial?.sourceUrl,
+	);
 	const [notes, setNotes] = useState(initial?.notes ?? "");
+
+	// Provider Search state
+	const [showProviderSearch, setShowProviderSearch] = useState(!initial);
+	const [searchProvider, setSearchProvider] = useState<
+		"genius" | "lyrically" | "lrclib"
+	>("genius");
+	const [providerQuery, setProviderQuery] = useState("");
+	const [providerResults, setProviderResults] = useState<ProviderSearchResult[]>(
+		[],
+	);
+	const [isSearchingProvider, setIsSearchingProvider] = useState(false);
+	const [hasSearchedProvider, setHasSearchedProvider] = useState(false);
 
 	const projectIdentity = useAtomValue(projectIdentityAtom);
 	const lyricLines = useAtomValue(lyricLinesAtom);
 	const audioCoverArt = useAtomValue(audioCoverArtAtom);
-	const customBg = useAtomValue(customBackgroundImageAtom);
+	const geniusApiKey = useAtomValue(geniusApiKeyAtom);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handleImportCurrent = () => {
 		const metaAlbum = lyricLines.metadata.find(
 			(m) => m.key.toLowerCase() === "album",
+		)?.value[0];
+		const metaCover = lyricLines.metadata.find(
+			(m) => m.key.toLowerCase() === "cover_art" || m.key.toLowerCase() === "cover",
 		)?.value[0];
 
 		if (projectIdentity.name && !projectIdentity.isUntitled) {
@@ -79,7 +124,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 		if (metaAlbum) {
 			setAlbum(metaAlbum);
 		}
-		const currentCover = audioCoverArt || customBg;
+		const currentCover = audioCoverArt || metaCover;
 		if (currentCover) {
 			setCoverArt(currentCover);
 		}
@@ -97,6 +142,63 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 		reader.readAsDataURL(file);
 	};
 
+	const handleSearchProvider = async () => {
+		if (!providerQuery.trim()) return;
+		setIsSearchingProvider(true);
+		setHasSearchedProvider(true);
+		setProviderResults([]);
+		try {
+			let hits: ProviderSearchResult[] = [];
+			if (searchProvider === "genius") {
+				const res = await GeniusApi.search(providerQuery, geniusApiKey);
+				hits = res.response.hits.map(({ result }) => ({
+					id: result.id,
+					name: result.title,
+					artist: result.primary_artist.name,
+					album: result.album?.name,
+					cover:
+						result.song_art_image_url ||
+						result.song_art_image_thumbnail_url,
+					source: "genius",
+				}));
+			} else if (searchProvider === "lrclib") {
+				const res = await LrcLibApi.search(providerQuery);
+				hits = res.map((track) => ({
+					id: track.id,
+					name: track.name,
+					artist: track.artistName,
+					album: track.albumName,
+					source: "lrclib",
+				}));
+			} else {
+				const res = await LyricallyApi.search(providerQuery);
+				hits = res.map((track, idx) => ({
+					id: `${track.artist}-${track.name}-${idx}`,
+					name: track.name,
+					artist: track.artist,
+					album: track.album,
+					cover: track.cover,
+					source: "lyrically",
+				}));
+			}
+			setProviderResults(hits);
+		} catch (err) {
+			console.error("Provider search failed:", err);
+		} finally {
+			setIsSearchingProvider(false);
+		}
+	};
+
+	const handleSelectSearchResult = (hit: ProviderSearchResult) => {
+		setSong(hit.name);
+		setArtist(hit.artist);
+		if (hit.album) setAlbum(hit.album);
+		if (hit.cover) setCoverArt(hit.cover);
+		setSource(hit.source);
+		setSourceId(hit.id);
+		setShowProviderSearch(false);
+	};
+
 	const valid = song.trim().length > 0;
 
 	return (
@@ -106,7 +208,16 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 					onSubmit={(event) => {
 						event.preventDefault();
 						if (valid) {
-							onSubmit({ song, artist, album, coverArt, notes });
+							onSubmit({
+								song,
+								artist,
+								album,
+								coverArt,
+								source,
+								sourceId,
+								sourceUrl,
+								notes,
+							});
 						}
 					}}
 				>
@@ -116,17 +227,179 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								? t("ttmlChecklist.edit", "Edit checklist item")
 								: t("ttmlChecklist.newItem", "New Song")}
 						</Text>
-						<Button
-							type="button"
-							size="1"
-							variant="soft"
-							color="cyan"
-							onClick={handleImportCurrent}
-						>
-							<ArrowDownload16Regular />
-							{t("ttmlChecklist.importCurrent", "Import from Current Project")}
-						</Button>
+						<Flex gap="2">
+							<Button
+								type="button"
+								size="1"
+								variant={showProviderSearch ? "solid" : "soft"}
+								color="indigo"
+								onClick={() => setShowProviderSearch((prev) => !prev)}
+							>
+								<Globe16Regular />
+								{t(
+									"ttmlChecklist.searchProvider",
+									"Search Genius / Lyrics Providers",
+								)}
+							</Button>
+							<Button
+								type="button"
+								size="1"
+								variant="soft"
+								color="cyan"
+								onClick={handleImportCurrent}
+							>
+								<ArrowDownload16Regular />
+								{t(
+									"ttmlChecklist.importCurrent",
+									"Import from Current Project",
+								)}
+							</Button>
+						</Flex>
 					</Flex>
+
+					{/* Inline Provider Search Panel */}
+					{showProviderSearch && (
+						<Box
+							p="3"
+							style={{
+								backgroundColor: "var(--indigo-a2)",
+								borderRadius: "var(--radius-3)",
+								border: "1px solid var(--indigo-a5)",
+							}}
+						>
+							<Flex gap="2" mb="2" align="center">
+								<Select.Root
+									value={searchProvider}
+									onValueChange={(val) =>
+										setSearchProvider(
+											val as "genius" | "lyrically" | "lrclib",
+										)
+									}
+								>
+									<Select.Trigger style={{ width: "120px" }} />
+									<Select.Content>
+										<Select.Item value="genius">Genius</Select.Item>
+										<Select.Item value="lyrically">Lyrically</Select.Item>
+										<Select.Item value="lrclib">LRCLIB</Select.Item>
+									</Select.Content>
+								</Select.Root>
+								<Box style={{ flex: 1 }}>
+									<TextField.Root
+										placeholder={t(
+											"ttmlChecklist.searchProviderPlaceholder",
+											"Search song or artist on Genius, Lyrically, LRCLIB...",
+										)}
+										value={providerQuery}
+										onChange={(e) => setProviderQuery(e.currentTarget.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") {
+												e.preventDefault();
+												void handleSearchProvider();
+											}
+										}}
+									>
+										<TextField.Slot>
+											<Search16Regular />
+										</TextField.Slot>
+									</TextField.Root>
+								</Box>
+								<Button
+									type="button"
+									variant="solid"
+									color="indigo"
+									onClick={() => void handleSearchProvider()}
+									disabled={isSearchingProvider || !providerQuery.trim()}
+								>
+									{isSearchingProvider ? (
+										<Spinner size="1" />
+									) : (
+										<Search16Regular />
+									)}
+									{t("ttmlChecklist.searchProviderBtn", "Search")}
+								</Button>
+							</Flex>
+
+							{/* Search results */}
+							{providerResults.length > 0 && (
+								<ScrollArea
+									type="auto"
+									scrollbars="vertical"
+									style={{ maxHeight: "180px", marginTop: "8px" }}
+								>
+									<Flex direction="column" gap="1">
+										{providerResults.map((hit) => (
+											<Card
+												key={`${hit.source}-${hit.id}`}
+												size="1"
+												style={{
+													padding: "6px 10px",
+													cursor: "pointer",
+													transition: "background 0.1s",
+												}}
+												onClick={() => handleSelectSearchResult(hit)}
+											>
+												<Flex align="center" justify="between">
+													<Flex align="center" gap="2" style={{ minWidth: 0 }}>
+														{hit.cover ? (
+															<img
+																src={hit.cover}
+																alt="Cover"
+																style={{
+																	width: "32px",
+																	height: "32px",
+																	borderRadius: "4px",
+																	objectFit: "cover",
+																}}
+															/>
+														) : (
+															<Box
+																style={{
+																	width: "32px",
+																	height: "32px",
+																	borderRadius: "4px",
+																	backgroundColor: "var(--gray-a4)",
+																	display: "flex",
+																	alignItems: "center",
+																	justifyContent: "center",
+																}}
+															>
+																<MusicNote2Filled />
+															</Box>
+														)}
+														<Flex
+															direction="column"
+															style={{ minWidth: 0 }}
+														>
+															<Text size="2" weight="bold" truncate>
+																{hit.name}
+															</Text>
+															<Text size="1" color="gray" truncate>
+																{hit.artist} {hit.album ? `• ${hit.album}` : ""}
+															</Text>
+														</Flex>
+													</Flex>
+													<Button size="1" variant="soft" color="indigo">
+														{t("common.select", "Select")}
+													</Button>
+												</Flex>
+											</Card>
+										))}
+									</Flex>
+								</ScrollArea>
+							)}
+
+							{hasSearchedProvider &&
+								!isSearchingProvider &&
+								providerResults.length === 0 && (
+									<Text size="1" color="gray" style={{ display: "block", marginTop: "4px" }}>
+										{t(
+											"ttmlChecklist.noProviderResults",
+											"No results found from lyric providers.",
+										)}
+									</Text>
+								)}
+						</Box>
+					)}
 
 					<Flex gap="3" align="start">
 						{/* Cover Art Preview & Upload */}
@@ -280,6 +553,7 @@ type ChecklistEntryCardProps = {
 	onComplete: (completed: boolean) => void;
 	onDelete: () => void;
 	onEdit: (input: TTMLChecklistEntryInput) => void;
+	onImportLyrics: (entry: TTMLChecklistEntry) => void;
 };
 
 const ChecklistEntryCard = ({
@@ -287,6 +561,7 @@ const ChecklistEntryCard = ({
 	onComplete,
 	onDelete,
 	onEdit,
+	onImportLyrics,
 }: ChecklistEntryCardProps) => {
 	const { t } = useTranslation();
 	const [editing, setEditing] = useState(false);
@@ -367,6 +642,21 @@ const ChecklistEntryCard = ({
 						>
 							{entry.song}
 						</Text>
+						{entry.source && (
+							<Badge
+								size="1"
+								color={
+									entry.source === "genius"
+										? "yellow"
+										: entry.source === "lrclib"
+											? "cyan"
+											: "indigo"
+								}
+								variant="soft"
+							>
+								{entry.source.toUpperCase()}
+							</Badge>
+						)}
 						{entry.completed && (
 							<Badge size="1" color="green" variant="soft">
 								{t("ttmlChecklist.completed", "Completed")}
@@ -423,6 +713,25 @@ const ChecklistEntryCard = ({
 
 				{/* Action Buttons */}
 				<Flex gap="1" align="center">
+					{/* 1-Click Import Lyrics Page */}
+					<Tooltip
+						content={t(
+							"ttmlChecklist.importLyricsTooltip",
+							"Open lyrics import & review page for this song",
+						)}
+					>
+						<Button
+							size="2"
+							variant="soft"
+							color="indigo"
+							onClick={() => onImportLyrics(entry)}
+							style={{ height: "32px" }}
+						>
+							<ArrowDownload16Regular />
+							{t("ttmlChecklist.importLyrics", "Import Lyrics")}
+						</Button>
+					</Tooltip>
+
 					<Tooltip
 						content={
 							entry.completed
@@ -481,6 +790,11 @@ export const TTMLChecklistDialog = () => {
 	const [filterTab, setFilterTab] = useState<"all" | "pending" | "completed">("all");
 	const [searchQuery, setSearchQuery] = useState("");
 
+	const setImportLyricsPrefill = useSetAtom(importLyricsPrefillAtom);
+	const setGeniusImportDialog = useSetAtom(geniusImportLyricsDialogAtom);
+	const setLyricallyImportDialog = useSetAtom(lyricallyImportLyricsDialogAtom);
+	const setLrclibImportDialog = useSetAtom(importFromLRCLIBDialogAtom);
+
 	const entries = useMemo(
 		() => normalizeChecklistEntries(storedEntries),
 		[storedEntries],
@@ -516,9 +830,38 @@ export const TTMLChecklistDialog = () => {
 		setStoredEntries(nextEntries);
 	};
 
+	const handleImportLyricsForEntry = (entry: TTMLChecklistEntry) => {
+		const source = entry.source || "genius";
+		setImportLyricsPrefill({
+			source,
+			track: entry.sourceId
+				? {
+						id: entry.sourceId,
+						name: entry.song,
+						artist: entry.artist,
+						album: entry.album,
+						cover: entry.coverArt,
+					}
+				: undefined,
+			query: entry.artist ? `${entry.artist} - ${entry.song}` : entry.song,
+		});
+
+		// Open target provider dialog
+		if (source === "lrclib") {
+			setLrclibImportDialog(true);
+		} else if (source === "lyrically") {
+			setLyricallyImportDialog(true);
+		} else {
+			setGeniusImportDialog(true);
+		}
+
+		// Close checklist so user sees the import review page immediately
+		setOpen(false);
+	};
+
 	return (
 		<Dialog.Root open={open} onOpenChange={setOpen}>
-			<Dialog.Content style={{ maxWidth: 660, maxHeight: "85vh" }}>
+			<Dialog.Content style={{ maxWidth: 700, maxHeight: "88vh" }}>
 				<Dialog.Title>
 					<Flex justify="between" align="center">
 						<Text size="5" weight="bold">
@@ -670,6 +1013,7 @@ export const TTMLChecklistDialog = () => {
 									onEdit={(input) =>
 										save(updateChecklistEntry(entries, entry.id, input))
 									}
+									onImportLyrics={handleImportLyricsForEntry}
 								/>
 							))
 						)}

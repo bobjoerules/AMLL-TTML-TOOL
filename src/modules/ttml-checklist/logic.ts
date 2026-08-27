@@ -6,6 +6,9 @@ export interface TTMLChecklistEntry {
 	artist: string;
 	album?: string;
 	coverArt?: string;
+	source?: "genius" | "lyrically" | "lrclib";
+	sourceId?: string | number;
+	sourceUrl?: string;
 	notes: string;
 	completed: boolean;
 	createdAt: number;
@@ -16,6 +19,9 @@ export type TTMLChecklistEntryInput = {
 	artist?: string;
 	album?: string;
 	coverArt?: string;
+	source?: "genius" | "lyrically" | "lrclib";
+	sourceId?: string | number;
+	sourceUrl?: string;
 	notes?: string;
 };
 
@@ -33,6 +39,12 @@ export function normalizeChecklistEntries(
 			if (!isRecord(item) || typeof item.song !== "string") return null;
 			const song = item.song.trim();
 			if (!song) return null;
+			const sourceVal =
+				item.source === "genius" ||
+				item.source === "lyrically" ||
+				item.source === "lrclib"
+					? item.source
+					: undefined;
 			return {
 				id:
 					typeof item.id === "string" && item.id ? item.id : `legacy-${index}`,
@@ -41,6 +53,13 @@ export function normalizeChecklistEntries(
 				album: typeof item.album === "string" ? item.album.trim() : undefined,
 				coverArt:
 					typeof item.coverArt === "string" ? item.coverArt.trim() : undefined,
+				source: sourceVal,
+				sourceId:
+					typeof item.sourceId === "string" || typeof item.sourceId === "number"
+						? item.sourceId
+						: undefined,
+				sourceUrl:
+					typeof item.sourceUrl === "string" ? item.sourceUrl.trim() : undefined,
 				notes: typeof item.notes === "string" ? item.notes.trim() : "",
 				completed: item.completed === true,
 				createdAt:
@@ -68,6 +87,9 @@ export function createChecklistEntry(
 		artist: input.artist?.trim() ?? "",
 		album: input.album?.trim() || undefined,
 		coverArt: input.coverArt?.trim() || undefined,
+		source: input.source,
+		sourceId: input.sourceId,
+		sourceUrl: input.sourceUrl?.trim() || undefined,
 		notes: input.notes?.trim() ?? "",
 		completed: false,
 		createdAt,
@@ -99,6 +121,9 @@ export function updateChecklistEntry(
 						artist: input.artist?.trim() ?? "",
 						album: input.album?.trim() || undefined,
 						coverArt: input.coverArt?.trim() || undefined,
+						source: input.source ?? entry.source,
+						sourceId: input.sourceId ?? entry.sourceId,
+						sourceUrl: input.sourceUrl?.trim() || entry.sourceUrl,
 						notes: input.notes?.trim() ?? "",
 					}
 				: entry,

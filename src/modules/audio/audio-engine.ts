@@ -157,47 +157,45 @@ class AudioEngine extends EventTarget {
 		if (typeof window !== "undefined") {
 			let lastHeartbeat = Date.now();
 
-			const handleWakeOrDeviceChange = () => {
-				this._needsFreshContext = true;
-				if (this._ctx && (this._ctx.state === "suspended" || this._ctx.state === "interrupted")) {
-					void this._ctx.resume().catch(() => {});
-				}
-			};
+			const handleWakeOrInteraction = () => {
+				const now = Date.now();
+				const elapsed = now - lastHeartbeat;
+				lastHeartbeat = now;
+				const idleTime = now - this._lastAudioActivityTime;
 
-			window.addEventListener("focus", () => {
-				const elapsed = Date.now() - lastHeartbeat;
-				lastHeartbeat = Date.now();
-				if (elapsed > 5000) {
-					// Woke up from sleep or away for more than 5s
+				if (elapsed > 4000 || idleTime > 15000) {
+					// Woke up from sleep or away/idle for more than 15s
 					this._needsFreshContext = true;
 				}
 				if (this._ctx && (this._ctx.state === "suspended" || this._ctx.state === "interrupted")) {
 					void this._ctx.resume().catch(() => {});
 				}
-			});
+			};
+
+			window.addEventListener("focus", handleWakeOrInteraction);
+			window.addEventListener("pointerdown", handleWakeOrInteraction, { passive: true });
+			window.addEventListener("keydown", handleWakeOrInteraction, { passive: true });
 
 			document.addEventListener("visibilitychange", () => {
 				if (document.visibilityState === "visible") {
-					const elapsed = Date.now() - lastHeartbeat;
-					lastHeartbeat = Date.now();
-					if (elapsed > 5000) {
-						this._needsFreshContext = true;
-					}
-					if (this._ctx && (this._ctx.state === "suspended" || this._ctx.state === "interrupted")) {
-						void this._ctx.resume().catch(() => {});
-					}
+					handleWakeOrInteraction();
 				}
 			});
 
-			navigator.mediaDevices?.addEventListener?.("devicechange", handleWakeOrDeviceChange);
+			navigator.mediaDevices?.addEventListener?.("devicechange", () => {
+				this._needsFreshContext = true;
+				if (this._ctx) {
+					void this.recreateContext().catch(() => {});
+				}
+			});
 
-			// Heartbeat timer to detect sleep gaps while app was in background
+			// Heartbeat timer to detect sleep gaps or idle periods while app was in background
 			setInterval(() => {
 				const now = Date.now();
 				const elapsed = now - lastHeartbeat;
 				lastHeartbeat = now;
 
-				if (elapsed > 5000) {
+				if (elapsed > 4000) {
 					// System was asleep
 					this._needsFreshContext = true;
 				}
@@ -207,6 +205,7 @@ class AudioEngine extends EventTarget {
 
 	private _rawAudioData: ArrayBuffer | null = null;
 	private _needsFreshContext = false;
+	private _lastAudioActivityTime = Date.now();
 
 	public markNeedsFreshContext() {
 		this._needsFreshContext = true;
@@ -243,7 +242,10 @@ class AudioEngine extends EventTarget {
 			console.warn("[AudioEngine] Error resuming new AudioContext:", e);
 		}
 
-		if (this._rawAudioData && this._rawAudioData.byteLength > 0) {
+		this._lastAudioActivityTime = Date.now();
+
+		// If musicBuffer is missing but raw data exists, decode it
+		if (!this.musicBuffer && this._rawAudioData && this._rawAudioData.byteLength > 0) {
 			try {
 				this.musicBuffer = await newCtx.decodeAudioData(this._rawAudioData.slice(0));
 				globalStore.set(audioBufferAtom, this.musicBuffer);
@@ -283,26 +285,34 @@ class AudioEngine extends EventTarget {
 
 	/** Handle browser autoplay policy, macOS sleep, device changes and interruption */
 	public async resumeContext() {
+		const now = Date.now();
+		const idleTime = now - this._lastAudioActivityTime;
+		this._lastAudioActivityTime = now;
+
 		if (
 			this._needsFreshContext ||
 			!this._ctx ||
 			this._ctx.state === "closed" ||
-			this._ctx.state === "interrupted"
+			this._ctx.state === "interrupted" ||
+			(!this._isPlaying && idleTime > 15000)
 		) {
 			this._needsFreshContext = false;
 			await this.recreateContext();
 			return;
 		}
 
-		let ctx = this.ctx;
-		if (ctx.state === "suspended") {
+		const ctx = this.ctx;
+		if (ctx.state !== "running") {
 			try {
 				await ctx.resume();
 				log("AudioContext resumed, state is now:", ctx.state);
 			} catch (e) {
 				console.warn("Failed to resume AudioContext, recreating fresh context:", e);
-				await this.recreateContext();
 			}
+		}
+
+		if (ctx.state !== "running") {
+			await this.recreateContext();
 		}
 	}
 
@@ -455,30 +465,57 @@ class AudioEngine extends EventTarget {
 			this._activeSourceNode = null;
 		}
 
-		const source = this.ctx.createBufferSource();
-		source.buffer = this.musicBuffer;
-		source.playbackRate.value = this._musicPlayBackRate;
-		source.connect(this.eqEntryPoint);
+		try {
+			const source = this.ctx.createBufferSource();
+			source.buffer = this.musicBuffer;
+			source.playbackRate.value = this._musicPlayBackRate;
+			source.connect(this.eqEntryPoint);
 
-		this._activeSourceNode = source;
-		this._startTimeInContext = this.ctx.currentTime;
-		this._startOffsetInSeconds = clampedOffset;
-		this._pausedPosition = clampedOffset;
-		this._isPlaying = true;
+			this._activeSourceNode = source;
+			this._startTimeInContext = this.ctx.currentTime;
+			this._startOffsetInSeconds = clampedOffset;
+			this._pausedPosition = clampedOffset;
+			this._isPlaying = true;
 
-		source.onended = () => {
-			if (this._activeSourceNode === source) {
-				this._activeSourceNode = null;
-				this._isPlaying = false;
-				this._pausedPosition = this.musicDuration;
-				this.dispatchEvent(new Event("music-pause"));
-				this.dispatchEvent(new Event("music-seeked"));
-			}
-		};
+			source.onended = () => {
+				if (this._activeSourceNode === source) {
+					this._activeSourceNode = null;
+					this._isPlaying = false;
+					this._pausedPosition = this.musicDuration;
+					this.dispatchEvent(new Event("music-pause"));
+					this.dispatchEvent(new Event("music-seeked"));
+				}
+			};
 
-		source.start(0, clampedOffset);
+			source.start(0, clampedOffset);
+			this.dispatchEvent(new Event("music-resume"));
+		} catch (err) {
+			console.warn("[AudioEngine] Playback start failed, recreating context...", err);
+			await this.recreateContext();
+			const source = this.ctx.createBufferSource();
+			source.buffer = this.musicBuffer;
+			source.playbackRate.value = this._musicPlayBackRate;
+			source.connect(this.eqEntryPoint);
 
-		this.dispatchEvent(new Event("music-resume"));
+			this._activeSourceNode = source;
+			this._startTimeInContext = this.ctx.currentTime;
+			this._startOffsetInSeconds = clampedOffset;
+			this._pausedPosition = clampedOffset;
+			this._isPlaying = true;
+
+			source.onended = () => {
+				if (this._activeSourceNode === source) {
+					this._activeSourceNode = null;
+					this._isPlaying = false;
+					this._pausedPosition = this.musicDuration;
+					this.dispatchEvent(new Event("music-pause"));
+					this.dispatchEvent(new Event("music-seeked"));
+				}
+			};
+
+			source.start(0, clampedOffset);
+			this.dispatchEvent(new Event("music-resume"));
+		}
 	}
 
 	pauseMusic() {
@@ -548,41 +585,81 @@ class AudioEngine extends EventTarget {
 
 		await this.resumeContext();
 
-		const audioCtxStartTime = this.ctx.currentTime;
-		const mediaStartTime = startTimeInSeconds;
+		try {
+			const audioCtxStartTime = this.ctx.currentTime;
+			const mediaStartTime = startTimeInSeconds;
 
-		const source = this.ctx.createBufferSource();
-		source.buffer = this.musicBuffer;
-		source.connect(this.eqEntryPoint);
-		this.auditionSourceNode = source;
+			const source = this.ctx.createBufferSource();
+			source.buffer = this.musicBuffer;
+			source.connect(this.eqEntryPoint);
+			this.auditionSourceNode = source;
 
-		const progressLoop = () => {
-			const elapsedTime = this.ctx.currentTime - audioCtxStartTime;
-			const currentAuditionTime = mediaStartTime + elapsedTime;
+			const progressLoop = () => {
+				const elapsedTime = this.ctx.currentTime - audioCtxStartTime;
+				const currentAuditionTime = mediaStartTime + elapsedTime;
 
-			if (currentAuditionTime >= endTimeInSeconds) {
-				globalStore.set(auditionTimeAtom, null);
-				auditionRafId = null;
-			} else {
-				globalStore.set(auditionTimeAtom, currentAuditionTime);
-				auditionRafId = requestAnimationFrame(progressLoop);
-			}
-		};
-
-		source.addEventListener("ended", () => {
-			if (this.auditionSourceNode === source) {
-				if (auditionRafId) {
-					cancelAnimationFrame(auditionRafId);
+				if (currentAuditionTime >= endTimeInSeconds) {
+					globalStore.set(auditionTimeAtom, null);
 					auditionRafId = null;
+				} else {
+					globalStore.set(auditionTimeAtom, currentAuditionTime);
+					auditionRafId = requestAnimationFrame(progressLoop);
 				}
-				globalStore.set(auditionTimeAtom, null);
-				this.auditionSourceNode = null;
-			}
-			source.disconnect();
-		});
+			};
 
-		source.start(0, mediaStartTime, durationInSeconds);
-		auditionRafId = requestAnimationFrame(progressLoop);
+			source.addEventListener("ended", () => {
+				if (this.auditionSourceNode === source) {
+					if (auditionRafId) {
+						cancelAnimationFrame(auditionRafId);
+						auditionRafId = null;
+					}
+					globalStore.set(auditionTimeAtom, null);
+					this.auditionSourceNode = null;
+				}
+				source.disconnect();
+			});
+
+			source.start(0, mediaStartTime, durationInSeconds);
+			auditionRafId = requestAnimationFrame(progressLoop);
+		} catch (err) {
+			console.warn("[AudioEngine] Audition start failed, recreating context...", err);
+			await this.recreateContext();
+			const audioCtxStartTime = this.ctx.currentTime;
+			const mediaStartTime = startTimeInSeconds;
+
+			const source = this.ctx.createBufferSource();
+			source.buffer = this.musicBuffer;
+			source.connect(this.eqEntryPoint);
+			this.auditionSourceNode = source;
+
+			const progressLoop = () => {
+				const elapsedTime = this.ctx.currentTime - audioCtxStartTime;
+				const currentAuditionTime = mediaStartTime + elapsedTime;
+
+				if (currentAuditionTime >= endTimeInSeconds) {
+					globalStore.set(auditionTimeAtom, null);
+					auditionRafId = null;
+				} else {
+					globalStore.set(auditionTimeAtom, currentAuditionTime);
+					auditionRafId = requestAnimationFrame(progressLoop);
+				}
+			};
+
+			source.addEventListener("ended", () => {
+				if (this.auditionSourceNode === source) {
+					if (auditionRafId) {
+						cancelAnimationFrame(auditionRafId);
+						auditionRafId = null;
+					}
+					globalStore.set(auditionTimeAtom, null);
+					this.auditionSourceNode = null;
+				}
+				source.disconnect();
+			});
+
+			source.start(0, mediaStartTime, durationInSeconds);
+			auditionRafId = requestAnimationFrame(progressLoop);
+		}
 	}
 
 	//#endregion

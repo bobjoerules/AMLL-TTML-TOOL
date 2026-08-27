@@ -9,7 +9,11 @@
  * https://github.com/bobjoerules/AMLL-TTML-TOOL/blob/main/LICENSE
  */
 
-import { Cloud24Regular, MyLocation24Regular } from "@fluentui/react-icons";
+import {
+	Cloud24Regular,
+	DocumentBulletList24Regular,
+	MyLocation24Regular,
+} from "@fluentui/react-icons";
 import { Box, Button, Card, Flex, Text } from "@radix-ui/themes";
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { splitAtom } from "jotai/utils";
@@ -37,7 +41,10 @@ import {
 	guideStepAtom,
 	guideWelcomeOpenAtom,
 } from "$/modules/onboarding/states";
-import { importLyricsChooserDialogAtom } from "$/states/dialogs";
+import {
+	importLyricsChooserDialogAtom,
+	ttmlChecklistDialogAtom,
+} from "$/states/dialogs";
 import { useFileOpener } from "$/hooks/useFileOpener";
 import { ViewportList, type ViewportListRef } from "react-viewport-list";
 import { currentTimeAtom } from "$/modules/audio/states";
@@ -116,6 +123,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 	const setGuideStep = useSetAtom(guideStepAtom);
 	const setGuideExported = useSetAtom(guideExportedAtom);
 	const setImportChooser = useSetAtom(importLyricsChooserDialogAtom);
+	const setTtmlChecklist = useSetAtom(ttmlChecklistDialogAtom);
 	const { openFile } = useFileOpener();
 	const user = useAtomValue(currentUserAtom);
 	const setFileManagerOpen = useSetAtom(cloudFileManagerOpenAtom);
@@ -558,6 +566,14 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 							</Button>
 							<Button variant="soft" onClick={() => setImportChooser(true)}>
 								{t("beginnerGuide.empty.import", "Import Lyrics")}
+							</Button>
+							<Button
+								variant="soft"
+								color="purple"
+								onClick={() => setTtmlChecklist(true)}
+							>
+								<DocumentBulletList24Regular style={{ width: 16, height: 16 }} />
+								{t("ttmlChecklist.title", "TTML Checklist")}
 							</Button>
 							<Button variant="outline" onClick={openExistingTtml}>
 								{t("beginnerGuide.empty.open", "Open TTML")}

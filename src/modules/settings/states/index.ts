@@ -97,7 +97,7 @@ export const discordIdleTimeoutMinutesAtom = atomWithStorage(
 export type DiscordActivityType = "playing" | "listening";
 export const discordActivityTypeAtom = atomWithStorage<DiscordActivityType>(
 	"discordActivityType",
-	"playing",
+	"listening",
 );
 
 export type DiscordImageMode =

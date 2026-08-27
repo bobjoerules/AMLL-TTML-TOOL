@@ -1227,7 +1227,14 @@
     "completed": "Completed",
     "uploadCover": "Upload Cover",
     "removeCover": "Remove Cover",
-    "newItem": "New Song"
+    "newItem": "New Song",
+    "searchProvider": "Search Genius / Lyrics Providers",
+    "searchProviderPlaceholder": "Search song or artist on Genius, Lyrically, LRCLIB...",
+    "searchingProvider": "Searching...",
+    "searchProviderBtn": "Search",
+    "noProviderResults": "No results found from lyric providers.",
+    "importLyrics": "Import Lyrics",
+    "importLyricsTooltip": "Open lyrics import & review page for this song"
   },
   "autoSegmentDialog": {
     "title": "Auto Segment",

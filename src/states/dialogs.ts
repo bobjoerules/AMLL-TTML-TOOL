@@ -69,3 +69,19 @@ export const suggestedSplitsDialogAtom = atom<{
 	lineId?: string;
 	wordIndex?: number;
 }>({ open: false });
+
+export interface ImportLyricsPrefill {
+	source: "genius" | "lyrically" | "lrclib";
+	query?: string;
+	track?: {
+		id?: string | number;
+		name: string;
+		artist: string;
+		album?: string;
+		cover?: string;
+		lyrics?: string;
+	};
+}
+
+export const importLyricsPrefillAtom = atom<ImportLyricsPrefill | null>(null);
+

@@ -35,6 +35,7 @@ import {
 	confirmDialogAtom,
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
+	importLyricsPrefillAtom,
 	lyricallyImportLyricsDialogAtom,
 } from "$/states/dialogs.ts";
 import {
@@ -124,24 +125,62 @@ export const ImportLyricsDialog = ({
 		geniusCategorizationEnabledAtom,
 	);
 	const [tempApiKey, setTempApiKey] = useState("");
+	const [prefill, setPrefill] = useAtom(importLyricsPrefillAtom);
 
-	useEffect(() => {
-		if (isOpen) {
-			setHasSearched(false);
-			setResults([]);
-			setSelectedHit(null);
+	const handleSelectSong = useCallback(
+		async (hit: ImportTrack) => {
+			setSelectedHit(hit);
+			setFetchingLyrics(true);
 			setEditableLyrics("");
 			setIsEditing(false);
-			if (source === "genius") {
-				setProcessLyrics(true);
-				setFetchSongwriters(true);
-				setCategorizeGeniusHeaders(true);
+
+			// Set TTML metadata and file name immediately
+			const title = hit.name;
+			const artist = hit.artist;
+			const safeFileName = `${artist} - ${title}.ttml`
+				.replace(/[/\\?%*:|"<>]/g, "-")
+				.trim();
+
+			setSaveFileName(safeFileName);
+			setLyricLines((prev) => {
+				const upsert = (key: string, value: string) => {
+					const existing = prev.metadata.find((m) => m.key === key);
+					if (existing) {
+						existing.value = [value];
+					} else {
+						prev.metadata.push({ key, value: [value] });
+					}
+				};
+				upsert("musicName", title);
+				upsert("artists", artist);
+				if (hit.album) upsert("album", hit.album);
+				if (hit.cover) upsert("cover_art", hit.cover);
+			});
+
+			try {
+				const lyrics =
+					hit.lyrics?.trim() ||
+					(hit.fetchLyrics ? await hit.fetchLyrics() : "");
+				setEditableLyrics(
+					lyrics ||
+						t("lyrically.noLyricsLabel", "No lyrics available for this track."),
+				);
+			} catch (e) {
+				const msg = e instanceof Error ? e.message : String(e);
+				toast.error(
+					t(
+						"metadataDialog.fetchSongwriters.fetchError",
+						"Could not fetch lyrics: {error}",
+						{ error: msg },
+					),
+				);
+				setSelectedHit(null);
+			} finally {
+				setFetchingLyrics(false);
 			}
-			setTimeout(() => {
-				inputRef.current?.focus();
-			}, 50);
-		}
-	}, [isOpen, source]);
+		},
+		[setSaveFileName, setLyricLines, t],
+	);
 
 	const handleSearch = useCallback(async () => {
 		if (!query.trim()) return;
@@ -259,60 +298,166 @@ export const ImportLyricsDialog = ({
 		}
 	}, [query, t, source, geniusApiKey]);
 
-	const handleSelectSong = useCallback(
-		async (hit: ImportTrack) => {
-			setSelectedHit(hit);
-			setFetchingLyrics(true);
+	useEffect(() => {
+		if (isOpen) {
+			if (prefill && prefill.source === source) {
+				const currentPrefill = prefill;
+				setPrefill(null);
+
+				if (currentPrefill.track) {
+					const track = currentPrefill.track;
+					let hit: ImportTrack;
+					if (source === "genius" && track.id) {
+						hit = {
+							id: Number(track.id),
+							name: track.name,
+							artist: track.artist,
+							album: track.album,
+							cover: track.cover,
+							fetchLyrics: () => GeniusApi.getLyrics(Number(track.id)),
+							fetchSongwriters: async () => {
+								try {
+									const artists = (
+										await GeniusApi.getSongById(Number(track.id), geniusApiKey)
+									).response.song.writer_artists;
+									return artists.map((a: any) => a.name);
+								} catch {
+									return [track.artist];
+								}
+							},
+						};
+					} else if (source === "lrclib" && track.id) {
+						hit = {
+							id: Number(track.id),
+							name: track.name,
+							artist: track.artist,
+							album: track.album,
+							cover: track.cover,
+							lyrics: track.lyrics || "",
+							source: "LRCLIB",
+						};
+					} else {
+						hit = {
+							id: track.id || `${track.artist}-${track.name}`,
+							name: track.name,
+							artist: track.artist,
+							album: track.album,
+							cover: track.cover,
+							lyrics: track.lyrics || "",
+							fetchLyrics: () =>
+								LyricallyApi.getLyrics(track.name, track.artist).then(
+									(d) => d.lyrics || "",
+								),
+						};
+					}
+					void handleSelectSong(hit);
+					return;
+				}
+
+				if (currentPrefill.query) {
+					setQuery(currentPrefill.query);
+					setSearching(true);
+					setHasSearched(true);
+					setResults([]);
+					setSelectedHit(null);
+					setEditableLyrics("");
+					setIsEditing(false);
+					const q = currentPrefill.query;
+					(async () => {
+						try {
+							let hits: ImportTrack[] = [];
+							if (source === "genius") {
+								try {
+									hits = (await GeniusApi.search(q, geniusApiKey)).response.hits.map(
+										({ result }) => ({
+											id: result.id,
+											name: result.title,
+											artist: result.primary_artist.name,
+											album: result.album?.name,
+											cover:
+												result.song_art_image_url ||
+												result.song_art_image_thumbnail_url,
+											fetchLyrics: () => GeniusApi.getLyrics(result.id),
+											fetchSongwriters: async () => {
+												try {
+													const artists = (
+														await GeniusApi.getSongById(
+															result.id,
+															geniusApiKey,
+														)
+													).response.song.writer_artists;
+													return artists.map((a: any) => a.name);
+												} catch {
+													return [result.primary_artist.name];
+												}
+											},
+										}),
+									);
+								} catch (err) {
+									console.warn("Genius search failed in prefill, fallback to Lyrically:", err);
+									hits = (await LyricallyApi.search(q)).map((track, index) => ({
+										id: `${track.artist}-${track.name}-${index}`,
+										...track,
+										fetchLyrics: () =>
+											LyricallyApi.getLyrics(track.name, track.artist).then(
+												(detail) => detail.lyrics || "",
+											),
+									}));
+								}
+							} else if (source === "lrclib") {
+								hits = (await LrcLibApi.search(q)).map((track) => ({
+									id: track.id,
+									name: track.name,
+									artist: track.artistName,
+									album: track.albumName,
+									lyrics:
+										track.plainLyrics ||
+										(track.syncedLyrics
+											? lrcToPlainLyrics(track.syncedLyrics)
+											: ""),
+									source: track.syncedLyrics
+										? "LRCLIB • synced lyrics available"
+										: "LRCLIB",
+								}));
+							} else {
+								hits = (await LyricallyApi.search(q)).map((track, index) => ({
+									id: `${track.artist}-${track.name}-${index}`,
+									...track,
+									fetchLyrics: () =>
+										LyricallyApi.getLyrics(track.name, track.artist).then(
+											(detail) => detail.lyrics || "",
+										),
+								}));
+							}
+							setResults(hits);
+							if (hits.length > 0) {
+								void handleSelectSong(hits[0]);
+							}
+						} catch (e) {
+							console.error("Auto search failed", e);
+						} finally {
+							setSearching(false);
+						}
+					})();
+					return;
+				}
+			}
+
+			setHasSearched(false);
+			setResults([]);
+			setSelectedHit(null);
 			setEditableLyrics("");
 			setIsEditing(false);
-
-			// Set TTML metadata and file name immediately
-			const title = hit.name;
-			const artist = hit.artist;
-			const safeFileName = `${artist} - ${title}.ttml`
-				.replace(/[/\\?%*:|"<>]/g, "-")
-				.trim();
-
-			setSaveFileName(safeFileName);
-			setLyricLines((prev) => {
-				const upsert = (key: string, value: string) => {
-					const existing = prev.metadata.find((m) => m.key === key);
-					if (existing) {
-						existing.value = [value];
-					} else {
-						prev.metadata.push({ key, value: [value] });
-					}
-				};
-				upsert("musicName", title);
-				upsert("artists", artist);
-				if (hit.album) upsert("album", hit.album);
-				if (hit.cover) upsert("cover_art", hit.cover);
-			});
-
-			try {
-				const lyrics =
-					hit.lyrics?.trim() ||
-					(hit.fetchLyrics ? await hit.fetchLyrics() : "");
-				setEditableLyrics(
-					lyrics ||
-						t("lyrically.noLyricsLabel", "No lyrics available for this track."),
-				);
-			} catch (e) {
-				const msg = e instanceof Error ? e.message : String(e);
-				toast.error(
-					t(
-						"metadataDialog.fetchSongwriters.fetchError",
-						"Could not fetch lyrics: {error}",
-						{ error: msg },
-					),
-				);
-				setSelectedHit(null);
-			} finally {
-				setFetchingLyrics(false);
+			if (source === "genius") {
+				setProcessLyrics(true);
+				setFetchSongwriters(true);
+				setCategorizeGeniusHeaders(true);
 			}
-		},
-		[setSaveFileName, setLyricLines, t],
-	);
+			setTimeout(() => {
+				inputRef.current?.focus();
+			}, 50);
+		}
+	}, [isOpen, source, prefill, setPrefill, geniusApiKey, handleSelectSong]);
 
 	const performImport = useCallback(
 		async (reviewed: ReviewedSection[] = []) => {

@@ -1,7 +1,7 @@
 {
 	"name": "amll-ttml-tool",
 	"private": true,
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
@@ -13,6 +13,9 @@
 		"lint": "biome lint",
 		"fmt": "biome format --write ./src",
 		"preview": "vite preview",
+		"website:dev": "npm --prefix website run dev",
+		"website:build": "npm --prefix website run build",
+		"website:preview": "npm --prefix website run preview",
 		"locale:gen": "i18next 'src/**/*.{ts,tsx}'",
 		"locale:pull": "crowdin download",
 		"locale:push": "crowdin upload"
