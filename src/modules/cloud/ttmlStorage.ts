@@ -167,7 +167,20 @@ export async function saveTTMLToCloud(
 	}
 
 	const now = Date.now();
-	const data: Omit<CloudTTMLDocument, "id"> = {
+	let coverArt: string | null = null;
+	const coverMatch =
+		input.rawTTML?.match(/key=["']cover(?:_art)?["'][^>]*value=["']([^"']+)["']/i) ||
+		input.rawTTML?.match(/<amll:meta[^>]*key=["']cover(?:_art)?["'][^>]*>([^<]+)<\/amll:meta>/i) ||
+		input.rawTTML?.match(/https?:\/\/[^\s<>"']+\.(?:jpg|jpeg|png|webp)/i);
+	if (coverMatch?.[1] || coverMatch?.[0]) {
+		coverArt = coverMatch[1] || coverMatch[0];
+	}
+
+	const data: Omit<CloudTTMLDocument, "id"> & {
+		coverArt?: string | null;
+		tags?: string[];
+		finished?: boolean;
+	} = {
 		title: input.title || "Untitled",
 		artist: input.artist || "",
 		album: input.album || "",
@@ -183,9 +196,20 @@ export async function saveTTMLToCloud(
 		audioStoragePath,
 		audioFileName,
 		audioSize,
+		coverArt,
+		tags: ["finished"],
+		finished: true,
 	};
 
 	await setDoc(docRef, data, { merge: true });
+
+	// Mirror to finished_ttmls and public_ttmls collections
+	try {
+		const finishedDocRef = doc(collection(db, "finished_ttmls"), docRef.id);
+		await setDoc(finishedDocRef, data, { merge: true });
+	} catch (err) {
+		console.warn("Could not mirror to finished_ttmls:", err);
+	}
 
 	// Refresh the local list
 	await fetchUserTTMLList();

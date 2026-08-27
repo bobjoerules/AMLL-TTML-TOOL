@@ -1,5 +1,15 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, orderBy, limit, type Firestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  collectionGroup,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  type Firestore,
+  type DocumentData
+} from 'firebase/firestore';
 
 export interface FinishedTTML {
   id: string;
@@ -36,6 +46,105 @@ try {
   db = getFirestore(app);
 } catch (e) {
   console.warn("Firebase initialization failed:", e);
+}
+
+function parseTTMLDoc(id: string, data: DocumentData): FinishedTTML {
+  const rawTTML = data.rawTTML || data.ttmlContent || data.ttml || "";
+  
+  let coverArt = data.coverArt || data.cover_art || data.cover || data.songCover || null;
+  if (!coverArt && rawTTML) {
+    const match =
+      rawTTML.match(/key=["']cover(?:_art)?["'][^>]*value=["']([^"']+)["']/i) ||
+      rawTTML.match(/<amll:meta[^>]*key=["']cover(?:_art)?["'][^>]*>([^<]+)<\/amll:meta>/i) ||
+      rawTTML.match(/https?:\/\/[^\s<>"']+\.(?:jpg|jpeg|png|webp)/i);
+    if (match?.[1] || match?.[0]) {
+      coverArt = match[1] || match[0];
+    }
+  }
+
+  let title = data.title;
+  let artist = data.artist;
+  let album = data.album;
+
+  if (!title && rawTTML) {
+    const titleMatch = rawTTML.match(/<ttm:title>([^<]+)<\/ttm:title>/i);
+    if (titleMatch) title = titleMatch[1];
+  }
+
+  if (!artist && rawTTML) {
+    const artistMatch = rawTTML.match(/<ttm:agent[^>]*type=["']person["'][^>]*>([^<]+)<\/ttm:agent>/i);
+    if (artistMatch) artist = artistMatch[1];
+  }
+
+  return {
+    id,
+    title: title || "Untitled",
+    artist: artist || "Unknown Artist",
+    album: album || undefined,
+    coverArt: coverArt || undefined,
+    lineCount: data.lineCount || (data.lines ? data.lines.length : 0) || (rawTTML.match(/<p\b/g)?.length || 0),
+    durationMs: data.durationMs || 0,
+    tags: data.tags || (data.finished ? ["finished"] : ["community"]),
+    rawTTML,
+    createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt || Date.now(),
+    downloadUrl: data.downloadUrl || data.audioUrl,
+  };
+}
+
+export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
+  if (!db) return FEATURED_FINISHED_TTMLS;
+
+  const resultsMap = new Map<string, FinishedTTML>();
+
+  try {
+    // 1. Try querying collection "finished_ttmls"
+    try {
+      const snap = await getDocs(query(collection(db, "finished_ttmls"), limit(60)));
+      snap.forEach((docSnap) => {
+        const item = parseTTMLDoc(docSnap.id, docSnap.data());
+        resultsMap.set(item.id, item);
+      });
+    } catch (e) {
+      console.warn("Could not read finished_ttmls collection:", e);
+    }
+
+    // 2. Try querying collection "public_ttmls"
+    try {
+      const snap = await getDocs(query(collection(db, "public_ttmls"), limit(60)));
+      snap.forEach((docSnap) => {
+        const item = parseTTMLDoc(docSnap.id, docSnap.data());
+        if (!resultsMap.has(item.id)) {
+          resultsMap.set(item.id, item);
+        }
+      });
+    } catch (e) {
+      console.warn("Could not read public_ttmls collection:", e);
+    }
+
+    // 3. Try querying collectionGroup "ttmls" (all user uploaded tracks)
+    try {
+      const snap = await getDocs(query(collectionGroup(db, "ttmls"), limit(60)));
+      snap.forEach((docSnap) => {
+        const item = parseTTMLDoc(docSnap.id, docSnap.data());
+        if (!resultsMap.has(item.id)) {
+          resultsMap.set(item.id, item);
+        }
+      });
+    } catch (e) {
+      console.warn("Could not read collectionGroup(ttmls):", e);
+    }
+  } catch (err) {
+    console.error("Error connecting to Firebase:", err);
+  }
+
+  // Include featured verified tracks if library has few items
+  for (const featured of FEATURED_FINISHED_TTMLS) {
+    if (!resultsMap.has(featured.id)) {
+      resultsMap.set(featured.id, featured);
+    }
+  }
+
+  return Array.from(resultsMap.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
 // Built-in showcase finished TTMLs crafted with syllable-level timings
@@ -123,45 +232,7 @@ export const FEATURED_FINISHED_TTMLS: FinishedTTML[] = [
   }
 ];
 
-export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
-  if (!db) return FEATURED_FINISHED_TTMLS;
 
-  try {
-    const list: FinishedTTML[] = [];
-    
-    // Attempt querying public documents from Firestore
-    try {
-      const q = query(collection(db, "public_ttmls"), orderBy("createdAt", "desc"), limit(50));
-      const snapshot = await getDocs(q);
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        list.push({
-          id: docSnap.id,
-          title: data.title || "Untitled",
-          artist: data.artist || "Unknown Artist",
-          album: data.album,
-          coverArt: data.coverArt || data.cover_art,
-          lineCount: data.lineCount || (data.lines ? data.lines.length : 0),
-          durationMs: data.durationMs || 0,
-          tags: data.tags || ["finished"],
-          rawTTML: data.rawTTML || data.ttmlContent,
-          createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
-          downloadUrl: data.downloadUrl,
-        });
-      });
-    } catch {
-      // If collection doesn't exist yet or permissions are restricted, fallback to local verified list
-    }
-
-    if (list.length === 0) {
-      return FEATURED_FINISHED_TTMLS;
-    }
-    return list;
-  } catch (err) {
-    console.error("Error fetching finished TTMLs:", err);
-    return FEATURED_FINISHED_TTMLS;
-  }
-}
 
 export function downloadTTMLFile(ttml: FinishedTTML) {
   const content = ttml.rawTTML || `<?xml version="1.0" encoding="utf-8"?>

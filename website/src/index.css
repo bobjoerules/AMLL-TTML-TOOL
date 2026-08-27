@@ -231,11 +231,20 @@ body {
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background: transparent;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover {
   color: white;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active {
+  color: white;
+  background: rgba(250, 45, 72, 0.12);
+  border-color: rgba(250, 45, 72, 0.3);
+  font-weight: 600;
 }
 
 .nav-actions {
@@ -337,12 +346,11 @@ body {
 
 /* App Showcase Carousel / Tabs */
 .showcase-container {
-  background: var(--bg-secondary);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .showcase-tabs {
@@ -350,52 +358,56 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
 }
 
 .showcase-tab-btn {
   padding: 8px 18px;
   border-radius: 9999px;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text-secondary);
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .showcase-tab-btn:hover {
   color: white;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border-hover);
 }
 
 .showcase-tab-btn.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(135deg, rgba(250, 45, 72, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+  color: #ffffff;
+  border-color: rgba(250, 45, 72, 0.45);
+  box-shadow: 0 0 20px rgba(250, 45, 72, 0.2);
 }
 
 .showcase-image-wrapper {
   position: relative;
   border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: #000;
-  border: 1px solid var(--glass-border);
-  aspect-ratio: 16 / 10;
-  max-height: 600px;
+  overflow: visible;
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: none;
 }
 
 .showcase-img {
   width: 100%;
-  height: 100%;
+  max-width: 1080px;
+  height: auto;
+  max-height: 720px;
   object-fit: contain;
-  transition: transform 0.4s ease;
+  border-radius: var(--radius-lg);
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s ease;
 }
 
 /* Features Grid */

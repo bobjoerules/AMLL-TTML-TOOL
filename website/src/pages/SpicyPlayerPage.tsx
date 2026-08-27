@@ -110,11 +110,13 @@ export const SpicyPlayerPage: React.FC = () => {
                 style={{
                   position: 'relative',
                   width: '100%',
-                  aspectRatio: '16/10',
                   borderRadius: 'var(--radius-md)',
                   overflow: 'hidden',
-                  background: '#000',
+                  background: 'transparent',
                   marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 <img
@@ -122,9 +124,12 @@ export const SpicyPlayerPage: React.FC = () => {
                   alt={item.title}
                   style={{
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
+                    height: 'auto',
+                    maxHeight: '450px',
+                    objectFit: 'contain',
+                    borderRadius: 'var(--radius-md)',
                     transition: 'transform 0.3s ease',
+                    display: 'block',
                   }}
                 />
                 <div

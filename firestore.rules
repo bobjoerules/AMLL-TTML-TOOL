@@ -7,15 +7,26 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // User TTML Files & Library
+    // User TTML Files & Library (allow public read for community library & website)
     match /users/{userId}/ttmls/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Public / Shared TTMLs
+    // Public & Finished TTMLs Collection
+    match /finished_ttmls/{ttmlId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
     match /public_ttmls/{ttmlId} {
       allow read: if true;
       allow write: if request.auth != null;
+    }
+
+    // Collection group query support across all user ttmls
+    match /{path=**}/ttmls/{document} {
+      allow read: if true;
     }
   }
 }
