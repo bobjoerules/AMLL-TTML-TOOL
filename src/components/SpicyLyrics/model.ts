@@ -95,8 +95,7 @@ export function groupSpicyTokens(tokens: SpicyToken[]): SpicyWordGroup[] {
 		) {
 			groups.push({
 				items,
-				hasTrailingSpace:
-					!!token.spaceAfter && wordIndex < tokens.length - 1,
+				hasTrailingSpace: !!token.spaceAfter && wordIndex < tokens.length - 1,
 			});
 			items = [];
 		}
@@ -220,27 +219,32 @@ export function buildSpicyLines(
 	romanized: boolean,
 	forceLineSynced = false,
 ): SpicyLine[] {
-	const normalized = source
-		.map((line) => {
-			const text = lineText(line, romanized);
-			const timedWords = line.words.filter((w) => valid(w.startTime, w.endTime));
-			const effectiveStart = line.startTime > 0 ? line.startTime : (timedWords[0]?.startTime ?? 0);
-			const effectiveEnd = line.endTime > effectiveStart ? line.endTime : (timedWords[timedWords.length - 1]?.endTime ?? (effectiveStart > 0 ? effectiveStart + 1000 : 0));
-			const lineSyncedExplicit = forceLineSynced || isLineSynced(line);
-			const isWordSynced = !lineSyncedExplicit && timedWords.length > 0;
-			return {
-				id: line.id,
-				startTime: effectiveStart,
-				endTime: effectiveEnd,
-				isLineSynced: lineSyncedExplicit || (!isWordSynced && effectiveEnd <= effectiveStart),
-				isRtl: isRtl(lineText(line, false)),
-				text,
-				isBackground: !!line.isBG,
-				isDuet: !!line.isDuet,
-				translation: line.translatedLyric || undefined,
-				words: makeTokens(line.words, simple, romanized, !!line.isBG),
-			};
-		});
+	const normalized = source.map((line) => {
+		const text = lineText(line, romanized);
+		const timedWords = line.words.filter((w) => valid(w.startTime, w.endTime));
+		const effectiveStart =
+			line.startTime > 0 ? line.startTime : (timedWords[0]?.startTime ?? 0);
+		const effectiveEnd =
+			line.endTime > effectiveStart
+				? line.endTime
+				: (timedWords[timedWords.length - 1]?.endTime ??
+					(effectiveStart > 0 ? effectiveStart + 1000 : 0));
+		const lineSyncedExplicit = forceLineSynced || isLineSynced(line);
+		const isWordSynced = !lineSyncedExplicit && timedWords.length > 0;
+		return {
+			id: line.id,
+			startTime: effectiveStart,
+			endTime: effectiveEnd,
+			isLineSynced:
+				lineSyncedExplicit || (!isWordSynced && effectiveEnd <= effectiveStart),
+			isRtl: isRtl(lineText(line, false)),
+			text,
+			isBackground: !!line.isBG,
+			isDuet: !!line.isDuet,
+			translation: line.translatedLyric || undefined,
+			words: makeTokens(line.words, simple, romanized, !!line.isBG),
+		};
+	});
 	const result: SpicyLine[] = [];
 	const firstMainLine = normalized.find((line) => !line.isBackground);
 	const firstMainStart = firstMainLine?.startTime;

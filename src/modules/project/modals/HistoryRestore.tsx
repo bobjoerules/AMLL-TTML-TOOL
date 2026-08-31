@@ -194,10 +194,20 @@ export const HistoryRestoreDialog = () => {
 						{t("historyRestoreDialog.projects", "最近项目")}
 					</Dialog.Title>
 					<Dialog.Description>
-						{t("historyRestoreDialog.confirm.description", "恢复或管理项目历史快照")}
+						{t(
+							"historyRestoreDialog.confirm.description",
+							"恢复或管理项目历史快照",
+						)}
 					</Dialog.Description>
 				</VisuallyHidden>
-				<Flex style={{ height: "100%", width: "100%", minHeight: 0, overflow: "hidden" }}>
+				<Flex
+					style={{
+						height: "100%",
+						width: "100%",
+						minHeight: 0,
+						overflow: "hidden",
+					}}
+				>
 					<Flex
 						direction="column"
 						style={{
@@ -299,7 +309,13 @@ export const HistoryRestoreDialog = () => {
 					>
 						{currentProject ? (
 							<>
-								<Box p="4" style={{ borderBottom: "1px solid var(--gray-5)", flexShrink: 0 }}>
+								<Box
+									p="4"
+									style={{
+										borderBottom: "1px solid var(--gray-5)",
+										flexShrink: 0,
+									}}
+								>
 									<Flex justify="between" align="start" mb="3">
 										<Heading size="4">
 											{getProjectDisplayName(currentProject)}
@@ -311,7 +327,11 @@ export const HistoryRestoreDialog = () => {
 											<Box>
 												<DocumentRegular fontSize={24} />
 											</Box>
-											<Flex direction="column" flexGrow="1" style={{ minWidth: 0 }}>
+											<Flex
+												direction="column"
+												flexGrow="1"
+												style={{ minWidth: 0 }}
+											>
 												<Text weight="bold">
 													{t("historyRestoreDialog.latestState", "最新版本")}
 												</Text>
@@ -364,7 +384,9 @@ export const HistoryRestoreDialog = () => {
 										</Text>
 									</Flex>
 
-									<Box style={{ flexGrow: 1, minHeight: 0, overflow: "hidden" }}>
+									<Box
+										style={{ flexGrow: 1, minHeight: 0, overflow: "hidden" }}
+									>
 										<ScrollArea
 											type="auto"
 											scrollbars="vertical"
@@ -412,7 +434,9 @@ export const HistoryRestoreDialog = () => {
 																	<Button
 																		size="2"
 																		variant="soft"
-																		onClick={() => handleRestoreVersion(version)}
+																		onClick={() =>
+																			handleRestoreVersion(version)
+																		}
 																	>
 																		{t("common.restore", "恢复")}
 																	</Button>

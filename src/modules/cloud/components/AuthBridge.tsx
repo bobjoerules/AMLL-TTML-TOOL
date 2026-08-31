@@ -22,7 +22,11 @@ import {
 import { doc, setDoc } from "firebase/firestore";
 import { type FC, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { getFirebaseAuth, getFirebaseFirestore, initFirebase } from "../firebase";
+import {
+	getFirebaseAuth,
+	getFirebaseFirestore,
+	initFirebase,
+} from "../firebase";
 
 export interface BridgeTokenPayload {
 	type: "amll-ttml-auth-token";
@@ -50,17 +54,19 @@ export const AuthBridge: FC = () => {
 		const { auth } = initFirebase();
 		if (auth) {
 			import("firebase/auth").then(({ getRedirectResult }) => {
-				getRedirectResult(auth).then(async (res) => {
-					if (res?.user) {
-						setUser(res.user);
-						if (sessionId) {
-							await syncSessionToFirestore(
-								res.user,
-								res.user.providerData[0]?.providerId || "google.com",
-							);
+				getRedirectResult(auth)
+					.then(async (res) => {
+						if (res?.user) {
+							setUser(res.user);
+							if (sessionId) {
+								await syncSessionToFirestore(
+									res.user,
+									res.user.providerData[0]?.providerId || "google.com",
+								);
+							}
 						}
-					}
-				}).catch(console.error);
+					})
+					.catch(console.error);
 			});
 
 			return onAuthStateChanged(auth, async (currentUser) => {
@@ -137,7 +143,10 @@ export const AuthBridge: FC = () => {
 					credential?.accessToken,
 				);
 			} catch (popupErr: unknown) {
-				console.warn("Popup blocked or closed, falling back to redirect...", popupErr);
+				console.warn(
+					"Popup blocked or closed, falling back to redirect...",
+					popupErr,
+				);
 				await signInWithRedirect(auth, provider);
 			}
 		} catch (err: unknown) {
@@ -165,7 +174,10 @@ export const AuthBridge: FC = () => {
 					credential?.accessToken,
 				);
 			} catch (popupErr: unknown) {
-				console.warn("Popup blocked or closed, falling back to redirect...", popupErr);
+				console.warn(
+					"Popup blocked or closed, falling back to redirect...",
+					popupErr,
+				);
 				await signInWithRedirect(auth, provider);
 			}
 		} catch (err: unknown) {
@@ -193,7 +205,10 @@ export const AuthBridge: FC = () => {
 					credential?.accessToken,
 				);
 			} catch (popupErr: unknown) {
-				console.warn("Popup blocked or closed, falling back to redirect...", popupErr);
+				console.warn(
+					"Popup blocked or closed, falling back to redirect...",
+					popupErr,
+				);
 				await signInWithRedirect(auth, provider);
 			}
 		} catch (err: unknown) {
@@ -228,7 +243,8 @@ export const AuthBridge: FC = () => {
 						<Flex direction="column" align="center" gap="2">
 							<Heading size="5">🔗 TTML Tool Desktop Login</Heading>
 							<Text size="2" color="gray" align="center">
-								Sign in below in your web browser to securely sync your account with the Desktop App.
+								Sign in below in your web browser to securely sync your account
+								with the Desktop App.
 							</Text>
 						</Flex>
 
@@ -239,7 +255,9 @@ export const AuthBridge: FC = () => {
 								<Card
 									variant="classic"
 									style={{
-										background: autoSynced ? "var(--green-a3)" : "var(--gray-a2)",
+										background: autoSynced
+											? "var(--green-a3)"
+											: "var(--gray-a2)",
 										borderColor: autoSynced ? "var(--green-7)" : undefined,
 									}}
 								>
@@ -250,7 +268,11 @@ export const AuthBridge: FC = () => {
 											fallback={user.displayName?.[0]?.toUpperCase() || "U"}
 											radius="full"
 										/>
-										<Flex direction="column" gap="1" style={{ overflow: "hidden" }}>
+										<Flex
+											direction="column"
+											gap="1"
+											style={{ overflow: "hidden" }}
+										>
 											<Text weight="bold" size="3" truncate>
 												{user.displayName}
 											</Text>
@@ -259,7 +281,11 @@ export const AuthBridge: FC = () => {
 													{user.email}
 												</Text>
 											)}
-											<Badge color="green" size="1" style={{ width: "fit-content" }}>
+											<Badge
+												color="green"
+												size="1"
+												style={{ width: "fit-content" }}
+											>
 												{autoSynced ? "✓ Auto-Synced to Desktop" : "Signed In"}
 											</Badge>
 										</Flex>
@@ -267,9 +293,13 @@ export const AuthBridge: FC = () => {
 								</Card>
 
 								{autoSynced ? (
-									<Card variant="surface" style={{ background: "var(--green-a2)" }}>
+									<Card
+										variant="surface"
+										style={{ background: "var(--green-a2)" }}
+									>
 										<Text size="2" color="green" weight="bold" align="center">
-											🎉 Login Successful! Your Desktop App is already signed in. You can close this tab!
+											🎉 Login Successful! Your Desktop App is already signed
+											in. You can close this tab!
 										</Text>
 									</Card>
 								) : (
@@ -280,12 +310,19 @@ export const AuthBridge: FC = () => {
 										onClick={handleCopyExisting}
 										style={{ cursor: "pointer" }}
 									>
-										{copied ? "✓ Copied to Clipboard!" : "📋 Copy Login Token to Desktop"}
+										{copied
+											? "✓ Copied to Clipboard!"
+											: "📋 Copy Login Token to Desktop"}
 									</Button>
 								)}
 
 								<Flex justify="end" mt="2">
-									<Button size="1" variant="ghost" color="red" onClick={handleSignOut}>
+									<Button
+										size="1"
+										variant="ghost"
+										color="red"
+										onClick={handleSignOut}
+									>
 										Sign Out / Switch Account
 									</Button>
 								</Flex>

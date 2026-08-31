@@ -18,11 +18,13 @@ export const SettingsDevTab = memo(() => {
 				<Card variant="surface">
 					<Flex direction="column" gap="3">
 						<Flex align="center" gap="3">
-							<Checkbox 
-								checked={showFps} 
-								onCheckedChange={(v) => setShowFps(!!v)} 
+							<Checkbox
+								checked={showFps}
+								onCheckedChange={(v) => setShowFps(!!v)}
 							/>
-							<Text size="2">{t("settings.dev.showFps", "Show FPS Counter in Preview")}</Text>
+							<Text size="2">
+								{t("settings.dev.showFps", "Show FPS Counter in Preview")}
+							</Text>
 						</Flex>
 					</Flex>
 				</Card>
@@ -30,12 +32,18 @@ export const SettingsDevTab = memo(() => {
 
 			<Box>
 				<Text size="3" weight="bold" mb="2" as="div">
-					{t("settings.dev.wasmPlugins.title", "Community Plugin System (WASM)")}
+					{t(
+						"settings.dev.wasmPlugins.title",
+						"Community Plugin System (WASM)",
+					)}
 				</Text>
 				<Card variant="surface">
 					<Flex direction="column" gap="3">
 						<Text size="2" color="gray">
-							{t("settings.dev.wasmPlugins.description", "Manage and upload custom WebAssembly plugins to extend the tool's importing and exporting capabilities.")}
+							{t(
+								"settings.dev.wasmPlugins.description",
+								"Manage and upload custom WebAssembly plugins to extend the tool's importing and exporting capabilities.",
+							)}
 						</Text>
 						<Flex justify="start">
 							<PluginManagerDialog />
@@ -44,14 +52,18 @@ export const SettingsDevTab = memo(() => {
 				</Card>
 			</Box>
 
-            <Box>
+			<Box>
 				<Text size="3" weight="bold" mb="2" as="div">
 					{t("settings.dev.debugInfo.title", "Debug Information")}
 				</Text>
 				<Card variant="surface">
 					<Flex direction="column" gap="1">
-						<Text size="1" color="gray">Environment: {import.meta.env.MODE}</Text>
-                        <Text size="1" color="gray">Platform: {window.navigator.platform}</Text>
+						<Text size="1" color="gray">
+							Environment: {import.meta.env.MODE}
+						</Text>
+						<Text size="1" color="gray">
+							Platform: {window.navigator.platform}
+						</Text>
 					</Flex>
 				</Card>
 			</Box>

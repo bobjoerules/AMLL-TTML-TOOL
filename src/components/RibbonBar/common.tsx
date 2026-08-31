@@ -11,13 +11,19 @@
 
 import { Flex, Grid, Separator } from "@radix-ui/themes";
 import { motion } from "framer-motion";
-import { type FC, forwardRef, type PropsWithChildren, type ReactNode, useImperativeHandle, useRef, useEffect } from "react";
+import {
+	type FC,
+	forwardRef,
+	type PropsWithChildren,
+	type ReactNode,
+	useImperativeHandle,
+	useRef,
+	useEffect,
+} from "react";
 
-export const RibbonSection: FC<PropsWithChildren<{ label: ReactNode; isSidebar?: boolean }>> = ({
-	children,
-	label,
-	isSidebar,
-}) => (
+export const RibbonSection: FC<
+	PropsWithChildren<{ label: ReactNode; isSidebar?: boolean }>
+> = ({ children, label, isSidebar }) => (
 	<>
 		<Flex
 			direction="column"
@@ -28,7 +34,14 @@ export const RibbonSection: FC<PropsWithChildren<{ label: ReactNode; isSidebar?:
 				width: isSidebar ? "100%" : "unset",
 			}}
 		>
-			<Flex flexGrow="1" align="center" justify={isSidebar ? "start" : "center"} direction={isSidebar ? "column" : "row"} gap="2" p={isSidebar ? "2" : "0"}>
+			<Flex
+				flexGrow="1"
+				align="center"
+				justify={isSidebar ? "start" : "center"}
+				direction={isSidebar ? "column" : "row"}
+				gap="2"
+				p={isSidebar ? "2" : "0"}
+			>
 				{children}
 			</Flex>
 			{!isSidebar && (
@@ -49,7 +62,18 @@ export const RibbonSection: FC<PropsWithChildren<{ label: ReactNode; isSidebar?:
 				</Flex>
 			)}
 			{isSidebar && label && (
-				<Flex px="3" py="1" style={{ backgroundColor: "var(--accent-3)", color: "var(--accent-11)", fontSize: "10px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+				<Flex
+					px="3"
+					py="1"
+					style={{
+						backgroundColor: "var(--accent-3)",
+						color: "var(--accent-11)",
+						fontSize: "10px",
+						fontWeight: "bold",
+						textTransform: "uppercase",
+						letterSpacing: "0.05em",
+					}}
+				>
 					{label}
 				</Flex>
 			)}
@@ -60,7 +84,7 @@ export const RibbonSection: FC<PropsWithChildren<{ label: ReactNode; isSidebar?:
 			style={{
 				height: isSidebar ? "1px" : "unset",
 				width: isSidebar ? "100%" : "1px",
-				alignSelf: "stretch"
+				alignSelf: "stretch",
 			}}
 		/>
 	</>
@@ -96,62 +120,62 @@ const RibbonHeightReserve: FC<{ rows: number }> = ({ rows }) => (
 export const RibbonFrame = forwardRef<
 	HTMLDivElement,
 	PropsWithChildren<{ isSidebar?: boolean; reserveControlRows?: number }>
->(
-	({ children, isSidebar, reserveControlRows }, ref) => {
-		const frameRef = useRef<HTMLDivElement>(null);
-		useImperativeHandle(ref, () => frameRef.current as HTMLDivElement, []);
+>(({ children, isSidebar, reserveControlRows }, ref) => {
+	const frameRef = useRef<HTMLDivElement>(null);
+	useImperativeHandle(ref, () => frameRef.current as HTMLDivElement, []);
 
-		useEffect(() => {
-			const frame = frameRef.current;
-			if (!frame || isSidebar) return;
+	useEffect(() => {
+		const frame = frameRef.current;
+		if (!frame || isSidebar) return;
 
-			const handleWheel = (e: WheelEvent) => {
-				const isScrollable = frame.scrollWidth > frame.clientWidth;
-				if (!isScrollable) return;
+		const handleWheel = (e: WheelEvent) => {
+			const isScrollable = frame.scrollWidth > frame.clientWidth;
+			if (!isScrollable) return;
 
-				// If the user is scrolling vertically with mouse wheel, translate to horizontal scroll
-				if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY !== 0) {
-					e.preventDefault();
-					frame.scrollLeft += e.deltaY;
-				}
-			};
+			// If the user is scrolling vertically with mouse wheel, translate to horizontal scroll
+			if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY !== 0) {
+				e.preventDefault();
+				frame.scrollLeft += e.deltaY;
+			}
+		};
 
-			frame.addEventListener("wheel", handleWheel, { passive: false });
-			return () => {
-				frame.removeEventListener("wheel", handleWheel);
-			};
-		}, [isSidebar]);
+		frame.addEventListener("wheel", handleWheel, { passive: false });
+		return () => {
+			frame.removeEventListener("wheel", handleWheel);
+		};
+	}, [isSidebar]);
 
-		return (
-			<Flex
-				p={isSidebar ? "0" : "3"}
-				direction={isSidebar ? "column" : "row"}
-				gap={isSidebar ? "0" : "3"}
-				align={isSidebar ? "stretch" : "center"}
-				style={{
-					overflowX: isSidebar ? "hidden" : "auto",
-					overflowY: isSidebar ? "auto" : "hidden",
-					height: "100%",
-					width: isSidebar ? undefined : "100%",
-					minWidth: 0,
-					scrollbarWidth: "thin",
-					scrollbarColor: "var(--gray-a8) transparent",
-					WebkitOverflowScrolling: "touch",
-					overscrollBehaviorX: "contain",
-				}}
-				className="ribbon-scrollbar"
-				asChild
-			><motion.div
+	return (
+		<Flex
+			p={isSidebar ? "0" : "3"}
+			direction={isSidebar ? "column" : "row"}
+			gap={isSidebar ? "0" : "3"}
+			align={isSidebar ? "stretch" : "center"}
+			style={{
+				overflowX: isSidebar ? "hidden" : "auto",
+				overflowY: isSidebar ? "auto" : "hidden",
+				height: "100%",
+				width: isSidebar ? undefined : "100%",
+				minWidth: 0,
+				scrollbarWidth: "thin",
+				scrollbarColor: "var(--gray-a8) transparent",
+				WebkitOverflowScrolling: "touch",
+				overscrollBehaviorX: "contain",
+			}}
+			className="ribbon-scrollbar"
+			asChild
+		>
+			<motion.div
 				initial={isSidebar ? { y: 10, opacity: 0 } : { x: 10, opacity: 0 }}
 				animate={isSidebar ? { y: 0, opacity: 1 } : { x: 0, opacity: 1 }}
 				exit={isSidebar ? { y: -10, opacity: 0 } : { x: -10, opacity: 0 }}
 				ref={frameRef}
 			>
-					{!isSidebar && reserveControlRows && (
-						<RibbonHeightReserve rows={reserveControlRows} />
-					)}
-					{children}
-				</motion.div></Flex>
-		);
-	},
-);
+				{!isSidebar && reserveControlRows && (
+					<RibbonHeightReserve rows={reserveControlRows} />
+				)}
+				{children}
+			</motion.div>
+		</Flex>
+	);
+});

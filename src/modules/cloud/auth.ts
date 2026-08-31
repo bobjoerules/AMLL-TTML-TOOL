@@ -265,7 +265,10 @@ export async function uploadProfilePhoto(file: Blob | File): Promise<string> {
 			downloadUrl = await getDownloadURL(snapshot.ref);
 		}
 	} catch (storageErr) {
-		console.warn("Firebase Storage unavailable, trying fallbacks...", storageErr);
+		console.warn(
+			"Firebase Storage unavailable, trying fallbacks...",
+			storageErr,
+		);
 	}
 
 	// 2. Try Litterbox / Catbox (reliable, fast, no CORS issues, no hotlink block)
@@ -276,10 +279,13 @@ export async function uploadProfilePhoto(file: Blob | File): Promise<string> {
 			formData.append("time", "72h");
 			formData.append("fileToUpload", optimizedBlob, "avatar.webp");
 
-			const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
-				method: "POST",
-				body: formData,
-			});
+			const res = await fetch(
+				"https://litterbox.catbox.moe/resources/internals/api.php",
+				{
+					method: "POST",
+					body: formData,
+				},
+			);
 			if (res.ok) {
 				const link = (await res.text()).trim();
 				if (link.startsWith("http")) {
@@ -287,7 +293,10 @@ export async function uploadProfilePhoto(file: Blob | File): Promise<string> {
 				}
 			}
 		} catch (catboxErr) {
-			console.warn("Litterbox upload failed, trying next fallback...", catboxErr);
+			console.warn(
+				"Litterbox upload failed, trying next fallback...",
+				catboxErr,
+			);
 		}
 	}
 
@@ -318,7 +327,9 @@ export async function uploadProfilePhoto(file: Blob | File): Promise<string> {
 	}
 
 	if (!downloadUrl) {
-		throw new Error("Could not upload profile photo. Please try a direct image URL.");
+		throw new Error(
+			"Could not upload profile photo. Please try a direct image URL.",
+		);
 	}
 
 	// Save to user profile across Firebase Auth, Firestore, and LocalStorage
@@ -354,7 +365,10 @@ export async function updateUserProfileDetails(updates: {
 				authUpdates.displayName = updates.displayName;
 			}
 			// Only set photoURL in Firebase Auth if it's a standard URL (Firebase Auth limits photoURL to ~2048 chars)
-			if (updates.photoURL !== undefined && !updates.photoURL.startsWith("data:")) {
+			if (
+				updates.photoURL !== undefined &&
+				!updates.photoURL.startsWith("data:")
+			) {
 				authUpdates.photoURL = updates.photoURL;
 			}
 			if (Object.keys(authUpdates).length > 0) {

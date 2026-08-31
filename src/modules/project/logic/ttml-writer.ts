@@ -52,7 +52,8 @@ export function hasExportableLineContent(line: LyricLine): boolean {
 				word.word.trim().length > 0 ||
 				word.romanWord.trim().length > 0 ||
 				word.emptyBeat > 0 ||
-				(word.ruby?.some((rubyWord) => rubyWord.word.trim().length > 0) ?? false),
+				(word.ruby?.some((rubyWord) => rubyWord.word.trim().length > 0) ??
+					false),
 		) ||
 		line.translatedLyric.trim().length > 0 ||
 		line.romanLyric.trim().length > 0

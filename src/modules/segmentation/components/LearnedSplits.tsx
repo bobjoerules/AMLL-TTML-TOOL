@@ -59,7 +59,8 @@ export const LearnedSplitsDialog = memo(() => {
 	}, [learnedRules, setLearnedRules, splitIndices, word]);
 
 	const allRules = useMemo(
-		() => Array.from(learnedRules.entries()).sort(([a], [b]) => a.localeCompare(b)),
+		() =>
+			Array.from(learnedRules.entries()).sort(([a], [b]) => a.localeCompare(b)),
 		[learnedRules],
 	);
 	const rules = useMemo(() => {
@@ -120,9 +121,13 @@ export const LearnedSplitsDialog = memo(() => {
 
 					<Flex justify="between" align="center" mt="2">
 						<Text weight="medium">
-							{t("advancedSegmentDialog.learned.saved", "Saved rules ({count})", {
-								count: allRules.length,
-							})}
+							{t(
+								"advancedSegmentDialog.learned.saved",
+								"Saved rules ({count})",
+								{
+									count: allRules.length,
+								},
+							)}
 						</Text>
 						{allRules.length > 0 && (
 							<Button
@@ -196,7 +201,10 @@ export const LearnedSplitsDialog = memo(() => {
 					)}
 					{allRules.length > 0 && rules.length === 0 && (
 						<Text size="2" color="gray" align="center">
-							{t("advancedSegmentDialog.learned.noResults", "No matching learned splits.")}
+							{t(
+								"advancedSegmentDialog.learned.noResults",
+								"No matching learned splits.",
+							)}
 						</Text>
 					)}
 				</Flex>
@@ -207,7 +215,10 @@ export const LearnedSplitsDialog = memo(() => {
 				>
 					<AlertDialog.Content maxWidth="420px">
 						<AlertDialog.Title>
-							{t("advancedSegmentDialog.learned.clearTitle", "Clear all learned splits?")}
+							{t(
+								"advancedSegmentDialog.learned.clearTitle",
+								"Clear all learned splits?",
+							)}
 						</AlertDialog.Title>
 						<AlertDialog.Description size="2">
 							{t(
@@ -222,10 +233,7 @@ export const LearnedSplitsDialog = memo(() => {
 								</Button>
 							</AlertDialog.Cancel>
 							<AlertDialog.Action>
-								<Button
-									color="red"
-									onClick={() => setLearnedRules(new Map())}
-								>
+								<Button color="red" onClick={() => setLearnedRules(new Map())}>
 									{t("advancedSegmentDialog.learned.clear", "Clear all")}
 								</Button>
 							</AlertDialog.Action>

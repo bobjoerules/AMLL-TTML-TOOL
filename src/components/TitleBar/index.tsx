@@ -123,9 +123,13 @@ export const TitleBar: FC = () => {
 								style={{ cursor: "pointer", fontWeight: 500 }}
 							>
 								{showPreviewPanel ? (
-									<PanelRight24Filled style={{ width: "14px", height: "14px" }} />
+									<PanelRight24Filled
+										style={{ width: "14px", height: "14px" }}
+									/>
 								) : (
-									<PanelRight24Regular style={{ width: "14px", height: "14px" }} />
+									<PanelRight24Regular
+										style={{ width: "14px", height: "14px" }}
+									/>
 								)}
 								<span>{t("topBar.sidePreview", "Preview Panel")}</span>
 							</Button>
@@ -157,10 +161,7 @@ export const TitleBar: FC = () => {
 						variant="ghost"
 						color="gray"
 						onClick={() => setExperimentalDialogOpen(true)}
-						title={t(
-							"ribbonBar.experimentalFeatures",
-							"Experimental Features",
-						)}
+						title={t("ribbonBar.experimentalFeatures", "Experimental Features")}
 					>
 						<Beaker24Regular />
 					</IconButton>
@@ -182,7 +183,7 @@ export const TitleBar: FC = () => {
 								</span>
 							</Text>
 							<Text size="1" color="gray" style={{ opacity: 0.7 }}>
-								Forked by NaeNae
+								Forked by Bobjoerules
 							</Text>
 						</Flex>
 					)}

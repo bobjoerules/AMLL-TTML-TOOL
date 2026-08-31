@@ -186,7 +186,9 @@ export const SettingsAccountTab = memo(() => {
 					"Invalid email or password. If you don't have an account, click 'Sign Up'.",
 				);
 			} else if (msg.includes("email-already-in-use")) {
-				toast.error("An account with this email already exists. Please sign in.");
+				toast.error(
+					"An account with this email already exists. Please sign in.",
+				);
 				setIsSignUp(false);
 			} else {
 				toast.error(msg);
@@ -216,7 +218,9 @@ export const SettingsAccountTab = memo(() => {
 				<Card variant="surface" style={{ padding: 20 }}>
 					<Flex direction="column" gap="3">
 						<Flex align="center" gap="3">
-							<Cloud24Regular style={{ width: 28, height: 28, color: "var(--accent-9)" }} />
+							<Cloud24Regular
+								style={{ width: 28, height: 28, color: "var(--accent-9)" }}
+							/>
 							<Flex direction="column">
 								<Heading size="3">
 									{isSignUp
@@ -377,7 +381,10 @@ export const SettingsAccountTab = memo(() => {
 			/>
 
 			{/* Profile Info Header */}
-			<Card variant="classic" style={{ background: "var(--gray-a2)", padding: 20 }}>
+			<Card
+				variant="classic"
+				style={{ background: "var(--gray-a2)", padding: 20 }}
+			>
 				<Flex justify="between" align="center" wrap="wrap" gap="3">
 					<Flex align="center" gap="4">
 						<Box
@@ -456,12 +463,7 @@ export const SettingsAccountTab = memo(() => {
 							<ArrowClockwise24Regular style={{ width: 16, height: 16 }} />
 							{t("cloud.refresh", "Refresh")}
 						</Button>
-						<Button
-							variant="soft"
-							color="red"
-							size="2"
-							onClick={handleSignOut}
-						>
+						<Button variant="soft" color="red" size="2" onClick={handleSignOut}>
 							{t("cloud.signOut", "Sign Out")}
 						</Button>
 					</Flex>
@@ -471,7 +473,9 @@ export const SettingsAccountTab = memo(() => {
 			{/* Edit Profile & Avatar Dialog */}
 			<Dialog.Root open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
 				<Dialog.Content style={{ maxWidth: 450 }}>
-					<Dialog.Title>{t("cloud.editProfileTitle", "Edit User Profile")}</Dialog.Title>
+					<Dialog.Title>
+						{t("cloud.editProfileTitle", "Edit User Profile")}
+					</Dialog.Title>
 					<Dialog.Description size="2" color="gray" mb="4">
 						{t(
 							"cloud.editProfileDesc",
@@ -508,7 +512,8 @@ export const SettingsAccountTab = memo(() => {
 									{t("cloud.uploadNewPhoto", "Upload Image File")}
 								</Button>
 								<Text size="1" color="gray">
-									Supports PNG, JPG, GIF, WebP. Automatically hosted for Discord RPC.
+									Supports PNG, JPG, GIF, WebP. Automatically hosted for Discord
+									RPC.
 								</Text>
 							</Flex>
 						</Flex>
@@ -576,7 +581,9 @@ export const SettingsAccountTab = memo(() => {
 								</Text>
 							</Heading>
 						</Flex>
-						<MusicNote224Regular style={{ width: 24, height: 24, color: "var(--accent-9)" }} />
+						<MusicNote224Regular
+							style={{ width: 24, height: 24, color: "var(--accent-9)" }}
+						/>
 					</Flex>
 				</Card>
 
@@ -593,7 +600,9 @@ export const SettingsAccountTab = memo(() => {
 								</Text>
 							</Heading>
 						</Flex>
-						<DocumentBulletList24Regular style={{ width: 24, height: 24, color: "var(--accent-9)" }} />
+						<DocumentBulletList24Regular
+							style={{ width: 24, height: 24, color: "var(--accent-9)" }}
+						/>
 					</Flex>
 				</Card>
 
@@ -621,7 +630,10 @@ export const SettingsAccountTab = memo(() => {
 			</Grid>
 
 			{/* User ID & Technical Info */}
-			<Card variant="surface" style={{ padding: 14, background: "var(--accent-a2)" }}>
+			<Card
+				variant="surface"
+				style={{ padding: 14, background: "var(--accent-a2)" }}
+			>
 				<Flex justify="between" align="center">
 					<Flex direction="column" gap="1">
 						<Text size="1" color="gray" weight="medium">
@@ -650,7 +662,8 @@ export const SettingsAccountTab = memo(() => {
 				<Flex direction="column" gap="3">
 					<Heading size="3">Cloud Storage Management</Heading>
 					<Text size="2" color="gray">
-						Manage your online lyric backups, download existing projects, or sync your current lyric document to your account.
+						Manage your online lyric backups, download existing projects, or
+						sync your current lyric document to your account.
 					</Text>
 					<Flex gap="3" mt="1">
 						<Button

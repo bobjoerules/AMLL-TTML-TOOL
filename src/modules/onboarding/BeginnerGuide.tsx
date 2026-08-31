@@ -334,7 +334,8 @@ export const BeginnerGuide = () => {
 							paddingLeft: "40px",
 							paddingTop: "10px",
 							paddingBottom: "10px",
-							transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s",
+							transition:
+								"transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s",
 							transform: "translateX(60%)",
 							opacity: 0.7,
 							cursor: "pointer",
@@ -385,269 +386,297 @@ export const BeginnerGuide = () => {
 								backdropFilter: "none",
 							}}
 						>
-					<Flex direction="column" gap="3">
-						<Flex
-							justify="between"
-							align="center"
-							onPointerDown={startDragging}
-							style={{
-								cursor: "grab",
-								userSelect: "none",
-								touchAction: "none",
-							}}
-						>
-							<Text size="1" color="gray">
-								{t("beginnerGuide.progress", "Step {current} of {total}", {
-									current: step + 1,
-									total: GUIDE_STEP_IDS.length,
-								})}
-							</Text>
-							<Flex gap="1">
-								<Button
-									size="1"
-									variant="ghost"
-									color="gray"
-									onClick={() => setTucked(true)}
-								>
-									{t("beginnerGuide.tuck", "Tuck")}
-								</Button>
-								<Button
-									size="1"
-									variant="ghost"
-									color="gray"
-									onClick={() => {
-										setCompletion("dismissed");
-										setPanelOpen(false);
-									}}
-								>
-									<DismissRegular /> {t("beginnerGuide.exit", "Exit guide")}
-								</Button>
-							</Flex>
-						</Flex>
-						<Progress value={((step + 1) / GUIDE_STEP_IDS.length) * 100} />
-						<Box>
-							<Heading size="4">
-								{t(`beginnerGuide.steps.${currentId}.title`, copy.title)}
-							</Heading>
-							<Text size="2" color="gray">
-								{t(`beginnerGuide.steps.${currentId}.description`, copy.text)}
-							</Text>
-							{currentId === "audio" && (
-								<Box
-									mt="2"
-									p="2"
+							<Flex direction="column" gap="3">
+								<Flex
+									justify="between"
+									align="center"
+									onPointerDown={startDragging}
 									style={{
-										borderLeft: "2px solid var(--accent-8)",
-										background: "var(--gray-a3)",
-										borderRadius: "var(--radius-1)",
+										cursor: "grab",
+										userSelect: "none",
+										touchAction: "none",
 									}}
 								>
-									<Text size="1" weight="bold" color="accent" style={{ display: "block", marginBottom: "2px" }}>
-										{t("beginnerGuide.beforeStart.title", "Before you start:")}
-									</Text>
 									<Text size="1" color="gray">
-										{t(
-											"beginnerGuide.beforeStart.text",
-											"You can change the appearance of the editor to suit your preference. Click below to open settings. Feel free to try the Basic Editor, or check out the Advanced Editor for complete detail control.",
-										)}{" "}
-										<a
-											href="#"
-											onClick={(e) => {
-												e.preventDefault();
-												setSettingsTab("appearance");
-												setSettingsOpen(true);
-											}}
-											style={{
-												color: "var(--accent-11)",
-												textDecoration: "underline",
-												fontWeight: "bold",
-											}}
-										>
-											{t("beginnerGuide.beforeStart.link", "Customize Editor Appearance")}
-										</a>
+										{t("beginnerGuide.progress", "Step {current} of {total}", {
+											current: step + 1,
+											total: GUIDE_STEP_IDS.length,
+										})}
 									</Text>
-								</Box>
-							)}
-						</Box>
-						<Card
-							variant="surface"
-							style={{
-								background: stepComplete ? "var(--green-3)" : "var(--accent-3)",
-							}}
-						>
-							<Text size="2" weight="medium">
-								{stepComplete
-									? t(
-											"beginnerGuide.status.complete",
-											"Done — the tool detected this step is complete.",
-										)
-									: t(`beginnerGuide.steps.${currentId}.waiting`, waitingText)}
-							</Text>
-						</Card>
-						<Flex gap="2" wrap="wrap">
-							{stepComplete ? (
-								<Button color="green" onClick={continueGuide}>
-									{t("beginnerGuide.continue", "Continue")}
-								</Button>
-							) : currentId === "lyrics" ? (
-								<>
-									<Button
-										onClick={() =>
-											geniusApiKey
-												? setImportGenius(true)
-												: setShowGeniusSetup(true)
-										}
-									>
-										{geniusApiKey
-											? "Genius"
-											: t("beginnerGuide.genius.setup", "Set up Genius")}
-									</Button>
-									<Button variant="soft" onClick={() => setImportLrclib(true)}>
-										LRCLIB
-									</Button>
-									<Button variant="soft" onClick={() => setImportText(true)}>
-										{t("beginnerGuide.import.plain", "Plain text")}
-									</Button>
-									<Button
-										variant="soft"
-										onClick={() => setImportLyrically(true)}
-									>
-										Lyrically
-									</Button>
-								</>
-							) : (
-								<>
-									{currentId === "export" && (
-										<Button variant="soft" onClick={() => setChecklist(true)}>
-											{t("beginnerGuide.checklist", "Open checklist")}
-										</Button>
-									)}
-									<Button onClick={() => void doAction()}>
-										{currentId === "review"
-											? t(
-													"beginnerGuide.review.confirm",
-													"I checked the lyrics",
-												)
-											: currentId === "test"
-												? t("beginnerGuide.test.open", "Open testing steps")
-												: currentId === "audio"
-													? t("beginnerGuide.audio.choose", "Choose audio")
-													: currentId === "sync"
-														? t("beginnerGuide.sync.open", "Open Time mode")
-														: currentId === "songwriters"
-															? t(
-																	"beginnerGuide.songwriters.open",
-																	"Open metadata",
-																)
-															: t("beginnerGuide.export.save", "Save TTML")}
-									</Button>
-								</>
-							)}
-							<Button
-								variant="soft"
-								disabled={step === 0}
-								onClick={() => setStep(Math.max(0, step - 1))}
-							>
-								{t("common.back", "Back")}
-							</Button>
-							<Button
-								variant="ghost"
-								onClick={() =>
-									window.open(
-										`${DOCS_BASE}${copy.anchor}`,
-										"_blank",
-										"noopener,noreferrer",
-									)
-								}
-							>
-								<BookOpen24Regular />{" "}
-								{t("beginnerGuide.readMore", "Full guide")}
-							</Button>
-						</Flex>
-						{currentId === "lyrics" && showGeniusSetup && !geniusApiKey && (
-							<Card variant="surface">
-								<Flex direction="column" gap="2">
-									<Flex justify="between" align="center">
-										<Text weight="bold">
-											{t(
-												"beginnerGuide.genius.title",
-												"Create a Genius Client Access Token",
-											)}
-										</Text>
+									<Flex gap="1">
 										<Button
 											size="1"
 											variant="ghost"
 											color="gray"
-											onClick={() => setShowGeniusSetup(false)}
+											onClick={() => setTucked(true)}
 										>
-											{t("common.close", "Close")}
+											{t("beginnerGuide.tuck", "Tuck")}
 										</Button>
-									</Flex>
-									<Text size="2">
-										{t(
-											"beginnerGuide.genius.step1",
-											"1. Open Genius API Clients and sign in.",
-										)}
-									</Text>
-									<Text size="2">
-										{t(
-											"beginnerGuide.genius.step2",
-											"2. Select New API Client, give it any recognizable app name, and fill the required app website field.",
-										)}
-									</Text>
-									<Text size="2">
-										{t(
-											"beginnerGuide.genius.step3",
-											"3. Save the client, then select Generate Access Token.",
-										)}
-									</Text>
-									<Text size="2">
-										{t(
-											"beginnerGuide.genius.step4",
-											"4. Copy the Client Access Token—not the Client ID or Client Secret.",
-										)}
-									</Text>
-									<Text size="1" color="gray">
-										{t(
-											"beginnerGuide.genius.reuse",
-											"The tool stores this token locally and reuses it for lyric imports and songwriter lookup.",
-										)}
-									</Text>
-									<Flex gap="2" wrap="wrap">
 										<Button
-											variant="soft"
-											onClick={() =>
-												window.open(
-													"https://genius.com/api-clients",
-													"_blank",
-													"noopener,noreferrer",
-												)
-											}
+											size="1"
+											variant="ghost"
+											color="gray"
+											onClick={() => {
+												setCompletion("dismissed");
+												setPanelOpen(false);
+											}}
 										>
-											{t(
-												"beginnerGuide.genius.openPortal",
-												"Open Genius API Clients",
-											)}
-										</Button>
-										<Button onClick={() => setImportGenius(true)}>
-											{t(
-												"beginnerGuide.genius.paste",
-												"Paste token in Genius import",
-											)}
+											<DismissRegular /> {t("beginnerGuide.exit", "Exit guide")}
 										</Button>
 									</Flex>
 								</Flex>
-							</Card>
-						)}
-						{currentId === "test" && (
-							<Button color="green" onClick={finish}>
-								{t("beginnerGuide.finish", "Finish guide")}
-							</Button>
-						)}
-					</Flex>
-				</Card>
+								<Progress value={((step + 1) / GUIDE_STEP_IDS.length) * 100} />
+								<Box>
+									<Heading size="4">
+										{t(`beginnerGuide.steps.${currentId}.title`, copy.title)}
+									</Heading>
+									<Text size="2" color="gray">
+										{t(
+											`beginnerGuide.steps.${currentId}.description`,
+											copy.text,
+										)}
+									</Text>
+									{currentId === "audio" && (
+										<Box
+											mt="2"
+											p="2"
+											style={{
+												borderLeft: "2px solid var(--accent-8)",
+												background: "var(--gray-a3)",
+												borderRadius: "var(--radius-1)",
+											}}
+										>
+											<Text
+												size="1"
+												weight="bold"
+												color="accent"
+												style={{ display: "block", marginBottom: "2px" }}
+											>
+												{t(
+													"beginnerGuide.beforeStart.title",
+													"Before you start:",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"beginnerGuide.beforeStart.text",
+													"You can change the appearance of the editor to suit your preference. Click below to open settings. Feel free to try the Basic Editor, or check out the Advanced Editor for complete detail control.",
+												)}{" "}
+												<a
+													href="#"
+													onClick={(e) => {
+														e.preventDefault();
+														setSettingsTab("appearance");
+														setSettingsOpen(true);
+													}}
+													style={{
+														color: "var(--accent-11)",
+														textDecoration: "underline",
+														fontWeight: "bold",
+													}}
+												>
+													{t(
+														"beginnerGuide.beforeStart.link",
+														"Customize Editor Appearance",
+													)}
+												</a>
+											</Text>
+										</Box>
+									)}
+								</Box>
+								<Card
+									variant="surface"
+									style={{
+										background: stepComplete
+											? "var(--green-3)"
+											: "var(--accent-3)",
+									}}
+								>
+									<Text size="2" weight="medium">
+										{stepComplete
+											? t(
+													"beginnerGuide.status.complete",
+													"Done — the tool detected this step is complete.",
+												)
+											: t(
+													`beginnerGuide.steps.${currentId}.waiting`,
+													waitingText,
+												)}
+									</Text>
+								</Card>
+								<Flex gap="2" wrap="wrap">
+									{stepComplete ? (
+										<Button color="green" onClick={continueGuide}>
+											{t("beginnerGuide.continue", "Continue")}
+										</Button>
+									) : currentId === "lyrics" ? (
+										<>
+											<Button
+												onClick={() =>
+													geniusApiKey
+														? setImportGenius(true)
+														: setShowGeniusSetup(true)
+												}
+											>
+												{geniusApiKey
+													? "Genius"
+													: t("beginnerGuide.genius.setup", "Set up Genius")}
+											</Button>
+											<Button
+												variant="soft"
+												onClick={() => setImportLrclib(true)}
+											>
+												LRCLIB
+											</Button>
+											<Button
+												variant="soft"
+												onClick={() => setImportText(true)}
+											>
+												{t("beginnerGuide.import.plain", "Plain text")}
+											</Button>
+											<Button
+												variant="soft"
+												onClick={() => setImportLyrically(true)}
+											>
+												Lyrically
+											</Button>
+										</>
+									) : (
+										<>
+											{currentId === "export" && (
+												<Button
+													variant="soft"
+													onClick={() => setChecklist(true)}
+												>
+													{t("beginnerGuide.checklist", "Open checklist")}
+												</Button>
+											)}
+											<Button onClick={() => void doAction()}>
+												{currentId === "review"
+													? t(
+															"beginnerGuide.review.confirm",
+															"I checked the lyrics",
+														)
+													: currentId === "test"
+														? t("beginnerGuide.test.open", "Open testing steps")
+														: currentId === "audio"
+															? t("beginnerGuide.audio.choose", "Choose audio")
+															: currentId === "sync"
+																? t("beginnerGuide.sync.open", "Open Time mode")
+																: currentId === "songwriters"
+																	? t(
+																			"beginnerGuide.songwriters.open",
+																			"Open metadata",
+																		)
+																	: t("beginnerGuide.export.save", "Save TTML")}
+											</Button>
+										</>
+									)}
+									<Button
+										variant="soft"
+										disabled={step === 0}
+										onClick={() => setStep(Math.max(0, step - 1))}
+									>
+										{t("common.back", "Back")}
+									</Button>
+									<Button
+										variant="ghost"
+										onClick={() =>
+											window.open(
+												`${DOCS_BASE}${copy.anchor}`,
+												"_blank",
+												"noopener,noreferrer",
+											)
+										}
+									>
+										<BookOpen24Regular />{" "}
+										{t("beginnerGuide.readMore", "Full guide")}
+									</Button>
+								</Flex>
+								{currentId === "lyrics" && showGeniusSetup && !geniusApiKey && (
+									<Card variant="surface">
+										<Flex direction="column" gap="2">
+											<Flex justify="between" align="center">
+												<Text weight="bold">
+													{t(
+														"beginnerGuide.genius.title",
+														"Create a Genius Client Access Token",
+													)}
+												</Text>
+												<Button
+													size="1"
+													variant="ghost"
+													color="gray"
+													onClick={() => setShowGeniusSetup(false)}
+												>
+													{t("common.close", "Close")}
+												</Button>
+											</Flex>
+											<Text size="2">
+												{t(
+													"beginnerGuide.genius.step1",
+													"1. Open Genius API Clients and sign in.",
+												)}
+											</Text>
+											<Text size="2">
+												{t(
+													"beginnerGuide.genius.step2",
+													"2. Select New API Client, give it any recognizable app name, and fill the required app website field.",
+												)}
+											</Text>
+											<Text size="2">
+												{t(
+													"beginnerGuide.genius.step3",
+													"3. Save the client, then select Generate Access Token.",
+												)}
+											</Text>
+											<Text size="2">
+												{t(
+													"beginnerGuide.genius.step4",
+													"4. Copy the Client Access Token—not the Client ID or Client Secret.",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"beginnerGuide.genius.reuse",
+													"The tool stores this token locally and reuses it for lyric imports and songwriter lookup.",
+												)}
+											</Text>
+											<Flex gap="2" wrap="wrap">
+												<Button
+													variant="soft"
+													onClick={() =>
+														window.open(
+															"https://genius.com/api-clients",
+															"_blank",
+															"noopener,noreferrer",
+														)
+													}
+												>
+													{t(
+														"beginnerGuide.genius.openPortal",
+														"Open Genius API Clients",
+													)}
+												</Button>
+												<Button onClick={() => setImportGenius(true)}>
+													{t(
+														"beginnerGuide.genius.paste",
+														"Paste token in Genius import",
+													)}
+												</Button>
+											</Flex>
+										</Flex>
+									</Card>
+								)}
+								{currentId === "test" && (
+									<Button color="green" onClick={finish}>
+										{t("beginnerGuide.finish", "Finish guide")}
+									</Button>
+								)}
+							</Flex>
+						</Card>
 					</motion.div>
-			)}
+				)}
 			</AnimatePresence>
 		</>
 	);

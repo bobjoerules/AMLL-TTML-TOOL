@@ -12,6 +12,7 @@
 		"test:versioning": "node --test scripts/version-utils.test.mjs",
 		"lint": "biome lint",
 		"fmt": "biome format --write ./src",
+		"test": "vitest run --exclude 'scripts/**'",
 		"preview": "vite preview",
 		"website:dev": "npm --prefix website run dev",
 		"website:build": "npm --prefix website run build",

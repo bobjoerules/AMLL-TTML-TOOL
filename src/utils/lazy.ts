@@ -16,12 +16,15 @@ export function lazy<T extends ComponentType<any>>(
 				/failed to fetch/i.test(error.message) ||
 				/loading chunk/i.test(error.message)
 			) {
-				console.error("Dynamic import failed. Forcing page refresh to get latest version.", error);
-				
+				console.error(
+					"Dynamic import failed. Forcing page refresh to get latest version.",
+					error,
+				);
+
 				// Optional: Check if we've already tried to reload in the last few seconds to avoid loops
 				const lastReload = sessionStorage.getItem("last-lazy-reload");
 				const now = Date.now();
-				
+
 				if (!lastReload || now - Number(lastReload) > 10000) {
 					sessionStorage.setItem("last-lazy-reload", String(now));
 					window.location.reload();

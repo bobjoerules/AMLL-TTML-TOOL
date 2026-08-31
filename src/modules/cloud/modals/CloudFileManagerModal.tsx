@@ -81,11 +81,7 @@ export const CloudFileManagerModal: FC = () => {
 				key === "ti"
 			) {
 				if (!title) title = val;
-			} else if (
-				key === "artists" ||
-				key === "artist" ||
-				key === "ar"
-			) {
+			} else if (key === "artists" || key === "artist" || key === "ar") {
 				if (!artist) artist = val;
 			} else if (key === "album" || key === "al") {
 				if (!album) album = val;
@@ -494,9 +490,7 @@ export const CloudFileManagerModal: FC = () => {
 											{isSaving ? (
 												<Flex align="center" gap="2">
 													<Spinner size="1" />
-													<Text size="2">
-														{t("cloud.saving", "Saving...")}
-													</Text>
+													<Text size="2">{t("cloud.saving", "Saving...")}</Text>
 												</Flex>
 											) : (
 												t("cloud.saveToCloudButton", "Save to Cloud")

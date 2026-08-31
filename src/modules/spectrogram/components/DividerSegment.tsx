@@ -24,104 +24,106 @@ const HALF_DIVIDER_WIDTH_PX = DIVIDER_WIDTH_PX / 2;
 const NUDGE_MS = 10;
 const SHIFT_NUDGE_MS = 50;
 
-export const DividerSegment: FC<DividerSegmentProps> = memo(({
-	lineId,
-	segmentIndex,
-	timeMs,
-	lineStartTime,
-	segmentsLength,
-	isTouching,
-}) => {
-	const setTimelineDrag = useSetAtom(timelineDragAtom);
-	const { zoom } = useContext(SpectrogramContext);
+export const DividerSegment: FC<DividerSegmentProps> = memo(
+	({
+		lineId,
+		segmentIndex,
+		timeMs,
+		lineStartTime,
+		segmentsLength,
+		isTouching,
+	}) => {
+		const setTimelineDrag = useSetAtom(timelineDragAtom);
+		const { zoom } = useContext(SpectrogramContext);
 
-	const startDrag = useCallback(
-		(e: React.MouseEvent) => {
-			if (e.button !== 0) return;
-			e.preventDefault();
-			e.stopPropagation();
-			setTimelineDrag({
-				type: "divider",
-				lineId: lineId,
-				segmentIndex: segmentIndex,
-				zoom: zoom,
-				startX: e.clientX,
-				isGapCreation: e.altKey,
-			});
-		},
-		[lineId, segmentIndex, setTimelineDrag, zoom],
-	);
+		const startDrag = useCallback(
+			(e: React.MouseEvent) => {
+				if (e.button !== 0) return;
+				e.preventDefault();
+				e.stopPropagation();
+				setTimelineDrag({
+					type: "divider",
+					lineId: lineId,
+					segmentIndex: segmentIndex,
+					zoom: zoom,
+					startX: e.clientX,
+					isGapCreation: e.altKey,
+				});
+			},
+			[lineId, segmentIndex, setTimelineDrag, zoom],
+		);
 
-	const handleKeyDown = useCallback(
-		(event: React.KeyboardEvent) => {
-			if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
-				return;
-			}
+		const handleKeyDown = useCallback(
+			(event: React.KeyboardEvent) => {
+				if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+					return;
+				}
 
-			event.preventDefault();
-			event.stopPropagation();
+				event.preventDefault();
+				event.stopPropagation();
 
-			const processedLines = globalStore.get(processedLyricLinesAtom);
-			const lineBeingDragged = processedLines.find((l) => l.id === lineId);
-			if (!lineBeingDragged) {
-				return;
-			}
+				const processedLines = globalStore.get(processedLyricLinesAtom);
+				const lineBeingDragged = processedLines.find((l) => l.id === lineId);
+				if (!lineBeingDragged) {
+					return;
+				}
 
-			const nudgeAmount = event.shiftKey ? SHIFT_NUDGE_MS : NUDGE_MS;
-			const newTime =
-				event.key === "ArrowRight"
-					? timeMs + nudgeAmount
-					: timeMs - nudgeAmount;
+				const nudgeAmount = event.shiftKey ? SHIFT_NUDGE_MS : NUDGE_MS;
+				const newTime =
+					event.key === "ArrowRight"
+						? timeMs + nudgeAmount
+						: timeMs - nudgeAmount;
 
-			const updatedLine = getUpdatedLineForDivider(
-				lineBeingDragged,
-				segmentIndex,
-				newTime,
-				false,
-				zoom,
-			);
+				const updatedLine = getUpdatedLineForDivider(
+					lineBeingDragged,
+					segmentIndex,
+					newTime,
+					false,
+					zoom,
+				);
 
-			commitUpdatedLine(updatedLine);
-		},
-		[lineId, segmentIndex, timeMs, zoom],
-	);
+				commitUpdatedLine(updatedLine);
+			},
+			[lineId, segmentIndex, timeMs, zoom],
+		);
 
-	if (timeMs == null || timeMs < 0 || lineStartTime == null) return null;
+		if (timeMs == null || timeMs < 0 || lineStartTime == null) return null;
 
-	const timePx = ((timeMs - lineStartTime) / 1000) * zoom;
-	const isLineStartHandle = segmentIndex === -1;
-	const isLineEndHandle = segmentIndex === segmentsLength - 1;
+		const timePx = ((timeMs - lineStartTime) / 1000) * zoom;
+		const isLineStartHandle = segmentIndex === -1;
+		const isLineEndHandle = segmentIndex === segmentsLength - 1;
 
-	const handleWidthPx = DIVIDER_WIDTH_PX;
-	let handleOffsetPx: number;
+		const handleWidthPx = DIVIDER_WIDTH_PX;
+		let handleOffsetPx: number;
 
-	if (isLineStartHandle && isTouching) {
-		handleOffsetPx = 0;
-	} else if (isLineEndHandle && isTouching) {
-		handleOffsetPx = -DIVIDER_WIDTH_PX;
-	} else {
-		handleOffsetPx = -HALF_DIVIDER_WIDTH_PX;
-	}
+		if (isLineStartHandle && isTouching) {
+			handleOffsetPx = 0;
+		} else if (isLineEndHandle && isTouching) {
+			handleOffsetPx = -DIVIDER_WIDTH_PX;
+		} else {
+			handleOffsetPx = -HALF_DIVIDER_WIDTH_PX;
+		}
 
-	const left = timePx + handleOffsetPx;
+		const left = timePx + handleOffsetPx;
 
-	const dynamicStyles = {
-		left: `${left}px`,
-		width: `${handleWidthPx}px`,
-	};
+		const dynamicStyles = {
+			left: `${left}px`,
+			width: `${handleWidthPx}px`,
+		};
 
-	return (
-		// biome-ignore lint/a11y/useSemanticElements: <hr> 在这里不适用
-		<div
-			className={styles.divider}
-			style={dynamicStyles}
-			onMouseDown={startDrag}
-			onContextMenu={(e) => e.preventDefault()}
-			role="separator"
-			tabIndex={0}
-			aria-orientation="vertical"
-			aria-valuenow={timeMs}
-			onKeyDown={handleKeyDown}
-		/>
-	);
-});
+		return (
+			// biome-ignore lint/a11y/useSemanticElements: <hr> 在这里不适用
+			<div
+				className={styles.divider}
+				style={dynamicStyles}
+				onMouseDown={startDrag}
+				onContextMenu={(e) => e.preventDefault()}
+				role="separator"
+				tabIndex={0}
+				aria-orientation="vertical"
+				aria-valuenow={timeMs}
+				onKeyDown={handleKeyDown}
+			/>
+		);
+	},
+);

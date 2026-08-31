@@ -59,7 +59,10 @@ export const SidePreviewPanel = memo(() => {
 						<button
 							type="button"
 							className={styles.addButton}
-							title={t("ribbonBar.previewMode.selectEngine", "Switch Preview Engine")}
+							title={t(
+								"ribbonBar.previewMode.selectEngine",
+								"Switch Preview Engine",
+							)}
 						>
 							<Add16Regular />
 						</button>

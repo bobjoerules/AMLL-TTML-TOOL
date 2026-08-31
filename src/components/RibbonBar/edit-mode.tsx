@@ -602,7 +602,17 @@ function ToggleButtonField<
 	icon?: React.ReactNode;
 	isWordField?: Word;
 	fieldName: F;
-	activeColor?: "indigo" | "amber" | "crimson" | "ruby" | "purple" | "violet" | "blue" | "green" | "teal" | "cyan";
+	activeColor?:
+		| "indigo"
+		| "amber"
+		| "crimson"
+		| "ruby"
+		| "purple"
+		| "violet"
+		| "blue"
+		| "green"
+		| "teal"
+		| "cyan";
 }) {
 	const itemAtom = useMemo(
 		() => (isWordField ? selectedWordsAtom : selectedLinesAtom),
@@ -628,7 +638,8 @@ function ToggleButtonField<
 								}
 							}
 						}
-						if (values.size === 1) return values.values().next().value as boolean;
+						if (values.size === 1)
+							return values.values().next().value as boolean;
 						return MULTIPLE_VALUES;
 					}
 					const selectedLines = selectedItems as Set<string>;
@@ -670,9 +681,8 @@ function ToggleButtonField<
 					}
 				} else {
 					if (selectedItems.has(line.id)) {
-						(line as unknown as Record<string, unknown>)[
-							fieldName as string
-						] = targetValue;
+						(line as unknown as Record<string, unknown>)[fieldName as string] =
+							targetValue;
 					}
 				}
 			}
@@ -1183,13 +1193,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						</Flex>
 					}
 				>
-					<Grid
-						columns="1"
-						gap="1"
-						gapY="1"
-						flexGrow="1"
-						align="center"
-					>
+					<Grid columns="1" gap="1" gapY="1" flexGrow="1" align="center">
 						<ToggleButtonField
 							icon={<MusicNote216Regular />}
 							label={t("ribbonBar.editMode.bgLyric", "背景歌词")}

@@ -1,8 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import saveFile from "save-file";
 import { currentUserAtom } from "$/modules/cloud/states";
-import { getFirebaseFirestore, isFirebaseConfigured } from "$/modules/cloud/firebase";
+import {
+	getFirebaseFirestore,
+	isFirebaseConfigured,
+} from "$/modules/cloud/firebase";
 import { normalizeChecklistEntries, type TTMLChecklistEntry } from "./logic";
 import { ttmlChecklistAtom } from "./states";
 
@@ -22,7 +26,11 @@ export async function saveChecklistToCloud(
 		const db = getFirebaseFirestore();
 		if (!db) return false;
 
-		const targetUid = uid || (await import("firebase/auth").then((m) => m.getAuth()?.currentUser?.uid));
+		const targetUid =
+			uid ||
+			(await import("firebase/auth").then(
+				(m) => m.getAuth()?.currentUser?.uid,
+			));
 		if (!targetUid) return false;
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
@@ -39,7 +47,7 @@ export async function saveChecklistToCloud(
 }
 
 export async function loadChecklistFromCloud(
-	uid: string,
+	uid?: string,
 ): Promise<TTMLChecklistEntry[] | null> {
 	if (!isFirebaseConfigured()) return null;
 
@@ -47,7 +55,14 @@ export async function loadChecklistFromCloud(
 		const db = getFirebaseFirestore();
 		if (!db) return null;
 
-		const docRef = doc(db, "users", uid, "userData", "checklist");
+		const targetUid =
+			uid ||
+			(await import("firebase/auth").then(
+				(m) => m.getAuth()?.currentUser?.uid,
+			));
+		if (!targetUid) return null;
+
+		const docRef = doc(db, "users", targetUid, "userData", "checklist");
 		const snap = await getDoc(docRef);
 		if (snap.exists()) {
 			const data = snap.data() as Partial<CloudChecklistData>;
@@ -60,6 +75,40 @@ export async function loadChecklistFromCloud(
 		console.warn("Failed to load checklist from Firebase:", err);
 		return null;
 	}
+}
+
+export function parseChecklistJson(content: string): TTMLChecklistEntry[] {
+	try {
+		const parsed = JSON.parse(content);
+		if (Array.isArray(parsed)) {
+			return normalizeChecklistEntries(parsed);
+		}
+		if (
+			typeof parsed === "object" &&
+			parsed !== null &&
+			Array.isArray(parsed.entries)
+		) {
+			return normalizeChecklistEntries(parsed.entries);
+		}
+		return [];
+	} catch {
+		return [];
+	}
+}
+
+export async function exportChecklistToFile(
+	entries: TTMLChecklistEntry[],
+): Promise<void> {
+	const normalized = normalizeChecklistEntries(entries);
+	const exportData = {
+		version: 1,
+		exportedAt: new Date().toISOString(),
+		entries: normalized,
+	};
+	const jsonStr = JSON.stringify(exportData, null, 2);
+	const blob = new Blob([jsonStr], { type: "application/json" });
+	const filename = `ttml-checklist-${new Date().toISOString().slice(0, 10)}.json`;
+	await saveFile(blob, filename);
 }
 
 export function useChecklistCloudSync() {
@@ -138,4 +187,13 @@ export function useChecklistCloudSync() {
 		isLoggedIn: Boolean(user?.uid),
 		user,
 	};
+}
+
+/**
+ * Background sync component mounted at app level so checklist sync is active
+ * as long as the application is running.
+ */
+export function ChecklistBackgroundSync() {
+	useChecklistCloudSync();
+	return null;
 }

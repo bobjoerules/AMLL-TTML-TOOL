@@ -99,7 +99,7 @@ describe("Discord presence", () => {
 				smallImageMode: "state",
 				generalActivityText: "Working on lyrics",
 				showProgressTimer: true,
-			}
+			},
 		);
 
 		expect(payload.largeImage).toBe("https://example.com/cover.jpg");
@@ -563,4 +563,3 @@ describe("Discord presence", () => {
 		expect(payload.smallImageText).toBe("LyricMaster");
 	});
 });
-

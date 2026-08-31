@@ -54,9 +54,8 @@ export async function uploadAudioToCloud(
 		throw new Error("Firebase is not initialized.");
 	}
 
-	const { getStorage, ref, uploadBytesResumable, getDownloadURL } = await import(
-		"firebase/storage"
-	);
+	const { getStorage, ref, uploadBytesResumable, getDownloadURL } =
+		await import("firebase/storage");
 
 	const storage = getStorage(app);
 
@@ -89,14 +88,20 @@ export async function uploadAudioToCloud(
 	const audioUrl = await new Promise<string>((resolve, reject) => {
 		const timeout = setTimeout(() => {
 			uploadTask.cancel();
-			reject(new Error("Audio upload timed out. Please check your network connection and try again."));
+			reject(
+				new Error(
+					"Audio upload timed out. Please check your network connection and try again.",
+				),
+			);
 		}, 120000); // 2 minute timeout for large lossless audio files
 
 		uploadTask.on(
 			"state_changed",
 			(snapshot) => {
 				if (snapshot.totalBytes > 0) {
-					const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+					const pct = Math.round(
+						(snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+					);
 					onProgress?.(pct);
 				}
 			},
@@ -169,8 +174,12 @@ export async function saveTTMLToCloud(
 	const now = Date.now();
 	let coverArt: string | null = null;
 	const coverMatch =
-		input.rawTTML?.match(/key=["']cover(?:_art)?["'][^>]*value=["']([^"']+)["']/i) ||
-		input.rawTTML?.match(/<amll:meta[^>]*key=["']cover(?:_art)?["'][^>]*>([^<]+)<\/amll:meta>/i) ||
+		input.rawTTML?.match(
+			/key=["']cover(?:_art)?["'][^>]*value=["']([^"']+)["']/i,
+		) ||
+		input.rawTTML?.match(
+			/<amll:meta[^>]*key=["']cover(?:_art)?["'][^>]*>([^<]+)<\/amll:meta>/i,
+		) ||
 		input.rawTTML?.match(/https?:\/\/[^\s<>"']+\.(?:jpg|jpeg|png|webp)/i);
 	if (coverMatch?.[1] || coverMatch?.[0]) {
 		coverArt = coverMatch[1] || coverMatch[0];
@@ -333,13 +342,19 @@ export async function downloadCloudAudio(
 	}
 
 	// 2. If it's a full URL, try ref(storage, audioUrl)
-	if (audioUrl && (audioUrl.startsWith("http") || audioUrl.startsWith("gs://"))) {
+	if (
+		audioUrl &&
+		(audioUrl.startsWith("http") || audioUrl.startsWith("gs://"))
+	) {
 		try {
 			const storageRef = ref(storage, audioUrl);
 			const blob = await getBlob(storageRef);
 			return blob;
 		} catch (urlErr) {
-			console.warn("ref(storage, audioUrl) failed, trying fetch fallback:", urlErr);
+			console.warn(
+				"ref(storage, audioUrl) failed, trying fetch fallback:",
+				urlErr,
+			);
 		}
 	}
 

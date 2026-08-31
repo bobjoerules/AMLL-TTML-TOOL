@@ -167,14 +167,21 @@ class AudioEngine extends EventTarget {
 					// Woke up from sleep or away/idle for more than 15s
 					this._needsFreshContext = true;
 				}
-				if (this._ctx && (this._ctx.state === "suspended" || this._ctx.state === "interrupted")) {
+				if (
+					this._ctx &&
+					(this._ctx.state === "suspended" || this._ctx.state === "interrupted")
+				) {
 					void this._ctx.resume().catch(() => {});
 				}
 			};
 
 			window.addEventListener("focus", handleWakeOrInteraction);
-			window.addEventListener("pointerdown", handleWakeOrInteraction, { passive: true });
-			window.addEventListener("keydown", handleWakeOrInteraction, { passive: true });
+			window.addEventListener("pointerdown", handleWakeOrInteraction, {
+				passive: true,
+			});
+			window.addEventListener("keydown", handleWakeOrInteraction, {
+				passive: true,
+			});
 
 			document.addEventListener("visibilitychange", () => {
 				if (document.visibilityState === "visible") {
@@ -245,12 +252,21 @@ class AudioEngine extends EventTarget {
 		this._lastAudioActivityTime = Date.now();
 
 		// If musicBuffer is missing but raw data exists, decode it
-		if (!this.musicBuffer && this._rawAudioData && this._rawAudioData.byteLength > 0) {
+		if (
+			!this.musicBuffer &&
+			this._rawAudioData &&
+			this._rawAudioData.byteLength > 0
+		) {
 			try {
-				this.musicBuffer = await newCtx.decodeAudioData(this._rawAudioData.slice(0));
+				this.musicBuffer = await newCtx.decodeAudioData(
+					this._rawAudioData.slice(0),
+				);
 				globalStore.set(audioBufferAtom, this.musicBuffer);
 			} catch (e) {
-				console.warn("[AudioEngine] Error re-decoding audio for new context:", e);
+				console.warn(
+					"[AudioEngine] Error re-decoding audio for new context:",
+					e,
+				);
 			}
 		}
 
@@ -307,7 +323,10 @@ class AudioEngine extends EventTarget {
 				await ctx.resume();
 				log("AudioContext resumed, state is now:", ctx.state);
 			} catch (e) {
-				console.warn("Failed to resume AudioContext, recreating fresh context:", e);
+				console.warn(
+					"Failed to resume AudioContext, recreating fresh context:",
+					e,
+				);
 			}
 		}
 
@@ -490,7 +509,10 @@ class AudioEngine extends EventTarget {
 			source.start(0, clampedOffset);
 			this.dispatchEvent(new Event("music-resume"));
 		} catch (err) {
-			console.warn("[AudioEngine] Playback start failed, recreating context...", err);
+			console.warn(
+				"[AudioEngine] Playback start failed, recreating context...",
+				err,
+			);
 			await this.recreateContext();
 			const source = this.ctx.createBufferSource();
 			source.buffer = this.musicBuffer;
@@ -622,7 +644,10 @@ class AudioEngine extends EventTarget {
 			source.start(0, mediaStartTime, durationInSeconds);
 			auditionRafId = requestAnimationFrame(progressLoop);
 		} catch (err) {
-			console.warn("[AudioEngine] Audition start failed, recreating context...", err);
+			console.warn(
+				"[AudioEngine] Audition start failed, recreating context...",
+				err,
+			);
 			await this.recreateContext();
 			const audioCtxStartTime = this.ctx.currentTime;
 			const mediaStartTime = startTimeInSeconds;
@@ -741,10 +766,7 @@ class AudioEngine extends EventTarget {
 					this.musicBuffer = await this.ctx.decodeAudioData(audioData.slice(0));
 					globalStore.set(audioBufferAtom, this.musicBuffer);
 					globalStore.set(loadedAudioAtom, src);
-					globalStore.set(
-						loadedAudioFileNameAtom,
-						(src as any).name || null,
-					);
+					globalStore.set(loadedAudioFileNameAtom, (src as any).name || null);
 
 					this.connectAudioToContext();
 					this.setupAudioListeners();

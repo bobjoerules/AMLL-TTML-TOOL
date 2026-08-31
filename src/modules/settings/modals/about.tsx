@@ -242,9 +242,7 @@ export const SettingsAboutTab = () => {
 						<Button
 							variant="soft"
 							onClick={() =>
-								openExternal(
-									"https://github.com/bobjoerules/AMLL-TTML-TOOL",
-								)
+								openExternal("https://github.com/bobjoerules/AMLL-TTML-TOOL")
 							}
 						>
 							{t("aboutModal.github", "GitHub Repository")}

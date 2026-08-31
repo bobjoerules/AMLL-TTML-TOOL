@@ -128,4 +128,7 @@ export const spectrogramHoverFrequencyAtom = atom((get) => {
 	return ratio * nyquist;
 });
 
-export const spectrogramSelectionAtom = atom<{ start: number; end: number } | null>(null);
+export const spectrogramSelectionAtom = atom<{
+	start: number;
+	end: number;
+} | null>(null);

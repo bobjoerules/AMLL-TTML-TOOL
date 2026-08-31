@@ -48,7 +48,6 @@ import {
 	SpotifyIcon,
 } from "./PlatformIcons";
 
-
 interface MetadataEntryProps {
 	entry: { key: string; value: string[] };
 	index: number;
@@ -68,8 +67,8 @@ const MetadataEntry = memo(
 		const validation = option?.validation;
 		const rowHasError = validation
 			? entry.value.some(
-				(val) => val.trim() !== "" && !validation.verifier(val),
-			)
+					(val) => val.trim() !== "" && !validation.verifier(val),
+				)
 			: false;
 
 		const rowHasDuplicate = useMemo(() => {
@@ -258,8 +257,9 @@ const MetadataEntry = memo(
 											}
 										}}
 										value={vv}
-										className={`${styles.metadataInput} ${dragInputIndex === ii ? styles.dragOverInput : ""
-											}`}
+										className={`${styles.metadataInput} ${
+											dragInputIndex === ii ? styles.dragOverInput : ""
+										}`}
 										onChange={(e) => {
 											const newValue = e.currentTarget.value;
 											setLyricLines((prev) => {

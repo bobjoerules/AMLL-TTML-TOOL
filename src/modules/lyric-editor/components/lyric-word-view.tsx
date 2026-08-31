@@ -17,11 +17,7 @@ import {
 	SplitVerticalRegular,
 	TaskListLtrRegular,
 } from "@fluentui/react-icons";
-import {
-	ContextMenu,
-	IconButton,
-	TextField,
-} from "@radix-ui/themes";
+import { ContextMenu, IconButton, TextField } from "@radix-ui/themes";
 import classNames from "classnames";
 import { type Atom, atom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
@@ -508,8 +504,7 @@ const LyricWordViewEditAdvance = ({
 				if (!open) return;
 				const currentStore = store;
 				const currentSelectedWords = currentStore.get(selectedWordsAtom);
-				if (currentSelectedWords.has(currentWord.id))
-					return;
+				if (currentSelectedWords.has(currentWord.id)) return;
 				setSelectedWords((state) => {
 					state.clear();
 					state.add(currentWord.id);
@@ -690,11 +685,17 @@ const LyricWorldViewEdit = ({
 	const legacySpaceLabels = useAtomValue(legacySpaceLabelsAtom);
 	const useCompactSpace = isSpaceWord && !legacySpaceLabels;
 	// In Edit Mode, we always want to see the original word in the capsule.
-	const displayWord = getDisplayWordText(t, word.word, isWordBlank, word.romanWord, false);
+	const displayWord = getDisplayWordText(
+		t,
+		word.word,
+		isWordBlank,
+		word.romanWord,
+		false,
+	);
 	const spaceLabel = isSpaceWord
 		? t("lyricWordView.spaceCount", "空格 x{count}", {
-			count: word.word.length,
-		})
+				count: word.word.length,
+			})
 		: undefined;
 	const showRubyEditor = useMemo(() => word.ruby !== undefined, [word.ruby]);
 
@@ -769,8 +770,7 @@ const LyricWorldViewEdit = ({
 				if (!open) return;
 				const currentStore = store;
 				const currentSelectedWords = currentStore.get(selectedWordsAtom);
-				if (currentSelectedWords.has(word.id))
-					return;
+				if (currentSelectedWords.has(word.id)) return;
 				setSelectedWords((state) => {
 					state.clear();
 					state.add(word.id);
@@ -859,485 +859,499 @@ const LyricSyncWordView: FC<{
 	rubyIndex = -1,
 	editableField,
 }) => {
-		const word = useAtomValue(wordAtom);
-		const isWordSelectedAtom = useMemo(
-			() => atom((get) => get(selectedWordsAtom).has(syncId)),
-			[syncId],
-		);
-		const isWordSelected = useAtomValue(isWordSelectedAtom);
-		const setSelectedWords = useSetImmerAtom(selectedWordsAtom);
-		const setSelectedLines = useSetImmerAtom(selectedLinesAtom);
-		const visualizeTimestampUpdate = useAtomValue(visualizeTimestampUpdateAtom);
-		const showTimestamps = useAtomValue(showTimestampsAtom);
-		const showEndTimeAsDuration = useAtomValue(showEndTimeAsDurationAtom);
-		const highlightErrors = useAtomValue(highlightErrorsAtom);
-		const highlightActiveWord = useAtomValue(highlightActiveWordAtom);
-		const toolMode = useAtomValue(toolModeAtom);
-		const syncLevelMode = useAtomValue(syncLevelModeAtom);
-		const editLyricLines = useSetImmerAtom(lyricLinesAtom);
-		const enableSyncGlowAnimation = useAtomValue(enableSyncGlowAnimationAtom);
-		const enableManualTimestampEdit = useAtomValue(enableManualTimestampEditAtom);
-		const enableTimeModeDoubleClickEdit = useAtomValue(
-			enableTimeModeDoubleClickEditAtom,
-		);
+	const word = useAtomValue(wordAtom);
+	const isWordSelectedAtom = useMemo(
+		() => atom((get) => get(selectedWordsAtom).has(syncId)),
+		[syncId],
+	);
+	const isWordSelected = useAtomValue(isWordSelectedAtom);
+	const setSelectedWords = useSetImmerAtom(selectedWordsAtom);
+	const setSelectedLines = useSetImmerAtom(selectedLinesAtom);
+	const visualizeTimestampUpdate = useAtomValue(visualizeTimestampUpdateAtom);
+	const showTimestamps = useAtomValue(showTimestampsAtom);
+	const showEndTimeAsDuration = useAtomValue(showEndTimeAsDurationAtom);
+	const highlightErrors = useAtomValue(highlightErrorsAtom);
+	const highlightActiveWord = useAtomValue(highlightActiveWordAtom);
+	const toolMode = useAtomValue(toolModeAtom);
+	const syncLevelMode = useAtomValue(syncLevelModeAtom);
+	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
+	const enableSyncGlowAnimation = useAtomValue(enableSyncGlowAnimationAtom);
+	const enableManualTimestampEdit = useAtomValue(enableManualTimestampEditAtom);
+	const enableTimeModeDoubleClickEdit = useAtomValue(
+		enableTimeModeDoubleClickEditAtom,
+	);
 
-		const store = useStore();
-		const enableUpcomingWordHighlight = useAtomValue(
-			enableUpcomingWordHighlightAtom,
-		);
-		const upcomingWordHighlightColor = useAtomValue(
-			upcomingWordHighlightColorAtom,
-		);
-		const upcomingWordHighlightThreshold = useAtomValue(
-			upcomingWordHighlightThresholdAtom,
-		);
+	const store = useStore();
+	const enableUpcomingWordHighlight = useAtomValue(
+		enableUpcomingWordHighlightAtom,
+	);
+	const upcomingWordHighlightColor = useAtomValue(
+		upcomingWordHighlightColorAtom,
+	);
+	const upcomingWordHighlightThreshold = useAtomValue(
+		upcomingWordHighlightThresholdAtom,
+	);
 
-		const startTimeRef = useRef<HTMLDivElement>(null);
-		const endTimeRef = useRef<HTMLDivElement>(null);
-		const ambientHighlightRef = useRef<HTMLDivElement>(null);
-		const wordContainerRef = useRef<HTMLDivElement>(null);
-		const lastClickTimeRef = useRef(0);
+	const startTimeRef = useRef<HTMLDivElement>(null);
+	const endTimeRef = useRef<HTMLDivElement>(null);
+	const ambientHighlightRef = useRef<HTMLDivElement>(null);
+	const wordContainerRef = useRef<HTMLDivElement>(null);
+	const lastClickTimeRef = useRef(0);
 
-		// Keep mutable refs for active-highlight settings to avoid re-subscribing on every settings change
-		const highlightActiveWordRef = useRef(highlightActiveWord);
-		const enableSyncGlowAnimationRef = useRef(enableSyncGlowAnimation);
-		useEffect(() => { highlightActiveWordRef.current = highlightActiveWord; }, [highlightActiveWord]);
-		useEffect(() => { enableSyncGlowAnimationRef.current = enableSyncGlowAnimation; }, [enableSyncGlowAnimation]);
+	// Keep mutable refs for active-highlight settings to avoid re-subscribing on every settings change
+	const highlightActiveWordRef = useRef(highlightActiveWord);
+	const enableSyncGlowAnimationRef = useRef(enableSyncGlowAnimation);
+	useEffect(() => {
+		highlightActiveWordRef.current = highlightActiveWord;
+	}, [highlightActiveWord]);
+	useEffect(() => {
+		enableSyncGlowAnimationRef.current = enableSyncGlowAnimation;
+	}, [enableSyncGlowAnimation]);
 
-		// ── PERF FIX: Drive the active/animated classes imperatively via store.sub
-		// instead of subscribing to currentTimeAtom inside React (which causes ~60fps
-		// re-renders of every visible word).
-		useEffect(() => {
-			const updateActive = () => {
-				const el = wordContainerRef.current;
-				if (!el) return;
-				const currentTime = store.get(currentTimeAtom);
-				const isActive = currentTime >= startTime && currentTime < endTime;
-				if (isActive) {
-					if (highlightActiveWordRef.current) {
-						el.classList.add(styles.active);
-						if (enableSyncGlowAnimationRef.current) {
-							el.classList.add(styles.animated);
-						} else {
-							el.classList.remove(styles.animated);
-						}
+	// ── PERF FIX: Drive the active/animated classes imperatively via store.sub
+	// instead of subscribing to currentTimeAtom inside React (which causes ~60fps
+	// re-renders of every visible word).
+	useEffect(() => {
+		const updateActive = () => {
+			const el = wordContainerRef.current;
+			if (!el) return;
+			const currentTime = store.get(currentTimeAtom);
+			const isActive = currentTime >= startTime && currentTime < endTime;
+			if (isActive) {
+				if (highlightActiveWordRef.current) {
+					el.classList.add(styles.active);
+					if (enableSyncGlowAnimationRef.current) {
+						el.classList.add(styles.animated);
+					} else {
+						el.classList.remove(styles.animated);
 					}
-				} else {
-					el.classList.remove(styles.active);
-					el.classList.remove(styles.animated);
 				}
-			};
-			updateActive();
-			return store.sub(currentTimeAtom, updateActive);
-		}, [store, startTime, endTime]);
+			} else {
+				el.classList.remove(styles.active);
+				el.classList.remove(styles.animated);
+			}
+		};
+		updateActive();
+		return store.sub(currentTimeAtom, updateActive);
+	}, [store, startTime, endTime]);
 
-		// Inline timestamp editing state: null = not editing, "start" | "end" = editing that field
-		const [editingTime, setEditingTime] = useState<"start" | "end" | null>(null);
-		const [editingInput, setEditingInput] = useState("");
-		const [editingTextField, setEditingTextField] = useState<
-			"word" | "romanWord" | null
-		>(null);
-		const [editingTextValue, setEditingTextValue] = useState("");
-		const editingTextInputRef = useRef<HTMLInputElement>(null);
-		const editingTextMeasureRef = useRef<HTMLSpanElement>(null);
-		const editingTextValueRef = useRef("");
-		const [editingTextWidth, setEditingTextWidth] = useState<number>();
-		const textForMeasurement = editingTextValue || " ";
+	// Inline timestamp editing state: null = not editing, "start" | "end" = editing that field
+	const [editingTime, setEditingTime] = useState<"start" | "end" | null>(null);
+	const [editingInput, setEditingInput] = useState("");
+	const [editingTextField, setEditingTextField] = useState<
+		"word" | "romanWord" | null
+	>(null);
+	const [editingTextValue, setEditingTextValue] = useState("");
+	const editingTextInputRef = useRef<HTMLInputElement>(null);
+	const editingTextMeasureRef = useRef<HTMLSpanElement>(null);
+	const editingTextValueRef = useRef("");
+	const [editingTextWidth, setEditingTextWidth] = useState<number>();
+	const textForMeasurement = editingTextValue || " ";
 
-		useEffect(() => {
-			if (!editingTextField) return;
-			editingTextInputRef.current?.focus();
-			editingTextInputRef.current?.select();
-		}, [editingTextField]);
+	useEffect(() => {
+		if (!editingTextField) return;
+		editingTextInputRef.current?.focus();
+		editingTextInputRef.current?.select();
+	}, [editingTextField]);
 
-		useLayoutEffect(() => {
-			if (
-				!editingTextField ||
-				!editingTextMeasureRef.current ||
-				!textForMeasurement
-			)
-				return;
-			setEditingTextWidth(
-				Math.ceil(editingTextMeasureRef.current.getBoundingClientRect().width),
+	useLayoutEffect(() => {
+		if (
+			!editingTextField ||
+			!editingTextMeasureRef.current ||
+			!textForMeasurement
+		)
+			return;
+		setEditingTextWidth(
+			Math.ceil(editingTextMeasureRef.current.getBoundingClientRect().width),
+		);
+	}, [editingTextField, textForMeasurement]);
+
+	const commitTextEdit = useCallback(
+		(field: "word" | "romanWord", value: string) => {
+			editLyricLines((state) => {
+				const targetLine = state.lyricLines.find((item) => item.id === line.id);
+				const targetWord = targetLine?.words[wordIndex];
+				if (targetWord) targetWord[field] = value;
+			});
+			setEditingTextField(null);
+		},
+		[editLyricLines, line.id, wordIndex],
+	);
+
+	useEffect(() => {
+		if (!editingTextField) return;
+
+		const commitOnOutsidePointerDown = (event: PointerEvent) => {
+			if (editingTextInputRef.current?.contains(event.target as Node)) return;
+			commitTextEdit(editingTextField, editingTextValueRef.current);
+		};
+
+		document.addEventListener("pointerdown", commitOnOutsidePointerDown, true);
+		return () =>
+			document.removeEventListener(
+				"pointerdown",
+				commitOnOutsidePointerDown,
+				true,
 			);
-		}, [editingTextField, textForMeasurement]);
+	}, [commitTextEdit, editingTextField]);
 
-		const commitTextEdit = useCallback(
-			(field: "word" | "romanWord", value: string) => {
+	const commitTimeEdit = useCallback(
+		(field: "start" | "end", rawValue: string) => {
+			try {
+				const newMs = parseTimespan(rawValue);
 				editLyricLines((state) => {
-					const targetLine = state.lyricLines.find((item) => item.id === line.id);
-					const targetWord = targetLine?.words[wordIndex];
-					if (targetWord) targetWord[field] = value;
+					const targetLine = state.lyricLines.find((l) => l.id === line.id);
+					if (!targetLine) return;
+					const word = targetLine.words[wordIndex];
+					if (!word) return;
+					if (rubyIndex >= 0) {
+						const ruby = word.ruby?.[rubyIndex];
+						if (!ruby) return;
+						if (field === "start") ruby.startTime = newMs;
+						else ruby.endTime = newMs;
+					} else {
+						if (field === "start") word.startTime = newMs;
+						else word.endTime = newMs;
+					}
 				});
-				setEditingTextField(null);
+			} catch {
+				// invalid format — silently revert
+			}
+			setEditingTime(null);
+		},
+		[editLyricLines, line.id, wordIndex, rubyIndex],
+	);
+
+	const startTimeDisplay = msToTimestamp(startTime);
+	const endTimeDisplay = showEndTimeAsDuration
+		? `+${endTime - startTime}ms`
+		: msToTimestamp(endTime);
+
+	// Optimized render loop for pre-playback word ambient highlighting
+	useEffect(() => {
+		if (!enableUpcomingWordHighlight || !ambientHighlightRef.current) return;
+
+		const updateHighlight = () => {
+			if (!ambientHighlightRef.current) return;
+			const currentTime = store.get(currentTimeAtom);
+			const delta = startTime - currentTime;
+			const threshold = upcomingWordHighlightThreshold;
+
+			const isBlueActive =
+				ambientHighlightRef.current.parentElement?.classList.contains(
+					styles.active,
+				);
+
+			// Extend the highlight window by 50ms to sync with the React blue highlight render delay
+			if (
+				delta > -50 &&
+				!isBlueActive &&
+				(threshold <= 0 || delta <= threshold)
+			) {
+				// Cap effective delta at 0 so opacity stays at maximum (0.75) during the 50ms delay window
+				const effectiveDelta = Math.max(0, delta);
+				const opacity =
+					threshold > 0 ? 0.75 * (1 - effectiveDelta / threshold) : 0.75;
+				ambientHighlightRef.current.style.transition = "none";
+				ambientHighlightRef.current.style.opacity = opacity.toFixed(3);
+				ambientHighlightRef.current.style.backgroundColor =
+					upcomingWordHighlightColor;
+			} else {
+				ambientHighlightRef.current.style.transition = "none";
+				ambientHighlightRef.current.style.opacity = "0";
+			}
+		};
+
+		// Run immediately to establish initial state without waiting for playback
+		updateHighlight();
+
+		return store.sub(currentTimeAtom, updateHighlight);
+	}, [
+		enableUpcomingWordHighlight,
+		upcomingWordHighlightColor,
+		upcomingWordHighlightThreshold,
+		startTime,
+		store,
+	]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: 用于呈现时间戳更新效果
+	useEffect(() => {
+		if (!visualizeTimestampUpdate) return;
+		const animation = startTimeRef.current?.animate(
+			[
+				{
+					backgroundColor: "var(--accent-a8)",
+				},
+				{
+					backgroundColor: "var(--accent-a4)",
+				},
+			],
+			{
+				duration: 500,
 			},
-			[editLyricLines, line.id, wordIndex],
 		);
 
-		useEffect(() => {
-			if (!editingTextField) return;
+		return () => {
+			animation?.cancel();
+		};
+	}, [startTime, visualizeTimestampUpdate]);
 
-			const commitOnOutsidePointerDown = (event: PointerEvent) => {
-				if (editingTextInputRef.current?.contains(event.target as Node)) return;
-				commitTextEdit(editingTextField, editingTextValueRef.current);
-			};
-
-			document.addEventListener("pointerdown", commitOnOutsidePointerDown, true);
-			return () =>
-				document.removeEventListener("pointerdown", commitOnOutsidePointerDown, true);
-		}, [commitTextEdit, editingTextField]);
-
-		const commitTimeEdit = useCallback(
-			(field: "start" | "end", rawValue: string) => {
-				try {
-					const newMs = parseTimespan(rawValue);
-					editLyricLines((state) => {
-						const targetLine = state.lyricLines.find((l) => l.id === line.id);
-						if (!targetLine) return;
-						const word = targetLine.words[wordIndex];
-						if (!word) return;
-						if (rubyIndex >= 0) {
-							const ruby = word.ruby?.[rubyIndex];
-							if (!ruby) return;
-							if (field === "start") ruby.startTime = newMs;
-							else ruby.endTime = newMs;
-						} else {
-							if (field === "start") word.startTime = newMs;
-							else word.endTime = newMs;
-						}
-					});
-				} catch {
-					// invalid format — silently revert
-				}
-				setEditingTime(null);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: 用于呈现时间戳更新效果
+	useEffect(() => {
+		if (!visualizeTimestampUpdate) return;
+		const animation = endTimeRef.current?.animate(
+			[
+				{
+					backgroundColor: "var(--accent-a8)",
+				},
+				{
+					backgroundColor: "var(--accent-a4)",
+				},
+			],
+			{
+				duration: 500,
 			},
-			[editLyricLines, line.id, wordIndex, rubyIndex],
 		);
 
-		const startTimeDisplay = msToTimestamp(startTime);
-		const endTimeDisplay = showEndTimeAsDuration
-			? `+${endTime - startTime}ms`
-			: msToTimestamp(endTime);
+		return () => {
+			animation?.cancel();
+		};
+	}, [endTime, visualizeTimestampUpdate]);
 
-		// Optimized render loop for pre-playback word ambient highlighting
-		useEffect(() => {
-			if (!enableUpcomingWordHighlight || !ambientHighlightRef.current) return;
+	const instantFade = useAtomValue(instantHighlightFadeAtom);
+	const hasError = useMemo(() => startTime > endTime, [startTime, endTime]);
+	const setOpenSplitWordDialog = useSetAtom(splitWordDialogAtom);
+	const setEditingWordState = useSetAtom(editingWordStateAtom);
 
-			const updateHighlight = () => {
-				if (!ambientHighlightRef.current) return;
-				const currentTime = store.get(currentTimeAtom);
-				const delta = startTime - currentTime;
-				const threshold = upcomingWordHighlightThreshold;
-
-				const isBlueActive =
-					ambientHighlightRef.current.parentElement?.classList.contains(
-						styles.active,
-					);
-
-				// Extend the highlight window by 50ms to sync with the React blue highlight render delay
-				if (
-					delta > -50 &&
-					!isBlueActive &&
-					(threshold <= 0 || delta <= threshold)
-				) {
-					// Cap effective delta at 0 so opacity stays at maximum (0.75) during the 50ms delay window
-					const effectiveDelta = Math.max(0, delta);
-					const opacity =
-						threshold > 0 ? 0.75 * (1 - effectiveDelta / threshold) : 0.75;
-					ambientHighlightRef.current.style.transition = "none";
-					ambientHighlightRef.current.style.opacity = opacity.toFixed(3);
-					ambientHighlightRef.current.style.backgroundColor =
-						upcomingWordHighlightColor;
-				} else {
-					ambientHighlightRef.current.style.transition = "none";
-					ambientHighlightRef.current.style.opacity = "0";
-				}
-			};
-
-			// Run immediately to establish initial state without waiting for playback
-			updateHighlight();
-
-			return store.sub(currentTimeAtom, updateHighlight);
-		}, [
-			enableUpcomingWordHighlight,
-			upcomingWordHighlightColor,
-			upcomingWordHighlightThreshold,
-			startTime,
-			store,
-		]);
-
-		// biome-ignore lint/correctness/useExhaustiveDependencies: 用于呈现时间戳更新效果
-		useEffect(() => {
-			if (!visualizeTimestampUpdate) return;
-			const animation = startTimeRef.current?.animate(
-				[
-					{
-						backgroundColor: "var(--accent-a8)",
-					},
-					{
-						backgroundColor: "var(--accent-a4)",
-					},
-				],
-				{
-					duration: 500,
-				},
-			);
-
-			return () => {
-				animation?.cancel();
-			};
-		}, [startTime, visualizeTimestampUpdate]);
-
-		// biome-ignore lint/correctness/useExhaustiveDependencies: 用于呈现时间戳更新效果
-		useEffect(() => {
-			if (!visualizeTimestampUpdate) return;
-			const animation = endTimeRef.current?.animate(
-				[
-					{
-						backgroundColor: "var(--accent-a8)",
-					},
-					{
-						backgroundColor: "var(--accent-a4)",
-					},
-				],
-				{
-					duration: 500,
-				},
-			);
-
-			return () => {
-				animation?.cancel();
-			};
-		}, [endTime, visualizeTimestampUpdate]);
-
-		const instantFade = useAtomValue(instantHighlightFadeAtom);
-		const hasError = useMemo(() => startTime > endTime, [startTime, endTime]);
-		const setOpenSplitWordDialog = useSetAtom(splitWordDialogAtom);
-		const setEditingWordState = useSetAtom(editingWordStateAtom);
-
-		// active/animated classes are applied imperatively by the store.sub effect above
-		const className = useMemo(
-			() =>
-				classNames(
-					styles.lyricWord,
-					styles.sync,
-					instantFade && styles.hasInstantFade,
-					isWordSelected && styles.selected,
-					isWordBlank && styles.blank,
-					hasError &&
+	// active/animated classes are applied imperatively by the store.sub effect above
+	const className = useMemo(
+		() =>
+			classNames(
+				styles.lyricWord,
+				styles.sync,
+				instantFade && styles.hasInstantFade,
+				isWordSelected && styles.selected,
+				isWordBlank && styles.blank,
+				hasError &&
 					(toolMode === ToolMode.Edit ||
 						(toolMode === ToolMode.Sync &&
 							showTimestamps &&
 							highlightErrors)) &&
 					styles.error,
-					/* highlightGrammarWarnings is visually disabled as per user request */
-				),
-			[
-				instantFade,
-				isWordBlank,
-				isWordSelected,
-				hasError,
-				toolMode,
-				showTimestamps,
-				highlightErrors,
-			],
-		);
+				/* highlightGrammarWarnings is visually disabled as per user request */
+			),
+		[
+			instantFade,
+			isWordBlank,
+			isWordSelected,
+			hasError,
+			toolMode,
+			showTimestamps,
+			highlightErrors,
+		],
+	);
 
-
-		return (
-			<div
-				ref={wordContainerRef}
-				className={className}
-				style={{ position: "relative", zIndex: 1 }}
-				onPointerDown={(evt) => {
-					evt.stopPropagation();
-					evt.preventDefault();
-					setSelectedLines((state) => {
-						state.clear();
-						state.add(line.id);
-					});
-					setSelectedWords((state) => {
-						state.clear();
-						if (syncLevelMode === "line") {
-							const units = getSynchronizableUnits(line);
-							for (const unit of units) {
-								state.add(unit.id);
-							}
-						} else {
-							state.add(syncId);
+	return (
+		<div
+			ref={wordContainerRef}
+			className={className}
+			style={{ position: "relative", zIndex: 1 }}
+			onPointerDown={(evt) => {
+				evt.stopPropagation();
+				evt.preventDefault();
+				setSelectedLines((state) => {
+					state.clear();
+					state.add(line.id);
+				});
+				setSelectedWords((state) => {
+					state.clear();
+					if (syncLevelMode === "line") {
+						const units = getSynchronizableUnits(line);
+						for (const unit of units) {
+							state.add(unit.id);
 						}
-					});
-				}}
-				onClick={(evt) => {
-					evt.stopPropagation();
-					evt.preventDefault();
-
-					const now = Date.now();
-					const clickInterval = now - lastClickTimeRef.current;
-					lastClickTimeRef.current = now;
-
-					// Only trigger double-click actions within the standard double-click window.
-					if (clickInterval > 300) return;
-
-					if (evt.ctrlKey || evt.metaKey) {
-						setEditingWordState({
-							wordIndex,
-							lineIndex,
-							word: word.word,
-						});
-						setOpenSplitWordDialog(true);
-						return;
+					} else {
+						state.add(syncId);
 					}
-					if (!enableTimeModeDoubleClickEdit) return;
+				});
+			}}
+			onClick={(evt) => {
+				evt.stopPropagation();
+				evt.preventDefault();
 
-					const value = word[editableField] || "";
-					editingTextValueRef.current = value;
-					setEditingTextValue(value);
-					setEditingTextField(editableField);
+				const now = Date.now();
+				const clickInterval = now - lastClickTimeRef.current;
+				lastClickTimeRef.current = now;
+
+				// Only trigger double-click actions within the standard double-click window.
+				if (clickInterval > 300) return;
+
+				if (evt.ctrlKey || evt.metaKey) {
+					setEditingWordState({
+						wordIndex,
+						lineIndex,
+						word: word.word,
+					});
+					setOpenSplitWordDialog(true);
+					return;
+				}
+				if (!enableTimeModeDoubleClickEdit) return;
+
+				const value = word[editableField] || "";
+				editingTextValueRef.current = value;
+				setEditingTextValue(value);
+				setEditingTextField(editableField);
+			}}
+		>
+			<div
+				ref={ambientHighlightRef}
+				style={{
+					position: "absolute",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					opacity: 0,
+					zIndex: -1,
+					pointerEvents: "none",
+					borderRadius: "inherit",
 				}}
-			>
+			/>
+			{showTimestamps && (
 				<div
-					ref={ambientHighlightRef}
-					style={{
-						position: "absolute",
-						top: 0,
-						left: 0,
-						right: 0,
-						bottom: 0,
-						opacity: 0,
-						zIndex: -1,
-						pointerEvents: "none",
-						borderRadius: "inherit",
+					className={classNames(styles.startTime)}
+					ref={startTimeRef}
+					title={
+						enableManualTimestampEdit ? "Click to edit start time" : undefined
+					}
+					style={{ cursor: enableManualTimestampEdit ? "text" : "default" }}
+					onClick={(e) => {
+						if (!enableManualTimestampEdit) return;
+						e.stopPropagation();
+						setEditingInput(startTimeDisplay);
+						setEditingTime("start");
 					}}
-				/>
-				{showTimestamps && (
-					<div
-						className={classNames(styles.startTime)}
-						ref={startTimeRef}
-						title={enableManualTimestampEdit ? "Click to edit start time" : undefined}
-						style={{ cursor: enableManualTimestampEdit ? "text" : "default" }}
-						onClick={(e) => {
-							if (!enableManualTimestampEdit) return;
-							e.stopPropagation();
-							setEditingInput(startTimeDisplay);
-							setEditingTime("start");
-						}}
-					>
-						{editingTime === "start" ? (
-							<input
-								autoFocus
-								value={editingInput}
-								onChange={(e) => setEditingInput(e.target.value)}
-								onBlur={() => commitTimeEdit("start", editingInput)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") commitTimeEdit("start", editingInput);
-									if (e.key === "Escape") setEditingTime(null);
-									e.stopPropagation();
-								}}
-								onClick={(e) => e.stopPropagation()}
-								style={{
-									width: "100%",
-									background: "transparent",
-									border: "none",
-									outline: "1px solid var(--accent-8)",
-									borderRadius: "2px",
-									color: "inherit",
-									fontFamily: "inherit",
-									fontSize: "inherit",
-									textAlign: "center",
-									padding: "0 2px",
-								}}
-							/>
-						) : (
-							startTimeDisplay
-						)}
-					</div>
-				)}
-				{editingTextField ? (
-					<>
-						<span ref={editingTextMeasureRef} className={styles.syncWordInputMeasure}>
-							{textForMeasurement}
-						</span>
+				>
+					{editingTime === "start" ? (
 						<input
-							ref={editingTextInputRef}
-							value={editingTextValue}
-							style={
-								editingTextWidth ? { width: `${editingTextWidth}px` } : undefined
-							}
-							onChange={(event) => {
-								editingTextValueRef.current = event.currentTarget.value;
-								setEditingTextValue(event.currentTarget.value);
+							autoFocus
+							value={editingInput}
+							onChange={(e) => setEditingInput(e.target.value)}
+							onBlur={() => commitTimeEdit("start", editingInput)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") commitTimeEdit("start", editingInput);
+								if (e.key === "Escape") setEditingTime(null);
+								e.stopPropagation();
 							}}
-							onBlur={(event) =>
-								commitTextEdit(editingTextField, event.currentTarget.value)
-							}
-							onPointerDown={(event) => event.stopPropagation()}
-							onClick={(event) => event.stopPropagation()}
-							onKeyDown={(event) => {
-								event.stopPropagation();
-								if (event.key === "Enter") {
-									event.preventDefault();
-									commitTextEdit(editingTextField, event.currentTarget.value);
-								}
-								if (event.key === "Escape") {
-									event.preventDefault();
-									setEditingTextField(null);
-								}
+							onClick={(e) => e.stopPropagation()}
+							style={{
+								width: "100%",
+								background: "transparent",
+								border: "none",
+								outline: "1px solid var(--accent-8)",
+								borderRadius: "2px",
+								color: "inherit",
+								fontFamily: "inherit",
+								fontSize: "inherit",
+								textAlign: "center",
+								padding: "0 2px",
 							}}
-							className={styles.syncWordInput}
 						/>
-					</>
-				) : (
-					<div className={styles.displayWord}>{displayWord}</div>
-				)}
-				{showTimestamps && (
-					<div
-						className={classNames(styles.endTime)}
-						ref={endTimeRef}
-						title={enableManualTimestampEdit ? "Click to edit end time" : undefined}
-						style={{ cursor: enableManualTimestampEdit ? "text" : "default" }}
-						onClick={(e) => {
-							if (!enableManualTimestampEdit) return;
-							e.stopPropagation();
-							setEditingInput(
-								showEndTimeAsDuration ? msToTimestamp(endTime) : endTimeDisplay,
-							);
-							setEditingTime("end");
-						}}
+					) : (
+						startTimeDisplay
+					)}
+				</div>
+			)}
+			{editingTextField ? (
+				<>
+					<span
+						ref={editingTextMeasureRef}
+						className={styles.syncWordInputMeasure}
 					>
-						{editingTime === "end" ? (
-							<input
-								autoFocus
-								value={editingInput}
-								onChange={(e) => setEditingInput(e.target.value)}
-								onBlur={() => commitTimeEdit("end", editingInput)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") commitTimeEdit("end", editingInput);
-									if (e.key === "Escape") setEditingTime(null);
-									e.stopPropagation();
-								}}
-								onClick={(e) => e.stopPropagation()}
-								style={{
-									width: "100%",
-									background: "transparent",
-									border: "none",
-									outline: "1px solid var(--accent-8)",
-									borderRadius: "2px",
-									color: "inherit",
-									fontFamily: "inherit",
-									fontSize: "inherit",
-									textAlign: "center",
-									padding: "0 2px",
-								}}
-							/>
-						) : (
-							endTimeDisplay
-						)}
-					</div>
-				)}
-			</div>
-		);
-	};
+						{textForMeasurement}
+					</span>
+					<input
+						ref={editingTextInputRef}
+						value={editingTextValue}
+						style={
+							editingTextWidth ? { width: `${editingTextWidth}px` } : undefined
+						}
+						onChange={(event) => {
+							editingTextValueRef.current = event.currentTarget.value;
+							setEditingTextValue(event.currentTarget.value);
+						}}
+						onBlur={(event) =>
+							commitTextEdit(editingTextField, event.currentTarget.value)
+						}
+						onPointerDown={(event) => event.stopPropagation()}
+						onClick={(event) => event.stopPropagation()}
+						onKeyDown={(event) => {
+							event.stopPropagation();
+							if (event.key === "Enter") {
+								event.preventDefault();
+								commitTextEdit(editingTextField, event.currentTarget.value);
+							}
+							if (event.key === "Escape") {
+								event.preventDefault();
+								setEditingTextField(null);
+							}
+						}}
+						className={styles.syncWordInput}
+					/>
+				</>
+			) : (
+				<div className={styles.displayWord}>{displayWord}</div>
+			)}
+			{showTimestamps && (
+				<div
+					className={classNames(styles.endTime)}
+					ref={endTimeRef}
+					title={
+						enableManualTimestampEdit ? "Click to edit end time" : undefined
+					}
+					style={{ cursor: enableManualTimestampEdit ? "text" : "default" }}
+					onClick={(e) => {
+						if (!enableManualTimestampEdit) return;
+						e.stopPropagation();
+						setEditingInput(
+							showEndTimeAsDuration ? msToTimestamp(endTime) : endTimeDisplay,
+						);
+						setEditingTime("end");
+					}}
+				>
+					{editingTime === "end" ? (
+						<input
+							autoFocus
+							value={editingInput}
+							onChange={(e) => setEditingInput(e.target.value)}
+							onBlur={() => commitTimeEdit("end", editingInput)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") commitTimeEdit("end", editingInput);
+								if (e.key === "Escape") setEditingTime(null);
+								e.stopPropagation();
+							}}
+							onClick={(e) => e.stopPropagation()}
+							style={{
+								width: "100%",
+								background: "transparent",
+								border: "none",
+								outline: "1px solid var(--accent-8)",
+								borderRadius: "2px",
+								color: "inherit",
+								fontFamily: "inherit",
+								fontSize: "inherit",
+								textAlign: "center",
+								padding: "0 2px",
+							}}
+						/>
+					) : (
+						endTimeDisplay
+					)}
+				</div>
+			)}
+		</div>
+	);
+};
 
 const LyricWorldViewSync: FC<{
 	wordAtom: Atom<LyricWord>;
@@ -1417,7 +1431,9 @@ type LyricWordViewProps = {
 	lineIndex: number;
 };
 
-export const LyricWordView: FC<LyricWordViewProps & { isHeaderLine?: boolean }> = memo(
+export const LyricWordView: FC<
+	LyricWordViewProps & { isHeaderLine?: boolean }
+> = memo(
 	({ wordAtom, wordIndex, line, lineIndex, isHeaderLine }) => {
 		const word = useAtomValue(wordAtom);
 		const toolMode = useAtomValue(toolModeAtom);

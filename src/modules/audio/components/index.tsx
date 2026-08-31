@@ -269,7 +269,9 @@ export const AudioControls: FC = memo(() => {
 										style={{ width: "100%", cursor: "pointer" }}
 										onClick={async () => {
 											await audioEngine.recreateContext();
-											toast.success(t("audioPanel.audioResetSuccess", "Audio engine reset"));
+											toast.success(
+												t("audioPanel.audioResetSuccess", "Audio engine reset"),
+											);
 										}}
 									>
 										{t("audioPanel.resetAudio", "Reset Audio Engine")}

@@ -10,30 +10,28 @@ interface GapSegmentProps {
 	offset?: number;
 }
 
-export const GapSegment: FC<GapSegmentProps> = memo(({
-	segment,
-	lineStartTime,
-	isGhost = false,
-	offset = 0,
-}) => {
-	const { zoom } = useContext(SpectrogramContext);
-	const { startTime, endTime } = segment;
+export const GapSegment: FC<GapSegmentProps> = memo(
+	({ segment, lineStartTime, isGhost = false, offset = 0 }) => {
+		const { zoom } = useContext(SpectrogramContext);
+		const { startTime, endTime } = segment;
 
-	if (startTime == null || endTime == null || endTime <= startTime) {
-		return null;
-	}
+		if (startTime == null || endTime == null || endTime <= startTime) {
+			return null;
+		}
 
-	const left = (((startTime + (isGhost ? offset : 0)) - lineStartTime) / 1000) * zoom;
-	const width = ((endTime - startTime) / 1000) * zoom;
+		const left =
+			((startTime + (isGhost ? offset : 0) - lineStartTime) / 1000) * zoom;
+		const width = ((endTime - startTime) / 1000) * zoom;
 
-	if (width < 1) {
-		return null;
-	}
+		if (width < 1) {
+			return null;
+		}
 
-	const dynamicStyles = {
-		left: `${left}px`,
-		width: `${width}px`,
-	};
+		const dynamicStyles = {
+			left: `${left}px`,
+			width: `${width}px`,
+		};
 
-	return <div className={styles.gapSegment} style={dynamicStyles} />;
-});
+		return <div className={styles.gapSegment} style={dynamicStyles} />;
+	},
+);
