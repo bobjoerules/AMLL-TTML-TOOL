@@ -1,6 +1,9 @@
 import { atom, useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import { spectrogramSelectionAtom, spectrogramHoverTimeMsAtom } from "../states";
+import {
+	spectrogramSelectionAtom,
+	spectrogramHoverTimeMsAtom,
+} from "../states";
 import { editingTimeFieldAtom } from "$/states/main.ts";
 
 const zeroAtom = atom(0);
@@ -15,31 +18,35 @@ export function useSpectrogramSelection(scrollLeft: number, zoom: number) {
 		isSelecting ? spectrogramHoverTimeMsAtom : zeroAtom,
 	);
 
-	const handleSelectionMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-		// Only allow Shift+Drag to select, or just drag if not editing anything?
-		// Wait, normal drag without Shift might just scrub or do nothing... let's say normal drag creates a selection when editingTimeField is NOT active
-		if (editingTimeField) return;
+	const handleSelectionMouseDown = useCallback(
+		(event: React.MouseEvent<HTMLDivElement>) => {
+			// Only allow Shift+Drag to select, or just drag if not editing anything?
+			// Wait, normal drag without Shift might just scrub or do nothing... let's say normal drag creates a selection when editingTimeField is NOT active
+			if (editingTimeField) return;
 
-		// Prevent scrubbing from interfering? The user can just drag.
-		setIsSelecting(true);
-		
-		const rect = event.currentTarget.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const clickX = scrollLeft + x;
-		const timeMs = (clickX / zoom) * 1000;
-		setSelectionStartMs(timeMs);
-		setSelection(null); // Clear previous selection
-	}, [editingTimeField, scrollLeft, zoom, setSelection]);
+			// Prevent scrubbing from interfering? The user can just drag.
+			setIsSelecting(true);
+
+			const rect = event.currentTarget.getBoundingClientRect();
+			const x = event.clientX - rect.left;
+			const clickX = scrollLeft + x;
+			const timeMs = (clickX / zoom) * 1000;
+			setSelectionStartMs(timeMs);
+			setSelection(null); // Clear previous selection
+		},
+		[editingTimeField, scrollLeft, zoom, setSelection],
+	);
 
 	useEffect(() => {
 		const handleMouseUp = () => {
 			if (isSelecting && selectionStartMs !== null) {
 				setIsSelecting(false);
 				const endMs = hoverTimeMs;
-				if (Math.abs(endMs - selectionStartMs) > 10) { // minimum width
+				if (Math.abs(endMs - selectionStartMs) > 10) {
+					// minimum width
 					setSelection({
 						start: Math.min(selectionStartMs, endMs),
-						end: Math.max(selectionStartMs, endMs)
+						end: Math.max(selectionStartMs, endMs),
 					});
 				} else {
 					setSelection(null); // Clear if just clicked
@@ -63,11 +70,11 @@ export function useSpectrogramSelection(scrollLeft: number, zoom: number) {
 		selectionStyle = {
 			left: `${startPx}px`,
 			width: `${width}px`,
-			backgroundColor: 'rgba(50, 150, 255, 0.3)',
-			position: 'absolute',
+			backgroundColor: "rgba(50, 150, 255, 0.3)",
+			position: "absolute",
 			top: 0,
-			height: '100%',
-			pointerEvents: 'none'
+			height: "100%",
+			pointerEvents: "none",
 		};
 	} else if (selection) {
 		const startPx = (selection.start / 1000) * zoom;
@@ -77,11 +84,11 @@ export function useSpectrogramSelection(scrollLeft: number, zoom: number) {
 		selectionStyle = {
 			left: `${startPx}px`,
 			width: `${width}px`,
-			backgroundColor: 'rgba(50, 150, 255, 0.4)',
-			position: 'absolute',
+			backgroundColor: "rgba(50, 150, 255, 0.4)",
+			position: "absolute",
 			top: 0,
-			height: '100%',
-			pointerEvents: 'none'
+			height: "100%",
+			pointerEvents: "none",
 		};
 	}
 

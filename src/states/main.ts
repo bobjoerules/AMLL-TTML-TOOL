@@ -39,7 +39,10 @@ export const showPreviewPanelAtom = atom(false);
 export const previewPanelWidthAtom = atomWithStorage("previewPanelWidth", 400);
 export const aiSidebarWidthAtom = atomWithStorage("aiSidebarWidth", 360);
 
-export const darkModeAtom = atomWithStorage<DarkMode>("darkMode", DarkMode.Dark);
+export const darkModeAtom = atomWithStorage<DarkMode>(
+	"darkMode",
+	DarkMode.Dark,
+);
 export const isDarkThemeAtom = atom((get) => {
 	if (get(darkModeAtom) === DarkMode.Auto) return get(autoDarkModeAtom);
 	return get(darkModeAtom) === DarkMode.Dark;

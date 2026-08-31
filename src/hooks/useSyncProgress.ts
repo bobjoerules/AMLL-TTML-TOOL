@@ -31,7 +31,9 @@ export function useSyncProgress(): SyncProgressResult {
 			totalLines > 0 ? Math.round((timedLines / totalLines) * 100) : 0;
 
 		const meaningfulWords = lyricLines.flatMap((l) =>
-			(l.words || []).filter((w) => Boolean(w.word && w.word.trim().length > 0)),
+			(l.words || []).filter((w) =>
+				Boolean(w.word && w.word.trim().length > 0),
+			),
 		);
 		const totalWords = meaningfulWords.length;
 		const timedWords = meaningfulWords.filter(

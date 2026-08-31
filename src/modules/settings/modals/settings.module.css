@@ -55,7 +55,9 @@
 	color: var(--gray-11) !important;
 	font-weight: 500;
 	font-size: 13px;
-	transition: background 0.1s ease, color 0.1s ease;
+	transition:
+		background 0.1s ease,
+		color 0.1s ease;
 	border: none !important;
 	outline: none !important;
 	box-shadow: none !important;

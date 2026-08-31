@@ -31,7 +31,10 @@ class MockText extends MockNode {
 class MockElement extends MockNode {
 	nodeType = 1;
 	attributes: Record<string, string> = {};
-	constructor(public tagName: string, public namespaceURI: string | null = null) {
+	constructor(
+		public tagName: string,
+		public namespaceURI: string | null = null,
+	) {
 		super();
 	}
 	setAttribute(name: string, value: string) {
@@ -64,7 +67,10 @@ class MockDocument {
 
 class MockXMLSerializer {
 	serializeToString(doc: MockDocument): string {
-		function serializeNode(node: MockNode | MockText, parentNs: string | null = null): string {
+		function serializeNode(
+			node: MockNode | MockText,
+			parentNs: string | null = null,
+		): string {
 			if (node instanceof MockText) {
 				return node.nodeValue;
 			}
@@ -75,7 +81,9 @@ class MockXMLSerializer {
 			if (parentNs && el.namespaceURI === null && !el.attributes.xmlns) {
 				attrs += ' xmlns=""';
 			}
-			const children = el.childNodes.map((c) => serializeNode(c, el.namespaceURI || parentNs)).join("");
+			const children = el.childNodes
+				.map((c) => serializeNode(c, el.namespaceURI || parentNs))
+				.join("");
 			return `<${el.tagName}${attrs}>${children}</${el.tagName}>`;
 		}
 		return serializeNode(doc.documentElement!);
@@ -105,7 +113,12 @@ describe("shouldExportAsLineSynced", () => {
 		const line = newLyricLine();
 		line.isLineSynced = true;
 		line.words = [
-			{ ...newLyricWord(), word: "Whole line lyric", startTime: 1000, endTime: 3000 },
+			{
+				...newLyricWord(),
+				word: "Whole line lyric",
+				startTime: 1000,
+				endTime: 3000,
+			},
 		];
 
 		expect(shouldExportAsLineSynced(line)).toBe(true);
@@ -175,7 +188,7 @@ describe("hasExportableLineContent", () => {
 });
 
 describe("exportTTMLText", () => {
-	it("never generates xmlns=\"\" on child elements", () => {
+	it('never generates xmlns="" on child elements', () => {
 		const line1 = newLyricLine();
 		line1.startTime = 1000;
 		line1.endTime = 3000;

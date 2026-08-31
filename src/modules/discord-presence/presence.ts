@@ -5,12 +5,12 @@ export const PRESENCE_BRIDGE_VERSION = 1;
 export const PRESENCE_META_NAME = "amll-discord-presence";
 export const DISCORD_LOGO_URL = "https://i.imgur.com/tuaWADI.png";
 export const DISCORD_PLAY_URL = "https://cdn.rcd.gg/PreMiD/resources/play.png";
-export const DISCORD_PAUSE_URL = "https://cdn.rcd.gg/PreMiD/resources/pause.png";
+export const DISCORD_PAUSE_URL =
+	"https://cdn.rcd.gg/PreMiD/resources/pause.png";
 export const DISCORD_EDIT_URL = "https://i.imgur.com/vXBNVsw.png";
 export const DISCORD_SYNC_URL = "https://i.imgur.com/cRaE75x.png";
 export const DISCORD_PREVIEW_URL = "https://i.imgur.com/x7xDsb5.png";
-export const REPOSITORY_URL =
-	"https://github.com/bobjoerules/AMLL-TTML-TOOL";
+export const REPOSITORY_URL = "https://github.com/bobjoerules/AMLL-TTML-TOOL";
 export const DEFAULT_DISCORD_DETAILS_TEMPLATE = "{{mode}} {{title}}";
 export const DEFAULT_DISCORD_STATE_TEMPLATE =
 	"[[{{artist}} • ]]{{lineProgress}} • {{playbackStatus}}";
@@ -345,7 +345,7 @@ export function createDiscordTemplateContext({
 			: "No audio loaded";
 
 	return {
-		title: hasFile ? (snapshot.title || "Untitled lyrics") : "No file open",
+		title: hasFile ? snapshot.title || "Untitled lyrics" : "No file open",
 		fileName: hasFile ? fileName : "",
 		artist: hasFile ? snapshot.artist : "",
 		album: hasFile ? firstMetadataValue(lyrics, "album") : "",
@@ -374,7 +374,9 @@ export function createDiscordTemplateContext({
 				? formatClock(snapshot.durationSeconds - snapshot.positionSeconds)
 				: "",
 		playbackRate: `${Number(snapshot.playbackRate.toFixed(2))}×`,
-		projectElapsed: hasFile ? formatElapsed(snapshot.projectElapsedSeconds ?? 0) : "",
+		projectElapsed: hasFile
+			? formatElapsed(snapshot.projectElapsedSeconds ?? 0)
+			: "",
 		appName: "AMLL TTML Tool",
 	};
 }
@@ -410,7 +412,8 @@ export function formatNativeDiscordActivity(
 	let details: string | undefined = undefined;
 	let state: string | undefined = undefined;
 	let showRepositoryButton = options.showRepositoryButton;
-	let showPlaybackTimeline = options.showPlaybackTimeline && options.showProgressTimer;
+	let showPlaybackTimeline =
+		options.showPlaybackTimeline && options.showProgressTimer;
 
 	if (options.privacyPreset === "rich") {
 		details = truncateDiscordText(
@@ -453,8 +456,7 @@ export function formatNativeDiscordActivity(
 				: "AMLL TTML Tool";
 		if (mode === "state") return snapshot.playing ? "Playing" : "Paused";
 		if (mode === "tab") return getTabImageText(snapshot.mode);
-		if (mode === "profile")
-			return snapshot.userDisplayName || "Profile";
+		if (mode === "profile") return snapshot.userDisplayName || "Profile";
 		return undefined;
 	};
 
@@ -466,7 +468,9 @@ export function formatNativeDiscordActivity(
 	if (options.privacyPreset !== "none") {
 		largeImage = getImageUrl(options.largeImageMode);
 		const customBottom = options.bottomLineTemplate
-			? truncateDiscordText(renderDiscordTemplate(options.bottomLineTemplate, context))
+			? truncateDiscordText(
+					renderDiscordTemplate(options.bottomLineTemplate, context),
+				)
 			: undefined;
 		largeImageText = customBottom || getImageText(options.largeImageMode);
 		smallImage = getImageUrl(options.smallImageMode);

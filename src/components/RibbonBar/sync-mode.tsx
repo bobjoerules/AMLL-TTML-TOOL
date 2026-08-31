@@ -162,10 +162,7 @@ export const LineTimingTools = () => {
 	const handlePasteTimings = useCallback(() => {
 		if (!copiedTimings) {
 			toast.info(
-				t(
-					"ribbonBar.timingTools.noTimingsCopied",
-					"No timings copied yet",
-				),
+				t("ribbonBar.timingTools.noTimingsCopied", "No timings copied yet"),
 			);
 			return;
 		}
@@ -218,10 +215,7 @@ export const LineTimingTools = () => {
 			return state;
 		});
 		toast.success(
-			t(
-				"ribbonBar.timingTools.pastedTimings",
-				"Pasted timings to selection",
-			),
+			t("ribbonBar.timingTools.pastedTimings", "Pasted timings to selection"),
 		);
 	}, [copiedTimings, editLyricLines, store, t]);
 
@@ -412,7 +406,8 @@ export const RibbonSyncProgressWidget = () => {
 					style={{
 						position: "absolute",
 						fontSize: syncProgress.linePercent === 100 ? "8.5px" : "10px",
-						letterSpacing: syncProgress.linePercent === 100 ? "-0.5px" : undefined,
+						letterSpacing:
+							syncProgress.linePercent === 100 ? "-0.5px" : undefined,
 						lineHeight: 1,
 						color:
 							syncProgress.linePercent === 100

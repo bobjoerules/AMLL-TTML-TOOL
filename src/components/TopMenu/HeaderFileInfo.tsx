@@ -1,5 +1,13 @@
 import { HistoryRegular, CheckmarkCircle24Filled } from "@fluentui/react-icons";
-import { Badge, Box, Button, Flex, Text, TextField, Tooltip } from "@radix-ui/themes";
+import {
+	Badge,
+	Box,
+	Button,
+	Flex,
+	Text,
+	TextField,
+	Tooltip,
+} from "@radix-ui/themes";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -215,7 +223,11 @@ export const HeaderFileInfo = () => {
 					>
 						{syncProgress.linePercent === 100 ? (
 							<CheckmarkCircle24Filled
-								style={{ width: "12px", height: "12px", color: "var(--green-9)" }}
+								style={{
+									width: "12px",
+									height: "12px",
+									color: "var(--green-9)",
+								}}
 							/>
 						) : (
 							<svg

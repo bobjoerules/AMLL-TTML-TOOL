@@ -30,7 +30,9 @@ describe("notifySectionIssues", () => {
 		const line = {
 			...newLyricLine(),
 			sectionId: "missing-section",
-			words: [{ ...newLyricWord(), word: "Test", startTime: 100, endTime: 200 }],
+			words: [
+				{ ...newLyricWord(), word: "Test", startTime: 100, endTime: 200 },
+			],
 		};
 		const lyrics: TTMLLyric = {
 			metadata: [],

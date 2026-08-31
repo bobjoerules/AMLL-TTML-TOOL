@@ -7,10 +7,18 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // User TTML Files & Library (allow public read for community library & website)
-    match /users/{userId}/ttmls/{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // User TTML Files, userData (e.g. checklist, preferences), and profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /userData/{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      match /ttmls/{document=**} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // Public & Finished TTMLs Collection

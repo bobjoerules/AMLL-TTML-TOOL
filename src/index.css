@@ -1,5 +1,7 @@
 :root {
-	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro",
+		"Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 	line-height: 1.5;
 	font-weight: 400;
 
@@ -14,7 +16,8 @@
 
 .radix-themes {
 	--default-font-family:
-		-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+		-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro",
+		"Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .radix-themes:is(.dark, .dark-theme):not([data-legacy-dark-theme="true"]) {
@@ -39,10 +42,10 @@
 	--gray-a6: rgba(37, 37, 41, 0.45) !important;
 	--gray-a7: rgba(48, 48, 56, 0.6) !important;
 	--gray-a8: rgba(66, 66, 73, 0.8) !important;
-	--gray-a9: rgba(88, 88, 102, 1.0) !important;
-	--gray-a10: rgba(113, 113, 128, 1.0) !important;
-	--gray-a11: rgba(178, 178, 186, 1.0) !important;
-	--gray-a12: rgba(237, 237, 239, 1.0) !important;
+	--gray-a9: rgba(88, 88, 102, 1) !important;
+	--gray-a10: rgba(113, 113, 128, 1) !important;
+	--gray-a11: rgba(178, 178, 186, 1) !important;
+	--gray-a12: rgba(237, 237, 239, 1) !important;
 
 	--color-background: #060607 !important;
 	--editor-bg: #0b0b0d !important;
@@ -118,4 +121,3 @@
 .ribbon-scrollbar::-webkit-scrollbar-thumb:hover {
 	background-color: var(--gray-a9);
 }
-

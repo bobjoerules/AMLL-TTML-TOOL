@@ -10,9 +10,7 @@ import {
 	toolModeAtom,
 	ToolMode,
 } from "$/states/main.ts";
-import {
-	useKeyBindingAtom,
-} from "$/utils/keybindings.ts";
+import { useKeyBindingAtom } from "$/utils/keybindings.ts";
 import { urbanDictionaryDialogAtom } from "$/states/urban-dictionary";
 
 export const UrbanDictionaryKeybinding: FC = () => {

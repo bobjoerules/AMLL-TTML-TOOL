@@ -63,7 +63,7 @@ export function processSingleLine(line: LyricLine): ProcessedLyricLine {
 		line.endTime > effectiveStart
 			? line.endTime
 			: (validWords[validWords.length - 1]?.endTime ??
-				(effectiveStart > 0 ? effectiveStart : line.endTime ?? 0));
+				(effectiveStart > 0 ? effectiveStart : (line.endTime ?? 0)));
 
 	let cursor = effectiveStart;
 

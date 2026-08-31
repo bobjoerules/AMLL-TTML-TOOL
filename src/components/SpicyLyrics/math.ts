@@ -121,4 +121,6 @@ export const stateAt = (time: number, start: number, end: number) => {
 	return time < start ? "not-sung" : time >= end ? "sung" : "active";
 };
 export const progressAt = (time: number, start: number, end: number) =>
-	end <= start || (start <= 0 && end <= 0) ? 0 : clamp((time - start) / (end - start));
+	end <= start || (start <= 0 && end <= 0)
+		? 0
+		: clamp((time - start) / (end - start));

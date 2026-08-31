@@ -320,7 +320,10 @@ export const ImportLyricsDialog = ({
 										const l = await GeniusApi.getLyrics(Number(track.id));
 										if (l) return l;
 									} catch (err) {
-										console.warn("Genius getLyrics failed, fallback to search:", err);
+										console.warn(
+											"Genius getLyrics failed, fallback to search:",
+											err,
+										);
 									}
 								}
 								const searchRes = await GeniusApi.search(
@@ -379,7 +382,9 @@ export const ImportLyricsDialog = ({
 										const res = await LrcLibApi.get(Number(track.id));
 										const l =
 											res.plainLyrics ||
-											(res.syncedLyrics ? lrcToPlainLyrics(res.syncedLyrics) : "");
+											(res.syncedLyrics
+												? lrcToPlainLyrics(res.syncedLyrics)
+												: "");
 										if (l) return l;
 									} catch (err) {
 										console.warn("LRCLIB get failed, fallback to search:", err);
@@ -391,7 +396,9 @@ export const ImportLyricsDialog = ({
 								const first = searchRes[0];
 								return (
 									first?.plainLyrics ||
-									(first?.syncedLyrics ? lrcToPlainLyrics(first.syncedLyrics) : "") ||
+									(first?.syncedLyrics
+										? lrcToPlainLyrics(first.syncedLyrics)
+										: "") ||
 									""
 								);
 							},
@@ -407,10 +414,16 @@ export const ImportLyricsDialog = ({
 							lyrics: track.lyrics || "",
 							fetchLyrics: async () => {
 								try {
-									const d = await LyricallyApi.getLyrics(track.name, track.artist);
+									const d = await LyricallyApi.getLyrics(
+										track.name,
+										track.artist,
+									);
 									if (d?.lyrics) return d.lyrics;
 								} catch (err) {
-									console.warn("Lyrically getLyrics failed, fallback to search:", err);
+									console.warn(
+										"Lyrically getLyrics failed, fallback to search:",
+										err,
+									);
 								}
 								const searchRes = await LyricallyApi.search(
 									`${track.artist} ${track.name}`,
@@ -444,33 +457,33 @@ export const ImportLyricsDialog = ({
 							let hits: ImportTrack[] = [];
 							if (source === "genius") {
 								try {
-									hits = (await GeniusApi.search(q, geniusApiKey)).response.hits.map(
-										({ result }) => ({
-											id: result.id,
-											name: result.title,
-											artist: result.primary_artist.name,
-											album: result.album?.name,
-											cover:
-												result.song_art_image_url ||
-												result.song_art_image_thumbnail_url,
-											fetchLyrics: () => GeniusApi.getLyrics(result.id),
-											fetchSongwriters: async () => {
-												try {
-													const artists = (
-														await GeniusApi.getSongById(
-															result.id,
-															geniusApiKey,
-														)
-													).response.song.writer_artists;
-													return artists.map((a: any) => a.name);
-												} catch {
-													return [result.primary_artist.name];
-												}
-											},
-										}),
-									);
+									hits = (
+										await GeniusApi.search(q, geniusApiKey)
+									).response.hits.map(({ result }) => ({
+										id: result.id,
+										name: result.title,
+										artist: result.primary_artist.name,
+										album: result.album?.name,
+										cover:
+											result.song_art_image_url ||
+											result.song_art_image_thumbnail_url,
+										fetchLyrics: () => GeniusApi.getLyrics(result.id),
+										fetchSongwriters: async () => {
+											try {
+												const artists = (
+													await GeniusApi.getSongById(result.id, geniusApiKey)
+												).response.song.writer_artists;
+												return artists.map((a: any) => a.name);
+											} catch {
+												return [result.primary_artist.name];
+											}
+										},
+									}));
 								} catch (err) {
-									console.warn("Genius search failed in prefill, fallback to Lyrically:", err);
+									console.warn(
+										"Genius search failed in prefill, fallback to Lyrically:",
+										err,
+									);
 									hits = (await LyricallyApi.search(q)).map((track, index) => ({
 										id: `${track.artist}-${track.name}-${index}`,
 										...track,

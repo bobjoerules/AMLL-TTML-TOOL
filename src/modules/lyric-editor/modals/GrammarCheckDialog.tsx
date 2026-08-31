@@ -112,7 +112,9 @@ export const GrammarCheckDialog = () => {
 
 				const firstAlphaIndex = word.word.search(/[a-zA-Zа-яёÁ-ЯЁ]/);
 				const hasCapitalInMiddle = /[a-zA-Zà-ÿÀ-ÿ].*[A-ZÀ-Ý]/.test(word.word);
-				const isRepeatedRemoval = suggestions.includes("__REMOVE_REPEATED_WORD__");
+				const isRepeatedRemoval = suggestions.includes(
+					"__REMOVE_REPEATED_WORD__",
+				);
 				let issueType: GrammarIssue["type"] = "ambiguous";
 				let message = t("grammarCheck.ambiguous", "Possible grammar issue");
 				let suggestion = suggestions[0];
@@ -124,7 +126,8 @@ export const GrammarCheckDialog = () => {
 				} else if (
 					wordIndex === 0 &&
 					firstAlphaIndex !== -1 &&
-					word.word[firstAlphaIndex] === word.word[firstAlphaIndex].toLowerCase()
+					word.word[firstAlphaIndex] ===
+						word.word[firstAlphaIndex].toLowerCase()
 				) {
 					issueType = "capitalization";
 					message = t(
@@ -140,21 +143,21 @@ export const GrammarCheckDialog = () => {
 				}
 
 				if (message) {
-				result.push({
-					type: issueType,
-					lineId: line.id,
-					lineIndex: mainLineCount,
-					isBackground,
-					wordId,
-					wordIndex,
-					word: word.word,
-					wordSnapshot: {
-						...word,
-						ruby: word.ruby?.map((rubyWord) => ({ ...rubyWord })),
-					},
-					message,
-					suggestion,
-				});
+					result.push({
+						type: issueType,
+						lineId: line.id,
+						lineIndex: mainLineCount,
+						isBackground,
+						wordId,
+						wordIndex,
+						word: word.word,
+						wordSnapshot: {
+							...word,
+							ruby: word.ruby?.map((rubyWord) => ({ ...rubyWord })),
+						},
+						message,
+						suggestion,
+					});
 				}
 			});
 		});
@@ -562,7 +565,10 @@ export const GrammarCheckDialog = () => {
 																	size="1"
 																	variant="soft"
 																	onClick={() => handleFix(issue)}
-																	title={t("grammarCheck.applyFix", "Apply suggested fix")}
+																	title={t(
+																		"grammarCheck.applyFix",
+																		"Apply suggested fix",
+																	)}
 																>
 																	<CheckRegular
 																		style={{ color: "var(--green-9)" }}
@@ -574,7 +580,10 @@ export const GrammarCheckDialog = () => {
 																variant="soft"
 																color="red"
 																onClick={() => handleIgnore(issue)}
-																title={t("grammarCheck.ignoreSession", "Ignore this word in this session")}
+																title={t(
+																	"grammarCheck.ignoreSession",
+																	"Ignore this word in this session",
+																)}
 															>
 																<DismissRegular />
 															</IconButton>
@@ -582,7 +591,10 @@ export const GrammarCheckDialog = () => {
 																size="1"
 																variant="soft"
 																onClick={() => handleIgnoreWord(issue.word)}
-																title={t("grammarCheck.ignoreAlways", "Always ignore this word")}
+																title={t(
+																	"grammarCheck.ignoreAlways",
+																	"Always ignore this word",
+																)}
 															>
 																<SubtractRegular />
 															</IconButton>

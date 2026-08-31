@@ -169,8 +169,7 @@ export function DiscordPresenceSettings() {
 	const [stateDraft, setStateDraft] = useState(stateTemplate);
 	const [bottomLineDraft, setBottomLineDraft] = useState(bottomLineTemplate);
 	const [variableSearch, setVariableSearch] = useState("");
-	const [templateTarget, setTemplateTarget] =
-		useState<TemplateTarget>("state");
+	const [templateTarget, setTemplateTarget] = useState<TemplateTarget>("state");
 	const detailsRef = useRef<HTMLTextAreaElement>(null);
 	const stateRef = useRef<HTMLTextAreaElement>(null);
 	const bottomLineRef = useRef<HTMLTextAreaElement>(null);
@@ -302,8 +301,7 @@ export function DiscordPresenceSettings() {
 		if (imgMode === "state")
 			return playing ? DISCORD_PLAY_URL : DISCORD_PAUSE_URL;
 		if (imgMode === "tab") return getTabImageUrl(mode);
-		if (imgMode === "profile")
-			return user?.photoURL || DISCORD_LOGO_URL;
+		if (imgMode === "profile") return user?.photoURL || DISCORD_LOGO_URL;
 		return undefined;
 	};
 
@@ -532,7 +530,10 @@ export function DiscordPresenceSettings() {
 				<Flex direction="column" gap="4">
 					<Flex align="center" justify="between">
 						<Text weight="bold" size="2">
-							{t("settings.discord.lineCustomization", "Presence Line Customization")}
+							{t(
+								"settings.discord.lineCustomization",
+								"Presence Line Customization",
+							)}
 						</Text>
 						<Button size="1" variant="soft" onClick={resetTemplates}>
 							{t("common.reset", "Reset All")}
@@ -562,14 +563,18 @@ export function DiscordPresenceSettings() {
 								<Button
 									size="1"
 									variant="outline"
-									onClick={() => updateTemplate("details", "Editing {{fileName}}")}
+									onClick={() =>
+										updateTemplate("details", "Editing {{fileName}}")
+									}
 								>
 									📁 File Name
 								</Button>
 								<Button
 									size="1"
 									variant="outline"
-									onClick={() => updateTemplate("details", "{{title}} • {{artist}}")}
+									onClick={() =>
+										updateTemplate("details", "{{title}} • {{artist}}")
+									}
 								>
 									Title • Artist
 								</Button>
@@ -580,7 +585,9 @@ export function DiscordPresenceSettings() {
 							value={detailsDraft}
 							rows={2}
 							onFocus={() => setTemplateTarget("details")}
-							onChange={(event) => updateTemplate("details", event.target.value)}
+							onChange={(event) =>
+								updateTemplate("details", event.target.value)
+							}
 						/>
 						{detailsError && (
 							<Text size="1" color="red">
@@ -593,7 +600,10 @@ export function DiscordPresenceSettings() {
 					<Flex direction="column" gap="1">
 						<Flex align="center" justify="between">
 							<Text size="2" weight="bold">
-								{t("settings.common.discordState", "2. Middle Line (State & Progress)")}
+								{t(
+									"settings.common.discordState",
+									"2. Middle Line (State & Progress)",
+								)}
 							</Text>
 							<Flex gap="1" wrap="wrap">
 								<Button
@@ -611,12 +621,7 @@ export function DiscordPresenceSettings() {
 								<Button
 									size="1"
 									variant="outline"
-									onClick={() =>
-										updateTemplate(
-											"state",
-											"[[{{artist}}]]",
-										)
-									}
+									onClick={() => updateTemplate("state", "[[{{artist}}]]")}
 								>
 									Artist
 								</Button>
@@ -652,7 +657,10 @@ export function DiscordPresenceSettings() {
 					<Flex direction="column" gap="1">
 						<Flex align="center" justify="between">
 							<Text size="2" weight="bold">
-								{t("settings.common.discordBottomLine", "3. Bottom Line (Album & Info)")}
+								{t(
+									"settings.common.discordBottomLine",
+									"3. Bottom Line (Album & Info)",
+								)}
 							</Text>
 							<Flex gap="1" wrap="wrap">
 								<Button
@@ -683,10 +691,7 @@ export function DiscordPresenceSettings() {
 									size="1"
 									variant="outline"
 									onClick={() =>
-										updateTemplate(
-											"bottomLine",
-											"{{fileName}} • {{mode}}",
-										)
+										updateTemplate("bottomLine", "{{fileName}} • {{mode}}")
 									}
 								>
 									📁 File & Mode
@@ -710,7 +715,9 @@ export function DiscordPresenceSettings() {
 							value={bottomLineDraft}
 							rows={2}
 							onFocus={() => setTemplateTarget("bottomLine")}
-							onChange={(event) => updateTemplate("bottomLine", event.target.value)}
+							onChange={(event) =>
+								updateTemplate("bottomLine", event.target.value)
+							}
 						/>
 						{bottomLineError && (
 							<Text size="1" color="red">
@@ -722,7 +729,10 @@ export function DiscordPresenceSettings() {
 					{/* 1-Click Variable Insertion Chips */}
 					<Flex direction="column" gap="1">
 						<Text size="1" color="gray">
-							{t("settings.discord.clickToInsert", "Click to insert variable into active line:")}
+							{t(
+								"settings.discord.clickToInsert",
+								"Click to insert variable into active line:",
+							)}
 						</Text>
 						<Flex gap="1" wrap="wrap">
 							{filteredVariables.map((variable) => (

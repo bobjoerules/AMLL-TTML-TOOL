@@ -110,7 +110,10 @@ export const SettingsDialog = memo(() => {
 								{t("settingsDialog.tab.appearance", "Appearance")}
 							</NavigationItem>
 							{import.meta.env.TAURI_ENV_PLATFORM && (
-								<NavigationItem value="discord" icon={<PlugConnected24Regular />}>
+								<NavigationItem
+									value="discord"
+									icon={<PlugConnected24Regular />}
+								>
 									{t("settingsDialog.tab.discord", "Discord RPC")}
 								</NavigationItem>
 							)}

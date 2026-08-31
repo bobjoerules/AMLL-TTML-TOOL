@@ -24,142 +24,151 @@ interface LyricLineSegmentProps {
 	offset?: number;
 }
 
-export const LyricLineSegment: FC<LyricLineSegmentProps> = memo(({
-	line,
-	isTouchingStart = false,
-	isTouchingEnd = false,
-	isGhost = false,
-	offset = 0,
-}) => {
-	const previewLine = useAtomValue(previewLineAtom);
-	const setSelectedLines = useSetAtom(selectedLinesAtom);
-	const setSelectedWordId = useSetAtom(selectedWordIdAtom);
-	const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
-	const editingTimeField = useAtomValue(editingTimeFieldAtom);
-	const setTimelineDrag = useSetAtom(timelineDragAtom);
+export const LyricLineSegment: FC<LyricLineSegmentProps> = memo(
+	({
+		line,
+		isTouchingStart = false,
+		isTouchingEnd = false,
+		isGhost = false,
+		offset = 0,
+	}) => {
+		const previewLine = useAtomValue(previewLineAtom);
+		const setSelectedLines = useSetAtom(selectedLinesAtom);
+		const setSelectedWordId = useSetAtom(selectedWordIdAtom);
+		const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
+		const editingTimeField = useAtomValue(editingTimeFieldAtom);
+		const setTimelineDrag = useSetAtom(timelineDragAtom);
 
-	let displayLine: ProcessedLyricLine;
-	if (!isGhost && previewLine && previewLine.id === line.id) {
-		displayLine = previewLine;
-	} else {
-		displayLine = line;
-	}
+		let displayLine: ProcessedLyricLine;
+		if (!isGhost && previewLine && previewLine.id === line.id) {
+			displayLine = previewLine;
+		} else {
+			displayLine = line;
+		}
 
-	const handleMouseDown = useCallback(
-		(e: React.MouseEvent) => {
-			if (isGhost) return;
-			if (e.button !== 0) return;
-			if (editingTimeField) return;
+		const handleMouseDown = useCallback(
+			(e: React.MouseEvent) => {
+				if (isGhost) return;
+				if (e.button !== 0) return;
+				if (editingTimeField) return;
 
-			if (!displayLine) return;
-			e.stopPropagation();
+				if (!displayLine) return;
+				e.stopPropagation();
 
-			const { id, startTime } = displayLine;
+				const { id, startTime } = displayLine;
 
-			const scrollContainer = scrollContainerRef.current;
-			if (!scrollContainer) return;
+				const scrollContainer = scrollContainerRef.current;
+				if (!scrollContainer) return;
 
-			const rect = scrollContainer.getBoundingClientRect();
-			const mouseXPx = e.clientX - rect.left;
-			const scrollLeft = globalStore.get(spectrogramScrollLeftAtom);
-			const initialMouseTimeMS = ((scrollLeft + mouseXPx) / zoom) * 1000;
+				const rect = scrollContainer.getBoundingClientRect();
+				const mouseXPx = e.clientX - rect.left;
+				const scrollLeft = globalStore.get(spectrogramScrollLeftAtom);
+				const initialMouseTimeMS = ((scrollLeft + mouseXPx) / zoom) * 1000;
 
-			setTimelineDrag({
-				type: "line-pan",
-				lineId: id,
-				initialMouseTimeMS,
-				initialLineStartMS: startTime,
-			});
+				setTimelineDrag({
+					type: "line-pan",
+					lineId: id,
+					initialMouseTimeMS,
+					initialLineStartMS: startTime,
+				});
 
-			setSelectedLines(new Set([id]));
-			setSelectedWordId(null);
-		},
-		[
-			isGhost,
-			editingTimeField,
-			displayLine,
-			setSelectedLines,
-			setSelectedWordId,
-			scrollContainerRef,
-			zoom,
-			setTimelineDrag,
-		],
-	);
+				setSelectedLines(new Set([id]));
+				setSelectedWordId(null);
+			},
+			[
+				isGhost,
+				editingTimeField,
+				displayLine,
+				setSelectedLines,
+				setSelectedWordId,
+				scrollContainerRef,
+				zoom,
+				setTimelineDrag,
+			],
+		);
 
-	if (!displayLine) {
-		return null;
-	}
+		if (!displayLine) {
+			return null;
+		}
 
-	const startTime = Math.max(0, (displayLine.startTime ?? 0) + offset);
-	const endTime = Math.max(0, (displayLine.endTime ?? 0) + offset);
-	const segments = displayLine.segments;
-	const segmentsLength = segments.length;
+		const startTime = Math.max(0, (displayLine.startTime ?? 0) + offset);
+		const endTime = Math.max(0, (displayLine.endTime ?? 0) + offset);
+		const segments = displayLine.segments;
+		const segmentsLength = segments.length;
 
-	if (startTime == null || endTime == null || endTime <= startTime) {
-		return null;
-	}
+		if (startTime == null || endTime == null || endTime <= startTime) {
+			return null;
+		}
 
-	const left = (startTime / 1000) * zoom;
-	const width = ((endTime - startTime) / 1000) * zoom;
+		const left = (startTime / 1000) * zoom;
+		const width = ((endTime - startTime) / 1000) * zoom;
 
-	if (width < 1) {
-		return null;
-	}
+		if (width < 1) {
+			return null;
+		}
 
-	const dynamicStyles = {
-		left: `${left}px`,
-		width: `${width}px`,
-		cursor: isGhost ? "default" : "auto",
-	};
+		const dynamicStyles = {
+			left: `${left}px`,
+			width: `${width}px`,
+			cursor: isGhost ? "default" : "auto",
+		};
 
-	return (
-		// biome-ignore lint/a11y/useSemanticElements: <button> 不适用
-		<div
-			className={classNames(styles.lineSegment, isGhost && styles.ghost)}
-			style={dynamicStyles}
-			onMouseDown={handleMouseDown}
-			tabIndex={isGhost ? -1 : 0}
-			role={isGhost ? "presentation" : "button"}
-			aria-label={isGhost ? "Ghost Lyric Line" : "Lyric Line"}
-		>
-			{!isGhost && (
-				<DividerSegment
-					key="divider-start"
-					lineId={displayLine.id}
-					segmentIndex={-1}
-					timeMs={startTime}
-					lineStartTime={startTime}
-					segmentsLength={segmentsLength}
-					isTouching={isTouchingStart}
-				/>
-			)}
+		return (
+			// biome-ignore lint/a11y/useSemanticElements: <button> 不适用
+			<div
+				className={classNames(styles.lineSegment, isGhost && styles.ghost)}
+				style={dynamicStyles}
+				onMouseDown={handleMouseDown}
+				tabIndex={isGhost ? -1 : 0}
+				role={isGhost ? "presentation" : "button"}
+				aria-label={isGhost ? "Ghost Lyric Line" : "Lyric Line"}
+			>
+				{!isGhost && (
+					<DividerSegment
+						key="divider-start"
+						lineId={displayLine.id}
+						segmentIndex={-1}
+						timeMs={startTime}
+						lineStartTime={startTime}
+						segmentsLength={segmentsLength}
+						isTouching={isTouchingStart}
+					/>
+				)}
 
-			{segments.map((segment, index) => (
-				<React.Fragment key={segment.id}>
-					{segment.type === "word" ? (
-						<LyricWordSegment
-							lineId={displayLine.id}
-							segment={segment}
-							lineStartTime={startTime}
-							offset={offset}
-							isGhost={isGhost}
-						/>
-					) : (
-						<GapSegment segment={segment} lineStartTime={startTime} offset={offset} isGhost={isGhost} />
-					)}
-					{!isGhost && (
-						<DividerSegment
-							key={`divider-${segment.id}`}
-							lineId={displayLine.id}
-							segmentIndex={index}
-							timeMs={segment.endTime}
-							lineStartTime={startTime}
-							segmentsLength={segmentsLength}
-							isTouching={index === segmentsLength - 1 ? isTouchingEnd : false}
-						/>
-					)}
-				</React.Fragment>
-			))}
-		</div>
-	);
-});
+				{segments.map((segment, index) => (
+					<React.Fragment key={segment.id}>
+						{segment.type === "word" ? (
+							<LyricWordSegment
+								lineId={displayLine.id}
+								segment={segment}
+								lineStartTime={startTime}
+								offset={offset}
+								isGhost={isGhost}
+							/>
+						) : (
+							<GapSegment
+								segment={segment}
+								lineStartTime={startTime}
+								offset={offset}
+								isGhost={isGhost}
+							/>
+						)}
+						{!isGhost && (
+							<DividerSegment
+								key={`divider-${segment.id}`}
+								lineId={displayLine.id}
+								segmentIndex={index}
+								timeMs={segment.endTime}
+								lineStartTime={startTime}
+								segmentsLength={segmentsLength}
+								isTouching={
+									index === segmentsLength - 1 ? isTouchingEnd : false
+								}
+							/>
+						)}
+					</React.Fragment>
+				))}
+			</div>
+		);
+	},
+);

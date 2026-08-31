@@ -2,11 +2,17 @@ import {
 	Add16Regular,
 	ArrowDownload16Regular,
 	ArrowSort16Regular,
+	ArrowSync16Regular,
+	ArrowUpload16Regular,
 	CheckmarkCircle16Filled,
 	Circle16Regular,
 	Cloud24Regular,
+	CloudArrowDown16Regular,
+	CloudArrowUp16Regular,
 	Delete16Regular,
 	Dismiss16Regular,
+	DocumentArrowDown16Regular,
+	DocumentArrowUp16Regular,
 	Edit16Regular,
 	Globe16Regular,
 	Image16Regular,
@@ -36,6 +42,7 @@ import {
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import { audioCoverArtAtom } from "$/modules/audio/states";
 import { GeniusApi } from "$/modules/genius/api/client";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
@@ -59,7 +66,13 @@ import {
 	type TTMLChecklistEntryInput,
 	updateChecklistEntry,
 } from "./logic";
-import { useChecklistCloudSync } from "./cloudSync";
+import {
+	exportChecklistToFile,
+	loadChecklistFromCloud,
+	parseChecklistJson,
+	saveChecklistToCloud,
+	useChecklistCloudSync,
+} from "./cloudSync";
 import { ttmlChecklistAtom } from "./states";
 
 type ProviderSearchResult = {
@@ -83,9 +96,9 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	const [artist, setArtist] = useState(initial?.artist ?? "");
 	const [album, setAlbum] = useState(initial?.album ?? "");
 	const [coverArt, setCoverArt] = useState(initial?.coverArt ?? "");
-	const [source, setSource] = useState<"genius" | "lyrically" | "lrclib" | undefined>(
-		initial?.source ?? "genius",
-	);
+	const [source, setSource] = useState<
+		"genius" | "lyrically" | "lrclib" | undefined
+	>(initial?.source ?? "genius");
 	const [sourceId, setSourceId] = useState<string | number | undefined>(
 		initial?.sourceId,
 	);
@@ -100,9 +113,9 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 		"genius" | "lyrically" | "lrclib"
 	>("genius");
 	const [providerQuery, setProviderQuery] = useState("");
-	const [providerResults, setProviderResults] = useState<ProviderSearchResult[]>(
-		[],
-	);
+	const [providerResults, setProviderResults] = useState<
+		ProviderSearchResult[]
+	>([]);
 	const [isSearchingProvider, setIsSearchingProvider] = useState(false);
 	const [hasSearchedProvider, setHasSearchedProvider] = useState(false);
 
@@ -128,7 +141,8 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 			(m) => m.key.toLowerCase() === "album",
 		)?.value[0];
 		const metaCover = lyricLines.metadata.find(
-			(m) => m.key.toLowerCase() === "cover_art" || m.key.toLowerCase() === "cover",
+			(m) =>
+				m.key.toLowerCase() === "cover_art" || m.key.toLowerCase() === "cover",
 		)?.value[0];
 
 		if (projectIdentity.name && !projectIdentity.isUntitled) {
@@ -173,8 +187,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 					artist: result.primary_artist.name,
 					album: result.album?.name,
 					cover:
-						result.song_art_image_url ||
-						result.song_art_image_thumbnail_url,
+						result.song_art_image_url || result.song_art_image_thumbnail_url,
 					source: "genius",
 				}));
 			} else if (searchProvider === "lrclib") {
@@ -509,7 +522,10 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 							<Flex gap="2">
 								<Box style={{ flex: 2 }}>
 									<TextField.Root
-										placeholder={t("ttmlChecklist.songPlaceholder", "Song title *")}
+										placeholder={t(
+											"ttmlChecklist.songPlaceholder",
+											"Song title *",
+										)}
 										value={song}
 										onChange={(event) => setSong(event.currentTarget.value)}
 										autoFocus={!initial && !showProviderSearch}
@@ -519,7 +535,10 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								</Box>
 								<Box style={{ flex: 2 }}>
 									<TextField.Root
-										placeholder={t("ttmlChecklist.artistPlaceholder", "Artist (optional)")}
+										placeholder={t(
+											"ttmlChecklist.artistPlaceholder",
+											"Artist (optional)",
+										)}
 										value={artist}
 										onChange={(event) => setArtist(event.currentTarget.value)}
 										size="2"
@@ -530,7 +549,10 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 							<Flex gap="2">
 								<Box style={{ flex: 1 }}>
 									<TextField.Root
-										placeholder={t("ttmlChecklist.albumPlaceholder", "Album (optional)")}
+										placeholder={t(
+											"ttmlChecklist.albumPlaceholder",
+											"Album (optional)",
+										)}
 										value={album}
 										onChange={(event) => setAlbum(event.currentTarget.value)}
 										size="2"
@@ -564,7 +586,12 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 
 					<Flex justify="end" gap="2" mt="1">
 						{onCancel && (
-							<Button type="button" variant="soft" color="gray" onClick={onCancel}>
+							<Button
+								type="button"
+								variant="soft"
+								color="gray"
+								onClick={onCancel}
+							>
 								{t("ttmlChecklist.cancel", "Cancel")}
 							</Button>
 						)}
@@ -617,7 +644,9 @@ const ChecklistEntryCard = ({
 				padding: "12px 14px",
 				border: "1px solid var(--gray-a4)",
 				borderRadius: "12px",
-				backgroundColor: entry.completed ? "var(--gray-a2)" : "var(--color-surface)",
+				backgroundColor: entry.completed
+					? "var(--gray-a2)"
+					: "var(--color-surface)",
 				opacity: entry.completed ? 0.78 : 1,
 				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
 			}}
@@ -647,7 +676,9 @@ const ChecklistEntryCard = ({
 								width: "100%",
 								height: "100%",
 								objectFit: "cover",
-								filter: entry.completed ? "grayscale(70%) opacity(70%)" : "none",
+								filter: entry.completed
+									? "grayscale(70%) opacity(70%)"
+									: "none",
 							}}
 						/>
 					) : (
@@ -822,7 +853,9 @@ export const TTMLChecklistDialog = () => {
 	const [open, setOpen] = useAtom(ttmlChecklistDialogAtom);
 	const [storedEntries, setStoredEntries] = useAtom(ttmlChecklistAtom);
 	const [showAddForm, setShowAddForm] = useState(false);
-	const [filterTab, setFilterTab] = useState<"all" | "pending" | "completed">("all");
+	const [filterTab, setFilterTab] = useState<"all" | "pending" | "completed">(
+		"all",
+	);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortBy, setSortBy] = useState<
 		"default" | "title-asc" | "title-desc" | "artist-asc" | "artist-desc"
@@ -843,7 +876,8 @@ export const TTMLChecklistDialog = () => {
 	const totalCount = entries.length;
 	const completedCount = entries.filter((e) => e.completed).length;
 	const pendingCount = totalCount - completedCount;
-	const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+	const progressPercent =
+		totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
 	const filteredEntries = useMemo(() => {
 		let result = [...entries];
@@ -916,6 +950,134 @@ export const TTMLChecklistDialog = () => {
 		setOpen(false);
 	};
 
+	const [isSyncingCloud, setIsSyncingCloud] = useState(false);
+	const [isExporting, setIsExporting] = useState(false);
+	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const handleExportChecklist = async () => {
+		if (entries.length === 0) {
+			toast.info(t("ttmlChecklist.emptyExport", "Checklist is empty."));
+			return;
+		}
+		try {
+			setIsExporting(true);
+			await exportChecklistToFile(entries);
+			toast.success(
+				t("ttmlChecklist.exportSuccess", "Checklist exported successfully!"),
+			);
+		} catch (e) {
+			console.error("Failed to export checklist:", e);
+			toast.error(
+				t("ttmlChecklist.exportError", "Failed to export checklist file."),
+			);
+		} finally {
+			setIsExporting(false);
+		}
+	};
+
+	const handleImportFileChange = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		try {
+			const text = await file.text();
+			const imported = parseChecklistJson(text);
+			if (imported.length === 0) {
+				toast.error(
+					t(
+						"ttmlChecklist.invalidJson",
+						"Invalid or empty checklist JSON file.",
+					),
+				);
+				return;
+			}
+			// Merge imported items with existing items without duplicates by song+artist or ID
+			const existingIds = new Set(entries.map((item) => item.id));
+			const newItems = imported.filter((item) => !existingIds.has(item.id));
+			const merged = normalizeChecklistEntries([...entries, ...newItems]);
+			save(merged);
+			toast.success(
+				t(
+					"ttmlChecklist.importSuccess",
+					"Imported {count} songs into checklist!",
+					{ count: newItems.length || imported.length },
+				),
+			);
+		} catch (err) {
+			console.error("Failed to parse imported file:", err);
+			toast.error(
+				t("ttmlChecklist.importError", "Failed to read checklist file."),
+			);
+		} finally {
+			if (fileInputRef.current) fileInputRef.current.value = "";
+		}
+	};
+
+	const handlePushToCloud = async () => {
+		if (!user?.uid) {
+			openAccountSettings();
+			return;
+		}
+		try {
+			setIsSyncingCloud(true);
+			const ok = await saveChecklistToCloud(entries, user.uid);
+			if (ok) {
+				toast.success(
+					t("ttmlChecklist.pushSuccess", "Pushed checklist to cloud!"),
+				);
+			} else {
+				toast.error(
+					t(
+						"ttmlChecklist.pushFailed",
+						"Could not push to cloud. Check network or permissions.",
+					),
+				);
+			}
+		} catch (err) {
+			toast.error(
+				(err as Error)?.message ||
+					t("ttmlChecklist.pushFailed", "Push to cloud failed."),
+			);
+		} finally {
+			setIsSyncingCloud(false);
+		}
+	};
+
+	const handlePullFromCloud = async () => {
+		if (!user?.uid) {
+			openAccountSettings();
+			return;
+		}
+		try {
+			setIsSyncingCloud(true);
+			const remoteEntries = await loadChecklistFromCloud(user.uid);
+			if (remoteEntries && remoteEntries.length > 0) {
+				save(remoteEntries);
+				toast.success(
+					t(
+						"ttmlChecklist.pullSuccess",
+						"Downloaded {count} items from cloud!",
+						{ count: remoteEntries.length },
+					),
+				);
+			} else if (remoteEntries && remoteEntries.length === 0) {
+				toast.info(t("ttmlChecklist.cloudEmpty", "Cloud checklist is empty."));
+			} else {
+				toast.error(
+					t("ttmlChecklist.pullFailed", "Failed to download from cloud."),
+				);
+			}
+		} catch (err) {
+			toast.error(
+				(err as Error)?.message ||
+					t("ttmlChecklist.pullFailed", "Download from cloud failed."),
+			);
+		} finally {
+			setIsSyncingCloud(false);
+		}
+	};
+
 	return (
 		<Dialog.Root open={open} onOpenChange={setOpen}>
 			<Dialog.Content
@@ -928,6 +1090,13 @@ export const TTMLChecklistDialog = () => {
 					flexDirection: "column",
 				}}
 			>
+				<input
+					type="file"
+					ref={fileInputRef}
+					accept=".json,application/json"
+					style={{ display: "none" }}
+					onChange={handleImportFileChange}
+				/>
 				<Dialog.Title style={{ flexShrink: 0 }}>
 					<Flex justify="between" align="center" gap="3" wrap="wrap">
 						<Flex align="center" gap="3">
@@ -969,14 +1138,20 @@ export const TTMLChecklistDialog = () => {
 										</Tooltip>
 									) : (
 										<Tooltip
-											content={t("ttmlChecklist.signInToSync", "Sign in to sync")}
+											content={t(
+												"ttmlChecklist.signInToSync",
+												"Sign in to sync",
+											)}
 										>
 											<IconButton
 												size="1"
 												variant="ghost"
 												color="gray"
 												onClick={() => openAccountSettings()}
-												aria-label={t("ttmlChecklist.signInToSync", "Sign in to sync")}
+												aria-label={t(
+													"ttmlChecklist.signInToSync",
+													"Sign in to sync",
+												)}
 											>
 												<Globe16Regular />
 											</IconButton>
@@ -991,29 +1166,123 @@ export const TTMLChecklistDialog = () => {
 								</Text>
 							</Flex>
 						</Flex>
-						<Button
-							size="2"
-							variant={showAddForm ? "soft" : "solid"}
-							color={showAddForm ? "gray" : "accent"}
-							onClick={() => setShowAddForm((prev) => !prev)}
-							style={{ borderRadius: "8px" }}
-						>
-							{showAddForm ? (
-								<Dismiss16Regular />
-							) : (
-								<Add16Regular />
+
+						<Flex align="center" gap="2" wrap="wrap">
+							{/* Cloud Pull Button */}
+							{isLoggedIn && (
+								<Tooltip
+									content={t(
+										"ttmlChecklist.downloadCloud",
+										"Download from Cloud",
+									)}
+								>
+									<IconButton
+										size="2"
+										variant="soft"
+										color="gray"
+										disabled={isSyncingCloud}
+										onClick={handlePullFromCloud}
+										aria-label={t(
+											"ttmlChecklist.downloadCloud",
+											"Download from Cloud",
+										)}
+									>
+										{isSyncingCloud ? (
+											<Spinner size="1" />
+										) : (
+											<CloudArrowDown16Regular />
+										)}
+									</IconButton>
+								</Tooltip>
 							)}
-							{showAddForm
-								? t("ttmlChecklist.cancel", "Cancel")
-								: t("ttmlChecklist.newItem", "New Song")}
-						</Button>
+
+							{/* Cloud Push Button */}
+							{isLoggedIn && (
+								<Tooltip
+									content={t("ttmlChecklist.pushCloud", "Push to Cloud")}
+								>
+									<IconButton
+										size="2"
+										variant="soft"
+										color="gray"
+										disabled={isSyncingCloud}
+										onClick={handlePushToCloud}
+										aria-label={t("ttmlChecklist.pushCloud", "Push to Cloud")}
+									>
+										{isSyncingCloud ? (
+											<Spinner size="1" />
+										) : (
+											<CloudArrowUp16Regular />
+										)}
+									</IconButton>
+								</Tooltip>
+							)}
+
+							{/* Export / Download File Button */}
+							<Tooltip
+								content={t(
+									"ttmlChecklist.downloadJson",
+									"Download / Export JSON",
+								)}
+							>
+								<IconButton
+									size="2"
+									variant="soft"
+									color="gray"
+									disabled={isExporting}
+									onClick={handleExportChecklist}
+									aria-label={t(
+										"ttmlChecklist.downloadJson",
+										"Download / Export JSON",
+									)}
+								>
+									<DocumentArrowDown16Regular />
+								</IconButton>
+							</Tooltip>
+
+							{/* Import File Button */}
+							<Tooltip
+								content={t("ttmlChecklist.importJson", "Import JSON file")}
+							>
+								<IconButton
+									size="2"
+									variant="soft"
+									color="gray"
+									onClick={() => fileInputRef.current?.click()}
+									aria-label={t("ttmlChecklist.importJson", "Import JSON file")}
+								>
+									<DocumentArrowUp16Regular />
+								</IconButton>
+							</Tooltip>
+
+							{/* Add New Song Button */}
+							<Button
+								size="2"
+								variant={showAddForm ? "soft" : "solid"}
+								color={showAddForm ? "gray" : "accent"}
+								onClick={() => setShowAddForm((prev) => !prev)}
+								style={{ borderRadius: "8px" }}
+							>
+								{showAddForm ? <Dismiss16Regular /> : <Add16Regular />}
+								{showAddForm
+									? t("ttmlChecklist.cancel", "Cancel")
+									: t("ttmlChecklist.newItem", "New Song")}
+							</Button>
+						</Flex>
 					</Flex>
 				</Dialog.Title>
 
 				{/* Body Content */}
 				{showAddForm ? (
 					/* New Entry Form View */
-					<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "8px" }}>
+					<Box
+						style={{
+							flex: 1,
+							minHeight: 0,
+							overflowY: "auto",
+							marginTop: "8px",
+						}}
+					>
 						<EntryForm
 							onCancel={() => setShowAddForm(false)}
 							onSubmit={(input) => {
@@ -1024,7 +1293,10 @@ export const TTMLChecklistDialog = () => {
 					</Box>
 				) : (
 					/* Checklist List View */
-					<Flex direction="column" style={{ flex: 1, minHeight: 0, marginTop: "8px" }}>
+					<Flex
+						direction="column"
+						style={{ flex: 1, minHeight: 0, marginTop: "8px" }}
+					>
 						{/* Progress summary banner */}
 						{totalCount > 0 && (
 							<Card
@@ -1065,7 +1337,8 @@ export const TTMLChecklistDialog = () => {
 												}}
 											/>
 											<Text size="1" color="gray">
-												{pendingCount} {t("ttmlChecklist.pending", "In Progress")}
+												{pendingCount}{" "}
+												{t("ttmlChecklist.pending", "In Progress")}
 											</Text>
 										</Flex>
 										<Flex align="center" gap="1">
@@ -1093,7 +1366,13 @@ export const TTMLChecklistDialog = () => {
 						)}
 
 						{/* Search, Sort & Filter Controls */}
-						<Flex gap="2" mb="3" align="center" wrap="wrap" style={{ flexShrink: 0 }}>
+						<Flex
+							gap="2"
+							mb="3"
+							align="center"
+							wrap="wrap"
+							style={{ flexShrink: 0 }}
+						>
 							<Box style={{ flex: 1, minWidth: "160px" }}>
 								<TextField.Root
 									size="2"
@@ -1164,7 +1443,9 @@ export const TTMLChecklistDialog = () => {
 									gap: "2px",
 								}}
 							>
-								<Tooltip content={`${t("ttmlChecklist.all", "All")} (${totalCount})`}>
+								<Tooltip
+									content={`${t("ttmlChecklist.all", "All")} (${totalCount})`}
+								>
 									<button
 										type="button"
 										onClick={() => setFilterTab("all")}
@@ -1177,9 +1458,13 @@ export const TTMLChecklistDialog = () => {
 											borderRadius: "8px",
 											border: "none",
 											background:
-												filterTab === "all" ? "var(--color-surface)" : "transparent",
+												filterTab === "all"
+													? "var(--color-surface)"
+													: "transparent",
 											color:
-												filterTab === "all" ? "var(--accent-11)" : "var(--gray-10)",
+												filterTab === "all"
+													? "var(--accent-11)"
+													: "var(--gray-10)",
 											cursor: "pointer",
 											transition: "all 0.15s ease",
 											boxShadow:
@@ -1284,7 +1569,9 @@ export const TTMLChecklistDialog = () => {
 													: "none",
 										}}
 									>
-										<CheckmarkCircle16Filled style={{ width: 16, height: 16 }} />
+										<CheckmarkCircle16Filled
+											style={{ width: 16, height: 16 }}
+										/>
 										{filterTab === "completed" && (
 											<span
 												style={{
@@ -1324,7 +1611,11 @@ export const TTMLChecklistDialog = () => {
 									>
 										<Flex direction="column" align="center" gap="2">
 											<MusicNote2Filled
-												style={{ width: 32, height: 32, color: "var(--gray-7)" }}
+												style={{
+													width: 32,
+													height: 32,
+													color: "var(--gray-7)",
+												}}
 											/>
 											<Text size="2" color="gray">
 												{searchQuery || filterTab !== "all"

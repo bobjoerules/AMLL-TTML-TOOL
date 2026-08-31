@@ -1,4 +1,12 @@
-import { Box, Flex, Grid, Heading, Switch, Text, TextField } from "@radix-ui/themes";
+import {
+	Box,
+	Flex,
+	Grid,
+	Heading,
+	Switch,
+	Text,
+	TextField,
+} from "@radix-ui/themes";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -86,7 +94,12 @@ export const AutoKeyBindingSettingsPanel = () => {
 				</Heading>
 				<Flex align="center" justify="between" gap="4">
 					<Box>
-						<Text>{t("settingsDialog.keybindings.autoSegmentDoublePress", "Require double press")}</Text>
+						<Text>
+							{t(
+								"settingsDialog.keybindings.autoSegmentDoublePress",
+								"Require double press",
+							)}
+						</Text>
 						<Text as="div" size="1" color="gray">
 							{t(
 								"settingsDialog.keybindings.autoSegmentDoublePressDesc",

@@ -10,8 +10,13 @@ const activeLineIdsBaseAtom = atom((get) => {
 	return lyrics.lyricLines
 		.filter((l) => {
 			const timedWords = l.words?.filter((w) => w.endTime > w.startTime) ?? [];
-			const start = l.startTime > 0 ? l.startTime : (timedWords[0]?.startTime ?? 0);
-			const end = l.endTime > start ? l.endTime : (timedWords[timedWords.length - 1]?.endTime ?? (start > 0 ? start + 3000 : 0));
+			const start =
+				l.startTime > 0 ? l.startTime : (timedWords[0]?.startTime ?? 0);
+			const end =
+				l.endTime > start
+					? l.endTime
+					: (timedWords[timedWords.length - 1]?.endTime ??
+						(start > 0 ? start + 3000 : 0));
 			if (start === 0 && end === 0) return false;
 			return currentTime >= start && currentTime <= end;
 		})
@@ -27,7 +32,7 @@ export const activeLineIdsAtom = selectAtom(
 			if (a[i] !== b[i]) return false;
 		}
 		return true;
-	}
+	},
 );
 
 export const audioBufferAtom = atom<AudioBuffer | null>(null);
@@ -56,21 +61,28 @@ export const audioErrorAtom = atom<string | null>(null);
 
 // Equalizer Settings
 export const equalizerEnabledAtom = atomWithStorage("equalizerEnabled", false);
-export const equalizerGainsAtom = atomWithStorage<number[]>("equalizerGains", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+export const equalizerGainsAtom = atomWithStorage<number[]>(
+	"equalizerGains",
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+);
 export const equalizerPresetAtom = atomWithStorage("equalizerPreset", "Flat");
 
-export const EQ_FREQUENCIES = [31.25, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+export const EQ_FREQUENCIES = [
+	31.25, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000,
+];
 
 export const EQ_PRESETS: Record<string, number[]> = {
-	"Flat": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	Flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	"Bass Boost": [6, 5, 4, 2, 0, 0, 0, 0, 0, 0],
 	"Treble Boost": [0, 0, 0, 0, 0, 0, 2, 4, 5, 6],
 	"Vocal Boost": [-2, -2, -1, 0, 3, 4, 3, 0, -1, -2],
-	"Electronic": [5, 4, 1, 0, -2, 0, 1, 1, 4, 5],
-	"Acoustic": [4, 3, 2, 1, 2, 2, 3, 3, 2, 1],
-	"Jazz": [4, 3, 1, 2, -2, -2, 0, 1, 3, 4],
-	"Pop": [-2, -1, 0, 2, 4, 4, 2, 0, -1, -2],
-	"Rock": [5, 3, 1, 0, -1, -1, 1, 2, 4, 5],
+	Electronic: [5, 4, 1, 0, -2, 0, 1, 1, 4, 5],
+	Acoustic: [4, 3, 2, 1, 2, 2, 3, 3, 2, 1],
+	Jazz: [4, 3, 1, 2, -2, -2, 0, 1, 3, 4],
+	Pop: [-2, -1, 0, 2, 4, 4, 2, 0, -1, -2],
+	Rock: [5, 3, 1, 0, -1, -1, 1, 2, 4, 5],
 };
 
-export const customEqualizerPresetsAtom = atomWithStorage<Record<string, number[]>>("customEqualizerPresets", {});
+export const customEqualizerPresetsAtom = atomWithStorage<
+	Record<string, number[]>
+>("customEqualizerPresets", {});

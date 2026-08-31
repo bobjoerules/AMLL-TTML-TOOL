@@ -270,7 +270,10 @@ export const AudioSpectrogram: FC = memo(() => {
 			hoverTimeMs <= (editingTimeField.lineStartTime ?? 0);
 
 		if (isInvalidEndTime) {
-			hoverTimeFormatted = t("spectrogram.invalidEndTime", "不能选择此结束时间");
+			hoverTimeFormatted = t(
+				"spectrogram.invalidEndTime",
+				"不能选择此结束时间",
+			);
 			tooltipBgColor = "var(--red-9)";
 		} else if (editingTimeField && !editingTimeField.isWord) {
 			const fieldName =
@@ -412,11 +415,7 @@ export const AudioSpectrogram: FC = memo(() => {
 		[handleTimelineMouseDown, handleSelectionMouseDown],
 	);
 
-	useScrubbing(
-		scrollContainerRef,
-		scrollLeft,
-		zoom,
-	);
+	useScrubbing(scrollContainerRef, scrollLeft, zoom);
 
 	const contextValue = useMemo<ISpectrogramContext>(
 		() => ({

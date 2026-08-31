@@ -42,19 +42,26 @@ describe("learned split rules", () => {
 		] as const) {
 			const rule = createLearnedRule(word, boundaries);
 			if (!rule) throw new Error("Expected a learned rule");
-			expect(applyLearnedRule(wrapped, new Map([[rule.key, rule.boundaries]])))
-				.not.toBeNull();
+			expect(
+				applyLearnedRule(wrapped, new Map([[rule.key, rule.boundaries]])),
+			).not.toBeNull();
 		}
 	});
 
 	it("takes precedence over automatic segmentation and preserves the input", () => {
 		const rule = createLearnedRule("hello", [2]);
 		if (!rule) throw new Error("Expected a learned rule");
-		const word = { ...newLyricWord(), word: "(HELLO!)", startTime: 0, endTime: 1000 };
-		expect(segmentWord(word, config(new Map([[rule.key, rule.boundaries]]))).map((item) => item.word)).toEqual([
-			"(HE",
-			"LLO!)",
-		]);
+		const word = {
+			...newLyricWord(),
+			word: "(HELLO!)",
+			startTime: 0,
+			endTime: 1000,
+		};
+		expect(
+			segmentWord(word, config(new Map([[rule.key, rule.boundaries]]))).map(
+				(item) => item.word,
+			),
+		).toEqual(["(HE", "LLO!)"]);
 	});
 
 	it("does not learn punctuation-only input", () => {

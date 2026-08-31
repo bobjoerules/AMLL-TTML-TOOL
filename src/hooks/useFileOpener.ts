@@ -27,10 +27,7 @@ import {
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 } from "$/modules/settings/states";
-import {
-	confirmDialogAtom,
-	mp3ConversionDialogAtom,
-} from "$/states/dialogs";
+import { confirmDialogAtom, mp3ConversionDialogAtom } from "$/states/dialogs";
 import {
 	isDirtyAtom,
 	newLyricLinesAtom,

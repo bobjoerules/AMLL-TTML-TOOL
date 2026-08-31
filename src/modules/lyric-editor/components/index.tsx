@@ -572,7 +572,9 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 								color="purple"
 								onClick={() => setTtmlChecklist(true)}
 							>
-								<DocumentBulletList24Regular style={{ width: 16, height: 16 }} />
+								<DocumentBulletList24Regular
+									style={{ width: 16, height: 16 }}
+								/>
 								{t("ttmlChecklist.title", "TTML Checklist")}
 							</Button>
 							<Button variant="outline" onClick={openExistingTtml}>
@@ -617,8 +619,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 					<Text size="2" weight="medium" style={{ color: "var(--accent-11)" }}>
 						{t("lyricLineView.copyTimingsBanner", {
 							count: timingCopyPlacement.snapshots.length,
-							defaultValue:
-								`Copying ${timingCopyPlacement.snapshots.length} line timing(s). Click "Apply timings starting here" above target line.`,
+							defaultValue: `Copying ${timingCopyPlacement.snapshots.length} line timing(s). Click "Apply timings starting here" above target line.`,
 						})}
 					</Text>
 					<Button

@@ -276,12 +276,54 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 ];
 
 const SURFACE_TINTS = [
-	{ id: "pure-black", name: "Pure Dark", titlebar: "#0d0d0d", sidebar: "#141414", editor: "#080808", dot: "#0d0d0d" },
-	{ id: "charcoal", name: "Charcoal Slate", titlebar: "#16181d", sidebar: "#1e2127", editor: "#121316", dot: "#1e2127" },
-	{ id: "deep-navy", name: "Midnight Navy", titlebar: "#0b1329", sidebar: "#101d3f", editor: "#070c1b", dot: "#101d3f" },
-	{ id: "emerald", name: "Pine Emerald", titlebar: "#051f18", sidebar: "#0c2e24", editor: "#061a14", dot: "#0c2e24" },
-	{ id: "amethyst", name: "Deep Amethyst", titlebar: "#160d24", sidebar: "#211438", editor: "#120a1e", dot: "#211438" },
-	{ id: "espresso", name: "Warm Espresso", titlebar: "#14100c", sidebar: "#1f1812", editor: "#0c0a08", dot: "#1f1812" },
+	{
+		id: "pure-black",
+		name: "Pure Dark",
+		titlebar: "#0d0d0d",
+		sidebar: "#141414",
+		editor: "#080808",
+		dot: "#0d0d0d",
+	},
+	{
+		id: "charcoal",
+		name: "Charcoal Slate",
+		titlebar: "#16181d",
+		sidebar: "#1e2127",
+		editor: "#121316",
+		dot: "#1e2127",
+	},
+	{
+		id: "deep-navy",
+		name: "Midnight Navy",
+		titlebar: "#0b1329",
+		sidebar: "#101d3f",
+		editor: "#070c1b",
+		dot: "#101d3f",
+	},
+	{
+		id: "emerald",
+		name: "Pine Emerald",
+		titlebar: "#051f18",
+		sidebar: "#0c2e24",
+		editor: "#061a14",
+		dot: "#0c2e24",
+	},
+	{
+		id: "amethyst",
+		name: "Deep Amethyst",
+		titlebar: "#160d24",
+		sidebar: "#211438",
+		editor: "#120a1e",
+		dot: "#211438",
+	},
+	{
+		id: "espresso",
+		name: "Warm Espresso",
+		titlebar: "#14100c",
+		sidebar: "#1f1812",
+		editor: "#0c0a08",
+		dot: "#1f1812",
+	},
 ];
 
 const accentColors = [
@@ -613,7 +655,9 @@ export const SettingsAppearanceTab = () => {
 											border: isActive
 												? "2px solid var(--accent-9)"
 												: "1px solid var(--gray-a4)",
-											backgroundColor: isActive ? "var(--accent-2)" : "var(--gray-a2)",
+											backgroundColor: isActive
+												? "var(--accent-2)"
+												: "var(--gray-a2)",
 											transition: "all 0.15s ease",
 											padding: "8px 10px",
 										}}
@@ -637,7 +681,13 @@ export const SettingsAppearanceTab = () => {
 														Active
 													</Badge>
 												) : (
-													<Badge size="1" variant="soft" color={s.darkMode === DarkMode.Light ? "orange" : "gray"}>
+													<Badge
+														size="1"
+														variant="soft"
+														color={
+															s.darkMode === DarkMode.Light ? "orange" : "gray"
+														}
+													>
 														{s.darkMode === DarkMode.Light ? "Light" : "Dark"}
 													</Badge>
 												)}
@@ -679,7 +729,11 @@ export const SettingsAppearanceTab = () => {
 														width: "14px",
 														height: "14px",
 														borderRadius: "50%",
-														backgroundColor: s.useCustomAccent ? (s.customAccentColor || "#e5484d") : (s.accentColor ? `var(--${s.accentColor}-9, #e5484d)` : "var(--accent-9)"),
+														backgroundColor: s.useCustomAccent
+															? s.customAccentColor || "#e5484d"
+															: s.accentColor
+																? `var(--${s.accentColor}-9, #e5484d)`
+																: "var(--accent-9)",
 														border: "1px solid rgba(255,255,255,0.2)",
 														marginLeft: "auto",
 													}}
@@ -913,7 +967,15 @@ export const SettingsAppearanceTab = () => {
 																		flexShrink: 0,
 																	}}
 																/>
-																<Text size="1" weight={isCurrent ? "bold" : "regular"} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+																<Text
+																	size="1"
+																	weight={isCurrent ? "bold" : "regular"}
+																	style={{
+																		overflow: "hidden",
+																		textOverflow: "ellipsis",
+																		whiteSpace: "nowrap",
+																	}}
+																>
 																	{tint.name}
 																</Text>
 															</Flex>
@@ -987,7 +1049,10 @@ export const SettingsAppearanceTab = () => {
 																{customAccentColor.toUpperCase()}
 															</Text>
 															<Text size="1" color="gray">
-																{t("settings.appearance.customHexHelp", "Pick any custom color for active lyric highlights and theme accents.")}
+																{t(
+																	"settings.appearance.customHexHelp",
+																	"Pick any custom color for active lyric highlights and theme accents.",
+																)}
 															</Text>
 														</Flex>
 													</Flex>
@@ -1011,7 +1076,13 @@ export const SettingsAppearanceTab = () => {
 														{accentColors.map((color) => {
 															const isSelected = accentColor === color;
 															return (
-																<Tooltip key={color} content={color.charAt(0).toUpperCase() + color.slice(1)}>
+																<Tooltip
+																	key={color}
+																	content={
+																		color.charAt(0).toUpperCase() +
+																		color.slice(1)
+																	}
+																>
 																	<IconButton
 																		size="2"
 																		variant={isSelected ? "solid" : "soft"}
@@ -1021,13 +1092,19 @@ export const SettingsAppearanceTab = () => {
 																			cursor: "pointer",
 																			position: "relative",
 																			transition: "transform 0.15s ease",
-																			transform: isSelected ? "scale(1.08)" : undefined,
-																			boxShadow: isSelected ? "0 2px 8px rgba(0,0,0,0.3)" : undefined,
+																			transform: isSelected
+																				? "scale(1.08)"
+																				: undefined,
+																			boxShadow: isSelected
+																				? "0 2px 8px rgba(0,0,0,0.3)"
+																				: undefined,
 																		}}
 																		onClick={() => setAccentColor(color)}
 																	>
 																		{isSelected ? (
-																			<Checkmark16Regular style={{ width: 14, height: 14 }} />
+																			<Checkmark16Regular
+																				style={{ width: 14, height: 14 }}
+																			/>
 																		) : (
 																			<Box
 																				style={{
@@ -1059,11 +1136,36 @@ export const SettingsAppearanceTab = () => {
 											>
 												<Flex direction="column" gap="2">
 													<Flex justify="between" align="center">
-														<Text size="1" weight="bold" color="gray" style={{ textTransform: "uppercase", letterSpacing: "0.5px" }}>
-															👁️ {t("settings.appearance.liveHighlightPreview", "Live Highlight & Glow Preview")}
+														<Text
+															size="1"
+															weight="bold"
+															color="gray"
+															style={{
+																textTransform: "uppercase",
+																letterSpacing: "0.5px",
+															}}
+														>
+															👁️{" "}
+															{t(
+																"settings.appearance.liveHighlightPreview",
+																"Live Highlight & Glow Preview",
+															)}
 														</Text>
-														<Badge color={useCustomAccent ? undefined : accentColor} size="1" style={useCustomAccent ? { backgroundColor: customAccentColor, color: "#fff" } : undefined}>
-															{useCustomAccent ? customAccentColor.toUpperCase() : accentColor}
+														<Badge
+															color={useCustomAccent ? undefined : accentColor}
+															size="1"
+															style={
+																useCustomAccent
+																	? {
+																			backgroundColor: customAccentColor,
+																			color: "#fff",
+																		}
+																	: undefined
+															}
+														>
+															{useCustomAccent
+																? customAccentColor.toUpperCase()
+																: accentColor}
 														</Badge>
 													</Flex>
 
@@ -1076,7 +1178,13 @@ export const SettingsAppearanceTab = () => {
 														}}
 													>
 														<Flex align="center" gap="2" wrap="wrap">
-															<Badge size="1" variant="soft" color={useCustomAccent ? undefined : accentColor}>
+															<Badge
+																size="1"
+																variant="soft"
+																color={
+																	useCustomAccent ? undefined : accentColor
+																}
+															>
 																00:02.336
 															</Badge>
 															<span
@@ -1095,16 +1203,40 @@ export const SettingsAppearanceTab = () => {
 															>
 																2003,
 															</span>
-															<span style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-12)" }}>
+															<span
+																style={{
+																	fontSize: "14px",
+																	fontWeight: 600,
+																	color: "var(--gray-12)",
+																}}
+															>
 																Arizona
 															</span>
-															<span style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-12)" }}>
+															<span
+																style={{
+																	fontSize: "14px",
+																	fontWeight: 600,
+																	color: "var(--gray-12)",
+																}}
+															>
 																Iced
 															</span>
-															<span style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-12)" }}>
+															<span
+																style={{
+																	fontSize: "14px",
+																	fontWeight: 600,
+																	color: "var(--gray-12)",
+																}}
+															>
 																Out
 															</span>
-															<span style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-12)" }}>
+															<span
+																style={{
+																	fontSize: "14px",
+																	fontWeight: 600,
+																	color: "var(--gray-12)",
+																}}
+															>
 																Boys
 															</span>
 															<Badge size="1" variant="soft" color="gray">
@@ -1115,9 +1247,20 @@ export const SettingsAppearanceTab = () => {
 
 													{/* Quick Highlight Toggles */}
 													<Grid columns="2" gap="2" mt="1">
-														<Flex align="center" justify="between" p="2" style={{ background: "var(--gray-a2)", borderRadius: "var(--radius-2)" }}>
+														<Flex
+															align="center"
+															justify="between"
+															p="2"
+															style={{
+																background: "var(--gray-a2)",
+																borderRadius: "var(--radius-2)",
+															}}
+														>
 															<Text size="1">
-																{t("ribbonBar.syncMode.highlightActiveWord", "Highlight Active Word")}
+																{t(
+																	"ribbonBar.syncMode.highlightActiveWord",
+																	"Highlight Active Word",
+																)}
 															</Text>
 															<Switch
 																size="1"
@@ -1125,9 +1268,20 @@ export const SettingsAppearanceTab = () => {
 																onCheckedChange={setHighlightActiveWord}
 															/>
 														</Flex>
-														<Flex align="center" justify="between" p="2" style={{ background: "var(--gray-a2)", borderRadius: "var(--radius-2)" }}>
+														<Flex
+															align="center"
+															justify="between"
+															p="2"
+															style={{
+																background: "var(--gray-a2)",
+																borderRadius: "var(--radius-2)",
+															}}
+														>
 															<Text size="1">
-																{t("ribbonBar.syncMode.enableGlowAnimation", "Sync Glow Animation")}
+																{t(
+																	"ribbonBar.syncMode.enableGlowAnimation",
+																	"Sync Glow Animation",
+																)}
 															</Text>
 															<Switch
 																size="1"
@@ -1135,9 +1289,20 @@ export const SettingsAppearanceTab = () => {
 																onCheckedChange={setEnableSyncGlowAnimation}
 															/>
 														</Flex>
-														<Flex align="center" justify="between" p="2" style={{ background: "var(--gray-a2)", borderRadius: "var(--radius-2)" }}>
+														<Flex
+															align="center"
+															justify="between"
+															p="2"
+															style={{
+																background: "var(--gray-a2)",
+																borderRadius: "var(--radius-2)",
+															}}
+														>
 															<Text size="1">
-																{t("ribbonBar.syncMode.highlightErrors", "Highlight Timing Errors")}
+																{t(
+																	"ribbonBar.syncMode.highlightErrors",
+																	"Highlight Timing Errors",
+																)}
 															</Text>
 															<Switch
 																size="1"
@@ -1145,9 +1310,20 @@ export const SettingsAppearanceTab = () => {
 																onCheckedChange={setHighlightErrors}
 															/>
 														</Flex>
-														<Flex align="center" justify="between" p="2" style={{ background: "var(--gray-a2)", borderRadius: "var(--radius-2)" }}>
+														<Flex
+															align="center"
+															justify="between"
+															p="2"
+															style={{
+																background: "var(--gray-a2)",
+																borderRadius: "var(--radius-2)",
+															}}
+														>
 															<Text size="1">
-																{t("ribbonBar.previewMode.instantHighlightFade", "Instant Fadeout")}
+																{t(
+																	"ribbonBar.previewMode.instantHighlightFade",
+																	"Instant Fadeout",
+																)}
 															</Text>
 															<Switch
 																size="1"
@@ -1541,7 +1717,8 @@ export const SettingsAppearanceTab = () => {
 												) : (
 													<Grid columns="4" gap="2">
 														{backgroundGradients.map((gradient) => {
-															const isSelected = selectedGradient === gradient.id;
+															const isSelected =
+																selectedGradient === gradient.id;
 															return (
 																<Box
 																	key={gradient.id}
@@ -1557,7 +1734,8 @@ export const SettingsAppearanceTab = () => {
 																		boxShadow: isSelected
 																			? "0 0 0 2px var(--accent-9), 0 4px 12px rgba(0,0,0,0.3)"
 																			: "0 2px 4px rgba(0,0,0,0.15)",
-																		transition: "transform 0.15s ease, box-shadow 0.15s ease",
+																		transition:
+																			"transform 0.15s ease, box-shadow 0.15s ease",
 																		overflow: "hidden",
 																	}}
 																	onClick={() =>
@@ -1579,7 +1757,10 @@ export const SettingsAppearanceTab = () => {
 																		<Text
 																			size="1"
 																			weight="bold"
-																			style={{ color: "#ffffff", fontSize: "10px" }}
+																			style={{
+																				color: "#ffffff",
+																				fontSize: "10px",
+																			}}
 																		>
 																			{gradient.name}
 																		</Text>

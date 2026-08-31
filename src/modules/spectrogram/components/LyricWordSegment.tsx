@@ -27,116 +27,113 @@ interface LyricWordSegmentProps {
 	offset?: number;
 }
 
-export const LyricWordSegment: FC<LyricWordSegmentProps> = memo(({
-	lineId,
-	segment,
-	lineStartTime,
-	isGhost = false,
-	offset = 0,
-}) => {
-	const [selectedWordId, setSelectedWordId] = useAtom(selectedWordIdAtom);
-	const setTimelineDrag = useSetAtom(timelineDragAtom);
-	const { zoom, scrollContainerRef } = useContext(SpectrogramContext);
-	const showPerWordRomanization = useAtomValue(displayRomanizationInSyncAtom);
-	const editingTimeField = useAtomValue(editingTimeFieldAtom);
+export const LyricWordSegment: FC<LyricWordSegmentProps> = memo(
+	({ lineId, segment, lineStartTime, isGhost = false, offset = 0 }) => {
+		const [selectedWordId, setSelectedWordId] = useAtom(selectedWordIdAtom);
+		const setTimelineDrag = useSetAtom(timelineDragAtom);
+		const { zoom, scrollContainerRef } = useContext(SpectrogramContext);
+		const showPerWordRomanization = useAtomValue(displayRomanizationInSyncAtom);
+		const editingTimeField = useAtomValue(editingTimeFieldAtom);
 
-	const { startTime, endTime, word, romanWord } = segment;
+		const { startTime, endTime, word, romanWord } = segment;
 
-	if (startTime == null || endTime == null || endTime <= startTime) {
-		return null;
-	}
-
-	const left = (((startTime + (isGhost ? offset : 0)) - lineStartTime) / 1000) * zoom;
-	const width = ((endTime - startTime) / 1000) * zoom;
-
-	const isSelected = !isGhost && selectedWordId === segment.id;
-
-	const handleClick = (e: MouseEvent<HTMLDivElement>) => {
-		if (isGhost) return;
-		if (editingTimeField) return;
-		e.stopPropagation();
-		setSelectedWordId(segment.id);
-	};
-
-	const handlePanStart = (e: MouseEvent<HTMLDivElement>) => {
-		if (isGhost) return;
-		if (editingTimeField) return;
-		if (e.button !== 0) return;
-
-		e.preventDefault();
-		e.stopPropagation();
-
-		const scrollContainer = scrollContainerRef.current;
-		if (!scrollContainer) return;
-		const rect = scrollContainer.getBoundingClientRect();
-
-		const mouseXPx = e.clientX - rect.left;
-		const scrollLeft = globalStore.get(spectrogramScrollLeftAtom);
-		const initialMouseTimeMS = ((scrollLeft + mouseXPx) / zoom) * 1000;
-
-		setTimelineDrag({
-			type: "word-pan",
-			lineId: lineId,
-			wordId: segment.id,
-			initialMouseTimeMS,
-			initialWordStartMS: segment.startTime,
-		});
-
-		setSelectedWordId(segment.id);
-	};
-
-	const handleContextMenu = (e: MouseEvent<HTMLDivElement>) => {
-		if (isGhost) return;
-		if (editingTimeField) return;
-		e.preventDefault();
-		e.stopPropagation();
-		setSelectedWordId(segment.id);
-		if (startTime != null && endTime != null) {
-			audioEngine.auditionRange(startTime / 1000, endTime / 1000);
+		if (startTime == null || endTime == null || endTime <= startTime) {
+			return null;
 		}
-	};
 
-	const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-		if (isGhost) return;
-		if (e.key === "Enter") {
+		const left =
+			((startTime + (isGhost ? offset : 0) - lineStartTime) / 1000) * zoom;
+		const width = ((endTime - startTime) / 1000) * zoom;
+
+		const isSelected = !isGhost && selectedWordId === segment.id;
+
+		const handleClick = (e: MouseEvent<HTMLDivElement>) => {
+			if (isGhost) return;
+			if (editingTimeField) return;
+			e.stopPropagation();
+			setSelectedWordId(segment.id);
+		};
+
+		const handlePanStart = (e: MouseEvent<HTMLDivElement>) => {
+			if (isGhost) return;
+			if (editingTimeField) return;
+			if (e.button !== 0) return;
+
+			e.preventDefault();
+			e.stopPropagation();
+
+			const scrollContainer = scrollContainerRef.current;
+			if (!scrollContainer) return;
+			const rect = scrollContainer.getBoundingClientRect();
+
+			const mouseXPx = e.clientX - rect.left;
+			const scrollLeft = globalStore.get(spectrogramScrollLeftAtom);
+			const initialMouseTimeMS = ((scrollLeft + mouseXPx) / zoom) * 1000;
+
+			setTimelineDrag({
+				type: "word-pan",
+				lineId: lineId,
+				wordId: segment.id,
+				initialMouseTimeMS,
+				initialWordStartMS: segment.startTime,
+			});
+
+			setSelectedWordId(segment.id);
+		};
+
+		const handleContextMenu = (e: MouseEvent<HTMLDivElement>) => {
+			if (isGhost) return;
+			if (editingTimeField) return;
 			e.preventDefault();
 			e.stopPropagation();
 			setSelectedWordId(segment.id);
 			if (startTime != null && endTime != null) {
 				audioEngine.auditionRange(startTime / 1000, endTime / 1000);
 			}
-		}
-	};
+		};
 
-	const dynamicStyles = {
-		left: `${left}px`,
-		width: `${width}px`,
-		backgroundColor: isSelected ? "var(--accent-a6)" : "transparent",
-	};
+		const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+			if (isGhost) return;
+			if (e.key === "Enter") {
+				e.preventDefault();
+				e.stopPropagation();
+				setSelectedWordId(segment.id);
+				if (startTime != null && endTime != null) {
+					audioEngine.auditionRange(startTime / 1000, endTime / 1000);
+				}
+			}
+		};
 
-	const hasRoman =
-		showPerWordRomanization && romanWord && romanWord.trim() !== "";
+		const dynamicStyles = {
+			left: `${left}px`,
+			width: `${width}px`,
+			backgroundColor: isSelected ? "var(--accent-a6)" : "transparent",
+		};
 
-	return (
-		// biome-ignore lint/a11y/useSemanticElements: 在这里用 <button> 显然不正确
-		<div
-			className={styles.wordSegment}
-			style={dynamicStyles}
-			onClick={handleClick}
-			onMouseDown={handlePanStart}
-			onContextMenu={handleContextMenu}
-			role={isGhost ? "presentation" : "button"}
-			tabIndex={isGhost ? -1 : 0}
-			onKeyDown={handleKeyDown}
-		>
-			{hasRoman ? (
-				<>
-					<span className={styles.romanText}>{romanWord}</span>
-					<span className={styles.originText}>{word}</span>
-				</>
-			) : (
-				word
-			)}
-		</div>
-	);
-});
+		const hasRoman =
+			showPerWordRomanization && romanWord && romanWord.trim() !== "";
+
+		return (
+			// biome-ignore lint/a11y/useSemanticElements: 在这里用 <button> 显然不正确
+			<div
+				className={styles.wordSegment}
+				style={dynamicStyles}
+				onClick={handleClick}
+				onMouseDown={handlePanStart}
+				onContextMenu={handleContextMenu}
+				role={isGhost ? "presentation" : "button"}
+				tabIndex={isGhost ? -1 : 0}
+				onKeyDown={handleKeyDown}
+			>
+				{hasRoman ? (
+					<>
+						<span className={styles.romanText}>{romanWord}</span>
+						<span className={styles.originText}>{word}</span>
+					</>
+				) : (
+					word
+				)}
+			</div>
+		);
+	},
+);

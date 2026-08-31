@@ -133,14 +133,13 @@ import { useAppUpdate } from "./utils/useAppUpdate.ts";
 import { DiscordPresence } from "./modules/discord-presence/DiscordPresence";
 import { BeginnerGuide } from "./modules/onboarding/BeginnerGuide";
 import { MigrationNotice } from "./modules/domain-migration/MigrationNotice";
+import { ChecklistBackgroundSync } from "./modules/ttml-checklist/cloudSync";
 
 const LyricLinesView = lazy(() => import("./modules/lyric-editor/components"));
 const PreviewModeSwitcher = lazy(
 	() => import("./components/PreviewModeSwitcher"),
 );
-const SidePreviewPanel = lazy(
-	() => import("./components/SidePreviewPanel"),
-);
+const SidePreviewPanel = lazy(() => import("./components/SidePreviewPanel"));
 const Dialogs = lazy(() => import("./components/Dialogs"));
 
 const AppErrorPage = ({
@@ -575,7 +574,7 @@ function App() {
 	useEffect(() => {
 		setHasBackground(
 			backgroundMode !== "none" &&
-			!!(customBackgroundImage || selectedGradient),
+				!!(customBackgroundImage || selectedGradient),
 		);
 	}, [backgroundMode, customBackgroundImage, selectedGradient]);
 	const { checkUpdate, status, update } = useAppUpdate();
@@ -672,7 +671,7 @@ function App() {
 			const currentLyricLines = store.get(lyricLinesAtom);
 			if (
 				currentLyricLines.lyricLines.length +
-				currentLyricLines.metadata.length >
+					currentLyricLines.metadata.length >
 				0
 			) {
 				evt.preventDefault();
@@ -737,6 +736,7 @@ function App() {
 			<MigrationNotice />
 			<DiscordPresence />
 			<BeginnerGuide />
+			<ChecklistBackgroundSync />
 			{customStyleString ? <style>{customStyleString}</style> : null}
 			<ErrorBoundary
 				FallbackComponent={AppErrorPage}
@@ -754,12 +754,12 @@ function App() {
 										? `url(${customBackgroundImage})`
 										: useCustomGradient
 											? generateGradient(
-												customGradientColors,
-												customGradientType,
-												customGradientCenter,
-												customGradientAngle,
-												customGradientSize,
-											)
+													customGradientColors,
+													customGradientType,
+													customGradientCenter,
+													customGradientAngle,
+													customGradientSize,
+												)
 											: selectedGradient?.css,
 								opacity:
 									backgroundMode === "gradient"
@@ -785,12 +785,7 @@ function App() {
 					<DarkThemeDetector />
 					<Flex direction="column" height="100vh">
 						<TitleBar key="titlebar" />
-						<Flex
-							direction="row"
-							flexGrow="1"
-							overflow="hidden"
-							minHeight="0"
-						>
+						<Flex direction="row" flexGrow="1" overflow="hidden" minHeight="0">
 							<Flex
 								direction="column"
 								flexGrow="1"
@@ -804,7 +799,9 @@ function App() {
 										id === "ribbonbar" &&
 										(vRibbonPosition === "top" || vRibbonPosition === "bottom")
 									) {
-										return <RibbonBar key="ribbonbar" position={vRibbonPosition} />;
+										return (
+											<RibbonBar key="ribbonbar" position={vRibbonPosition} />
+										);
 									}
 									if (id === "editor") {
 										const editorContent = (
@@ -854,7 +851,10 @@ function App() {
 											</Box>
 										);
 
-										if (vRibbonPosition === "left" || vRibbonPosition === "right") {
+										if (
+											vRibbonPosition === "left" ||
+											vRibbonPosition === "right"
+										) {
 											return (
 												<Flex
 													direction="row"

@@ -22,61 +22,78 @@ const SyncModeRibbonBar = lazy(() => import("./sync-mode"));
 const PreviewModeRibbonBar = lazy(() => import("./preview-mode"));
 
 export const RibbonBar = memo(
-	forwardRef<HTMLDivElement>(({ isSidebar, position = "top" }: { isSidebar?: boolean, position?: "top" | "bottom" | "left" | "right" }, ref) => {
-		const toolMode = useAtomValue(toolModeAtom);
+	forwardRef<HTMLDivElement>(
+		(
+			{
+				isSidebar,
+				position = "top",
+			}: {
+				isSidebar?: boolean;
+				position?: "top" | "bottom" | "left" | "right";
+			},
+			ref,
+		) => {
+			const toolMode = useAtomValue(toolModeAtom);
 
-		return (
-			<Card
-				data-guide-target="ribbon"
-				style={{
-					minHeight: isSidebar ? "100%" : "fit-content",
-					minWidth: isSidebar ? "240px" : 0,
-					maxWidth: isSidebar ? "240px" : "100%",
-					width: "100%",
-					flexShrink: "0",
-					borderRadius: 0,
-					borderLeft: position === "right" ? "1px solid var(--gray-5)" : "none",
-					borderRight: position === "left" ? "1px solid var(--gray-5)" : "none",
-					borderTop: position === "bottom" ? "1px solid var(--gray-5)" : "none",
-					borderBottom: position === "top" ? "1px solid var(--gray-5)" : "none",
-					backgroundColor: "var(--titlebar-bg, var(--color-panel-translucent))",
-					backdropFilter: "blur(var(--custom-backdrop-blur, 16px)) saturate(160%)",
-					zIndex: 10,
-				}}
-				ref={ref}
-			>
-				<Inset style={{ minWidth: 0 }}>
-					<div
-						style={{
-							width: "100%",
-							minWidth: 0,
-							overflowY: isSidebar ? "auto" : "visible",
-							overflowX: isSidebar ? "hidden" : "auto",
-							paddingBottom: isSidebar ? 0 : "4px",
-						}}
-					>
-						<AnimatePresence mode="wait">
-							{toolMode === ToolMode.Edit && (
-								<SuspensePlaceHolder key="edit">
-									<EditModeRibbonBar isSidebar={isSidebar} />
-								</SuspensePlaceHolder>
-							)}
-							{toolMode === ToolMode.Sync && (
-								<SuspensePlaceHolder key="sync">
-									<SyncModeRibbonBar isSidebar={isSidebar} />
-								</SuspensePlaceHolder>
-							)}
-							{toolMode === ToolMode.Preview && (
-								<SuspensePlaceHolder key="preview">
-									<PreviewModeRibbonBar isSidebar={isSidebar} />
-								</SuspensePlaceHolder>
-							)}
-						</AnimatePresence>
-					</div>
-				</Inset>
-			</Card>
-		);
-	}),
+			return (
+				<Card
+					data-guide-target="ribbon"
+					style={{
+						minHeight: isSidebar ? "100%" : "fit-content",
+						minWidth: isSidebar ? "240px" : 0,
+						maxWidth: isSidebar ? "240px" : "100%",
+						width: "100%",
+						flexShrink: "0",
+						borderRadius: 0,
+						borderLeft:
+							position === "right" ? "1px solid var(--gray-5)" : "none",
+						borderRight:
+							position === "left" ? "1px solid var(--gray-5)" : "none",
+						borderTop:
+							position === "bottom" ? "1px solid var(--gray-5)" : "none",
+						borderBottom:
+							position === "top" ? "1px solid var(--gray-5)" : "none",
+						backgroundColor:
+							"var(--titlebar-bg, var(--color-panel-translucent))",
+						backdropFilter:
+							"blur(var(--custom-backdrop-blur, 16px)) saturate(160%)",
+						zIndex: 10,
+					}}
+					ref={ref}
+				>
+					<Inset style={{ minWidth: 0 }}>
+						<div
+							style={{
+								width: "100%",
+								minWidth: 0,
+								overflowY: isSidebar ? "auto" : "visible",
+								overflowX: isSidebar ? "hidden" : "auto",
+								paddingBottom: isSidebar ? 0 : "4px",
+							}}
+						>
+							<AnimatePresence mode="wait">
+								{toolMode === ToolMode.Edit && (
+									<SuspensePlaceHolder key="edit">
+										<EditModeRibbonBar isSidebar={isSidebar} />
+									</SuspensePlaceHolder>
+								)}
+								{toolMode === ToolMode.Sync && (
+									<SuspensePlaceHolder key="sync">
+										<SyncModeRibbonBar isSidebar={isSidebar} />
+									</SuspensePlaceHolder>
+								)}
+								{toolMode === ToolMode.Preview && (
+									<SuspensePlaceHolder key="preview">
+										<PreviewModeRibbonBar isSidebar={isSidebar} />
+									</SuspensePlaceHolder>
+								)}
+							</AnimatePresence>
+						</div>
+					</Inset>
+				</Card>
+			);
+		},
+	),
 );
 
 export default RibbonBar;

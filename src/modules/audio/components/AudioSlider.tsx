@@ -1,4 +1,13 @@
-import { Card, Flex, Popover, Text, TextField, TextArea, Box, IconButton } from "@radix-ui/themes";
+import {
+	Card,
+	Flex,
+	Popover,
+	Text,
+	TextField,
+	TextArea,
+	Box,
+	IconButton,
+} from "@radix-ui/themes";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,11 +62,8 @@ const InteractiveHoverOverlay = memo(
 		sliderWidthPx: number;
 		isDraggingRef: React.RefObject<boolean>;
 	}) => {
-		const {
-			hoverState,
-			handleContainerMouseMove,
-			handleContainerMouseLeave,
-		} = useHoverGuide(sliderWidthPx, isDraggingRef);
+		const { hoverState, handleContainerMouseMove, handleContainerMouseLeave } =
+			useHoverGuide(sliderWidthPx, isDraggingRef);
 
 		return (
 			<div

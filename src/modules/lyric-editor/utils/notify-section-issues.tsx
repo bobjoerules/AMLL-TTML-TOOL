@@ -14,7 +14,11 @@ export function notifySectionIssues(lyrics: TTMLLyric): SectionIssue[] {
 
 	const hasErrors = issues.some((i) => i.severity === "error");
 	const hasWarnings = issues.some((i) => i.severity === "warning");
-	const toastFn = hasErrors ? toast.error : hasWarnings ? toast.warn : toast.info;
+	const toastFn = hasErrors
+		? toast.error
+		: hasWarnings
+			? toast.warn
+			: toast.info;
 
 	const title = `Section review: ${issues.length} non-blocking issue${issues.length === 1 ? "" : "s"}`;
 
@@ -35,7 +39,9 @@ export function notifySectionIssues(lyrics: TTMLLyric): SectionIssue[] {
 			>
 				{issues.slice(0, 6).map((issue, idx) => {
 					const lineLabel =
-						issue.lineIndex !== undefined ? `Line ${issue.lineIndex + 1}: ` : "";
+						issue.lineIndex !== undefined
+							? `Line ${issue.lineIndex + 1}: `
+							: "";
 					return (
 						<li key={idx} style={{ marginBottom: "2px" }}>
 							{lineLabel && <strong>{lineLabel}</strong>}

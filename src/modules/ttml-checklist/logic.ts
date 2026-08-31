@@ -59,7 +59,9 @@ export function normalizeChecklistEntries(
 						? item.sourceId
 						: undefined,
 				sourceUrl:
-					typeof item.sourceUrl === "string" ? item.sourceUrl.trim() : undefined,
+					typeof item.sourceUrl === "string"
+						? item.sourceUrl.trim()
+						: undefined,
 				notes: typeof item.notes === "string" ? item.notes.trim() : "",
 				completed: item.completed === true,
 				createdAt:
