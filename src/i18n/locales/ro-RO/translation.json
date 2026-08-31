@@ -207,7 +207,8 @@
         "title": "Manage Quick Fix Exclusions",
         "description": "Add words to ignore in quick fixes.",
         "placeholder": "Enter word to ignore"
-      }
+      },
+      "mainLyricIgnoreSync": "Ignore Main Vocals"
     },
     "experimentalFeatures": "Experimental Features",
     "loading": "面板载入中..."

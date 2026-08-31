@@ -60,10 +60,25 @@ export function ChangelogDialog() {
 							</Heading>
 							<Flex direction="column" gap="3">
 								<Text size="2">
-									<strong>Discord Activity Type Selection:</strong> Added an Activity Type selector (Listening / Playing) in Discord Rich Presence settings, allowing you to customize whether Discord displays "Listening to AMLL TTML Tool" or "Playing AMLL TTML Tool".
+									<strong>TTML Checklist Sorting & Design:</strong> Added sorting by Title (A–Z / Z–A) and Artist (A–Z / Z–A), sleek icon filter buttons with glowing active indicator bars, and fixed-height form view switching.
 								</Text>
 								<Text size="2">
-									<strong>Discord Activity Type Consistency:</strong> Ensured the selected activity type is consistently applied across all editor states, including idle inactivity mode and when starting with no file loaded.
+									<strong>TTML Checklist Cloud Sync:</strong> The TTML Checklist connects in real-time to Firebase Firestore when signed in, keeping your songs, notes, and cover art synced across devices.
+								</Text>
+								<Text size="2">
+									<strong>Seamless 1-Click Lyrics Fetching:</strong> Checklist lyric imports immediately fetch the track's lyrics and songwriters without prompting for manual re-search.
+								</Text>
+								<Text size="2">
+									<strong>Unified Cloud Account Preferences:</strong> Streamlined all cloud sync, authentication, statistics, and profile management directly into Preferences → Account & Cloud.
+								</Text>
+								<Text size="2">
+									<strong>Section Review Detailed Notifications:</strong> Section review toasts now display detailed multi-line issue descriptions and exact line numbers.
+								</Text>
+								<Text size="2">
+									<strong>Vocal & Sync Editing Controls:</strong> Added dedicated Ignore Main Vocals, Duet Vocal, and Ignore Sync controls alongside Remembered Background Vocal export settings.
+								</Text>
+								<Text size="2">
+									<strong>Discord Activity Type Selection:</strong> Added an Activity Type selector (Listening / Playing) in Discord Rich Presence settings, applied consistently across all editor states.
 								</Text>
 							</Flex>
 						</Box>

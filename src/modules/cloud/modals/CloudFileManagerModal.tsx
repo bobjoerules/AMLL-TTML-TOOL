@@ -18,10 +18,13 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useFileOpener } from "$/hooks/useFileOpener";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
-import { lyricTextNormalizationOptionsAtom } from "$/modules/settings/states";
+import {
+	allowConsecutiveBackgroundLinesAtom,
+	lyricTextNormalizationOptionsAtom,
+} from "$/modules/settings/states";
+import { openAccountSettingsAtom } from "$/states/dialogs";
 import { lyricLinesAtom, saveFileNameAtom } from "$/states/main";
 import {
-	authModalOpenAtom,
 	cloudFileManagerInitialTabAtom,
 	cloudFileManagerOpenAtom,
 	cloudTTMLListAtom,
@@ -42,11 +45,14 @@ export const CloudFileManagerModal: FC = () => {
 	const initialTab = useAtomValue(cloudFileManagerInitialTabAtom);
 	const [activeTab, setActiveTab] = useState<string>("open");
 	const user = useAtomValue(currentUserAtom);
-	const setAuthModalOpen = useSetAtom(authModalOpenAtom);
+	const openAccountSettings = useSetAtom(openAccountSettingsAtom);
 
 	const lyricLines = useAtomValue(lyricLinesAtom);
 	const saveFileName = useAtomValue(saveFileNameAtom);
 	const normalizationOptions = useAtomValue(lyricTextNormalizationOptionsAtom);
+	const allowConsecutiveBackgroundLines = useAtomValue(
+		allowConsecutiveBackgroundLinesAtom,
+	);
 	const { openFile } = useFileOpener();
 
 	const cloudList = useAtomValue(cloudTTMLListAtom);
@@ -147,13 +153,15 @@ export const CloudFileManagerModal: FC = () => {
 					"Please sign in to save lyrics to the cloud.",
 				),
 			);
-			setAuthModalOpen(true);
+			openAccountSettings();
 			return;
 		}
 
 		try {
 			setIsSaving(true);
-			const rawTTML = exportTTMLText(lyricLines, normalizationOptions);
+			const rawTTML = exportTTMLText(lyricLines, normalizationOptions, {
+				allowConsecutiveBackgroundLines,
+			});
 
 			await saveTTMLToCloud({
 				title: saveTitle || "Untitled",
@@ -260,7 +268,7 @@ export const CloudFileManagerModal: FC = () => {
 							size="3"
 							onClick={() => {
 								setOpen(false);
-								setAuthModalOpen(true);
+								openAccountSettings();
 							}}
 						>
 							{t("cloud.signInButton", "Sign In to TTML Cloud")}

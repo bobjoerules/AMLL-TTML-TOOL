@@ -1,4 +1,4 @@
-import { type FC, useContext } from "react";
+import { type FC, memo, useContext } from "react";
 import type { GapSegment as GapSegmentType } from "$/modules/segmentation/utils/segment-processing.ts";
 import styles from "./GapSegment.module.css";
 import { SpectrogramContext } from "./SpectrogramContext.ts";
@@ -10,7 +10,7 @@ interface GapSegmentProps {
 	offset?: number;
 }
 
-export const GapSegment: FC<GapSegmentProps> = ({
+export const GapSegment: FC<GapSegmentProps> = memo(({
 	segment,
 	lineStartTime,
 	isGhost = false,
@@ -36,4 +36,4 @@ export const GapSegment: FC<GapSegmentProps> = ({
 	};
 
 	return <div className={styles.gapSegment} style={dynamicStyles} />;
-};
+});

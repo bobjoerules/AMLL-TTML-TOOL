@@ -1,9 +1,11 @@
 import {
+	CenterHorizontal24Regular,
 	ClockRegular,
 	EyeFilled,
 	EyeOffFilled,
 	MusicNote2Filled,
 	SettingsFilled,
+	Target24Regular,
 } from "@fluentui/react-icons";
 import {
 	Button,
@@ -12,6 +14,7 @@ import {
 	Popover,
 	Select,
 	Slider,
+	Switch,
 	Text,
 	Theme,
 	Tooltip,
@@ -52,12 +55,14 @@ import {
 	currentPaletteAtom,
 	spectrogramContainerWidthAtom,
 	spectrogramFftSizeAtom,
+	spectrogramFollowPlayheadAtom,
 	spectrogramGainAtom,
 	spectrogramHeightAtom,
 	spectrogramHoverFrequencyAtom,
 	spectrogramHoverPxAtom,
 	spectrogramHoverPyAtom,
 	spectrogramHoverTimeMsAtom,
+	spectrogramOnlyShowSyncLineAtom,
 	spectrogramSelectionAtom,
 } from "$/modules/spectrogram/states";
 import { isDraggingAtom } from "$/modules/spectrogram/states/dnd.ts";
@@ -66,6 +71,7 @@ import {
 	timeShiftPreviewActiveAtom,
 } from "$/states/dialogs.ts";
 import {
+	editingTimeFieldAtom,
 	lyricLinesAtom,
 	selectedLinesAtom,
 	showUnselectedLinesAtom,
@@ -112,6 +118,12 @@ export const AudioSpectrogram: FC = memo(() => {
 	const [fftSize, setFftSize] = useAtom(spectrogramFftSizeAtom);
 	const [showUnselectedLines, setShowUnselectedLines] = useAtom(
 		showUnselectedLinesAtom,
+	);
+	const [onlyShowSyncLine, setOnlyShowSyncLine] = useAtom(
+		spectrogramOnlyShowSyncLineAtom,
+	);
+	const [followPlayhead, setFollowPlayhead] = useAtom(
+		spectrogramFollowPlayheadAtom,
 	);
 	const globalEnableInsert = useAtomValue(globalEnableInsertAtom);
 	const setDialogVisible = useSetAtom(timeShiftDialogAtom);
@@ -230,6 +242,112 @@ export const AudioSpectrogram: FC = memo(() => {
 		}
 	}, [globalEnableInsert, store]);
 
+	const RulerHoverOverlay: FC<{
+		isHovering: boolean;
+	}> = memo(({ isHovering }) => {
+		const { t } = useTranslation();
+		const isDragging = useAtomValue(isDraggingAtom);
+		const hoverPx = useAtomValue(spectrogramHoverPxAtom);
+		const hoverTimeMs = useAtomValue(spectrogramHoverTimeMsAtom);
+		const hoverFrequency = useAtomValue(spectrogramHoverFrequencyAtom);
+		const editingTimeField = useAtomValue(editingTimeFieldAtom);
+
+		if (isDragging || !isHovering) return null;
+
+		let hoverTimeFormatted = msToTimestamp(hoverTimeMs);
+		if (hoverFrequency > 0) {
+			const freqFormatted =
+				hoverFrequency >= 1000
+					? `${(hoverFrequency / 1000).toFixed(2)} kHz`
+					: `${Math.round(hoverFrequency)} Hz`;
+			const noteFormatted = getNoteFromFreq(hoverFrequency);
+			hoverTimeFormatted = `${hoverTimeFormatted} (${freqFormatted}${noteFormatted ? ` / ${noteFormatted}` : ""})`;
+		}
+		let tooltipBgColor: string | undefined;
+
+		const isInvalidEndTime =
+			editingTimeField?.field === "endTime" &&
+			hoverTimeMs <= (editingTimeField.lineStartTime ?? 0);
+
+		if (isInvalidEndTime) {
+			hoverTimeFormatted = t("spectrogram.invalidEndTime", "不能选择此结束时间");
+			tooltipBgColor = "var(--red-9)";
+		} else if (editingTimeField && !editingTimeField.isWord) {
+			const fieldName =
+				editingTimeField.field === "startTime"
+					? t("ribbonBar.editMode.startTime", "起始时间")
+					: t("ribbonBar.editMode.endTime", "结束时间");
+			hoverTimeFormatted = `${t("common.clickToSet", "点击设置")}${fieldName}: ${hoverTimeFormatted}`;
+			tooltipBgColor = "var(--accent-9)";
+		}
+
+		return (
+			<>
+				<div
+					className={styles.hoverTimeTooltip}
+					style={{
+						left: `${hoverPx}px`,
+						opacity: isHovering ? 1 : 0,
+						backgroundColor: tooltipBgColor,
+					}}
+				>
+					{hoverTimeFormatted}
+				</div>
+
+				<div
+					className={`${styles.rulerHoverFade} ${styles.rulerHoverFadeLeft}`}
+					style={{
+						width: `${hoverPx}px`,
+						height: `${RULER_HEIGHT}px`,
+						opacity: isHovering ? 1 : 0,
+					}}
+				/>
+
+				<div
+					className={`${styles.rulerHoverFade} ${styles.rulerHoverFadeRight}`}
+					style={{
+						left: `${hoverPx}px`,
+						height: `${RULER_HEIGHT}px`,
+						opacity: isHovering ? 1 : 0,
+					}}
+				/>
+			</>
+		);
+	});
+
+	const SpectrogramHoverCursor: FC<{
+		isHovering: boolean;
+		scrollLeft: number;
+	}> = memo(({ isHovering, scrollLeft }) => {
+		const isDragging = useAtomValue(isDraggingAtom);
+		const hoverPx = useAtomValue(spectrogramHoverPxAtom);
+		const hoverTimeMs = useAtomValue(spectrogramHoverTimeMsAtom);
+		const editingTimeField = useAtomValue(editingTimeFieldAtom);
+
+		if (isDragging || !isHovering) return null;
+
+		const isInvalidEndTime =
+			editingTimeField?.field === "endTime" &&
+			hoverTimeMs <= (editingTimeField.lineStartTime ?? 0);
+		const hoverLineColor = isInvalidEndTime ? "var(--red-9)" : undefined;
+		const hoverX = scrollLeft + hoverPx;
+
+		return (
+			<div
+				className={styles.hoverCursorContainer}
+				style={{
+					left: `${hoverX}px`,
+					opacity: isHovering ? 1 : 0,
+				}}
+			>
+				<div
+					className={styles.hoverCursorLine}
+					style={{ backgroundColor: hoverLineColor }}
+				/>
+			</div>
+		);
+	});
+
 	const { height: uiHeight, resizeHandleProps } = useSpectrogramResize({
 		initialHeight: dataHeight,
 		onCommit: setDataHeight,
@@ -248,12 +366,8 @@ export const AudioSpectrogram: FC = memo(() => {
 	);
 
 	const [isHovering, setIsHovering] = useState(false);
-	const hoverPx = useAtomValue(spectrogramHoverPxAtom);
 	const setHoverPx = useSetAtom(spectrogramHoverPxAtom);
 	const setHoverPy = useSetAtom(spectrogramHoverPyAtom);
-	const hoverTimeMs = useAtomValue(spectrogramHoverTimeMsAtom);
-	const hoverFrequency = useAtomValue(spectrogramHoverFrequencyAtom);
-	const isDragging = useAtomValue(isDraggingAtom);
 
 	const rulerRef = useRef<TimelineRulerHandle>(null);
 
@@ -279,11 +393,9 @@ export const AudioSpectrogram: FC = memo(() => {
 
 	const {
 		handleContainerMouseDown: handleTimelineMouseDown,
-		isInvalidEndTime,
 		pendingCursorPosition,
 		showRangePreview,
 		previewStyle,
-		editingTimeField,
 	} = useTimelineEditing(scrollLeft, zoom);
 
 	const { handleSelectionMouseDown, selectionStyle } = useSpectrogramSelection(
@@ -300,7 +412,7 @@ export const AudioSpectrogram: FC = memo(() => {
 		[handleTimelineMouseDown, handleSelectionMouseDown],
 	);
 
-	const { handleScrubStart } = useScrubbing(
+	useScrubbing(
 		scrollContainerRef,
 		scrollLeft,
 		zoom,
@@ -310,9 +422,8 @@ export const AudioSpectrogram: FC = memo(() => {
 		() => ({
 			scrollContainerRef,
 			zoom,
-			scrollLeft,
 		}),
-		[zoom, scrollLeft],
+		[zoom],
 	);
 
 	const updateVisibleTiles = useCallback(() => {
@@ -437,34 +548,7 @@ export const AudioSpectrogram: FC = memo(() => {
 	const totalWidth = audioBuffer ? audioBuffer.duration * zoom : 0;
 	const auditionCursorPosition = auditionTime ? auditionTime * zoom : null;
 
-	let hoverTimeFormatted = msToTimestamp(hoverTimeMs);
-	if (hoverFrequency > 0) {
-		const freqFormatted =
-			hoverFrequency >= 1000
-				? `${(hoverFrequency / 1000).toFixed(2)} kHz`
-				: `${Math.round(hoverFrequency)} Hz`;
-		const noteFormatted = getNoteFromFreq(hoverFrequency);
-		hoverTimeFormatted = `${hoverTimeFormatted} (${freqFormatted}${noteFormatted ? ` / ${noteFormatted}` : ""})`;
-	}
-	let tooltipBgColor: string | undefined;
-	let hoverLineColor: string | undefined;
-
-	if (isInvalidEndTime) {
-		hoverTimeFormatted = t("spectrogram.invalidEndTime", "不能选择此结束时间");
-		tooltipBgColor = "var(--red-9)";
-		hoverLineColor = "var(--red-9)";
-	} else if (editingTimeField && !editingTimeField.isWord) {
-		const fieldName =
-			editingTimeField.field === "startTime"
-				? t("ribbonBar.editMode.startTime", "起始时间")
-				: t("ribbonBar.editMode.endTime", "结束时间");
-		hoverTimeFormatted = `${t("common.clickToSet", "点击设置")}${fieldName}: ${hoverTimeFormatted}`;
-		tooltipBgColor = "var(--accent-9)";
-	}
-
 	const transformX = isZooming ? scrollLeft : Math.round(scrollLeft);
-
-	const hoverX = scrollLeft + hoverPx;
 
 	const minGain = 0.5;
 	const maxGain = 8;
@@ -556,38 +640,7 @@ export const AudioSpectrogram: FC = memo(() => {
 								onSeek={handleRulerSeek}
 							/>
 
-							{!isDragging && (
-								<>
-									<div
-										className={styles.hoverTimeTooltip}
-										style={{
-											left: `${hoverPx}px`,
-											opacity: isHovering ? 1 : 0,
-											backgroundColor: tooltipBgColor,
-										}}
-									>
-										{hoverTimeFormatted}
-									</div>
-
-									<div
-										className={`${styles.rulerHoverFade} ${styles.rulerHoverFadeLeft}`}
-										style={{
-											width: `${hoverPx}px`,
-											height: `${RULER_HEIGHT}px`,
-											opacity: isHovering ? 1 : 0,
-										}}
-									/>
-
-									<div
-										className={`${styles.rulerHoverFade} ${styles.rulerHoverFadeRight}`}
-										style={{
-											left: `${hoverPx}px`,
-											height: `${RULER_HEIGHT}px`,
-											opacity: isHovering ? 1 : 0,
-										}}
-									/>
-								</>
-							)}
+							<RulerHoverOverlay isHovering={isHovering} />
 
 							<ScrubHandle
 								scrollContainerRef={scrollContainerRef}
@@ -720,20 +773,10 @@ export const AudioSpectrogram: FC = memo(() => {
 												clientWidth={containerWidth}
 												hiddenLineIds={showRangePreview ? selectedLines : null}
 											/>
-											{!isDragging && (
-												<div
-													className={styles.hoverCursorContainer}
-													style={{
-														left: `${hoverX}px`,
-														opacity: isHovering ? 1 : 0,
-													}}
-												>
-													<div
-														className={styles.hoverCursorLine}
-														style={{ backgroundColor: hoverLineColor }}
-													/>
-												</div>
-											)}
+											<SpectrogramHoverCursor
+												isHovering={isHovering}
+												scrollLeft={scrollLeft}
+											/>
 										</Theme>
 									</SpectrogramContext.Provider>
 								</div>
@@ -753,6 +796,36 @@ export const AudioSpectrogram: FC = memo(() => {
 							onClick={() => setShowUnselectedLines((prev) => !prev)}
 						>
 							{showUnselectedLines ? <EyeFilled /> : <EyeOffFilled />}
+						</IconButton>
+					</Tooltip>
+
+					<Tooltip
+						content={t(
+							"spectrogram.onlyShowSyncLine",
+							"Only show line being time synced",
+						)}
+						side="left"
+					>
+						<IconButton
+							variant={onlyShowSyncLine ? "solid" : "outline"}
+							onClick={() => setOnlyShowSyncLine((prev) => !prev)}
+						>
+							<Target24Regular />
+						</IconButton>
+					</Tooltip>
+
+					<Tooltip
+						content={t(
+							"spectrogram.followPlayhead",
+							"Follow playhead (Keep in center)",
+						)}
+						side="left"
+					>
+						<IconButton
+							variant={followPlayhead ? "solid" : "outline"}
+							onClick={() => setFollowPlayhead((prev) => !prev)}
+						>
+							<CenterHorizontal24Regular />
 						</IconButton>
 					</Tooltip>
 
@@ -782,11 +855,39 @@ export const AudioSpectrogram: FC = memo(() => {
 								</IconButton>
 							</Popover.Trigger>
 						</Tooltip>
-						<Popover.Content side="left" align="end" style={{ width: 220 }}>
+						<Popover.Content side="left" align="end" style={{ width: 240 }}>
 							<Flex direction="column" gap="3">
 								<Text size="2" weight="bold">
 									{t("spectrogram.settings", "频谱图设置")}
 								</Text>
+
+								<Flex align="center" justify="between" gap="2">
+									<Text size="1" color="gray">
+										{t(
+											"spectrogram.onlyShowSyncLine",
+											"Only show line being time synced",
+										)}
+									</Text>
+									<Switch
+										size="1"
+										checked={onlyShowSyncLine}
+										onCheckedChange={setOnlyShowSyncLine}
+									/>
+								</Flex>
+
+								<Flex align="center" justify="between" gap="2">
+									<Text size="1" color="gray">
+										{t(
+											"spectrogram.followPlayhead",
+											"Follow playhead (Keep in center)",
+										)}
+									</Text>
+									<Switch
+										size="1"
+										checked={followPlayhead}
+										onCheckedChange={setFollowPlayhead}
+									/>
+								</Flex>
 
 								<Flex direction="column" gap="2">
 									<Text size="1" color="gray">

@@ -25,6 +25,7 @@ import { audioEngine } from "$/modules/audio/audio-engine";
 import { currentDurationAtom } from "$/modules/audio/states";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
 import {
+	allowConsecutiveBackgroundLinesAtom,
 	geniusApiKeyAtom,
 	lyricTextNormalizationOptionsAtom,
 } from "$/modules/settings/states";
@@ -233,6 +234,11 @@ export const BeginnerGuide = () => {
 			const text = exportTTMLText(
 				lyrics,
 				store.get(lyricTextNormalizationOptionsAtom),
+				{
+					allowConsecutiveBackgroundLines: store.get(
+						allowConsecutiveBackgroundLinesAtom,
+					),
+				},
 			);
 			const saved = await saveFile(text, {
 				suggestedName: store.get(saveFileNameAtom),

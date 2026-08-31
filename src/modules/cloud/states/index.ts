@@ -33,7 +33,6 @@ export const currentUserAtom = atomWithStorage<UserProfile | null>(
 	null,
 );
 export const authLoadingAtom = atom<boolean>(false);
-export const authModalOpenAtom = atom<boolean>(false);
 
 export const cloudFileManagerOpenAtom = atom<boolean>(false);
 export const cloudFileManagerInitialTabAtom = atom<"save" | "open">("open");

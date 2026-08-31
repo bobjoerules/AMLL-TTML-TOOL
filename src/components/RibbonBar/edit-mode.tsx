@@ -59,9 +59,6 @@ import {
 	People16Regular,
 	DismissCircle16Regular,
 	Translate16Regular,
-	Copy16Regular,
-	ClipboardPaste16Regular,
-	FastForward16Regular,
 } from "@fluentui/react-icons";
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
@@ -77,7 +74,6 @@ import {
 	showWordRomanizationInputAtom,
 } from "$/modules/settings/states/index.ts";
 import {
-	copiedTimingsAtom,
 	editingTimeFieldAtom,
 	lyricLinesAtom,
 	requestFocusAtom,
@@ -85,7 +81,6 @@ import {
 	selectedWordsAtom,
 	showEndTimeAsDurationAtom,
 } from "$/states/main.ts";
-import { currentTimeAtom } from "$/modules/audio/states/index.ts";
 import { grammarCheckDialogAtom } from "$/modules/lyric-editor/modals/GrammarCheckDialog.tsx";
 import { type LyricLine, type LyricWord, newLyricLine } from "$/types/ttml";
 import { msToTimestamp, parseTimespan } from "$/utils/timestamp.ts";
@@ -93,236 +88,6 @@ import { buildLineRomanization, getPhoneticSyllables } from "$/utils/phonetic";
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
 import { RibbonSyncProgressWidget } from "./sync-mode.tsx";
-
-export const LineTimingTools = () => {
-	const { t } = useTranslation();
-	const store = useStore();
-	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
-	const [copiedTimings, setCopiedTimings] = useAtom(copiedTimingsAtom);
-
-	const handleCopyTimings = useCallback(() => {
-		const lyricLines = store.get(lyricLinesAtom).lyricLines;
-		const selLines = store.get(selectedLinesAtom);
-		const selWords = store.get(selectedWordsAtom);
-
-		if (selLines.size === 0 && selWords.size === 0) {
-			toast.info(
-				t(
-					"ribbonBar.timingTools.selectLineFirst",
-					"Please select a line first",
-				),
-			);
-			return;
-		}
-
-		if (selLines.size > 0) {
-			const targetLine = lyricLines.find((l) => selLines.has(l.id));
-			if (targetLine) {
-				const duration = Math.max(0, targetLine.endTime - targetLine.startTime);
-				const wordTimings = (targetLine.words || []).map((w) => ({
-					relativeStart: Math.max(0, w.startTime - targetLine.startTime),
-					duration: Math.max(0, w.endTime - w.startTime),
-					emptyBeat: w.emptyBeat,
-				}));
-				setCopiedTimings({
-					startTime: targetLine.startTime,
-					endTime: targetLine.endTime,
-					duration,
-					wordTimings,
-				});
-				toast.success(
-					t(
-						"ribbonBar.timingTools.copiedLineTimings",
-						"Copied line timings to clipboard",
-					),
-				);
-				return;
-			}
-		}
-
-		if (selWords.size > 0) {
-			for (const line of lyricLines) {
-				for (const word of line.words) {
-					if (selWords.has(word.id)) {
-						const duration = Math.max(0, word.endTime - word.startTime);
-						setCopiedTimings({
-							startTime: word.startTime,
-							endTime: word.endTime,
-							duration,
-						});
-						toast.success(
-							t(
-								"ribbonBar.timingTools.copiedWordTimings",
-								"Copied word timing",
-							),
-						);
-						return;
-					}
-				}
-			}
-		}
-	}, [setCopiedTimings, store, t]);
-
-	const handlePasteTimings = useCallback(() => {
-		if (!copiedTimings) {
-			toast.info(
-				t(
-					"ribbonBar.timingTools.noTimingsCopied",
-					"No timings copied yet",
-				),
-			);
-			return;
-		}
-		const selLines = store.get(selectedLinesAtom);
-		const selWords = store.get(selectedWordsAtom);
-
-		if (selLines.size === 0 && selWords.size === 0) {
-			toast.info(
-				t(
-					"ribbonBar.timingTools.selectTargetFirst",
-					"Please select a target line or word",
-				),
-			);
-			return;
-		}
-
-		editLyricLines((state) => {
-			for (const line of state.lyricLines) {
-				if (selLines.has(line.id)) {
-					line.startTime = copiedTimings.startTime;
-					line.endTime = copiedTimings.endTime;
-					if (
-						copiedTimings.wordTimings &&
-						line.words &&
-						line.words.length > 0
-					) {
-						const count = Math.min(
-							line.words.length,
-							copiedTimings.wordTimings.length,
-						);
-						for (let i = 0; i < count; i++) {
-							const wt = copiedTimings.wordTimings[i];
-							line.words[i].startTime = line.startTime + wt.relativeStart;
-							line.words[i].endTime = line.words[i].startTime + wt.duration;
-							if (wt.emptyBeat !== undefined) {
-								line.words[i].emptyBeat = wt.emptyBeat;
-							}
-						}
-					}
-				}
-				if (selWords.size > 0) {
-					for (const word of line.words) {
-						if (selWords.has(word.id)) {
-							word.startTime = copiedTimings.startTime;
-							word.endTime = copiedTimings.endTime;
-						}
-					}
-				}
-			}
-			return state;
-		});
-		toast.success(
-			t(
-				"ribbonBar.timingTools.pastedTimings",
-				"Pasted timings to selection",
-			),
-		);
-	}, [copiedTimings, editLyricLines, store, t]);
-
-	const handleSnapToPlayhead = useCallback(() => {
-		const currentTime = Math.round(store.get(currentTimeAtom));
-		const selLines = store.get(selectedLinesAtom);
-		const selWords = store.get(selectedWordsAtom);
-
-		if (selLines.size === 0 && selWords.size === 0) {
-			toast.info(
-				t(
-					"ribbonBar.timingTools.selectLineFirst",
-					"Please select a line first",
-				),
-			);
-			return;
-		}
-
-		editLyricLines((state) => {
-			for (const line of state.lyricLines) {
-				if (selLines.has(line.id)) {
-					const origStart = line.startTime;
-					const duration =
-						line.endTime > origStart ? line.endTime - origStart : 3000;
-					const offset = currentTime - origStart;
-					line.startTime = currentTime;
-					line.endTime = currentTime + duration;
-					if (line.words) {
-						for (const word of line.words) {
-							if (word.startTime > 0 || word.endTime > 0) {
-								const wDur = Math.max(0, word.endTime - word.startTime);
-								word.startTime = Math.max(0, word.startTime + offset);
-								word.endTime = word.startTime + wDur;
-							}
-						}
-					}
-				}
-				if (selWords.size > 0) {
-					for (const word of line.words) {
-						if (selWords.has(word.id)) {
-							const wDur =
-								word.endTime > word.startTime
-									? word.endTime - word.startTime
-									: 500;
-							word.startTime = currentTime;
-							word.endTime = currentTime + wDur;
-						}
-					}
-				}
-			}
-			return state;
-		});
-		toast.success(
-			t(
-				"ribbonBar.timingTools.snappedToPlayhead",
-				"Snapped timing to playhead",
-			),
-		);
-	}, [editLyricLines, store, t]);
-
-	return (
-		<Flex gap="1" align="center" wrap="wrap">
-			<Button
-				size="1"
-				variant="soft"
-				onClick={handleCopyTimings}
-				title={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}
-			>
-				<Copy16Regular />
-				<span>{t("ribbonBar.timingTools.copy", "Copy Timings")}</span>
-			</Button>
-			<Button
-				size="1"
-				variant="soft"
-				onClick={handlePasteTimings}
-				disabled={!copiedTimings}
-				title={t("ribbonBar.timingTools.pasteTimings", "Paste Timings")}
-			>
-				<ClipboardPaste16Regular />
-				<span>{t("ribbonBar.timingTools.paste", "Paste Timings")}</span>
-			</Button>
-			<Button
-				size="1"
-				variant="soft"
-				color="indigo"
-				onClick={handleSnapToPlayhead}
-				title={t(
-					"ribbonBar.timingTools.snapPlayhead",
-					"Snap Timings to Playhead",
-				)}
-			>
-				<FastForward16Regular />
-				<span>{t("ribbonBar.timingTools.snap", "Snap to Playhead")}</span>
-			</Button>
-		</Flex>
-	);
-};
 
 const GrammarCheckButton = () => {
 	const { t } = useTranslation();
@@ -822,6 +587,116 @@ function CheckboxField<
 	);
 }
 
+function ToggleButtonField<
+	L extends Word extends true ? LyricWord : LyricLine,
+	F extends keyof L,
+	Word extends boolean | undefined = undefined,
+>({
+	label,
+	icon,
+	isWordField,
+	fieldName,
+	activeColor = "indigo",
+}: {
+	label: React.ReactNode;
+	icon?: React.ReactNode;
+	isWordField?: Word;
+	fieldName: F;
+	activeColor?: "indigo" | "amber" | "crimson" | "ruby" | "purple" | "violet" | "blue" | "green" | "teal" | "cyan";
+}) {
+	const itemAtom = useMemo(
+		() => (isWordField ? selectedWordsAtom : selectedLinesAtom),
+		[isWordField],
+	);
+
+	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
+	const store = useStore();
+
+	const currentValueAtom = useMemo(
+		() =>
+			atom((get) => {
+				const selectedItems = get(itemAtom);
+				const lyricLines = get(lyricLinesAtom);
+				if (selectedItems.size) {
+					if (isWordField) {
+						const selectedWords = selectedItems as Set<string>;
+						const values = new Set();
+						for (const line of lyricLines.lyricLines) {
+							for (const word of line.words) {
+								if (selectedWords.has(word.id)) {
+									values.add(!!word[fieldName as keyof LyricWord]);
+								}
+							}
+						}
+						if (values.size === 1) return values.values().next().value as boolean;
+						return MULTIPLE_VALUES;
+					}
+					const selectedLines = selectedItems as Set<string>;
+					const values = new Set();
+					for (const line of lyricLines.lyricLines) {
+						if (selectedLines.has(line.id)) {
+							values.add(!!line[fieldName as keyof LyricLine]);
+						}
+					}
+					if (values.size === 1) return values.values().next().value as boolean;
+					return MULTIPLE_VALUES;
+				}
+				return undefined;
+			}),
+		[itemAtom, fieldName, isWordField],
+	);
+	const currentValue = useAtomValue(currentValueAtom);
+	const isDisabledAtom = useMemo(
+		() => atom((get) => get(itemAtom).size === 0),
+		[itemAtom],
+	);
+	const isDisabled = useAtomValue(isDisabledAtom);
+
+	const isChecked = currentValue === true;
+	const isIndeterminate = currentValue === MULTIPLE_VALUES;
+
+	const handleToggle = () => {
+		const targetValue = isChecked ? false : true;
+		editLyricLines((state) => {
+			const selectedItems = store.get(itemAtom);
+			for (const line of state.lyricLines) {
+				if (isWordField) {
+					for (const word of line.words) {
+						if (selectedItems.has(word.id)) {
+							(word as unknown as Record<string, unknown>)[
+								fieldName as string
+							] = targetValue;
+						}
+					}
+				} else {
+					if (selectedItems.has(line.id)) {
+						(line as unknown as Record<string, unknown>)[
+							fieldName as string
+						] = targetValue;
+					}
+				}
+			}
+			return state;
+		});
+	};
+
+	return (
+		<Button
+			size="1"
+			variant={isChecked ? "solid" : isIndeterminate ? "outline" : "soft"}
+			color={isChecked ? activeColor : "gray"}
+			disabled={isDisabled}
+			onClick={handleToggle}
+		>
+			<Flex gap="1" align="center">
+				{icon}
+				<span>{label}</span>
+				{isIndeterminate && <span style={{ opacity: 0.7 }}>(–)</span>}
+			</Flex>
+		</Button>
+	);
+}
+
 function EditModeField({
 	simpleModeLabel = "简单模式",
 	advanceModeLabel = "高级模式",
@@ -1296,9 +1171,6 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							formatter={msToTimestamp}
 						/>
 					</Grid>
-					<Flex mt="2" justify="center">
-						<LineTimingTools />
-					</Flex>
 				</RibbonSection>
 			)}
 			{selectedLines.size > 0 && (
@@ -1312,44 +1184,26 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					}
 				>
 					<Grid
-						columns="max-content max-content"
-						gap="4"
+						columns="1"
+						gap="1"
 						gapY="1"
 						flexGrow="1"
 						align="center"
 					>
-						<CheckboxField
-							label={
-								<Flex gap="1" align="center">
-									<MusicNote216Regular />
-									{t("ribbonBar.editMode.bgLyric", "背景歌词")}
-								</Flex>
-							}
-							defaultValue={false}
-							isWordField={false}
+						<ToggleButtonField
+							icon={<MusicNote216Regular />}
+							label={t("ribbonBar.editMode.bgLyric", "背景歌词")}
 							fieldName="isBG"
 						/>
-						<CheckboxField
-							label={
-								<Flex gap="1" align="center">
-									<People16Regular />
-									{t("ribbonBar.editMode.duetLyric", "对唱歌词")}
-								</Flex>
-							}
-							isWordField={false}
+						<ToggleButtonField
+							icon={<People16Regular />}
+							label={t("ribbonBar.editMode.duetLyric", "对唱歌词")}
 							fieldName="isDuet"
-							defaultValue={false}
 						/>
-						<CheckboxField
-							label={
-								<Flex gap="1" align="center">
-									<DismissCircle16Regular />
-									{t("ribbonBar.editMode.ignoreSync", "忽略打轴")}
-								</Flex>
-							}
-							isWordField={false}
+						<ToggleButtonField
+							icon={<DismissCircle16Regular />}
+							label={t("ribbonBar.editMode.ignoreSync", "忽略打轴")}
 							fieldName="ignoreSync"
-							defaultValue={false}
 						/>
 					</Grid>
 				</RibbonSection>
@@ -1561,7 +1415,6 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					isSidebar={isSidebar}
 				>
 					<Flex gap="2" direction="column" align="center">
-						<LineTimingTools />
 						<GrammarCheckButton />
 					</Flex>
 				</RibbonSection>

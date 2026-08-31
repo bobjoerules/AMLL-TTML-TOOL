@@ -3,6 +3,7 @@ import {
 	type FC,
 	type KeyboardEvent,
 	type MouseEvent,
+	memo,
 	useContext,
 } from "react";
 import { audioEngine } from "$/modules/audio/audio-engine.ts";
@@ -12,7 +13,9 @@ import {
 	selectedWordIdAtom,
 	timelineDragAtom,
 } from "$/modules/spectrogram/states/dnd.ts";
+import { spectrogramScrollLeftAtom } from "$/modules/spectrogram/states/index.ts";
 import { editingTimeFieldAtom } from "$/states/main.ts";
+import { globalStore } from "$/states/store.ts";
 import styles from "./LyricWordSegment.module.css";
 import { SpectrogramContext } from "./SpectrogramContext.ts";
 
@@ -24,7 +27,7 @@ interface LyricWordSegmentProps {
 	offset?: number;
 }
 
-export const LyricWordSegment: FC<LyricWordSegmentProps> = ({
+export const LyricWordSegment: FC<LyricWordSegmentProps> = memo(({
 	lineId,
 	segment,
 	lineStartTime,
@@ -33,8 +36,7 @@ export const LyricWordSegment: FC<LyricWordSegmentProps> = ({
 }) => {
 	const [selectedWordId, setSelectedWordId] = useAtom(selectedWordIdAtom);
 	const setTimelineDrag = useSetAtom(timelineDragAtom);
-	const { zoom, scrollLeft, scrollContainerRef } =
-		useContext(SpectrogramContext);
+	const { zoom, scrollContainerRef } = useContext(SpectrogramContext);
 	const showPerWordRomanization = useAtomValue(displayRomanizationInSyncAtom);
 	const editingTimeField = useAtomValue(editingTimeFieldAtom);
 
@@ -69,6 +71,7 @@ export const LyricWordSegment: FC<LyricWordSegmentProps> = ({
 		const rect = scrollContainer.getBoundingClientRect();
 
 		const mouseXPx = e.clientX - rect.left;
+		const scrollLeft = globalStore.get(spectrogramScrollLeftAtom);
 		const initialMouseTimeMS = ((scrollLeft + mouseXPx) / zoom) * 1000;
 
 		setTimelineDrag({
@@ -136,4 +139,4 @@ export const LyricWordSegment: FC<LyricWordSegmentProps> = ({
 			)}
 		</div>
 	);
-};
+});

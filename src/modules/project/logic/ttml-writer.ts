@@ -29,27 +29,51 @@ export function shouldExportAsLineSynced(line: LyricLine): boolean {
 	return line.words.filter((word) => word.word.trim().length > 0).length <= 1;
 }
 
+export function collectFollowingBackgroundLines(
+	lines: LyricLine[],
+	mainLineIndex: number,
+	allowConsecutive: boolean,
+): LyricLine[] {
+	const backgroundLines: LyricLine[] = [];
+	const collectOnlyOne = !allowConsecutive;
+	for (let index = mainLineIndex + 1; index < lines.length; index++) {
+		const line = lines[index];
+		if (!line.isBG) break;
+		backgroundLines.push(line);
+		if (collectOnlyOne) break;
+	}
+	return backgroundLines;
+}
+
+export function hasExportableLineContent(line: LyricLine): boolean {
+	return (
+		line.words.some(
+			(word) =>
+				word.word.trim().length > 0 ||
+				word.romanWord.trim().length > 0 ||
+				word.emptyBeat > 0 ||
+				(word.ruby?.some((rubyWord) => rubyWord.word.trim().length > 0) ?? false),
+		) ||
+		line.translatedLyric.trim().length > 0 ||
+		line.romanLyric.trim().length > 0
+	);
+}
+
+export interface TTMLExportOptions {
+	allowConsecutiveBackgroundLines?: boolean;
+}
+
 export default function exportTTMLText(
 	ttmlLyric: TTMLLyric,
 	normalization?: LyricTextNormalizationOptions,
+	options: TTMLExportOptions = {},
 ): string {
 	if (normalization) ttmlLyric = normalizeLyricText(ttmlLyric, normalization);
 	const params: LyricLine[][] = [];
 	const lyric = ttmlLyric.lyricLines;
 
-	let tmp: LyricLine[] = [];
-	for (const line of lyric) {
-		if (line.words.length === 0 && tmp.length > 0) {
-			params.push(tmp);
-			tmp = [];
-		} else {
-			tmp.push(line);
-		}
-	}
-
-	if (tmp.length > 0) {
-		params.push(tmp);
-	}
+	const exportableLines = lyric.filter(hasExportableLineContent);
+	if (exportableLines.length > 0) params.push(exportableLines);
 
 	const TTML_NS = "http://www.w3.org/ns/ttml";
 	const TTM_NS = "http://www.w3.org/ns/ttml#metadata";
@@ -291,7 +315,7 @@ export default function exportTTMLText(
 
 	const romanizationMap = new Map<
 		string,
-		{ main: LyricWord[]; bg: LyricWord[] }
+		{ main: LyricWord[]; backgrounds: LyricWord[][] }
 	>();
 
 	const guessDuration = lyric[lyric.length - 1]?.endTime ?? 0;
@@ -310,6 +334,8 @@ export default function exportTTMLText(
 
 		for (let lineIndex = 0; lineIndex < param.length; lineIndex++) {
 			const line = param[lineIndex];
+			const exportAsStandaloneBackground =
+				(options.allowConsecutiveBackgroundLines ?? false) && line.isBG;
 			const lineP = createEl("p");
 			const beginTime = line.startTime ?? 0;
 			const endTime = line.endTime;
@@ -325,10 +351,12 @@ export default function exportTTMLText(
 				lineP.setAttribute("amll:section", line.sectionId);
 			}
 
-			const mainWords = line.words;
-			let bgWords: LyricWord[] = [];
+			const mainWords = exportAsStandaloneBackground ? [] : line.words;
+			const backgroundWordGroups: LyricWord[][] = [];
 
-			if (shouldExportAsLineSynced(line)) {
+			if (exportAsStandaloneBackground) {
+				// The line is emitted below as x-bg inside an otherwise empty p.
+			} else if (shouldExportAsLineSynced(line)) {
 				lineP.appendChild(
 					doc.createTextNode(line.words.map((word) => word.word).join("")),
 				);
@@ -358,11 +386,24 @@ export default function exportTTMLText(
 				lineP.setAttribute("end", msToTimestamp(word.endTime));
 			}
 
-			const nextLine = param[lineIndex + 1];
-			if (nextLine?.isBG) {
-				lineIndex++;
-				const bgLine = nextLine;
-				bgWords = bgLine.words;
+			const followingBackgroundLines = collectFollowingBackgroundLines(
+				param,
+				lineIndex,
+				options.allowConsecutiveBackgroundLines ?? false,
+			);
+			const backgroundLines = exportAsStandaloneBackground
+				? [line, ...followingBackgroundLines]
+				: followingBackgroundLines;
+			lineIndex += followingBackgroundLines.length;
+
+			if (exportAsStandaloneBackground) {
+				lineP.setAttribute(
+					"end",
+					msToTimestamp(backgroundLines.at(-1)?.endTime ?? line.endTime),
+				);
+			}
+			for (const bgLine of backgroundLines) {
+				backgroundWordGroups.push(bgLine.words);
 
 				const bgLineSpan = createEl("span");
 				bgLineSpan.setAttribute("ttm:role", "x-bg");
@@ -437,7 +478,7 @@ export default function exportTTMLText(
 				lineP.appendChild(bgLineSpan);
 			}
 
-			if (line.translatedLyric) {
+			if (!exportAsStandaloneBackground && line.translatedLyric) {
 				const span = createEl("span");
 				span.setAttribute("ttm:role", "x-translation");
 				span.setAttribute("xml:lang", "zh-CN");
@@ -445,7 +486,7 @@ export default function exportTTMLText(
 				lineP.appendChild(span);
 			}
 
-			if (line.romanLyric) {
+			if (!exportAsStandaloneBackground && line.romanLyric) {
 				const span = createEl("span");
 				span.setAttribute("ttm:role", "x-roman");
 				span.appendChild(doc.createTextNode(line.romanLyric));
@@ -454,10 +495,15 @@ export default function exportTTMLText(
 
 			const hasRoman =
 				mainWords.some((w) => w.romanWord && w.romanWord.trim().length > 0) ||
-				bgWords.some((w) => w.romanWord && w.romanWord.trim().length > 0);
+				backgroundWordGroups.some((words) =>
+					words.some((w) => w.romanWord && w.romanWord.trim().length > 0),
+				);
 
 			if (hasRoman) {
-				romanizationMap.set(itunesKey, { main: mainWords, bg: bgWords });
+				romanizationMap.set(itunesKey, {
+					main: mainWords,
+					backgrounds: backgroundWordGroups,
+				});
 			}
 
 			paramDiv.appendChild(lineP);
@@ -476,7 +522,7 @@ export default function exportTTMLText(
 		const transliterations = createEl("transliterations");
 		const transliteration = createEl("transliteration");
 
-		for (const [key, { main, bg }] of romanizationMap.entries()) {
+		for (const [key, { main, backgrounds }] of romanizationMap.entries()) {
 			const textEl = createEl("text");
 			textEl.setAttribute("for", key);
 
@@ -488,10 +534,12 @@ export default function exportTTMLText(
 				}
 			}
 
-			const hasBgRoman = bg.some(
-				(w) => w.romanWord && w.romanWord.trim().length > 0,
-			);
-			if (hasBgRoman) {
+			for (const bg of backgrounds) {
+				const hasBgRoman = bg.some(
+					(w) => w.romanWord && w.romanWord.trim().length > 0,
+				);
+				if (!hasBgRoman) continue;
+
 				const bgSpan = createEl("span");
 				bgSpan.setAttribute("ttm:role", "x-bg");
 

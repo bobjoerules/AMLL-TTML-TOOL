@@ -207,7 +207,8 @@
         "title": "Hızlı Düzeltme İstisnalarını Yönet",
         "description": "Hızlı düzeltmelerde görmezden gelinecek kelimeler ekleyin.",
         "placeholder": "Görmezden gelinecek kelime yazın"
-      }
+      },
+      "mainLyricIgnoreSync": "Ignore Main Vocals"
     },
     "experimentalFeatures": "Experimental Features",
     "loading": "面板载入中..."

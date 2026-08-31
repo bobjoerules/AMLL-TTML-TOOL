@@ -1,15 +1,19 @@
 import {
 	Add16Regular,
 	ArrowDownload16Regular,
+	ArrowSort16Regular,
 	CheckmarkCircle16Filled,
 	Circle16Regular,
+	Cloud24Regular,
 	Delete16Regular,
 	Dismiss16Regular,
 	Edit16Regular,
 	Globe16Regular,
 	Image16Regular,
+	List16Regular,
 	MusicNote2Filled,
 	Search16Regular,
+	Timer16Regular,
 } from "@fluentui/react-icons";
 import {
 	Badge,
@@ -30,7 +34,7 @@ import {
 	Tooltip,
 } from "@radix-ui/themes";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { audioCoverArtAtom } from "$/modules/audio/states";
 import { GeniusApi } from "$/modules/genius/api/client";
@@ -42,6 +46,7 @@ import {
 	importFromLRCLIBDialogAtom,
 	importLyricsPrefillAtom,
 	lyricallyImportLyricsDialogAtom,
+	openAccountSettingsAtom,
 	ttmlChecklistDialogAtom,
 } from "$/states/dialogs.ts";
 import { lyricLinesAtom, projectIdentityAtom } from "$/states/main.ts";
@@ -54,6 +59,7 @@ import {
 	type TTMLChecklistEntryInput,
 	updateChecklistEntry,
 } from "./logic";
+import { useChecklistCloudSync } from "./cloudSync";
 import { ttmlChecklistAtom } from "./states";
 
 type ProviderSearchResult = {
@@ -106,6 +112,16 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	const geniusApiKey = useAtomValue(geniusApiKeyAtom);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const searchFieldRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (showProviderSearch) {
+			const timer = setTimeout(() => {
+				searchFieldRef.current?.focus();
+			}, 60);
+			return () => clearTimeout(timer);
+		}
+	}, [showProviderSearch]);
 
 	const handleImportCurrent = () => {
 		const metaAlbum = lyricLines.metadata.find(
@@ -202,7 +218,16 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	const valid = song.trim().length > 0;
 
 	return (
-		<Card variant="surface" style={{ padding: "16px", marginBottom: "12px" }}>
+		<Card
+			variant="surface"
+			style={{
+				padding: "16px",
+				marginBottom: "14px",
+				borderRadius: "14px",
+				border: "1px solid var(--accent-a5)",
+				backgroundColor: "var(--gray-a2)",
+			}}
+		>
 			<Flex direction="column" gap="3" asChild>
 				<form
 					onSubmit={(event) => {
@@ -221,7 +246,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 						}
 					}}
 				>
-					<Flex justify="between" align="center">
+					<Flex justify="between" align="center" wrap="wrap" gap="2">
 						<Text size="2" weight="bold">
 							{initial
 								? t("ttmlChecklist.edit", "Edit checklist item")
@@ -257,40 +282,42 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 						</Flex>
 					</Flex>
 
-					{/* Inline Provider Search Panel */}
+					{/* Provider Search Sub-Panel */}
 					{showProviderSearch && (
 						<Box
 							p="3"
 							style={{
-								backgroundColor: "var(--indigo-a2)",
-								borderRadius: "var(--radius-3)",
-								border: "1px solid var(--indigo-a5)",
+								backgroundColor: "var(--gray-a3)",
+								borderRadius: "10px",
+								border: "1px solid var(--gray-a5)",
 							}}
 						>
-							<Flex gap="2" mb="2" align="center">
+							<Flex gap="2" align="center" mb="2" wrap="wrap">
 								<Select.Root
 									value={searchProvider}
 									onValueChange={(val) =>
-										setSearchProvider(
-											val as "genius" | "lyrically" | "lrclib",
-										)
+										setSearchProvider(val as "genius" | "lyrically" | "lrclib")
 									}
+									size="1"
 								>
-									<Select.Trigger style={{ width: "120px" }} />
+									<Select.Trigger />
 									<Select.Content>
 										<Select.Item value="genius">Genius</Select.Item>
-										<Select.Item value="lyrically">Lyrically</Select.Item>
 										<Select.Item value="lrclib">LRCLIB</Select.Item>
+										<Select.Item value="lyrically">Lyrically</Select.Item>
 									</Select.Content>
 								</Select.Root>
-								<Box style={{ flex: 1 }}>
+								<Box style={{ flex: 1, minWidth: "180px" }}>
 									<TextField.Root
+										ref={searchFieldRef}
+										size="1"
 										placeholder={t(
 											"ttmlChecklist.searchProviderPlaceholder",
-											"Search song or artist on Genius, Lyrically, LRCLIB...",
+											"Search song or artist...",
 										)}
 										value={providerQuery}
 										onChange={(e) => setProviderQuery(e.currentTarget.value)}
+										autoFocus={showProviderSearch}
 										onKeyDown={(e) => {
 											if (e.key === "Enter") {
 												e.preventDefault();
@@ -305,6 +332,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								</Box>
 								<Button
 									type="button"
+									size="1"
 									variant="solid"
 									color="indigo"
 									onClick={() => void handleSearchProvider()}
@@ -313,85 +341,90 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 									{isSearchingProvider ? (
 										<Spinner size="1" />
 									) : (
-										<Search16Regular />
+										t("ttmlChecklist.searchProviderBtn", "Search")
 									)}
-									{t("ttmlChecklist.searchProviderBtn", "Search")}
 								</Button>
 							</Flex>
 
-							{/* Search results */}
-							{providerResults.length > 0 && (
+							{/* Provider Search Results List */}
+							{isSearchingProvider && (
+								<Flex justify="center" p="3">
+									<Spinner size="2" />
+								</Flex>
+							)}
+
+							{!isSearchingProvider && providerResults.length > 0 && (
 								<ScrollArea
 									type="auto"
 									scrollbars="vertical"
-									style={{ maxHeight: "180px", marginTop: "8px" }}
+									style={{ maxHeight: "160px" }}
 								>
-									<Flex direction="column" gap="1">
+									<Flex direction="column" gap="1" pr="2">
 										{providerResults.map((hit) => (
-											<Card
-												key={`${hit.source}-${hit.id}`}
-												size="1"
+											<Flex
+												key={hit.id}
+												justify="between"
+												align="center"
+												p="2"
 												style={{
-													padding: "6px 10px",
+													borderRadius: "6px",
+													backgroundColor: "var(--gray-a2)",
 													cursor: "pointer",
 													transition: "background 0.1s",
 												}}
 												onClick={() => handleSelectSearchResult(hit)}
 											>
-												<Flex align="center" justify="between">
-													<Flex align="center" gap="2" style={{ minWidth: 0 }}>
-														{hit.cover ? (
-															<img
-																src={hit.cover}
-																alt="Cover"
-																style={{
-																	width: "32px",
-																	height: "32px",
-																	borderRadius: "4px",
-																	objectFit: "cover",
-																}}
-															/>
-														) : (
-															<Box
-																style={{
-																	width: "32px",
-																	height: "32px",
-																	borderRadius: "4px",
-																	backgroundColor: "var(--gray-a4)",
-																	display: "flex",
-																	alignItems: "center",
-																	justifyContent: "center",
-																}}
-															>
-																<MusicNote2Filled />
-															</Box>
-														)}
-														<Flex
-															direction="column"
-															style={{ minWidth: 0 }}
+												<Flex gap="2" align="center" style={{ minWidth: 0 }}>
+													{hit.cover ? (
+														<img
+															src={hit.cover}
+															alt={hit.name}
+															style={{
+																width: "28px",
+																height: "28px",
+																borderRadius: "4px",
+																objectFit: "cover",
+															}}
+														/>
+													) : (
+														<Box
+															style={{
+																width: "28px",
+																height: "28px",
+																borderRadius: "4px",
+																backgroundColor: "var(--gray-a4)",
+																display: "flex",
+																alignItems: "center",
+																justifyContent: "center",
+															}}
 														>
-															<Text size="2" weight="bold" truncate>
-																{hit.name}
-															</Text>
-															<Text size="1" color="gray" truncate>
-																{hit.artist} {hit.album ? `• ${hit.album}` : ""}
-															</Text>
-														</Flex>
+															<MusicNote2Filled
+																style={{ width: 14, height: 14 }}
+															/>
+														</Box>
+													)}
+													<Flex direction="column" style={{ minWidth: 0 }}>
+														<Text size="1" weight="bold" truncate>
+															{hit.name}
+														</Text>
+														<Text size="1" color="gray" truncate>
+															{hit.artist} {hit.album ? `• ${hit.album}` : ""}
+														</Text>
 													</Flex>
-													<Button size="1" variant="soft" color="indigo">
-														{t("common.select", "Select")}
-													</Button>
 												</Flex>
-											</Card>
+												<Badge size="1" variant="soft" color="indigo">
+													Select
+												</Badge>
+											</Flex>
 										))}
 									</Flex>
 								</ScrollArea>
 							)}
 
-							{hasSearchedProvider &&
-								!isSearchingProvider &&
+							{!isSearchingProvider &&
+								hasSearchedProvider &&
 								providerResults.length === 0 && (
-									<Text size="1" color="gray" style={{ display: "block", marginTop: "4px" }}>
+									<Text size="1" color="gray" align="center" as="div" py="2">
 										{t(
 											"ttmlChecklist.noProviderResults",
 											"No results found from lyric providers.",
@@ -401,28 +434,28 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 						</Box>
 					)}
 
+					{/* Manual Details Grid */}
 					<Flex gap="3" align="start">
-						{/* Cover Art Preview & Upload */}
-						<Flex direction="column" align="center" gap="1">
+						{/* Cover Art Preview / Upload Column */}
+						<Flex direction="column" gap="1" align="center">
 							<Box
 								style={{
-									width: "74px",
-									height: "74px",
-									borderRadius: "8px",
+									width: "80px",
+									height: "80px",
+									borderRadius: "10px",
 									overflow: "hidden",
-									backgroundColor: "var(--gray-a3)",
+									backgroundColor: "var(--gray-a4)",
 									border: "1px solid var(--gray-a5)",
 									display: "flex",
 									alignItems: "center",
 									justifyContent: "center",
 									position: "relative",
-									flexShrink: 0,
 								}}
 							>
 								{coverArt ? (
 									<img
 										src={coverArt}
-										alt="Cover"
+										alt={song || "Cover Art"}
 										style={{
 											width: "100%",
 											height: "100%",
@@ -432,32 +465,29 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								) : (
 									<MusicNote2Filled
 										style={{
-											width: "28px",
-											height: "28px",
+											width: "32px",
+											height: "32px",
 											color: "var(--gray-8)",
 										}}
 									/>
 								)}
 							</Box>
 							<input
-								ref={fileInputRef}
 								type="file"
 								accept="image/*"
+								ref={fileInputRef}
 								style={{ display: "none" }}
 								onChange={handleFileUpload}
 							/>
-							<Flex gap="1">
+							<Flex gap="1" mt="1">
 								<Button
 									type="button"
 									size="1"
-									variant="ghost"
-									color="gray"
+									variant="soft"
 									onClick={() => fileInputRef.current?.click()}
+									title={t("ttmlChecklist.uploadCover", "Upload Cover")}
 								>
 									<Image16Regular />
-									{coverArt
-										? t("common.replace", "Change")
-										: t("ttmlChecklist.uploadCover", "Upload")}
 								</Button>
 								{coverArt && (
 									<Button
@@ -466,6 +496,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 										variant="ghost"
 										color="red"
 										onClick={() => setCoverArt("")}
+										title={t("ttmlChecklist.removeCover", "Remove Cover")}
 									>
 										<Dismiss16Regular />
 									</Button>
@@ -473,44 +504,50 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 							</Flex>
 						</Flex>
 
-						{/* Form inputs */}
-						<Flex direction="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
-							<TextField.Root
-								placeholder={t("ttmlChecklist.songPlaceholder", "Song title *")}
-								value={song}
-								onChange={(event) => setSong(event.currentTarget.value)}
-								autoFocus
-							/>
+						{/* Fields Column */}
+						<Flex direction="column" gap="2" style={{ flex: 1 }}>
 							<Flex gap="2">
-								<Box style={{ flex: 1 }}>
+								<Box style={{ flex: 2 }}>
 									<TextField.Root
-										placeholder={t(
-											"ttmlChecklist.artistPlaceholder",
-											"Artist (optional)",
-										)}
-										value={artist}
-										onChange={(event) => setArtist(event.currentTarget.value)}
+										placeholder={t("ttmlChecklist.songPlaceholder", "Song title *")}
+										value={song}
+										onChange={(event) => setSong(event.currentTarget.value)}
+										autoFocus={!initial && !showProviderSearch}
+										required
+										size="2"
 									/>
 								</Box>
-								<Box style={{ flex: 1 }}>
+								<Box style={{ flex: 2 }}>
 									<TextField.Root
-										placeholder={t(
-											"ttmlChecklist.albumPlaceholder",
-											"Album (optional)",
-										)}
-										value={album}
-										onChange={(event) => setAlbum(event.currentTarget.value)}
+										placeholder={t("ttmlChecklist.artistPlaceholder", "Artist (optional)")}
+										value={artist}
+										onChange={(event) => setArtist(event.currentTarget.value)}
+										size="2"
 									/>
 								</Box>
 							</Flex>
-							<TextField.Root
-								placeholder={t(
-									"ttmlChecklist.coverArtPlaceholder",
-									"Cover art image URL (optional)",
-								)}
-								value={coverArt}
-								onChange={(event) => setCoverArt(event.currentTarget.value)}
-							/>
+
+							<Flex gap="2">
+								<Box style={{ flex: 1 }}>
+									<TextField.Root
+										placeholder={t("ttmlChecklist.albumPlaceholder", "Album (optional)")}
+										value={album}
+										onChange={(event) => setAlbum(event.currentTarget.value)}
+										size="2"
+									/>
+								</Box>
+								<Box style={{ flex: 1 }}>
+									<TextField.Root
+										placeholder={t(
+											"ttmlChecklist.coverArtPlaceholder",
+											"Cover art image URL (optional)",
+										)}
+										value={coverArt}
+										onChange={(event) => setCoverArt(event.currentTarget.value)}
+										size="2"
+									/>
+								</Box>
+							</Flex>
 						</Flex>
 					</Flex>
 
@@ -522,24 +559,19 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 						value={notes}
 						onChange={(event) => setNotes(event.currentTarget.value)}
 						rows={2}
+						size="2"
 					/>
 
-					<Flex justify="end" gap="2">
+					<Flex justify="end" gap="2" mt="1">
 						{onCancel && (
-							<Button
-								type="button"
-								variant="soft"
-								color="gray"
-								onClick={onCancel}
-							>
+							<Button type="button" variant="soft" color="gray" onClick={onCancel}>
 								{t("ttmlChecklist.cancel", "Cancel")}
 							</Button>
 						)}
-						<Button type="submit" disabled={!valid}>
-							{t(
-								initial ? "ttmlChecklist.save" : "ttmlChecklist.add",
-								initial ? "Save" : "Add to checklist",
-							)}
+						<Button type="submit" disabled={!valid} variant="solid">
+							{initial
+								? t("ttmlChecklist.save", "Save")
+								: t("ttmlChecklist.add", "Add to checklist")}
 						</Button>
 					</Flex>
 				</form>
@@ -548,21 +580,19 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	);
 };
 
-type ChecklistEntryCardProps = {
-	entry: TTMLChecklistEntry;
-	onComplete: (completed: boolean) => void;
-	onDelete: () => void;
-	onEdit: (input: TTMLChecklistEntryInput) => void;
-	onImportLyrics: (entry: TTMLChecklistEntry) => void;
-};
-
 const ChecklistEntryCard = ({
 	entry,
 	onComplete,
 	onDelete,
 	onEdit,
 	onImportLyrics,
-}: ChecklistEntryCardProps) => {
+}: {
+	entry: TTMLChecklistEntry;
+	onComplete: (completed: boolean) => void;
+	onDelete: () => void;
+	onEdit: (input: TTMLChecklistEntryInput) => void;
+	onImportLyrics: (entry: TTMLChecklistEntry) => void;
+}) => {
 	const { t } = useTranslation();
 	const [editing, setEditing] = useState(false);
 
@@ -584,11 +614,12 @@ const ChecklistEntryCard = ({
 			variant="surface"
 			style={{
 				width: "100%",
-				padding: "12px",
+				padding: "12px 14px",
 				border: "1px solid var(--gray-a4)",
-				borderRadius: "var(--radius-3)",
+				borderRadius: "12px",
 				backgroundColor: entry.completed ? "var(--gray-a2)" : "var(--color-surface)",
-				transition: "all 0.15s ease",
+				opacity: entry.completed ? 0.78 : 1,
+				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
 			}}
 		>
 			<Flex gap="3" align="center">
@@ -597,10 +628,11 @@ const ChecklistEntryCard = ({
 					style={{
 						width: "52px",
 						height: "52px",
-						borderRadius: "8px",
+						borderRadius: "10px",
 						overflow: "hidden",
 						backgroundColor: "var(--gray-a4)",
 						border: "1px solid var(--gray-a5)",
+						boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "center",
@@ -615,14 +647,14 @@ const ChecklistEntryCard = ({
 								width: "100%",
 								height: "100%",
 								objectFit: "cover",
-								filter: entry.completed ? "grayscale(80%) opacity(70%)" : "none",
+								filter: entry.completed ? "grayscale(70%) opacity(70%)" : "none",
 							}}
 						/>
 					) : (
 						<MusicNote2Filled
 							style={{
-								width: "22px",
-								height: "22px",
+								width: "24px",
+								height: "24px",
 								color: entry.completed ? "var(--gray-7)" : "var(--accent-9)",
 							}}
 						/>
@@ -647,12 +679,13 @@ const ChecklistEntryCard = ({
 								size="1"
 								color={
 									entry.source === "genius"
-										? "yellow"
+										? "amber"
 										: entry.source === "lrclib"
 											? "cyan"
 											: "indigo"
 								}
-								variant="soft"
+								variant="surface"
+								style={{ fontWeight: 600, letterSpacing: "0.4px" }}
 							>
 								{entry.source.toUpperCase()}
 							</Badge>
@@ -702,7 +735,7 @@ const ChecklistEntryCard = ({
 									color: "var(--gray-11)",
 									backgroundColor: "var(--gray-a3)",
 									padding: "6px 8px",
-									borderRadius: "4px",
+									borderRadius: "6px",
 								}}
 							>
 								{entry.notes}
@@ -725,7 +758,7 @@ const ChecklistEntryCard = ({
 							variant="soft"
 							color="indigo"
 							onClick={() => onImportLyrics(entry)}
-							style={{ height: "32px" }}
+							style={{ height: "32px", borderRadius: "8px", fontWeight: 500 }}
 						>
 							<ArrowDownload16Regular />
 							{t("ttmlChecklist.importLyrics", "Import Lyrics")}
@@ -741,10 +774,10 @@ const ChecklistEntryCard = ({
 					>
 						<Button
 							size="2"
-							variant={entry.completed ? "soft" : "solid"}
+							variant={entry.completed ? "surface" : "soft"}
 							color={entry.completed ? "gray" : "green"}
 							onClick={() => onComplete(!entry.completed)}
-							style={{ height: "32px" }}
+							style={{ height: "32px", borderRadius: "8px", fontWeight: 500 }}
 						>
 							{entry.completed ? (
 								<Circle16Regular />
@@ -758,20 +791,22 @@ const ChecklistEntryCard = ({
 					</Tooltip>
 					<Tooltip content={t("ttmlChecklist.edit", "Edit checklist item")}>
 						<IconButton
-							variant="soft"
+							variant="ghost"
 							color="gray"
 							onClick={() => setEditing(true)}
 							aria-label={t("ttmlChecklist.edit", "Edit checklist item")}
+							style={{ borderRadius: "8px" }}
 						>
 							<Edit16Regular />
 						</IconButton>
 					</Tooltip>
 					<Tooltip content={t("ttmlChecklist.delete", "Delete checklist item")}>
 						<IconButton
-							variant="soft"
+							variant="ghost"
 							color="red"
 							onClick={onDelete}
 							aria-label={t("ttmlChecklist.delete", "Delete checklist item")}
+							style={{ borderRadius: "8px" }}
 						>
 							<Delete16Regular />
 						</IconButton>
@@ -789,7 +824,12 @@ export const TTMLChecklistDialog = () => {
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [filterTab, setFilterTab] = useState<"all" | "pending" | "completed">("all");
 	const [searchQuery, setSearchQuery] = useState("");
+	const [sortBy, setSortBy] = useState<
+		"default" | "title-asc" | "title-desc" | "artist-asc" | "artist-desc"
+	>("default");
 
+	const { isLoggedIn, user } = useChecklistCloudSync();
+	const openAccountSettings = useSetAtom(openAccountSettingsAtom);
 	const setImportLyricsPrefill = useSetAtom(importLyricsPrefillAtom);
 	const setGeniusImportDialog = useSetAtom(geniusImportLyricsDialogAtom);
 	const setLyricallyImportDialog = useSetAtom(lyricallyImportLyricsDialogAtom);
@@ -806,7 +846,7 @@ export const TTMLChecklistDialog = () => {
 	const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
 	const filteredEntries = useMemo(() => {
-		let result = entries;
+		let result = [...entries];
 		if (filterTab === "pending") {
 			result = result.filter((e) => !e.completed);
 		} else if (filterTab === "completed") {
@@ -823,8 +863,27 @@ export const TTMLChecklistDialog = () => {
 					e.notes.toLowerCase().includes(q),
 			);
 		}
+
+		if (sortBy === "title-asc") {
+			result.sort((a, b) => a.song.localeCompare(b.song));
+		} else if (sortBy === "title-desc") {
+			result.sort((a, b) => b.song.localeCompare(a.song));
+		} else if (sortBy === "artist-asc") {
+			result.sort(
+				(a, b) =>
+					(a.artist || "zzz").localeCompare(b.artist || "zzz") ||
+					a.song.localeCompare(b.song),
+			);
+		} else if (sortBy === "artist-desc") {
+			result.sort(
+				(a, b) =>
+					(b.artist || "").localeCompare(a.artist || "") ||
+					a.song.localeCompare(b.song),
+			);
+		}
+
 		return result;
-	}, [entries, filterTab, searchQuery]);
+	}, [entries, filterTab, searchQuery, sortBy]);
 
 	const save = (nextEntries: TTMLChecklistEntry[]) => {
 		setStoredEntries(nextEntries);
@@ -834,15 +893,13 @@ export const TTMLChecklistDialog = () => {
 		const source = entry.source || "genius";
 		setImportLyricsPrefill({
 			source,
-			track: entry.sourceId
-				? {
-						id: entry.sourceId,
-						name: entry.song,
-						artist: entry.artist,
-						album: entry.album,
-						cover: entry.coverArt,
-					}
-				: undefined,
+			track: {
+				id: entry.sourceId,
+				name: entry.song,
+				artist: entry.artist,
+				album: entry.album,
+				cover: entry.coverArt,
+			},
 			query: entry.artist ? `${entry.artist} - ${entry.song}` : entry.song,
 		});
 
@@ -861,17 +918,85 @@ export const TTMLChecklistDialog = () => {
 
 	return (
 		<Dialog.Root open={open} onOpenChange={setOpen}>
-			<Dialog.Content style={{ maxWidth: 700, maxHeight: "88vh" }}>
-				<Dialog.Title>
-					<Flex justify="between" align="center">
-						<Text size="5" weight="bold">
-							{t("ttmlChecklist.title", "TTML Checklist")}
-						</Text>
+			<Dialog.Content
+				style={{
+					maxWidth: 780,
+					height: "640px",
+					maxHeight: "88vh",
+					borderRadius: "16px",
+					display: "flex",
+					flexDirection: "column",
+				}}
+			>
+				<Dialog.Title style={{ flexShrink: 0 }}>
+					<Flex justify="between" align="center" gap="3" wrap="wrap">
+						<Flex align="center" gap="3">
+							<Box
+								style={{
+									width: "36px",
+									height: "36px",
+									borderRadius: "50%",
+									backgroundColor: "var(--accent-a3)",
+									color: "var(--accent-9)",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									flexShrink: 0,
+								}}
+							>
+								<MusicNote2Filled style={{ width: 20, height: 20 }} />
+							</Box>
+							<Flex direction="column" gap="0">
+								<Flex align="center" gap="2">
+									<Text size="5" weight="bold">
+										{t("ttmlChecklist.title", "TTML Checklist")}
+									</Text>
+									{isLoggedIn ? (
+										<Tooltip
+											content={`${t("ttmlChecklist.cloudSynced", "Cloud Synced")}${user?.displayName ? ` (${user.displayName})` : ""}`}
+										>
+											<Box
+												style={{
+													display: "inline-flex",
+													alignItems: "center",
+													justifyContent: "center",
+													color: "var(--green-9)",
+													cursor: "default",
+												}}
+											>
+												<Cloud24Regular style={{ width: 20, height: 20 }} />
+											</Box>
+										</Tooltip>
+									) : (
+										<Tooltip
+											content={t("ttmlChecklist.signInToSync", "Sign in to sync")}
+										>
+											<IconButton
+												size="1"
+												variant="ghost"
+												color="gray"
+												onClick={() => openAccountSettings()}
+												aria-label={t("ttmlChecklist.signInToSync", "Sign in to sync")}
+											>
+												<Globe16Regular />
+											</IconButton>
+										</Tooltip>
+									)}
+								</Flex>
+								<Text size="1" color="gray">
+									{t(
+										"ttmlChecklist.description",
+										"Keep track of songs, cover art, and ideas you want to sync.",
+									)}
+								</Text>
+							</Flex>
+						</Flex>
 						<Button
 							size="2"
 							variant={showAddForm ? "soft" : "solid"}
 							color={showAddForm ? "gray" : "accent"}
 							onClick={() => setShowAddForm((prev) => !prev)}
+							style={{ borderRadius: "8px" }}
 						>
 							{showAddForm ? (
 								<Dismiss16Regular />
@@ -885,140 +1010,363 @@ export const TTMLChecklistDialog = () => {
 					</Flex>
 				</Dialog.Title>
 
-				<Dialog.Description size="2" color="gray" mb="3">
-					{t(
-						"ttmlChecklist.description",
-						"Keep track of songs, cover art, and ideas you want to sync.",
-					)}
-				</Dialog.Description>
-
-				{/* Progress summary banner */}
-				{totalCount > 0 && (
-					<Box
-						mb="3"
-						p="3"
-						style={{
-							backgroundColor: "var(--gray-a3)",
-							borderRadius: "var(--radius-3)",
-							border: "1px solid var(--gray-a4)",
-						}}
-					>
-						<Flex justify="between" align="center" mb="2">
-							<Flex gap="3" align="center">
-								<Text size="2" weight="medium">
-									{completedCount} / {totalCount} {t("ttmlChecklist.completed", "Completed")}
-								</Text>
-								<Badge size="1" color={progressPercent === 100 ? "green" : "blue"}>
-									{progressPercent}%
-								</Badge>
-							</Flex>
-							<Text size="1" color="gray">
-								{pendingCount} {t("ttmlChecklist.pending", "In Progress")}
-							</Text>
-						</Flex>
-						<Progress value={progressPercent} color="accent" size="2" />
+				{/* Body Content */}
+				{showAddForm ? (
+					/* New Entry Form View */
+					<Box style={{ flex: 1, minHeight: 0, overflowY: "auto", marginTop: "8px" }}>
+						<EntryForm
+							onCancel={() => setShowAddForm(false)}
+							onSubmit={(input) => {
+								save(addChecklistEntry(entries, input));
+								setShowAddForm(false);
+							}}
+						/>
 					</Box>
-				)}
-
-				{/* Collapsible New Entry Form */}
-				{showAddForm && (
-					<EntryForm
-						onCancel={() => setShowAddForm(false)}
-						onSubmit={(input) => {
-							save(addChecklistEntry(entries, input));
-							setShowAddForm(false);
-						}}
-					/>
-				)}
-
-				{/* Search & Filter Controls */}
-				<Flex gap="2" mb="3" align="center">
-					<Box style={{ flex: 1 }}>
-						<TextField.Root
-							placeholder={t(
-								"ttmlChecklist.searchPlaceholder",
-								"Search songs, artists, albums, or notes...",
-							)}
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.currentTarget.value)}
-						>
-							<TextField.Slot>
-								<Search16Regular />
-							</TextField.Slot>
-							{searchQuery && (
-								<TextField.Slot>
-									<IconButton
-										size="1"
-										variant="ghost"
-										color="gray"
-										onClick={() => setSearchQuery("")}
-									>
-										<Dismiss16Regular />
-									</IconButton>
-								</TextField.Slot>
-							)}
-						</TextField.Root>
-					</Box>
-
-					<SegmentedControl.Root
-						value={filterTab}
-						onValueChange={(val) =>
-							setFilterTab(val as "all" | "pending" | "completed")
-						}
-					>
-						<SegmentedControl.Item value="all">
-							{t("ttmlChecklist.all", "All")} ({totalCount})
-						</SegmentedControl.Item>
-						<SegmentedControl.Item value="pending">
-							{t("ttmlChecklist.pending", "In Progress")} ({pendingCount})
-						</SegmentedControl.Item>
-						<SegmentedControl.Item value="completed">
-							{t("ttmlChecklist.completed", "Completed")} ({completedCount})
-						</SegmentedControl.Item>
-					</SegmentedControl.Root>
-				</Flex>
-
-				{/* Items List */}
-				<ScrollArea
-					type="auto"
-					scrollbars="vertical"
-					style={{ maxHeight: "45vh" }}
-				>
-					<Flex direction="column" gap="2" pr="2">
-						{filteredEntries.length === 0 ? (
-							<Box py="6" style={{ textAlign: "center" }}>
-								<Text color="gray">
-									{searchQuery || filterTab !== "all"
-										? t(
-												"ttmlChecklist.noMatch",
-												"No checklist items match your search or filter.",
-											)
-										: t(
-												"ttmlChecklist.empty",
-												"No items yet. Add a song or import from the current project!",
-											)}
-								</Text>
-							</Box>
-						) : (
-							filteredEntries.map((entry) => (
-								<ChecklistEntryCard
-									key={entry.id}
-									entry={entry}
-									onComplete={(completed) =>
-										save(
-											setChecklistEntryCompleted(entries, entry.id, completed),
-										)
-									}
-									onDelete={() => save(deleteChecklistEntry(entries, entry.id))}
-									onEdit={(input) =>
-										save(updateChecklistEntry(entries, entry.id, input))
-									}
-									onImportLyrics={handleImportLyricsForEntry}
+				) : (
+					/* Checklist List View */
+					<Flex direction="column" style={{ flex: 1, minHeight: 0, marginTop: "8px" }}>
+						{/* Progress summary banner */}
+						{totalCount > 0 && (
+							<Card
+								variant="surface"
+								style={{
+									padding: "12px 16px",
+									marginBottom: "12px",
+									borderRadius: "12px",
+									border: "1px solid var(--gray-a4)",
+									background:
+										"linear-gradient(135deg, var(--gray-a3) 0%, var(--gray-a2) 100%)",
+									flexShrink: 0,
+								}}
+							>
+								<Flex justify="between" align="center" mb="2">
+									<Flex align="center" gap="2">
+										<Text size="2" weight="bold">
+											{completedCount} / {totalCount}{" "}
+											{t("ttmlChecklist.completed", "Completed")}
+										</Text>
+										<Badge
+											size="1"
+											color={progressPercent === 100 ? "green" : "indigo"}
+											variant="solid"
+											style={{ borderRadius: "10px", padding: "1px 8px" }}
+										>
+											{progressPercent}%
+										</Badge>
+									</Flex>
+									<Flex align="center" gap="3">
+										<Flex align="center" gap="1">
+											<span
+												style={{
+													width: 6,
+													height: 6,
+													borderRadius: "50%",
+													backgroundColor: "var(--amber-9)",
+												}}
+											/>
+											<Text size="1" color="gray">
+												{pendingCount} {t("ttmlChecklist.pending", "In Progress")}
+											</Text>
+										</Flex>
+										<Flex align="center" gap="1">
+											<span
+												style={{
+													width: 6,
+													height: 6,
+													borderRadius: "50%",
+													backgroundColor: "var(--green-9)",
+												}}
+											/>
+											<Text size="1" color="gray">
+												{completedCount} {t("ttmlChecklist.completed", "Done")}
+											</Text>
+										</Flex>
+									</Flex>
+								</Flex>
+								<Progress
+									value={progressPercent}
+									color={progressPercent === 100 ? "green" : "accent"}
+									size="2"
+									style={{ borderRadius: "6px" }}
 								/>
-							))
+							</Card>
 						)}
+
+						{/* Search, Sort & Filter Controls */}
+						<Flex gap="2" mb="3" align="center" wrap="wrap" style={{ flexShrink: 0 }}>
+							<Box style={{ flex: 1, minWidth: "160px" }}>
+								<TextField.Root
+									size="2"
+									placeholder={t(
+										"ttmlChecklist.searchPlaceholder",
+										"Search songs, artists, albums, or notes...",
+									)}
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.currentTarget.value)}
+									style={{ borderRadius: "8px" }}
+								>
+									<TextField.Slot>
+										<Search16Regular style={{ color: "var(--gray-9)" }} />
+									</TextField.Slot>
+									{searchQuery && (
+										<TextField.Slot>
+											<IconButton
+												size="1"
+												variant="ghost"
+												color="gray"
+												onClick={() => setSearchQuery("")}
+											>
+												<Dismiss16Regular />
+											</IconButton>
+										</TextField.Slot>
+									)}
+								</TextField.Root>
+							</Box>
+
+							{/* Sort Selector */}
+							<Select.Root
+								value={sortBy}
+								onValueChange={(val) => setSortBy(val as typeof sortBy)}
+								size="2"
+							>
+								<Select.Trigger
+									style={{ borderRadius: "8px" }}
+									placeholder={t("ttmlChecklist.sortBy", "Sort")}
+								/>
+								<Select.Content>
+									<Select.Item value="default">
+										{t("ttmlChecklist.sortDefault", "Recently Added")}
+									</Select.Item>
+									<Select.Item value="title-asc">
+										{t("ttmlChecklist.sortTitleAsc", "Title (A–Z)")}
+									</Select.Item>
+									<Select.Item value="title-desc">
+										{t("ttmlChecklist.sortTitleDesc", "Title (Z–A)")}
+									</Select.Item>
+									<Select.Item value="artist-asc">
+										{t("ttmlChecklist.sortArtistAsc", "Artist (A–Z)")}
+									</Select.Item>
+									<Select.Item value="artist-desc">
+										{t("ttmlChecklist.sortArtistDesc", "Artist (Z–A)")}
+									</Select.Item>
+								</Select.Content>
+							</Select.Root>
+
+							{/* Status Filter Tabs as Icons with Active Indicator Bar */}
+							<Flex
+								align="center"
+								style={{
+									position: "relative",
+									backgroundColor: "var(--gray-a3)",
+									borderRadius: "10px",
+									padding: "2px",
+									border: "1px solid var(--gray-a4)",
+									gap: "2px",
+								}}
+							>
+								<Tooltip content={`${t("ttmlChecklist.all", "All")} (${totalCount})`}>
+									<button
+										type="button"
+										onClick={() => setFilterTab("all")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "all" ? "var(--color-surface)" : "transparent",
+											color:
+												filterTab === "all" ? "var(--accent-11)" : "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "all"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<List16Regular style={{ width: 16, height: 16 }} />
+										{filterTab === "all" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--accent-9)",
+													boxShadow: "0 0 6px var(--accent-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
+
+								<Tooltip
+									content={`${t("ttmlChecklist.pending", "In Progress")} (${pendingCount})`}
+								>
+									<button
+										type="button"
+										onClick={() => setFilterTab("pending")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "pending"
+													? "var(--color-surface)"
+													: "transparent",
+											color:
+												filterTab === "pending"
+													? "var(--amber-11)"
+													: "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "pending"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<Timer16Regular style={{ width: 16, height: 16 }} />
+										{filterTab === "pending" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--amber-9)",
+													boxShadow: "0 0 6px var(--amber-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
+
+								<Tooltip
+									content={`${t("ttmlChecklist.completed", "Completed")} (${completedCount})`}
+								>
+									<button
+										type="button"
+										onClick={() => setFilterTab("completed")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "completed"
+													? "var(--color-surface)"
+													: "transparent",
+											color:
+												filterTab === "completed"
+													? "var(--green-11)"
+													: "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "completed"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<CheckmarkCircle16Filled style={{ width: 16, height: 16 }} />
+										{filterTab === "completed" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--green-9)",
+													boxShadow: "0 0 6px var(--green-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
+							</Flex>
+						</Flex>
+
+						{/* Items List */}
+						<ScrollArea
+							type="auto"
+							scrollbars="vertical"
+							style={{ flex: 1, minHeight: 0 }}
+						>
+							<Flex direction="column" gap="2" pr="2">
+								{filteredEntries.length === 0 ? (
+									<Card
+										variant="surface"
+										style={{
+											padding: "36px 20px",
+											textAlign: "center",
+											borderRadius: "12px",
+											border: "1px dashed var(--gray-a5)",
+											backgroundColor: "var(--gray-a2)",
+										}}
+									>
+										<Flex direction="column" align="center" gap="2">
+											<MusicNote2Filled
+												style={{ width: 32, height: 32, color: "var(--gray-7)" }}
+											/>
+											<Text size="2" color="gray">
+												{searchQuery || filterTab !== "all"
+													? t(
+															"ttmlChecklist.noMatch",
+															"No checklist items match your search or filter.",
+														)
+													: t(
+															"ttmlChecklist.empty",
+															"No items yet. Add a song or import from the current project!",
+														)}
+											</Text>
+										</Flex>
+									</Card>
+								) : (
+									filteredEntries.map((entry) => (
+										<ChecklistEntryCard
+											key={entry.id}
+											entry={entry}
+											onComplete={(completed) =>
+												save(
+													setChecklistEntryCompleted(
+														entries,
+														entry.id,
+														completed,
+													),
+												)
+											}
+											onDelete={() =>
+												save(deleteChecklistEntry(entries, entry.id))
+											}
+											onEdit={(input) =>
+												save(updateChecklistEntry(entries, entry.id, input))
+											}
+											onImportLyrics={handleImportLyricsForEntry}
+										/>
+									))
+								)}
+							</Flex>
+						</ScrollArea>
 					</Flex>
-				</ScrollArea>
+				)}
 			</Dialog.Content>
 		</Dialog.Root>
 	);

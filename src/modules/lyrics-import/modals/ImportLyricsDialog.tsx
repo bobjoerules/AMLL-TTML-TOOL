@@ -307,33 +307,94 @@ export const ImportLyricsDialog = ({
 				if (currentPrefill.track) {
 					const track = currentPrefill.track;
 					let hit: ImportTrack;
-					if (source === "genius" && track.id) {
+					if (source === "genius") {
 						hit = {
-							id: Number(track.id),
+							id: track.id ? Number(track.id) : 0,
 							name: track.name,
 							artist: track.artist,
 							album: track.album,
 							cover: track.cover,
-							fetchLyrics: () => GeniusApi.getLyrics(Number(track.id)),
+							fetchLyrics: async () => {
+								if (track.id) {
+									try {
+										const l = await GeniusApi.getLyrics(Number(track.id));
+										if (l) return l;
+									} catch (err) {
+										console.warn("Genius getLyrics failed, fallback to search:", err);
+									}
+								}
+								const searchRes = await GeniusApi.search(
+									`${track.artist} ${track.name}`,
+									geniusApiKey,
+								);
+								const first = searchRes.response.hits[0]?.result;
+								if (first) {
+									return GeniusApi.getLyrics(first.id);
+								}
+								const lyrRes = await LyricallyApi.search(
+									`${track.artist} ${track.name}`,
+								);
+								if (lyrRes[0]) {
+									const d = await LyricallyApi.getLyrics(
+										lyrRes[0].name,
+										lyrRes[0].artist,
+									);
+									return d.lyrics || "";
+								}
+								return "";
+							},
 							fetchSongwriters: async () => {
 								try {
-									const artists = (
-										await GeniusApi.getSongById(Number(track.id), geniusApiKey)
-									).response.song.writer_artists;
-									return artists.map((a: any) => a.name);
+									let songId = track.id ? Number(track.id) : null;
+									if (!songId) {
+										const searchRes = await GeniusApi.search(
+											`${track.artist} ${track.name}`,
+											geniusApiKey,
+										);
+										songId = searchRes.response.hits[0]?.result?.id || null;
+									}
+									if (songId) {
+										const artists = (
+											await GeniusApi.getSongById(songId, geniusApiKey)
+										).response.song.writer_artists;
+										return artists.map((a: any) => a.name);
+									}
+									return [track.artist];
 								} catch {
 									return [track.artist];
 								}
 							},
 						};
-					} else if (source === "lrclib" && track.id) {
+					} else if (source === "lrclib") {
 						hit = {
-							id: Number(track.id),
+							id: track.id ? Number(track.id) : 0,
 							name: track.name,
 							artist: track.artist,
 							album: track.album,
 							cover: track.cover,
 							lyrics: track.lyrics || "",
+							fetchLyrics: async () => {
+								if (track.id) {
+									try {
+										const res = await LrcLibApi.get(Number(track.id));
+										const l =
+											res.plainLyrics ||
+											(res.syncedLyrics ? lrcToPlainLyrics(res.syncedLyrics) : "");
+										if (l) return l;
+									} catch (err) {
+										console.warn("LRCLIB get failed, fallback to search:", err);
+									}
+								}
+								const searchRes = await LrcLibApi.search(
+									`${track.artist} ${track.name}`,
+								);
+								const first = searchRes[0];
+								return (
+									first?.plainLyrics ||
+									(first?.syncedLyrics ? lrcToPlainLyrics(first.syncedLyrics) : "") ||
+									""
+								);
+							},
 							source: "LRCLIB",
 						};
 					} else {
@@ -344,10 +405,25 @@ export const ImportLyricsDialog = ({
 							album: track.album,
 							cover: track.cover,
 							lyrics: track.lyrics || "",
-							fetchLyrics: () =>
-								LyricallyApi.getLyrics(track.name, track.artist).then(
-									(d) => d.lyrics || "",
-								),
+							fetchLyrics: async () => {
+								try {
+									const d = await LyricallyApi.getLyrics(track.name, track.artist);
+									if (d?.lyrics) return d.lyrics;
+								} catch (err) {
+									console.warn("Lyrically getLyrics failed, fallback to search:", err);
+								}
+								const searchRes = await LyricallyApi.search(
+									`${track.artist} ${track.name}`,
+								);
+								if (searchRes[0]) {
+									const d = await LyricallyApi.getLyrics(
+										searchRes[0].name,
+										searchRes[0].artist,
+									);
+									return d.lyrics || "";
+								}
+								return "";
+							},
 						};
 					}
 					void handleSelectSong(hit);

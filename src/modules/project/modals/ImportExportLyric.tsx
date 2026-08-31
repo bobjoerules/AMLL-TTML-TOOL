@@ -12,10 +12,13 @@ import { useSetAtom, useStore } from "jotai";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useFileOpener } from "$/hooks/useFileOpener.ts";
-import { validateSections } from "$/modules/lyric-editor/utils/section-system";
+import { notifySectionIssues } from "$/modules/lyric-editor/utils/notify-section-issues.tsx";
 import { pluginManager } from "$/modules/plugins/plugin-manager";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
-import { lyricTextNormalizationOptionsAtom } from "$/modules/settings/states";
+import {
+	allowConsecutiveBackgroundLinesAtom,
+	lyricTextNormalizationOptionsAtom,
+} from "$/modules/settings/states";
 import {
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
@@ -36,14 +39,6 @@ export const ImportExportLyric = () => {
 	const setLyricallyImportDialog = useSetAtom(lyricallyImportLyricsDialogAtom);
 	const { openFile } = useFileOpener();
 	const { t } = useTranslation();
-	const notifySectionIssues = () => {
-		const count = validateSections(store.get(lyricLinesAtom)).length;
-		if (count > 0) {
-			toast.info(
-				`Section review: ${count} non-blocking issue${count === 1 ? "" : "s"}.`,
-			);
-		}
-	};
 
 	const onImportLyric = (extension: string) => async () => {
 		const file = await openFileWithDialog({
@@ -85,7 +80,7 @@ export const ImportExportLyric = () => {
 	const onExportLyric =
 		(stringifier: (lines: LyricLine[]) => string, extension: string) =>
 		async () => {
-			notifySectionIssues();
+			notifySectionIssues(store.get(lyricLinesAtom));
 			const lyricState = normalizeLyricText(
 				store.get(lyricLinesAtom),
 				store.get(lyricTextNormalizationOptionsAtom),
@@ -138,13 +133,18 @@ export const ImportExportLyric = () => {
 
 	const onExportWithPlugin =
 		(pluginId: string, extension: string) => async () => {
-			notifySectionIssues();
+			notifySectionIssues(store.get(lyricLinesAtom));
 			const lyricState = store.get(lyricLinesAtom);
 
 			// Use TTML as the primary interchange format for plugins
 			const ttmlData = exportTTMLText(
 				lyricState,
 				store.get(lyricTextNormalizationOptionsAtom),
+				{
+					allowConsecutiveBackgroundLines: store.get(
+						allowConsecutiveBackgroundLinesAtom,
+					),
+				},
 			);
 
 			try {

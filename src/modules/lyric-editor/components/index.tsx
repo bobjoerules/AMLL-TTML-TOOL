@@ -30,7 +30,6 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-	authModalOpenAtom,
 	cloudFileManagerInitialTabAtom,
 	cloudFileManagerOpenAtom,
 	currentUserAtom,
@@ -43,6 +42,7 @@ import {
 } from "$/modules/onboarding/states";
 import {
 	importLyricsChooserDialogAtom,
+	openAccountSettingsAtom,
 	ttmlChecklistDialogAtom,
 } from "$/states/dialogs";
 import { useFileOpener } from "$/hooks/useFileOpener";
@@ -128,16 +128,16 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 	const user = useAtomValue(currentUserAtom);
 	const setFileManagerOpen = useSetAtom(cloudFileManagerOpenAtom);
 	const setFileManagerTab = useSetAtom(cloudFileManagerInitialTabAtom);
-	const setAuthModalOpen = useSetAtom(authModalOpenAtom);
+	const openAccountSettings = useSetAtom(openAccountSettingsAtom);
 
 	const openCloudLyrics = useCallback(() => {
 		if (user) {
 			setFileManagerTab("open");
 			setFileManagerOpen(true);
 		} else {
-			setAuthModalOpen(true);
+			openAccountSettings();
 		}
-	}, [user, setFileManagerOpen, setFileManagerTab, setAuthModalOpen]);
+	}, [user, setFileManagerOpen, setFileManagerTab, openAccountSettings]);
 
 	const openExistingTtml = useCallback(() => {
 		const input = document.createElement("input");

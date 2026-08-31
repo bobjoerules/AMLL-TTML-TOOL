@@ -28,6 +28,14 @@ export const spectrogramFftSizeAtom = atomWithStorage<number>(
 	"settings_spectrogramFftSize",
 	1024,
 );
+export const spectrogramOnlyShowSyncLineAtom = atomWithStorage(
+	"settings_spectrogramOnlyShowSyncLine",
+	false,
+);
+export const spectrogramFollowPlayheadAtom = atomWithStorage(
+	"settings_spectrogramFollowPlayhead",
+	false,
+);
 
 const icyBluePalette = {
 	id: "icy_blue",

@@ -1,6 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import type { FC } from "react";
-import { useContext, useEffect, useRef } from "react";
+import { type FC, memo, useContext, useEffect, useMemo, useRef } from "react";
 import { currentTimeAtom } from "$/modules/audio/states/index.ts";
 import {
 	type ProcessedLyricLine,
@@ -23,7 +22,16 @@ import {
 	getUpdatedLineForLinePan,
 	getUpdatedLineForWordPan,
 } from "$/modules/spectrogram/utils/timeline-mutations.ts";
-import { selectedLinesAtom, showUnselectedLinesAtom } from "$/states/main.ts";
+import {
+	spectrogramOnlyShowSyncLineAtom,
+	spectrogramScrollLeftAtom,
+} from "$/modules/spectrogram/states/index.ts";
+import {
+	selectedLinesAtom,
+	showUnselectedLinesAtom,
+	toolModeAtom,
+	ToolMode,
+} from "$/states/main.ts";
 import { globalStore } from "$/states/store.ts";
 import { LyricLineSegment } from "./LyricLineSegment";
 import styles from "./LyricTimelineOverlay.module.css";
@@ -36,7 +44,7 @@ interface LyricTimelineOverlayProps {
 
 const SNAP_THRESHOLD_PX = 7;
 
-export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = ({
+export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(({
 	clientWidth,
 	hiddenLineIds,
 }) => {
@@ -44,10 +52,14 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = ({
 	const [timelineDrag, setTimelineDrag] = useAtom(timelineDragAtom);
 	const setPreviewLine = useSetAtom(previewLineAtom);
 	const snapTargetsMs = useRef<number[]>([]);
-	const { scrollContainerRef, zoom, scrollLeft } =
-		useContext(SpectrogramContext);
+	const scrollLeft = useAtomValue(spectrogramScrollLeftAtom);
+	const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
 
 	const showUnselectedLines = useAtomValue(showUnselectedLinesAtom);
+	const spectrogramOnlyShowSyncLine = useAtomValue(
+		spectrogramOnlyShowSyncLineAtom,
+	);
+	const toolMode = useAtomValue(toolModeAtom);
 	const selectedLines = useAtomValue(selectedLinesAtom);
 	const previewActive = useAtomValue(timeShiftPreviewActiveAtom);
 	const previewOffset = useAtomValue(timeShiftPreviewOffsetAtom);
@@ -250,14 +262,39 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = ({
 		linesToRender = linesToRender.filter((line) => !hiddenLineIds.has(line.id));
 	}
 
-	if (!showUnselectedLines) {
+	if (
+		!showUnselectedLines ||
+		(spectrogramOnlyShowSyncLine &&
+			(toolMode === ToolMode.Sync || selectedLines.size > 0))
+	) {
 		linesToRender = linesToRender.filter((line) => selectedLines.has(line.id));
 	}
+
+	const lineStartTimes = useMemo(() => {
+		const set = new Set<number>();
+		for (const l of processedLines) {
+			if (l.startTime != null) set.add(l.startTime);
+		}
+		return set;
+	}, [processedLines]);
+
+	const lineEndTimes = useMemo(() => {
+		const set = new Set<number>();
+		for (const l of processedLines) {
+			if (l.endTime != null) set.add(l.endTime);
+		}
+		return set;
+	}, [processedLines]);
 
 	return (
 		<div className={styles.overlay}>
 			{linesToRender.map((line) => (
-				<LyricLineSegment key={line.id} line={line} allLines={processedLines} />
+				<LyricLineSegment
+					key={line.id}
+					line={line}
+					isTouchingStart={line.startTime != null && lineEndTimes.has(line.startTime)}
+					isTouchingEnd={line.endTime != null && lineStartTimes.has(line.endTime)}
+				/>
 			))}
 			{previewActive &&
 				previewOffset !== 0 &&
@@ -307,7 +344,6 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = ({
 						<LyricLineSegment
 							key={`ghost-${line.id}`}
 							line={line}
-							allLines={processedLines}
 							isGhost
 							offset={previewOffset}
 						/>
@@ -315,4 +351,4 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = ({
 				})}
 		</div>
 	);
-};
+});

@@ -207,7 +207,8 @@
         "title": "Manyage Quick Fix Excwusions",
         "description": "Add wowds to ignyowe in quick fixes.",
         "placeholder": "Entew wowd to ignyowe"
-      }
+      },
+      "mainLyricIgnoreSync": "Ignore Main Vocals"
     },
     "experimentalFeatures": "Experimental Features",
     "loading": "Loading panel..."

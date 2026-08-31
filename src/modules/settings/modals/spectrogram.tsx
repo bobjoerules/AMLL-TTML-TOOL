@@ -1,4 +1,5 @@
-import { Button, Flex, Select, Text, TextField } from "@radix-ui/themes";
+import { Box, Button, Card, Flex, Select, Switch, Text, TextField } from "@radix-ui/themes";
+import { CenterHorizontal24Regular, Target24Regular } from "@fluentui/react-icons";
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,6 +7,8 @@ import {
 	customPaletteStopsAtom,
 	predefinedPalettes,
 	selectedPaletteIdAtom,
+	spectrogramFollowPlayheadAtom,
+	spectrogramOnlyShowSyncLineAtom,
 } from "$/modules/spectrogram/states";
 
 export const SettingsSpectrogramTab = () => {
@@ -15,6 +18,12 @@ export const SettingsSpectrogramTab = () => {
 	);
 	const [globalStops, setGlobalStops] = useAtom(customPaletteStopsAtom);
 	const [localStops, setLocalStops] = useState(globalStops);
+	const [spectrogramOnlyShowSyncLine, setSpectrogramOnlyShowSyncLine] = useAtom(
+		spectrogramOnlyShowSyncLineAtom,
+	);
+	const [followPlayhead, setFollowPlayhead] = useAtom(
+		spectrogramFollowPlayheadAtom,
+	);
 
 	useEffect(() => {
 		setLocalStops(globalStops);
@@ -68,6 +77,66 @@ export const SettingsSpectrogramTab = () => {
 
 	return (
 		<Flex direction="column" gap="4">
+			<Card>
+				<Text as="label">
+					<Flex gap="3" align="center">
+						<Target24Regular />
+						<Box flexGrow="1">
+							<Flex gap="2" align="center" justify="between">
+								<Flex direction="column" gap="1">
+									<Text>
+										{t(
+											"settings.spectrogram.onlyShowSyncLine",
+											"Only Show Active Sync Line on Spectrogram",
+										)}
+									</Text>
+									<Text size="1" color="gray">
+										{t(
+											"settings.spectrogram.onlyShowSyncLineDesc",
+											"When syncing lyrics, hides other lines and only displays the line currently being synchronized on the spectrogram overlay.",
+										)}
+									</Text>
+								</Flex>
+								<Switch
+									checked={spectrogramOnlyShowSyncLine}
+									onCheckedChange={setSpectrogramOnlyShowSyncLine}
+								/>
+							</Flex>
+						</Box>
+					</Flex>
+				</Text>
+			</Card>
+
+			<Card>
+				<Text as="label">
+					<Flex gap="3" align="center">
+						<CenterHorizontal24Regular />
+						<Box flexGrow="1">
+							<Flex gap="2" align="center" justify="between">
+								<Flex direction="column" gap="1">
+									<Text>
+										{t(
+											"settings.spectrogram.followPlayhead",
+											"Center and Follow Playhead",
+										)}
+									</Text>
+									<Text size="1" color="gray">
+										{t(
+											"settings.spectrogram.followPlayheadDesc",
+											"Automatically scrolls the spectrogram during playback and seeking to keep the playhead in the middle of the frame.",
+										)}
+									</Text>
+								</Flex>
+								<Switch
+									checked={followPlayhead}
+									onCheckedChange={setFollowPlayhead}
+								/>
+							</Flex>
+						</Box>
+					</Flex>
+				</Text>
+			</Card>
+
 			<Text as="label">
 				<Flex direction="column" gap="2" align="start">
 					<Text>{t("settings.spectrogram.palette", "Color Palette")}</Text>

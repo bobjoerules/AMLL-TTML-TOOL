@@ -3,8 +3,8 @@ import { Avatar, Button, DropdownMenu, Flex, Text } from "@radix-ui/themes";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { openAccountSettingsAtom } from "$/states/dialogs";
 import {
-	authModalOpenAtom,
 	cloudFileManagerInitialTabAtom,
 	cloudFileManagerOpenAtom,
 	currentUserAtom,
@@ -13,12 +13,12 @@ import {
 export const CloudStatusButton: FC = () => {
 	const { t } = useTranslation();
 	const user = useAtomValue(currentUserAtom);
-	const setAuthModalOpen = useSetAtom(authModalOpenAtom);
+	const openAccountSettings = useSetAtom(openAccountSettingsAtom);
 	const setCloudFileManagerOpen = useSetAtom(cloudFileManagerOpenAtom);
 	const setCloudFileManagerTab = useSetAtom(cloudFileManagerInitialTabAtom);
 
 	const handleOpenAuth = () => {
-		setAuthModalOpen(true);
+		openAccountSettings();
 	};
 
 	const handleOpenCloudManager = (tab: "save" | "open") => {

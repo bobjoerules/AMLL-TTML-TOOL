@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from "jotai";
-import React, { type FC, useCallback, useContext } from "react";
+import React, { type FC, memo, useCallback, useContext } from "react";
 import classNames from "classnames";
 import type { ProcessedLyricLine } from "$/modules/segmentation/utils/segment-processing.ts";
 import {
@@ -7,7 +7,9 @@ import {
 	selectedWordIdAtom,
 	timelineDragAtom,
 } from "$/modules/spectrogram/states/dnd.ts";
+import { spectrogramScrollLeftAtom } from "$/modules/spectrogram/states/index.ts";
 import { editingTimeFieldAtom, selectedLinesAtom } from "$/states/main.ts";
+import { globalStore } from "$/states/store.ts";
 import { DividerSegment } from "./DividerSegment.tsx";
 import { GapSegment } from "./GapSegment.tsx";
 import styles from "./LyricLineSegment.module.css";
@@ -16,21 +18,23 @@ import { SpectrogramContext } from "./SpectrogramContext.ts";
 
 interface LyricLineSegmentProps {
 	line: ProcessedLyricLine;
-	allLines: ProcessedLyricLine[];
+	isTouchingStart?: boolean;
+	isTouchingEnd?: boolean;
 	isGhost?: boolean;
 	offset?: number;
 }
 
-export const LyricLineSegment: FC<LyricLineSegmentProps> = ({
+export const LyricLineSegment: FC<LyricLineSegmentProps> = memo(({
 	line,
-	allLines,
+	isTouchingStart = false,
+	isTouchingEnd = false,
 	isGhost = false,
 	offset = 0,
 }) => {
 	const previewLine = useAtomValue(previewLineAtom);
 	const setSelectedLines = useSetAtom(selectedLinesAtom);
 	const setSelectedWordId = useSetAtom(selectedWordIdAtom);
-	const { scrollContainerRef, zoom, scrollLeft } = useContext(SpectrogramContext);
+	const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
 	const editingTimeField = useAtomValue(editingTimeFieldAtom);
 	const setTimelineDrag = useSetAtom(timelineDragAtom);
 
@@ -57,6 +61,7 @@ export const LyricLineSegment: FC<LyricLineSegmentProps> = ({
 
 			const rect = scrollContainer.getBoundingClientRect();
 			const mouseXPx = e.clientX - rect.left;
+			const scrollLeft = globalStore.get(spectrogramScrollLeftAtom);
 			const initialMouseTimeMS = ((scrollLeft + mouseXPx) / zoom) * 1000;
 
 			setTimelineDrag({
@@ -76,7 +81,6 @@ export const LyricLineSegment: FC<LyricLineSegmentProps> = ({
 			setSelectedLines,
 			setSelectedWordId,
 			scrollContainerRef,
-			scrollLeft,
 			zoom,
 			setTimelineDrag,
 		],
@@ -101,13 +105,6 @@ export const LyricLineSegment: FC<LyricLineSegmentProps> = ({
 	if (width < 1) {
 		return null;
 	}
-
-	const isTouchingStart = allLines.some(
-		(l) => l.id !== line.id && l.endTime === startTime,
-	);
-	const isTouchingEnd = allLines.some(
-		(l) => l.id !== line.id && l.startTime === endTime,
-	);
 
 	const dynamicStyles = {
 		left: `${left}px`,
@@ -165,4 +162,4 @@ export const LyricLineSegment: FC<LyricLineSegmentProps> = ({
 			))}
 		</div>
 	);
-};
+});

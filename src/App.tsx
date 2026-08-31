@@ -93,6 +93,7 @@ import {
 	customFontNameAtom,
 	appLayoutOrderAtom,
 	vRibbonPositionAtom,
+	allowConsecutiveBackgroundLinesAtom,
 	lyricTextNormalizationOptionsAtom,
 	legacyDarkThemeAtom,
 } from "$/modules/settings/states/index.ts";
@@ -169,6 +170,11 @@ const AppErrorPage = ({
 								const ttmlText = exportTTMLText(
 									store.get(lyricLinesAtom),
 									store.get(lyricTextNormalizationOptionsAtom),
+									{
+										allowConsecutiveBackgroundLines: store.get(
+											allowConsecutiveBackgroundLinesAtom,
+										),
+									},
 								);
 								const b = new Blob([ttmlText], { type: "text/plain" });
 								saveFile(b, "lyric.ttml").catch(logError);

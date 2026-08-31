@@ -5,6 +5,10 @@ export const importLyricsChooserDialogAtom = atom(false);
 export const metadataEditorDialogAtom = atom(false);
 export const settingsDialogAtom = atom(false);
 export const settingsTabAtom = atom("common");
+export const openAccountSettingsAtom = atom(null, (_get, set) => {
+	set(settingsTabAtom, "account");
+	set(settingsDialogAtom, true);
+});
 export const latencyTestDialogAtom = atom(false);
 export const ttmlChecklistDialogAtom = atom(false);
 export const submitToAMLLDBDialogAtom = atom(false);

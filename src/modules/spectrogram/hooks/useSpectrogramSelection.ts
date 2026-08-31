@@ -1,15 +1,19 @@
-import { useAtom, useAtomValue } from "jotai";
+import { atom, useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { spectrogramSelectionAtom, spectrogramHoverTimeMsAtom } from "../states";
 import { editingTimeFieldAtom } from "$/states/main.ts";
 
+const zeroAtom = atom(0);
+
 export function useSpectrogramSelection(scrollLeft: number, zoom: number) {
 	const [selection, setSelection] = useAtom(spectrogramSelectionAtom);
-	const hoverTimeMs = useAtomValue(spectrogramHoverTimeMsAtom);
 	const editingTimeField = useAtomValue(editingTimeFieldAtom);
 
 	const [isSelecting, setIsSelecting] = useState(false);
 	const [selectionStartMs, setSelectionStartMs] = useState<number | null>(null);
+	const hoverTimeMs = useAtomValue(
+		isSelecting ? spectrogramHoverTimeMsAtom : zeroAtom,
+	);
 
 	const handleSelectionMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
 		// Only allow Shift+Drag to select, or just drag if not editing anything?

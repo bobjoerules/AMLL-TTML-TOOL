@@ -1,8 +1,9 @@
 import { useAtom } from "jotai";
 import { useAtomValue } from "jotai/index";
 import { useCallback, useEffect, useRef } from "react";
-import { audioBufferAtom } from "$/modules/audio/states";
+import { audioBufferAtom, currentTimeAtom } from "$/modules/audio/states";
 import {
+	spectrogramFollowPlayheadAtom,
 	spectrogramScrollLeftAtom,
 	spectrogramZoomAtom,
 } from "$/modules/spectrogram/states";
@@ -14,6 +15,8 @@ export function useSpectrogramInteraction(
 	containerWidth: number,
 ) {
 	const audioBuffer = useAtomValue(audioBufferAtom);
+	const currentTime = useAtomValue(currentTimeAtom);
+	const followPlayhead = useAtomValue(spectrogramFollowPlayheadAtom);
 	const [zoom, setZoom] = useAtom(spectrogramZoomAtom);
 	const [scrollLeft, setScrollLeft] = useAtom(spectrogramScrollLeftAtom);
 
@@ -132,12 +135,38 @@ export function useSpectrogramInteraction(
 	}, [zoom]);
 
 	useEffect(() => {
-		if (audioBuffer) {
+		if (!audioBuffer) {
 			setScrollLeft(0);
 			targetScrollLeftRef.current = 0;
 			currentScrollLeftRef.current = 0;
 		}
 	}, [audioBuffer, setScrollLeft]);
+
+	useEffect(() => {
+		if (!followPlayhead || !audioBuffer || containerWidth <= 0) return;
+
+		const playheadX = (currentTime / 1000) * zoom;
+		const totalWidth = audioBuffer.duration * zoom;
+		const maxScrollLeft = Math.max(0, totalWidth - containerWidth);
+		const targetScroll = playheadX - containerWidth / 2;
+		const clampedScroll = Math.max(0, Math.min(targetScroll, maxScrollLeft));
+
+		if (animationFrameRef.current !== null) {
+			cancelAnimationFrame(animationFrameRef.current);
+			animationFrameRef.current = null;
+		}
+
+		currentScrollLeftRef.current = clampedScroll;
+		targetScrollLeftRef.current = clampedScroll;
+		setScrollLeft(clampedScroll);
+	}, [
+		currentTime,
+		followPlayhead,
+		zoom,
+		containerWidth,
+		audioBuffer,
+		setScrollLeft,
+	]);
 
 	return {
 		zoom,

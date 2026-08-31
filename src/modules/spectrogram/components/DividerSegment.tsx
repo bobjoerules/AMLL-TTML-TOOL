@@ -1,11 +1,12 @@
-import { useAtomValue, useSetAtom } from "jotai";
-import { type FC, useCallback, useContext } from "react";
+import { useSetAtom } from "jotai";
+import React, { type FC, memo, useCallback, useContext } from "react";
 import { processedLyricLinesAtom } from "$/modules/segmentation/utils/segment-processing.ts";
 import { timelineDragAtom } from "$/modules/spectrogram/states/dnd";
 import {
 	commitUpdatedLine,
 	getUpdatedLineForDivider,
 } from "$/modules/spectrogram/utils/timeline-mutations";
+import { globalStore } from "$/states/store.ts";
 import styles from "./DividerSegment.module.css";
 import { SpectrogramContext } from "./SpectrogramContext";
 
@@ -23,7 +24,7 @@ const HALF_DIVIDER_WIDTH_PX = DIVIDER_WIDTH_PX / 2;
 const NUDGE_MS = 10;
 const SHIFT_NUDGE_MS = 50;
 
-export const DividerSegment: FC<DividerSegmentProps> = ({
+export const DividerSegment: FC<DividerSegmentProps> = memo(({
 	lineId,
 	segmentIndex,
 	timeMs,
@@ -32,7 +33,6 @@ export const DividerSegment: FC<DividerSegmentProps> = ({
 	isTouching,
 }) => {
 	const setTimelineDrag = useSetAtom(timelineDragAtom);
-	const processedLines = useAtomValue(processedLyricLinesAtom);
 	const { zoom } = useContext(SpectrogramContext);
 
 	const startDrag = useCallback(
@@ -61,6 +61,7 @@ export const DividerSegment: FC<DividerSegmentProps> = ({
 			event.preventDefault();
 			event.stopPropagation();
 
+			const processedLines = globalStore.get(processedLyricLinesAtom);
 			const lineBeingDragged = processedLines.find((l) => l.id === lineId);
 			if (!lineBeingDragged) {
 				return;
@@ -82,7 +83,7 @@ export const DividerSegment: FC<DividerSegmentProps> = ({
 
 			commitUpdatedLine(updatedLine);
 		},
-		[lineId, processedLines, segmentIndex, timeMs, zoom],
+		[lineId, segmentIndex, timeMs, zoom],
 	);
 
 	if (timeMs == null || timeMs < 0 || lineStartTime == null) return null;
@@ -123,4 +124,4 @@ export const DividerSegment: FC<DividerSegmentProps> = ({
 			onKeyDown={handleKeyDown}
 		/>
 	);
-};
+});

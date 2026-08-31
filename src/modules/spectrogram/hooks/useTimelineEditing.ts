@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom } from "jotai";
+import { atom, useAtomValue, useSetAtom } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -15,6 +15,8 @@ import {
 } from "$/states/main.ts";
 import { spectrogramHoverTimeMsAtom } from "../states";
 
+const zeroAtom = atom(0);
+
 export function useTimelineEditing(scrollLeft: number, zoom: number) {
 	const editingTimeField = useAtomValue(editingTimeFieldAtom);
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
@@ -22,7 +24,12 @@ export function useTimelineEditing(scrollLeft: number, zoom: number) {
 	const rawLyricLines = useAtomValue(lyricLinesAtom);
 	const setRequestFocus = useSetAtom(requestFocusAtom);
 	const [pendingStartTime, setPendingStartTime] = useState<number | null>(null);
-	const hoverTimeMs = useAtomValue(spectrogramHoverTimeMsAtom);
+
+	const isEditingEndTimeWithPending =
+		editingTimeField?.field === "endTime" && pendingStartTime !== null;
+	const hoverTimeMs = useAtomValue(
+		isEditingEndTimeWithPending ? spectrogramHoverTimeMsAtom : zeroAtom,
+	);
 
 	const referenceStartTime = useMemo(() => {
 		if (pendingStartTime !== null) return pendingStartTime;

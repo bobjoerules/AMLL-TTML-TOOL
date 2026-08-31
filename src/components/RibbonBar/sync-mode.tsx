@@ -11,6 +11,7 @@
 
 import {
 	Box,
+	Button,
 	Checkbox,
 	Flex,
 	Grid,
@@ -20,10 +21,11 @@ import {
 	Text,
 	TextField,
 } from "@radix-ui/themes";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useStore } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
-import { type FC, forwardRef } from "react";
+import { type FC, forwardRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import { useCurrentLocation } from "$/modules/lyric-editor/utils/lyric-states.ts";
 import { useSyncProgress } from "$/hooks/useSyncProgress";
 import {
@@ -51,16 +53,21 @@ import {
 	keySyncNextAtom,
 	keySyncStartAtom,
 } from "$/states/keybindings.ts";
+import { spectrogramOnlyShowSyncLineAtom } from "$/modules/spectrogram/states/index.ts";
+import { currentTimeAtom } from "$/modules/audio/states/index.ts";
 
 import {
 	bgLyricIgnoreSyncAtom,
+	copiedTimingsAtom,
 	lyricLinesAtom,
+	mainLyricIgnoreSyncAtom,
+	selectedLinesAtom,
+	selectedWordsAtom,
 	showPreviewPanelAtom,
 } from "$/states/main.ts";
 import { KeyBinding } from "../KeyBinding/index.tsx";
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
-import { LineTimingTools } from "./edit-mode.tsx";
 import {
 	Clock24Regular,
 	List24Regular,
@@ -78,7 +85,240 @@ import {
 	Keyboard16Regular,
 	DocumentSync16Regular,
 	Flow16Regular,
+	Copy16Regular,
+	ClipboardPaste16Regular,
+	FastForward16Regular,
 } from "@fluentui/react-icons";
+
+export const LineTimingTools = () => {
+	const { t } = useTranslation();
+	const store = useStore();
+	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
+	const [copiedTimings, setCopiedTimings] = useAtom(copiedTimingsAtom);
+
+	const handleCopyTimings = useCallback(() => {
+		const lyricLines = store.get(lyricLinesAtom).lyricLines;
+		const selLines = store.get(selectedLinesAtom);
+		const selWords = store.get(selectedWordsAtom);
+
+		if (selLines.size === 0 && selWords.size === 0) {
+			toast.info(
+				t(
+					"ribbonBar.timingTools.selectLineFirst",
+					"Please select a line first",
+				),
+			);
+			return;
+		}
+
+		if (selLines.size > 0) {
+			const targetLine = lyricLines.find((l) => selLines.has(l.id));
+			if (targetLine) {
+				const duration = Math.max(0, targetLine.endTime - targetLine.startTime);
+				const wordTimings = (targetLine.words || []).map((w) => ({
+					relativeStart: Math.max(0, w.startTime - targetLine.startTime),
+					duration: Math.max(0, w.endTime - w.startTime),
+					emptyBeat: w.emptyBeat,
+				}));
+				setCopiedTimings({
+					startTime: targetLine.startTime,
+					endTime: targetLine.endTime,
+					duration,
+					wordTimings,
+				});
+				toast.success(
+					t(
+						"ribbonBar.timingTools.copiedLineTimings",
+						"Copied line timings to clipboard",
+					),
+				);
+				return;
+			}
+		}
+
+		if (selWords.size > 0) {
+			for (const line of lyricLines) {
+				for (const word of line.words) {
+					if (selWords.has(word.id)) {
+						const duration = Math.max(0, word.endTime - word.startTime);
+						setCopiedTimings({
+							startTime: word.startTime,
+							endTime: word.endTime,
+							duration,
+						});
+						toast.success(
+							t(
+								"ribbonBar.timingTools.copiedWordTimings",
+								"Copied word timing",
+							),
+						);
+						return;
+					}
+				}
+			}
+		}
+	}, [setCopiedTimings, store, t]);
+
+	const handlePasteTimings = useCallback(() => {
+		if (!copiedTimings) {
+			toast.info(
+				t(
+					"ribbonBar.timingTools.noTimingsCopied",
+					"No timings copied yet",
+				),
+			);
+			return;
+		}
+		const selLines = store.get(selectedLinesAtom);
+		const selWords = store.get(selectedWordsAtom);
+
+		if (selLines.size === 0 && selWords.size === 0) {
+			toast.info(
+				t(
+					"ribbonBar.timingTools.selectTargetFirst",
+					"Please select a target line or word",
+				),
+			);
+			return;
+		}
+
+		editLyricLines((state) => {
+			for (const line of state.lyricLines) {
+				if (selLines.has(line.id)) {
+					line.startTime = copiedTimings.startTime;
+					line.endTime = copiedTimings.endTime;
+					if (
+						copiedTimings.wordTimings &&
+						line.words &&
+						line.words.length > 0
+					) {
+						const count = Math.min(
+							line.words.length,
+							copiedTimings.wordTimings.length,
+						);
+						for (let i = 0; i < count; i++) {
+							const wt = copiedTimings.wordTimings[i];
+							line.words[i].startTime = line.startTime + wt.relativeStart;
+							line.words[i].endTime = line.words[i].startTime + wt.duration;
+							if (wt.emptyBeat !== undefined) {
+								line.words[i].emptyBeat = wt.emptyBeat;
+							}
+						}
+					}
+				}
+				if (selWords.size > 0) {
+					for (const word of line.words) {
+						if (selWords.has(word.id)) {
+							word.startTime = copiedTimings.startTime;
+							word.endTime = copiedTimings.endTime;
+						}
+					}
+				}
+			}
+			return state;
+		});
+		toast.success(
+			t(
+				"ribbonBar.timingTools.pastedTimings",
+				"Pasted timings to selection",
+			),
+		);
+	}, [copiedTimings, editLyricLines, store, t]);
+
+	const handleSnapToPlayhead = useCallback(() => {
+		const currentTime = Math.round(store.get(currentTimeAtom));
+		const selLines = store.get(selectedLinesAtom);
+		const selWords = store.get(selectedWordsAtom);
+
+		if (selLines.size === 0 && selWords.size === 0) {
+			toast.info(
+				t(
+					"ribbonBar.timingTools.selectLineFirst",
+					"Please select a line first",
+				),
+			);
+			return;
+		}
+
+		editLyricLines((state) => {
+			for (const line of state.lyricLines) {
+				if (selLines.has(line.id)) {
+					const origStart = line.startTime;
+					const duration =
+						line.endTime > origStart ? line.endTime - origStart : 3000;
+					const offset = currentTime - origStart;
+					line.startTime = currentTime;
+					line.endTime = currentTime + duration;
+					if (line.words) {
+						for (const word of line.words) {
+							if (word.startTime > 0 || word.endTime > 0) {
+								const wDur = Math.max(0, word.endTime - word.startTime);
+								word.startTime = Math.max(0, word.startTime + offset);
+								word.endTime = word.startTime + wDur;
+							}
+						}
+					}
+				}
+				if (selWords.size > 0) {
+					for (const word of line.words) {
+						if (selWords.has(word.id)) {
+							const wDur =
+								word.endTime > word.startTime
+									? word.endTime - word.startTime
+									: 500;
+							word.startTime = currentTime;
+							word.endTime = currentTime + wDur;
+						}
+					}
+				}
+			}
+			return state;
+		});
+		toast.success(
+			t(
+				"ribbonBar.timingTools.snappedToPlayhead",
+				"Snapped timing to playhead",
+			),
+		);
+	}, [editLyricLines, store, t]);
+
+	return (
+		<Flex gap="1" align="center" wrap="wrap">
+			<Button
+				size="1"
+				variant="soft"
+				onClick={handleCopyTimings}
+				title={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}
+			>
+				<Copy16Regular />
+				<span>{t("ribbonBar.timingTools.copy", "Copy Timings")}</span>
+			</Button>
+			<Button
+				size="1"
+				variant="soft"
+				onClick={handlePasteTimings}
+				disabled={!copiedTimings}
+				title={t("ribbonBar.timingTools.pasteTimings", "Paste Timings")}
+			>
+				<ClipboardPaste16Regular />
+				<span>{t("ribbonBar.timingTools.paste", "Paste Timings")}</span>
+			</Button>
+			<Button
+				size="1"
+				variant="soft"
+				color="indigo"
+				onClick={handleSnapToPlayhead}
+				title={t(
+					"ribbonBar.timingTools.snapPlayhead",
+					"Snap Timings to Playhead",
+				)}
+			>
+				<FastForward16Regular />
+				<span>{t("ribbonBar.timingTools.snap", "Snap to Playhead")}</span>
+			</Button>
+		</Flex>
+	);
+};
 
 const EmptyBeatField = () => {
 	const [currentEmptyBeat, setCurrentEmptyBeat] = useAtom(currentEmptyBeatAtom);
@@ -125,8 +365,8 @@ export const RibbonSyncProgressWidget = () => {
 			<Box
 				style={{
 					position: "relative",
-					width: 32,
-					height: 32,
+					width: 36,
+					height: 36,
 					display: "flex",
 					alignItems: "center",
 					justifyContent: "center",
@@ -134,33 +374,33 @@ export const RibbonSyncProgressWidget = () => {
 				}}
 			>
 				<svg
-					width="32"
-					height="32"
+					width="36"
+					height="36"
 					viewBox="0 0 36 36"
 					style={{ transform: "rotate(-90deg)", display: "block" }}
 				>
 					<circle
 						cx="18"
 						cy="18"
-						r="14"
+						r="15"
 						stroke="var(--gray-a4)"
-						strokeWidth="3.5"
+						strokeWidth="3"
 						fill="none"
 					/>
 					<circle
 						cx="18"
 						cy="18"
-						r="14"
+						r="15"
 						stroke={
 							syncProgress.linePercent === 100
 								? "var(--green-9)"
 								: "var(--accent-9)"
 						}
-						strokeWidth="3.5"
+						strokeWidth="3"
 						fill="none"
-						strokeDasharray={2 * Math.PI * 14}
+						strokeDasharray={2 * Math.PI * 15}
 						strokeDashoffset={
-							2 * Math.PI * 14 * (1 - syncProgress.linePercent / 100)
+							2 * Math.PI * 15 * (1 - syncProgress.linePercent / 100)
 						}
 						strokeLinecap="round"
 						style={{ transition: "stroke-dashoffset 0.3s ease" }}
@@ -171,7 +411,9 @@ export const RibbonSyncProgressWidget = () => {
 					weight="bold"
 					style={{
 						position: "absolute",
-						fontSize: "10px",
+						fontSize: syncProgress.linePercent === 100 ? "8.5px" : "10px",
+						letterSpacing: syncProgress.linePercent === 100 ? "-0.5px" : undefined,
+						lineHeight: 1,
 						color:
 							syncProgress.linePercent === 100
 								? "var(--green-11)"
@@ -226,12 +468,18 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	const [bgLyricIgnoreSync, setBgLyricIgnoreSync] = useAtom(
 		bgLyricIgnoreSyncAtom,
 	);
+	const [mainLyricIgnoreSync, setMainLyricIgnoreSync] = useAtom(
+		mainLyricIgnoreSyncAtom,
+	);
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
 	const showWordRomanizationInput = useAtomValue(showWordRomanizationInputAtom);
 	const [syncTimeOffset, setSyncTimeOffset] = useAtom(syncTimeOffsetAtom);
 	const [syncCommitOffset, setSyncCommitOffset] = useAtom(syncCommitOffsetAtom);
 	const [syncLevelMode, setSyncLevelMode] = useAtom(syncLevelModeAtom);
 	const [instantFade, setInstantFade] = useAtom(instantHighlightFadeAtom);
+	const [spectrogramOnlyShowSyncLine, setSpectrogramOnlyShowSyncLine] = useAtom(
+		spectrogramOnlyShowSyncLineAtom,
+	);
 	const { t } = useTranslation();
 	const [showAdvanced, setShowAdvanced] = useAtom(advancedRibbonControlsAtom);
 
@@ -247,6 +495,19 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 				}
 			>
 				<RibbonSyncProgressWidget />
+			</RibbonSection>
+			<RibbonSection
+				isSidebar={isSidebar}
+				label={
+					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
+						<Timer16Regular style={{ width: "12px", height: "12px" }} />
+						<span>{t("ribbonBar.timingTools.title", "Timing Tools")}</span>
+					</Flex>
+				}
+			>
+				<Flex direction="column" align="center" gap="2">
+					<LineTimingTools />
+				</Flex>
 			</RibbonSection>
 			{showAdvanced && (
 				<RibbonSection
@@ -408,6 +669,27 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 							<Flex gap="1" align="center">
 								<Flow16Regular />
+								{t("ribbonBar.syncMode.mainLyricIgnoreSync", "主歌词忽略打轴")}
+							</Flex>
+						</Text>
+						<Checkbox
+							checked={mainLyricIgnoreSync}
+							onCheckedChange={(v) => {
+								const next = !!v;
+								setMainLyricIgnoreSync(next);
+								editLyricLines((state) => {
+									for (const line of state.lyricLines) {
+										if (!line.isBG) {
+											line.ignoreSync = next;
+										}
+									}
+									return state;
+								});
+							}}
+						/>
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							<Flex gap="1" align="center">
+								<Flow16Regular />
 								{t("ribbonBar.syncMode.bgLyricIgnoreSync", "背景歌词忽略打轴")}
 							</Flex>
 						</Text>
@@ -522,6 +804,20 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							onCheckedChange={(v) => setHighlightErrors(!!v)}
 						/>
 
+						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+							<Flex gap="1" align="center">
+								<DocumentSync16Regular />
+								{t(
+									"ribbonBar.syncMode.onlyShowSyncLineOnSpectrogram",
+									"仅在频谱图显示当前打轴行",
+								)}
+							</Flex>
+						</Text>
+						<Checkbox
+							checked={spectrogramOnlyShowSyncLine}
+							onCheckedChange={(v) => setSpectrogramOnlyShowSyncLine(!!v)}
+						/>
+
 						{showWordRomanizationInput && (
 							<>
 								<Text
@@ -581,22 +877,6 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					</Grid>
 				</Flex>
 			</RibbonSection>
-
-			{showAdvanced && (
-				<RibbonSection
-					isSidebar={isSidebar}
-					label={
-						<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
-							<Timer16Regular style={{ width: "12px", height: "12px" }} />
-							<span>{t("ribbonBar.editMode.tools", "Timing Tools")}</span>
-						</Flex>
-					}
-				>
-					<Flex direction="column" align="center" gap="2">
-						<LineTimingTools />
-					</Flex>
-				</RibbonSection>
-			)}
 
 			<RibbonSection
 				label={

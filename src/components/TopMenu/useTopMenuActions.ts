@@ -9,11 +9,11 @@ import { useFileOpener } from "$/hooks/useFileOpener.ts";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import { currentTimeAtom } from "$/modules/audio/states/index.ts";
 import {
-	authModalOpenAtom,
 	cloudFileManagerInitialTabAtom,
 	cloudFileManagerOpenAtom,
 } from "$/modules/cloud/states";
 import { getSynchronizableUnits } from "$/modules/lyric-editor/utils/lyric-states.ts";
+import { notifySectionIssues } from "$/modules/lyric-editor/utils/notify-section-issues.tsx";
 import { validateSections } from "$/modules/lyric-editor/utils/section-system.ts";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
 import {
@@ -27,7 +27,10 @@ import {
 } from "$/modules/segmentation/utils/segmentation";
 import { SYLLABIFICATION_ENGINES } from "$/modules/segmentation/utils/syllabification-engines";
 import { useSegmentationConfig } from "$/modules/segmentation/utils/useSegmentationConfig";
-import { lyricTextNormalizationOptionsAtom } from "$/modules/settings/states";
+import {
+	allowConsecutiveBackgroundLinesAtom,
+	lyricTextNormalizationOptionsAtom,
+} from "$/modules/settings/states";
 import {
 	advancedSegmentationDialogAtom,
 	autoSegmentDialogAtom,
@@ -36,6 +39,7 @@ import {
 	latencyTestDialogAtom,
 	learnedSplitsDialogAtom,
 	metadataEditorDialogAtom,
+	openAccountSettingsAtom,
 	settingsDialogAtom,
 	submitToAMLLDBDialogAtom,
 	timeShiftDialogAtom,
@@ -214,15 +218,15 @@ export const useTopMenuActions = () => {
 		const action = async () => {
 			try {
 				const currentLyrics = store.get(lyricLinesAtom);
-				const sectionIssues = validateSections(currentLyrics);
-				if (sectionIssues.length > 0) {
-					toast.info(
-						`Section review: ${sectionIssues.length} non-blocking issue${sectionIssues.length === 1 ? "" : "s"}.`,
-					);
-				}
+				notifySectionIssues(currentLyrics);
 				const ttmlText = exportTTMLText(
 					currentLyrics,
 					store.get(lyricTextNormalizationOptionsAtom),
+					{
+						allowConsecutiveBackgroundLines: store.get(
+							allowConsecutiveBackgroundLinesAtom,
+						),
+					},
 				);
 				const savedName = await saveFile(ttmlText, {
 					suggestedName: saveFileName,
@@ -297,15 +301,15 @@ export const useTopMenuActions = () => {
 		const action = async () => {
 			try {
 				const lyric = store.get(lyricLinesAtom);
-				const sectionIssues = validateSections(lyric);
-				if (sectionIssues.length > 0) {
-					toast.info(
-						`Section review: ${sectionIssues.length} non-blocking issue${sectionIssues.length === 1 ? "" : "s"}.`,
-					);
-				}
+				notifySectionIssues(lyric);
 				const ttml = exportTTMLText(
 					lyric,
 					store.get(lyricTextNormalizationOptionsAtom),
+					{
+						allowConsecutiveBackgroundLines: store.get(
+							allowConsecutiveBackgroundLinesAtom,
+						),
+					},
 				);
 				await navigator.clipboard.writeText(ttml);
 			} catch (e) {
@@ -607,7 +611,7 @@ export const useTopMenuActions = () => {
 	}, [setLearnedSplitsDialog]);
 	const setCloudFileManagerOpen = useSetAtom(cloudFileManagerOpenAtom);
 	const setCloudFileManagerTab = useSetAtom(cloudFileManagerInitialTabAtom);
-	const setAuthModalOpen = useSetAtom(authModalOpenAtom);
+	const openAccountSettings = useSetAtom(openAccountSettingsAtom);
 
 	const onOpenFromCloud = useCallback(() => {
 		setCloudFileManagerTab("open");
@@ -620,8 +624,8 @@ export const useTopMenuActions = () => {
 	}, [setCloudFileManagerTab, setCloudFileManagerOpen]);
 
 	const onOpenCloudAuth = useCallback(() => {
-		setAuthModalOpen(true);
-	}, [setAuthModalOpen]);
+		openAccountSettings();
+	}, [openAccountSettings]);
 
 	return {
 		newFileKey,

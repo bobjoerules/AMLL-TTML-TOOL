@@ -1,5 +1,4 @@
 import { LatencyTestDialog } from "$/modules/audio/modals/LatencyTest.tsx";
-import { AuthModal } from "$/modules/cloud/modals/AuthModal.tsx";
 import { CloudFileManagerModal } from "$/modules/cloud/modals/CloudFileManagerModal.tsx";
 import { GeniusImportLyricsDialog } from "$/modules/genius/modals/GeniusImportLyricsDialog.tsx";
 import { GeniusSearchDialog } from "$/modules/genius/modals/GeniusSearchDialog.tsx";
@@ -59,7 +58,6 @@ export const Dialogs = () => {
 			<TimeShiftDialog />
 			<TimeStretchDialog />
 			<GrammarCheckDialog />
-			<AuthModal />
 			<CloudFileManagerModal />
 
 			<GeniusSearchDialog />
