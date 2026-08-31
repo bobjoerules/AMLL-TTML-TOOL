@@ -1,3 +1,9 @@
 name = "amll-ttml-tool"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-01"
+
+[build]
+command = "pnpm run build || npm run build"
+
+[vars]
+NODE_VERSION = "20.18.0"
