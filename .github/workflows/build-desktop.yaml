@@ -121,6 +121,7 @@ jobs:
           releaseName: AMLL TTML Tool ${{ github.ref_name }}
           releaseBody: Desktop release ${{ github.ref_name }}. Release notes are finalized after all platform assets are uploaded.
           includeUpdaterJson: true
+          retryAttempts: 3
           args: ${{ matrix.args }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
