@@ -4,12 +4,13 @@ import { useSetImmerAtom } from "jotai-immer";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { lyricLinesAtom, selectedLinesAtom } from "$/states/main";
-
 import { type LyricLine, newLyricLine, newLyricWord } from "$/types/ttml";
 import {
 	globalEnableInsertAtom,
 	timingCopyPlacementAtom,
 } from "./lyric-line-view-states";
+import { mergeLyricLines } from "../utils/merge-lines";
+import { MergeLineDialog } from "../modals/MergeLineDialog";
 
 const selectedLinesSizeAtom = atom((get) => get(selectedLinesAtom).size);
 
@@ -23,9 +24,12 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
 
 	const lineObjs = useAtomValue(lyricLinesAtom);
+	const totalLines = lineObjs.lyricLines.length;
 	const selectedLineObjs = lineObjs.lyricLines.filter((line) =>
 		selectedLines.has(line.id),
 	);
+	const [mergePickerOpen, setMergePickerOpen] = React.useState(false);
+
 	const [Bgchecked, setBgChecked] = React.useState(() => {
 		if (selectedLineObjs.every((line) => line.isBG)) return true;
 		else if (selectedLineObjs.every((line) => !line.isBG)) return false;
@@ -36,18 +40,6 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 		else if (selectedLineObjs.every((line) => !line.isDuet)) return false;
 		else return "indeterminate" as const;
 	});
-	const combineEnabled = (() => {
-		if (selectedLinesSize < 2) return null;
-		const lineIdxs = lineObjs.lyricLines
-			.filter((line) => selectedLines.has(line.id))
-			.map((line) => lineObjs.lyricLines.indexOf(line));
-		const minIdx = Math.min(...lineIdxs);
-		const maxIdx = Math.max(...lineIdxs);
-		if (lineIdxs.length !== maxIdx - minIdx + 1) return null;
-		for (let i = minIdx; i <= maxIdx; i++)
-			if (!lineIdxs.includes(i)) return null;
-		return { minIdx, maxIdx };
-	})();
 
 	function bgOnCheck(checked: boolean) {
 		setBgChecked(checked);
@@ -58,6 +50,7 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 			for (const line of lines) line.isBG = checked;
 		});
 	}
+
 	function duetOnCheck(checked: boolean) {
 		setDuetChecked(checked);
 		editLyricLines((state) => {
@@ -68,8 +61,77 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 		});
 	}
 
+	function mergeWithPrevious() {
+		if (lineIndex <= 0) return;
+		editLyricLines((state) => {
+			const prevLine = state.lyricLines[lineIndex - 1];
+			const curLine = state.lyricLines[lineIndex];
+			if (!prevLine || !curLine) return;
+			const merged = mergeLyricLines([prevLine, curLine]);
+			if (!merged) return;
+			state.lyricLines.splice(lineIndex, 1);
+			state.lyricLines.splice(lineIndex - 1, 1, merged);
+		});
+	}
+
+	function mergeWithNext() {
+		if (lineIndex >= totalLines - 1) return;
+		editLyricLines((state) => {
+			const curLine = state.lyricLines[lineIndex];
+			const nextLine = state.lyricLines[lineIndex + 1];
+			if (!curLine || !nextLine) return;
+			const merged = mergeLyricLines([curLine, nextLine]);
+			if (!merged) return;
+			state.lyricLines.splice(lineIndex + 1, 1);
+			state.lyricLines.splice(lineIndex, 1, merged);
+		});
+	}
+
+	function mergeSelectedLines() {
+		if (selectedLinesSize < 2) return;
+		editLyricLines((state) => {
+			const selectedIdxs = state.lyricLines
+				.map((line, idx) => (selectedLines.has(line.id) ? idx : -1))
+				.filter((idx) => idx !== -1)
+				.sort((a, b) => a - b);
+			if (selectedIdxs.length < 2) return;
+
+			const targetLines = selectedIdxs.map((idx) => state.lyricLines[idx]);
+			const merged = mergeLyricLines(targetLines);
+			if (!merged) return;
+
+			const firstIdx = selectedIdxs[0];
+			for (let i = selectedIdxs.length - 1; i >= 1; i--) {
+				state.lyricLines.splice(selectedIdxs[i], 1);
+			}
+			state.lyricLines.splice(firstIdx, 1, merged);
+		});
+	}
+
+	function copyLines() {
+		editLyricLines((state) => {
+			state.lyricLines = state.lyricLines.flatMap((line) => {
+				if (!selectedLines.has(line.id)) return line;
+				const newLine: LyricLine = {
+					...line,
+					id: newLyricLine().id,
+					words: line.words.map((word) => ({
+						...word,
+						id: newLyricWord().id,
+					})),
+				};
+				return [line, newLine];
+			});
+		});
+	}
+
 	return (
 		<>
+			<MergeLineDialog
+				sourceLineIndex={lineIndex}
+				open={mergePickerOpen}
+				onOpenChange={setMergePickerOpen}
+			/>
 			<ContextMenu.CheckboxItem checked={Bgchecked} onCheckedChange={bgOnCheck}>
 				{t("contextMenu.bgLyric", "背景歌词")}
 			</ContextMenu.CheckboxItem>
@@ -113,9 +175,41 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 			>
 				{t("contextMenu.duplicateTo", "Duplicate to...")}
 			</ContextMenu.Item>
-			<ContextMenu.Item onSelect={combineLines} disabled={!combineEnabled}>
-				{t("contextMenu.combineLine", "合并行")}
-			</ContextMenu.Item>
+			<ContextMenu.Separator />
+			<ContextMenu.Sub>
+				<ContextMenu.SubTrigger>
+					{t("contextMenu.mergeLine", "Merge line")}
+				</ContextMenu.SubTrigger>
+				<ContextMenu.SubContent>
+					<ContextMenu.Item
+						onSelect={mergeWithPrevious}
+						disabled={lineIndex <= 0}
+					>
+						{t("contextMenu.mergeWithPrevious", "Merge with previous line")}
+					</ContextMenu.Item>
+					<ContextMenu.Item
+						onSelect={mergeWithNext}
+						disabled={lineIndex >= totalLines - 1}
+					>
+						{t("contextMenu.mergeWithNext", "Merge with next line")}
+					</ContextMenu.Item>
+					<ContextMenu.Item
+						onSelect={() => setMergePickerOpen(true)}
+						disabled={totalLines <= 1}
+					>
+						{t("contextMenu.mergeWithAnother", "Merge with another line…")}
+					</ContextMenu.Item>
+					{selectedLinesSize >= 2 && (
+						<ContextMenu.Item onSelect={mergeSelectedLines}>
+							{t("contextMenu.mergeSelectedLines", {
+								count: selectedLinesSize,
+								defaultValue: `Merge ${selectedLinesSize} selected lines`,
+							})}
+						</ContextMenu.Item>
+					)}
+				</ContextMenu.SubContent>
+			</ContextMenu.Sub>
+			<ContextMenu.Separator />
 			<ContextMenu.Item
 				onSelect={() => {
 					editLyricLines((state) => {
@@ -136,35 +230,4 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 			</ContextMenu.Item>
 		</>
 	);
-
-	function combineLines() {
-		editLyricLines((state) => {
-			if (!combineEnabled) return;
-			const { minIdx, maxIdx } = combineEnabled;
-			const target = state.lyricLines[minIdx];
-			for (let i = minIdx + 1; i <= maxIdx; i++) {
-				const line = state.lyricLines[i];
-				target.words.push(...line.words);
-			}
-			target.endTime = state.lyricLines[maxIdx].endTime;
-			state.lyricLines.splice(minIdx + 1, maxIdx - minIdx);
-		});
-	}
-
-	function copyLines() {
-		editLyricLines((state) => {
-			state.lyricLines = state.lyricLines.flatMap((line) => {
-				if (!selectedLines.has(line.id)) return line;
-				const newLine: LyricLine = {
-					...line,
-					id: newLyricLine().id,
-					words: line.words.map((word) => ({
-						...word,
-						id: newLyricWord().id,
-					})),
-				};
-				return [line, newLine];
-			});
-		});
-	}
 };
