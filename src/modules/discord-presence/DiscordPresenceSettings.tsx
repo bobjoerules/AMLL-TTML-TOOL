@@ -21,6 +21,7 @@ import {
 	PlugConnected24Regular,
 	VideoBackgroundEffect24Regular,
 	Link24Regular,
+	Headphones24Regular,
 } from "@fluentui/react-icons";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useRef, useState } from "react";
@@ -771,6 +772,27 @@ export function DiscordPresenceSettings() {
 										<Select.Item value="rich">Rich</Select.Item>
 										<Select.Item value="minimal">Minimal</Select.Item>
 										<Select.Item value="none">None</Select.Item>
+									</Select.Content>
+								</Select.Root>
+							}
+						/>
+
+						<SettingRow
+							icon={<Headphones24Regular />}
+							title={t("settings.discord.activityType", "Activity Type")}
+							description={t(
+								"settings.discord.activityTypeDesc",
+								"Choose whether your status displays as 'Listening to' or 'Playing'.",
+							)}
+							control={
+								<Select.Root
+									value={activityType}
+									onValueChange={(val: any) => setActivityType(val)}
+								>
+									<Select.Trigger style={{ width: "120px" }} />
+									<Select.Content>
+										<Select.Item value="listening">Listening</Select.Item>
+										<Select.Item value="playing">Playing</Select.Item>
 									</Select.Content>
 								</Select.Root>
 							}

@@ -120,7 +120,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
-          <span>AMLL TTML Tool v1.0.5 Released</span>
+          <span>AMLL TTML Tool v1.0.6 Released</span>
         </div>
 
         <h1 className="hero-title">

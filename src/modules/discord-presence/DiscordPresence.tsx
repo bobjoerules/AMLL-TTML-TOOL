@@ -165,7 +165,7 @@ export function DiscordPresence() {
 				selectedWordIds,
 			});
 			const payload = inactive
-				? createInactiveDiscordActivity(generalActivityText)
+				? createInactiveDiscordActivity(generalActivityText, activityType)
 				: formatNativeDiscordActivity(snapshot, context, {
 						detailsTemplate: safeDetailsTemplate,
 						stateTemplate: safeStateTemplate,

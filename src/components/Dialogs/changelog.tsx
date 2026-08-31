@@ -56,6 +56,20 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.0.6
+							</Heading>
+							<Flex direction="column" gap="3">
+								<Text size="2">
+									<strong>Discord Activity Type Selection:</strong> Added an Activity Type selector (Listening / Playing) in Discord Rich Presence settings, allowing you to customize whether Discord displays "Listening to AMLL TTML Tool" or "Playing AMLL TTML Tool".
+								</Text>
+								<Text size="2">
+									<strong>Discord Activity Type Consistency:</strong> Ensured the selected activity type is consistently applied across all editor states, including idle inactivity mode and when starting with no file loaded.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.5
 							</Heading>
 							<Flex direction="column" gap="3">

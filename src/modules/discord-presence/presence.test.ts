@@ -429,6 +429,51 @@ describe("Discord presence", () => {
 			playing: false,
 			showRepositoryButton: false,
 		});
+		expect(
+			createInactiveDiscordActivity("Idle in editor", "listening"),
+		).toEqual({
+			details: "AMLL TTML Tool",
+			state: "Idle in editor",
+			playing: false,
+			activityType: "listening",
+			showRepositoryButton: false,
+		});
+	});
+
+	it("preserves activityType when no file is open", () => {
+		const snapshot = createPresenceSnapshot({
+			lyrics: { metadata: [], lyricLines: [] },
+			fileName: "lyric.ttml",
+			mode: ToolMode.Edit,
+			selectedLineIds: new Set(),
+			playing: false,
+			positionSeconds: 0,
+			durationSeconds: 0,
+			playbackRate: 1,
+		});
+		const context = createDiscordTemplateContext({
+			snapshot,
+			lyrics: { metadata: [], lyricLines: [] },
+			fileName: "lyric.ttml",
+			selectedLineIds: new Set(),
+			selectedWordIds: new Set(),
+		});
+		const payload = formatNativeDiscordActivity(snapshot, context, {
+			detailsTemplate: "",
+			stateTemplate: "",
+			showPlaybackTimeline: false,
+			showProjectElapsed: false,
+			showRepositoryButton: false,
+			activityType: "listening",
+			showStatusBadge: false,
+			privacyPreset: "rich",
+			largeImageMode: "icon",
+			smallImageMode: "none",
+			generalActivityText: "Working on lyrics",
+			showProgressTimer: false,
+		});
+
+		expect(payload.activityType).toBe("listening");
 	});
 
 	it("uses the active tab image and label when image mode is set to 'tab'", () => {

@@ -389,6 +389,7 @@ export function formatNativeDiscordActivity(
 		if (options.privacyPreset === "none") {
 			return {
 				playing: false,
+				...(options.activityType ? { activityType: options.activityType } : {}),
 				showRepositoryButton: false,
 			};
 		}
@@ -399,6 +400,7 @@ export function formatNativeDiscordActivity(
 					? options.generalActivityText
 					: "No file open",
 			playing: false,
+			...(options.activityType ? { activityType: options.activityType } : {}),
 			showRepositoryButton: options.showRepositoryButton,
 			largeImage: DISCORD_LOGO_URL,
 			largeImageText: "AMLL TTML Tool",
@@ -509,11 +511,13 @@ export function formatNativeDiscordActivity(
 
 export function createInactiveDiscordActivity(
 	generalActivityText = "Working on lyrics",
+	activityType?: string,
 ): DiscordActivityPayload {
 	return {
 		details: "AMLL TTML Tool",
 		state: generalActivityText,
 		playing: false,
+		...(activityType ? { activityType } : {}),
 		showRepositoryButton: false,
 	};
 }
