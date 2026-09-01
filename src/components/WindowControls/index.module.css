@@ -2,13 +2,15 @@
 	display: flex;
 	align-items: center;
 	width: 100%;
+	height: 38px;
+	min-height: 38px;
 	font-size: 12px;
 	user-select: none;
 	background-color: var(--titlebar-bg, var(--color-panel-translucent));
 	backdrop-filter: blur(var(--custom-backdrop-blur, 16px)) saturate(160%);
 	border-bottom: 1px solid var(--gray-a4);
 	min-width: 0;
-	overflow: hidden;
+	box-sizing: border-box;
 }
 
 .spacer {
@@ -18,24 +20,28 @@
 }
 
 .leftSlot {
+	display: flex;
+	align-items: center;
 	flex-grow: 0;
 	flex-shrink: 1;
 	min-width: 0;
 	overflow: hidden;
-	margin: auto 0;
 }
 
 .centerSlot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	flex-grow: 0;
 	flex-shrink: 0;
-	margin: auto 0;
 	z-index: 1;
 }
 
 .rightSlot {
+	display: flex;
+	align-items: center;
 	flex-grow: 0;
 	flex-shrink: 0;
-	margin: auto 0;
 }
 
 .leftSide,
@@ -44,8 +50,8 @@
 	width: 0;
 	flex: 1 1 0%;
 	min-width: 0;
+	height: 100%;
 	align-items: center;
-	overflow: hidden;
 }
 
 .rightSide {

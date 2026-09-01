@@ -1,11 +1,13 @@
 .controls {
 	display: flex;
 	width: 86px;
-	min-height: 44px;
+	height: 38px;
+	min-height: 38px;
 	align-items: center;
 	justify-content: center;
 	visibility: hidden;
 	pointer-events: none;
+	flex-shrink: 0;
 
 	& > * {
 		display: flex;
