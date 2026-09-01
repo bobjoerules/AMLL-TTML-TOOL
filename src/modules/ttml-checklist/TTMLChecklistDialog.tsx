@@ -961,10 +961,12 @@ export const TTMLChecklistDialog = () => {
 		}
 		try {
 			setIsExporting(true);
-			await exportChecklistToFile(entries);
-			toast.success(
-				t("ttmlChecklist.exportSuccess", "Checklist exported successfully!"),
-			);
+			const saved = await exportChecklistToFile(entries);
+			if (saved !== null) {
+				toast.success(
+					t("ttmlChecklist.exportSuccess", "Checklist exported successfully!"),
+				);
+			}
 		} catch (e) {
 			console.error("Failed to export checklist:", e);
 			toast.error(
@@ -1016,6 +1018,12 @@ export const TTMLChecklistDialog = () => {
 
 	const handlePushToCloud = async () => {
 		if (!user?.uid) {
+			toast.info(
+				t(
+					"ttmlChecklist.signInRequired",
+					"Please sign in to sync your checklist with the cloud.",
+				),
+			);
 			openAccountSettings();
 			return;
 		}
@@ -1046,6 +1054,12 @@ export const TTMLChecklistDialog = () => {
 	};
 	const handlePullFromCloud = async () => {
 		if (!user?.uid) {
+			toast.info(
+				t(
+					"ttmlChecklist.signInRequired",
+					"Please sign in to sync your checklist with the cloud.",
+				),
+			);
 			openAccountSettings();
 			return;
 		}

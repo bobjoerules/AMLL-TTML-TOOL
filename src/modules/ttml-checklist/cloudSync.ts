@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
-import saveFile from "save-file";
+import { saveFile } from "$/utils/fileSystem";
 import { globalStore } from "$/states/store";
 import { currentUserAtom } from "$/modules/cloud/states";
 import {
@@ -37,12 +37,19 @@ export async function saveChecklistToCloud(
 			globalStore.get(currentUserAtom)?.uid ||
 			getFirebaseAuth()?.currentUser?.uid;
 		if (!targetUid) {
-			return { success: false, error: "No user account or UID found." };
+			return {
+				success: false,
+				error: "Please sign in to save your checklist to the cloud.",
+			};
 		}
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
+		// Strip undefined fields which cause Firestore setDoc to throw
+		const cleanEntries = JSON.parse(
+			JSON.stringify(normalizeChecklistEntries(entries)),
+		);
 		const data: CloudChecklistData = {
-			entries,
+			entries: cleanEntries,
 			updatedAt: Date.now(),
 		};
 		await setDoc(docRef, data, { merge: true });
@@ -116,7 +123,7 @@ export function parseChecklistJson(content: string): TTMLChecklistEntry[] {
 
 export async function exportChecklistToFile(
 	entries: TTMLChecklistEntry[],
-): Promise<void> {
+): Promise<string | null> {
 	const normalized = normalizeChecklistEntries(entries);
 	const exportData = {
 		version: 1,
@@ -124,9 +131,16 @@ export async function exportChecklistToFile(
 		entries: normalized,
 	};
 	const jsonStr = JSON.stringify(exportData, null, 2);
-	const blob = new Blob([jsonStr], { type: "application/json" });
 	const filename = `ttml-checklist-${new Date().toISOString().slice(0, 10)}.json`;
-	await saveFile(blob, filename);
+	return (await saveFile(jsonStr, {
+		suggestedName: filename,
+		types: [
+			{
+				description: "JSON Checklist File",
+				accept: { "application/json": [".json"] },
+			},
+		],
+	})) as string | null;
 }
 
 export function useChecklistCloudSync() {
