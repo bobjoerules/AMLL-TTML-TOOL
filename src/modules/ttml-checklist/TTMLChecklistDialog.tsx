@@ -833,7 +833,7 @@ const ChecklistEntryCard = ({
 
 				{/* Action Buttons */}
 				<Flex
-					gap="1.5"
+					gap="2"
 					align="center"
 					style={{ flexShrink: 0, marginLeft: "auto" }}
 				>
@@ -1462,6 +1462,7 @@ export const TTMLChecklistDialog = () => {
 									height: "32px",
 									borderRadius: "8px",
 									cursor: "pointer",
+									marginLeft: "6px",
 								}}
 							>
 								{showAddForm ? <Dismiss16Regular /> : <Add16Regular />}
