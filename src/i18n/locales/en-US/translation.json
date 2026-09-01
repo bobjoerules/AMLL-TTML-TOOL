@@ -1280,7 +1280,10 @@
 		"importSuccess": "Imported {count} songs into checklist!",
 		"importError": "Failed to read checklist file.",
 		"invalidJson": "Invalid or empty checklist JSON file.",
-		"signInRequired": "Please sign in to sync your checklist with the cloud."
+		"signInRequired": "Please sign in to sync your checklist with the cloud.",
+		"loadCloudTTML": "Download TTML",
+		"loadCloudTTMLTooltip": "Download & load linked TTML from Cloud",
+		"cloudLinked": "Cloud Linked"
 	},
 	"autoSegmentDialog": {
 		"title": "Auto Segment",

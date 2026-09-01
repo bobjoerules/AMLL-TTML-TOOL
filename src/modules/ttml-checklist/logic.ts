@@ -1,4 +1,5 @@
 import { uid } from "uid";
+import { readTTMLText } from "$/modules/project/logic/ttml-parser";
 
 export interface TTMLChecklistEntry {
 	id: string;
@@ -9,6 +10,8 @@ export interface TTMLChecklistEntry {
 	source?: "genius" | "lyrically" | "lrclib";
 	sourceId?: string | number;
 	sourceUrl?: string;
+	cloudDocId?: string;
+	cloudAudioUrl?: string;
 	notes: string;
 	completed: boolean;
 	createdAt: number;
@@ -22,11 +25,60 @@ export type TTMLChecklistEntryInput = {
 	source?: "genius" | "lyrically" | "lrclib";
 	sourceId?: string | number;
 	sourceUrl?: string;
+	cloudDocId?: string;
+	cloudAudioUrl?: string;
 	notes?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function isTTML100PercentCompleted(lines: {
+	lyricLines?: any[];
+}): boolean {
+	if (
+		!lines ||
+		!Array.isArray(lines.lyricLines) ||
+		lines.lyricLines.length === 0
+	) {
+		return false;
+	}
+	const meaningfulLines = lines.lyricLines.filter((l) => {
+		const text =
+			l.words
+				?.map((w: any) => w.word)
+				.join("")
+				.trim() || "";
+		return text.length > 0;
+	});
+	if (meaningfulLines.length === 0) return false;
+
+	return meaningfulLines.every((line) => {
+		const hasValidLineTiming =
+			typeof line.endTime === "number" &&
+			typeof line.startTime === "number" &&
+			line.endTime > line.startTime &&
+			line.endTime > 0;
+		if (!hasValidLineTiming) return false;
+
+		if (Array.isArray(line.words) && line.words.length > 0) {
+			const validWords = line.words.filter(
+				(w: any) =>
+					w.word && typeof w.word === "string" && w.word.trim().length > 0,
+			);
+			if (validWords.length > 0) {
+				return validWords.every(
+					(w: any) =>
+						typeof w.endTime === "number" &&
+						typeof w.startTime === "number" &&
+						w.endTime >= w.startTime &&
+						w.endTime > 0,
+				);
+			}
+		}
+		return true;
+	});
 }
 
 export function normalizeChecklistEntries(
@@ -62,6 +114,14 @@ export function normalizeChecklistEntries(
 					typeof item.sourceUrl === "string"
 						? item.sourceUrl.trim()
 						: undefined,
+				cloudDocId:
+					typeof item.cloudDocId === "string" && item.cloudDocId.trim()
+						? item.cloudDocId.trim()
+						: undefined,
+				cloudAudioUrl:
+					typeof item.cloudAudioUrl === "string" && item.cloudAudioUrl.trim()
+						? item.cloudAudioUrl.trim()
+						: undefined,
 				notes: typeof item.notes === "string" ? item.notes.trim() : "",
 				completed: item.completed === true,
 				createdAt:
@@ -92,6 +152,8 @@ export function createChecklistEntry(
 		source: input.source,
 		sourceId: input.sourceId,
 		sourceUrl: input.sourceUrl?.trim() || undefined,
+		cloudDocId: input.cloudDocId?.trim() || undefined,
+		cloudAudioUrl: input.cloudAudioUrl?.trim() || undefined,
 		notes: input.notes?.trim() ?? "",
 		completed: false,
 		createdAt,
@@ -126,11 +188,103 @@ export function updateChecklistEntry(
 						source: input.source ?? entry.source,
 						sourceId: input.sourceId ?? entry.sourceId,
 						sourceUrl: input.sourceUrl?.trim() || entry.sourceUrl,
+						cloudDocId: input.cloudDocId ?? entry.cloudDocId,
+						cloudAudioUrl: input.cloudAudioUrl ?? entry.cloudAudioUrl,
 						notes: input.notes?.trim() ?? "",
 					}
 				: entry,
 		),
 	);
+}
+
+export function linkUploadedTTMLToChecklist(
+	entries: TTMLChecklistEntry[],
+	uploaded: {
+		title: string;
+		artist: string;
+		album?: string;
+		coverArt?: string | null;
+		docId: string;
+		rawTTML?: string;
+		audioUrl?: string | null;
+		isCompleted?: boolean;
+	},
+): { entries: TTMLChecklistEntry[]; added: boolean; updated: boolean } {
+	const title = uploaded.title?.trim() || "Untitled";
+	const artist = uploaded.artist?.trim() || "";
+	const album = uploaded.album?.trim() || undefined;
+	const coverArt = uploaded.coverArt?.trim() || undefined;
+	const audioUrl = uploaded.audioUrl?.trim() || undefined;
+	const docId = uploaded.docId;
+
+	let isCompleted = uploaded.isCompleted ?? false;
+	if (!isCompleted && uploaded.rawTTML) {
+		try {
+			const parsed = readTTMLText(uploaded.rawTTML);
+			isCompleted = isTTML100PercentCompleted(parsed);
+		} catch {
+			// ignore parse error
+		}
+	}
+
+	const norm = (s: string) =>
+		s
+			.toLowerCase()
+			.replace(/[\s\-_.,/\\'"]/g, "")
+			.trim();
+	const normTitle = norm(title);
+	const normArtist = norm(artist);
+
+	let found = false;
+	const nextEntries = entries.map((entry) => {
+		const entryNormTitle = norm(entry.song);
+		const entryNormArtist = norm(entry.artist);
+
+		const isMatch =
+			(entry.cloudDocId && entry.cloudDocId === docId) ||
+			(entryNormTitle === normTitle &&
+				(!normArtist || !entryNormArtist || entryNormArtist === normArtist));
+
+		if (isMatch) {
+			found = true;
+			return {
+				...entry,
+				cloudDocId: docId,
+				cloudAudioUrl: audioUrl || entry.cloudAudioUrl,
+				album: album || entry.album,
+				coverArt: coverArt || entry.coverArt,
+				completed: isCompleted ? true : entry.completed,
+			};
+		}
+		return entry;
+	});
+
+	if (found) {
+		return {
+			entries: normalizeChecklistEntries(nextEntries),
+			added: false,
+			updated: true,
+		};
+	}
+
+	const newEntry: TTMLChecklistEntry = {
+		id: uid(),
+		song: title,
+		artist,
+		album,
+		coverArt,
+		cloudDocId: docId,
+		cloudAudioUrl: audioUrl,
+		notes: "Uploaded from Cloud",
+		completed: isCompleted,
+		createdAt: Date.now(),
+	};
+
+	return {
+		entries: normalizeChecklistEntries([...nextEntries, newEntry]),
+		added: true,
+		updated: false,
+	};
 }
 
 export function setChecklistEntryCompleted(
