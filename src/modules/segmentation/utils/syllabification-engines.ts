@@ -96,8 +96,25 @@ const mergeContractionSuffix = (parts: string[]) => {
 	return result;
 };
 
+const NEVER_SPLIT_WORDS = new Set([
+	"oh",
+	"ooh",
+	"ah",
+	"ahh",
+	"ha",
+	"eh",
+	"uh",
+	"um",
+	"woah",
+	"whoa",
+	"yeah",
+]);
+
 const prosodicSplit = (word: string) => {
 	const key = word.toLowerCase();
+	if (NEVER_SPLIT_WORDS.has(key)) {
+		return [word];
+	}
 	const entry =
 		dictionary.get(key) ??
 		(key.endsWith("in") ? dictionary.get(`${key}g`) : undefined);

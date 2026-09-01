@@ -70,11 +70,17 @@ function autoTokenize(text: string, config: SegmentationConfig): string[] {
 			config.splitEnglish &&
 			currentToken.length > 1
 		) {
-			const syllables =
-				getHyphenationLanguage(config.engine) && config.hyphenator
-					? config.hyphenator(currentToken).split("\u00AD")
-					: getSyllabificationEngine(config.engine).split(currentToken);
-			tokens.push(...syllables);
+			if (
+				/^(?:oh|ooh|ah|ahh|woah|whoa|yeah|eh|uh|um|ha)$/i.test(currentToken)
+			) {
+				tokens.push(currentToken);
+			} else {
+				const syllables =
+					getHyphenationLanguage(config.engine) && config.hyphenator
+						? config.hyphenator(currentToken).split("\u00AD")
+						: getSyllabificationEngine(config.engine).split(currentToken);
+				tokens.push(...syllables);
+			}
 		} else {
 			tokens.push(currentToken);
 		}
