@@ -446,7 +446,7 @@ export const GeniusSearchDialog = () => {
 							</Flex>
 						)}
 
-						{!hasSearched && (
+						{!loading && !hasSearched && results.length === 0 && (
 							<Flex className={styles.emptyState}>
 								<Search24Regular className={styles.emptyStateIcon} />
 								<Text>
