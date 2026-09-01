@@ -277,26 +277,30 @@ export const LineTimingTools = () => {
 	}, [editLyricLines, store, t]);
 
 	return (
-		<Flex gap="1" align="center" wrap="wrap">
-			<Button
-				size="1"
-				variant="soft"
-				onClick={handleCopyTimings}
-				title={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}
-			>
-				<Copy16Regular />
-				<span>{t("ribbonBar.timingTools.copy", "Copy Timings")}</span>
-			</Button>
-			<Button
-				size="1"
-				variant="soft"
-				onClick={handlePasteTimings}
-				disabled={!copiedTimings}
-				title={t("ribbonBar.timingTools.pasteTimings", "Paste Timings")}
-			>
-				<ClipboardPaste16Regular />
-				<span>{t("ribbonBar.timingTools.paste", "Paste Timings")}</span>
-			</Button>
+		<Flex direction="column" gap="1" justify="center">
+			<Flex gap="1" align="center">
+				<Button
+					size="1"
+					variant="soft"
+					onClick={handleCopyTimings}
+					title={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}
+					style={{ flex: 1 }}
+				>
+					<Copy16Regular />
+					<span>{t("ribbonBar.timingTools.copy", "Copy Timings")}</span>
+				</Button>
+				<Button
+					size="1"
+					variant="soft"
+					onClick={handlePasteTimings}
+					disabled={!copiedTimings}
+					title={t("ribbonBar.timingTools.pasteTimings", "Paste Timings")}
+					style={{ flex: 1 }}
+				>
+					<ClipboardPaste16Regular />
+					<span>{t("ribbonBar.timingTools.paste", "Paste Timings")}</span>
+				</Button>
+			</Flex>
 			<Button
 				size="1"
 				variant="soft"
@@ -306,6 +310,7 @@ export const LineTimingTools = () => {
 					"ribbonBar.timingTools.snapPlayhead",
 					"Snap Timings to Playhead",
 				)}
+				style={{ width: "100%", justifyContent: "center" }}
 			>
 				<FastForward16Regular />
 				<span>{t("ribbonBar.timingTools.snap", "Snap to Playhead")}</span>
@@ -594,34 +599,43 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 			>
 				<Flex
 					direction="column"
-					gap="2"
-					align="center"
+					gap="1"
 					justify="center"
-					px="2"
+					px="1"
 					style={{ height: "100%" }}
 				>
-					<SegmentedControl.Root
-						value={syncLevelMode}
-						onValueChange={(v) => setSyncLevelMode(v as SyncLevelMode)}
+					<Button
 						size="1"
+						variant={syncLevelMode === "word" ? "solid" : "soft"}
+						color={syncLevelMode === "word" ? "indigo" : "gray"}
+						onClick={() => setSyncLevelMode("word")}
+						style={{
+							justifyContent: "flex-start",
+							cursor: "pointer",
+							width: "100%",
+							paddingLeft: "6px",
+							paddingRight: "8px",
+						}}
 					>
-						<SegmentedControl.Item value="word">
-							<Flex align="center" gap="1">
-								<TextT24Regular style={{ width: "14px", height: "14px" }} />
-								<span>
-									{t("ribbonBar.syncMode.syncLevelWord", "Word Sync")}
-								</span>
-							</Flex>
-						</SegmentedControl.Item>
-						<SegmentedControl.Item value="line">
-							<Flex align="center" gap="1">
-								<List24Regular style={{ width: "14px", height: "14px" }} />
-								<span>
-									{t("ribbonBar.syncMode.syncLevelLine", "Line Sync")}
-								</span>
-							</Flex>
-						</SegmentedControl.Item>
-					</SegmentedControl.Root>
+						<TextT24Regular style={{ width: "14px", height: "14px" }} />
+						<span>{t("ribbonBar.syncMode.syncLevelWord", "Word Sync")}</span>
+					</Button>
+					<Button
+						size="1"
+						variant={syncLevelMode === "line" ? "solid" : "soft"}
+						color={syncLevelMode === "line" ? "indigo" : "gray"}
+						onClick={() => setSyncLevelMode("line")}
+						style={{
+							justifyContent: "flex-start",
+							cursor: "pointer",
+							width: "100%",
+							paddingLeft: "6px",
+							paddingRight: "8px",
+						}}
+					>
+						<List24Regular style={{ width: "14px", height: "14px" }} />
+						<span>{t("ribbonBar.syncMode.syncLevelLine", "Line Sync")}</span>
+					</Button>
 				</Flex>
 			</RibbonSection>
 			{showAdvanced && (
