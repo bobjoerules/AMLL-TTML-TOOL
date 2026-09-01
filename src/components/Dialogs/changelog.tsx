@@ -56,6 +56,47 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.1.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 1, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>TTML Checklist & Cloud Auto-Sync:</b> Automatic linking
+									between uploaded Cloud TTMLs and Checklist songs, auto-marking
+									100% completed files, and 1-click Download / Load TTML
+									directly from checklist cards.
+								</Text>
+								<Text size="2">
+									• <b>Discord RPC Customization & Checklist Stats:</b> Live
+									dynamic RPC preview in settings, customizable idle status with
+									rich presets (username, tool name, checklist progress &
+									percentage), and avatar image selection.
+								</Text>
+								<Text size="2">
+									• <b>New Global Keyboard Shortcuts:</b> Quick shortcuts added
+									for Open from Cloud (<code>Cmd/Ctrl+Shift+O</code>), Save to
+									Cloud (<code>Cmd/Ctrl+Shift+S</code>), and TTML Checklist (
+									<code>Cmd/Ctrl+Shift+C</code>).
+								</Text>
+								<Text size="2">
+									• <b>Compact & Responsive Workspace:</b> Auto-collapsing
+									TitleBar mode tabs, collapsible Cloud user avatar, stacked
+									Ribbon Timing Tools and Sync Level buttons to optimize screen
+									space on smaller displays.
+								</Text>
+								<Text size="2">
+									• <b>UI & Performance Polish:</b> Single-line ellipsis
+									truncation for long song titles in checklist, fixed Timing
+									Offset Latency Test translation & keybindings, and window
+									initialization safety timeouts.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.8
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
