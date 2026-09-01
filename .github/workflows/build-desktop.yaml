@@ -61,6 +61,8 @@ jobs:
 
   build-tauri-desktop:
     name: Build ${{ matrix.name }} (${{ matrix.arch }})
+    permissions:
+      contents: write
     needs: [validate-release, prepare-release-notes]
     strategy:
       fail-fast: false
@@ -172,6 +174,8 @@ jobs:
 
   finalize-release:
     name: Finalize release notes
+    permissions:
+      contents: write
     if: startsWith(github.ref, 'refs/tags/v')
     needs: [build-tauri-desktop, prepare-release-notes]
     runs-on: ubuntu-latest
