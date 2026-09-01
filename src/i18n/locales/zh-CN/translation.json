@@ -1222,7 +1222,10 @@
 		"importSuccess": "成功导入 {count} 首歌曲！",
 		"importError": "读取清单文件失败。",
 		"invalidJson": "无效或空的清单 JSON 文件。",
-		"signInRequired": "请先登录账号以同步云端清单。"
+		"signInRequired": "请先登录账号以同步云端清单。",
+		"loadCloudTTML": "下载云端 TTML",
+		"loadCloudTTMLTooltip": "下载并打开与此歌曲关联的云端 TTML 歌词",
+		"cloudLinked": "已关联云端"
 	},
 	"autoSegmentDialog": {
 		"title": "Auto Segment",

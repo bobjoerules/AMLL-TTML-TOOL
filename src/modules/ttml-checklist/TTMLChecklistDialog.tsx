@@ -57,6 +57,8 @@ import {
 	ttmlChecklistDialogAtom,
 } from "$/states/dialogs.ts";
 import { lyricLinesAtom, projectIdentityAtom } from "$/states/main.ts";
+import { useFileOpener } from "$/hooks/useFileOpener";
+import { loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
 import {
 	addChecklistEntry,
 	deleteChecklistEntry,
@@ -613,12 +615,16 @@ const ChecklistEntryCard = ({
 	onDelete,
 	onEdit,
 	onImportLyrics,
+	onLoadCloud,
+	isLoadingCloud,
 }: {
 	entry: TTMLChecklistEntry;
 	onComplete: (completed: boolean) => void;
 	onDelete: () => void;
 	onEdit: (input: TTMLChecklistEntryInput) => void;
 	onImportLyrics: (entry: TTMLChecklistEntry) => void;
+	onLoadCloud?: (docId: string) => void;
+	isLoadingCloud?: boolean;
 }) => {
 	const { t } = useTranslation();
 	const [editing, setEditing] = useState(false);
@@ -721,6 +727,16 @@ const ChecklistEntryCard = ({
 								{entry.source.toUpperCase()}
 							</Badge>
 						)}
+						{entry.cloudDocId && (
+							<Badge
+								size="1"
+								color="sky"
+								variant="surface"
+								style={{ fontWeight: 600 }}
+							>
+								{t("ttmlChecklist.cloudLinked", "Cloud Linked")}
+							</Badge>
+						)}
 						{entry.completed && (
 							<Badge size="1" color="green" variant="soft">
 								{t("ttmlChecklist.completed", "Completed")}
@@ -777,6 +793,37 @@ const ChecklistEntryCard = ({
 
 				{/* Action Buttons */}
 				<Flex gap="1" align="center">
+					{/* Download / Open Cloud TTML Button */}
+					{entry.cloudDocId && (
+						<Tooltip
+							content={t(
+								"ttmlChecklist.loadCloudTTMLTooltip",
+								"Download & load linked TTML from Cloud",
+							)}
+						>
+							<Button
+								size="2"
+								variant="surface"
+								color="sky"
+								disabled={isLoadingCloud}
+								onClick={() => onLoadCloud?.(entry.cloudDocId!)}
+								style={{
+									height: "32px",
+									borderRadius: "8px",
+									fontWeight: 500,
+									cursor: "pointer",
+								}}
+							>
+								{isLoadingCloud ? (
+									<Spinner size="1" />
+								) : (
+									<CloudArrowDown16Regular />
+								)}
+								{t("ttmlChecklist.loadCloudTTML", "Download TTML")}
+							</Button>
+						</Tooltip>
+					)}
+
 					{/* 1-Click Import Lyrics Page */}
 					<Tooltip
 						content={t(
@@ -921,6 +968,35 @@ export const TTMLChecklistDialog = () => {
 
 	const save = (nextEntries: TTMLChecklistEntry[]) => {
 		setStoredEntries(nextEntries);
+	};
+
+	const { openFile } = useFileOpener();
+	const [loadingCloudDocId, setLoadingCloudDocId] = useState<string | null>(
+		null,
+	);
+
+	const handleLoadCloudTTML = async (docId: string) => {
+		try {
+			setLoadingCloudDocId(docId);
+			const cloudDoc = await loadTTMLFromCloud(docId);
+			const file = new File(
+				[cloudDoc.rawTTML],
+				`${cloudDoc.title || "lyric"}.ttml`,
+				{ type: "application/xml" },
+			);
+			await openFile(file);
+			toast.success(
+				t("cloud.openedSuccess", 'Loaded "{title}" from Cloud', {
+					title: cloudDoc.title || "Untitled",
+				}),
+			);
+			setOpen(false);
+		} catch (err) {
+			console.error("Failed to load cloud TTML from checklist:", err);
+			toast.error((err as Error)?.message || "Failed to load cloud TTML.");
+		} finally {
+			setLoadingCloudDocId(null);
+		}
 	};
 
 	const handleImportLyricsForEntry = (entry: TTMLChecklistEntry) => {
@@ -1704,6 +1780,8 @@ export const TTMLChecklistDialog = () => {
 												save(updateChecklistEntry(entries, entry.id, input))
 											}
 											onImportLyrics={handleImportLyricsForEntry}
+											onLoadCloud={handleLoadCloudTTML}
+											isLoadingCloud={loadingCloudDocId === entry.cloudDocId}
 										/>
 									))
 								)}

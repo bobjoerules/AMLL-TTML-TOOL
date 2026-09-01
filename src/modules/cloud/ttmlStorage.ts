@@ -223,6 +223,35 @@ export async function saveTTMLToCloud(
 	// Refresh the local list
 	await fetchUserTTMLList();
 
+	// Auto-link/add with TTML Checklist & update cloud checklist
+	try {
+		const { linkUploadedTTMLToChecklist } = await import(
+			"$/modules/ttml-checklist/logic"
+		);
+		const { saveChecklistToCloud } = await import(
+			"$/modules/ttml-checklist/cloudSync"
+		);
+		const { ttmlChecklistAtom } = await import(
+			"$/modules/ttml-checklist/states"
+		);
+
+		const currentChecklist = globalStore.get(ttmlChecklistAtom);
+		const linkResult = linkUploadedTTMLToChecklist(currentChecklist, {
+			title: data.title,
+			artist: data.artist,
+			album: data.album,
+			coverArt: data.coverArt,
+			docId: docRef.id,
+			rawTTML: input.rawTTML,
+			audioUrl,
+			isCompleted: data.finished,
+		});
+		globalStore.set(ttmlChecklistAtom, linkResult.entries);
+		void saveChecklistToCloud(linkResult.entries, user.uid);
+	} catch (err) {
+		console.warn("Could not auto-link TTML to checklist:", err);
+	}
+
 	return docRef.id;
 }
 

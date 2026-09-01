@@ -56,6 +56,44 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.0.8
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								August 31, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>TTML Checklist & Cloud Auto-Sync:</b> When saving or
+									uploading a TTML to the cloud, it is automatically linked with
+									your TTML Checklist. If the song was not in the checklist, it
+									is added automatically.
+								</Text>
+								<Text size="2">
+									• <b>Automatic Completion:</b> Uploaded TTMLs that are 100%
+									synchronized and timed are automatically marked as completed
+									in the checklist.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Cloud TTML Download Button:</b> Each linked
+									checklist song now features a 1-click Download / Load TTML
+									button to immediately open the cloud lyric in the editor.
+								</Text>
+								<Text size="2">
+									• <b>Lyrics Import Pre-fill Fixes:</b> Opening lyrics import
+									from a checklist item now automatically populates the search
+									query and loads provider search results without retyping.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Toolbar & Performance Polish:</b> Modern
+									surface styling across all action buttons, native desktop JSON
+									export, and deep serialization fixes for Firestore cloud
+									synchronization.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.0.7
 							</Heading>
 							<Flex direction="column" gap="3">
