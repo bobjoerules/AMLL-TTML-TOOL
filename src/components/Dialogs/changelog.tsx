@@ -60,16 +60,27 @@ export function ChangelogDialog() {
 							</Heading>
 							<Flex direction="column" gap="3">
 								<Text size="2">
-									<strong>Line Merging Tools:</strong> Added right-click context menu options to merge any lyric line with the previous line, next line, multiple selected lines, or any chosen line in the song while preserving all individual word timings, line bounds, translations, and flags.
+									<strong>Line Merging Tools:</strong> Added right-click context
+									menu options to merge any lyric line with the previous line,
+									next line, multiple selected lines, or any chosen line in the
+									song while preserving all individual word timings, line
+									bounds, translations, and flags.
 								</Text>
 								<Text size="2">
-									<strong>TTML Checklist Download & Import:</strong> Added 1-click JSON export/download and file import to easily back up, share, or restore your entire checklist.
+									<strong>TTML Checklist Download & Import:</strong> Added
+									1-click JSON export/download and file import to easily back
+									up, share, or restore your entire checklist.
 								</Text>
 								<Text size="2">
-									<strong>Continuous Checklist Cloud Sync:</strong> Checklist sync now runs automatically in the background across web and desktop as soon as you sign in, plus dedicated manual Push & Pull buttons.
+									<strong>Continuous Checklist Cloud Sync:</strong> Checklist
+									sync now runs automatically in the background across web and
+									desktop as soon as you sign in, plus dedicated manual Push &
+									Pull buttons.
 								</Text>
 								<Text size="2">
-									<strong>Cloudflare Web App & Firestore Rules:</strong> Fixed web loading configuration, build settings, and Firestore security rules for user checklist data.
+									<strong>Cloudflare Web App & Firestore Rules:</strong> Fixed
+									web loading configuration, build settings, and Firestore
+									security rules for user checklist data.
 								</Text>
 							</Flex>
 						</Box>
