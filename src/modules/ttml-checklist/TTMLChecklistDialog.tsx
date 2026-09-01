@@ -830,7 +830,7 @@ const ChecklistEntryCard = ({
 				</Flex>
 
 				{/* Action Buttons */}
-				<Flex gap="1" align="center" style={{ flexShrink: 0 }}>
+				<Flex gap="2" align="center" style={{ flexShrink: 0 }}>
 					{/* Download / Open Cloud TTML Button */}
 					{entry.cloudDocId && (
 						<Tooltip
@@ -909,7 +909,8 @@ const ChecklistEntryCard = ({
 
 					<Tooltip content={t("ttmlChecklist.edit", "Edit checklist item")}>
 						<IconButton
-							variant="ghost"
+							size="2"
+							variant="soft"
 							color="gray"
 							onClick={() => setEditing(true)}
 							aria-label={t("ttmlChecklist.edit", "Edit checklist item")}
@@ -920,7 +921,8 @@ const ChecklistEntryCard = ({
 					</Tooltip>
 					<Tooltip content={t("ttmlChecklist.delete", "Delete checklist item")}>
 						<IconButton
-							variant="ghost"
+							size="2"
+							variant="soft"
 							color="red"
 							onClick={onDelete}
 							aria-label={t("ttmlChecklist.delete", "Delete checklist item")}
