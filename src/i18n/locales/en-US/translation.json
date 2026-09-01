@@ -749,6 +749,7 @@
 	},
 	"latencyTestDialog": {
 		"title": "Timing Offset Latency Test",
+		"description": "Select your preferred BPM, and press the <0/> key whenever each beep sounds to measure audio and input latency.",
 		"latencyDisplay": {
 			"fastest": "Fastest",
 			"current": {

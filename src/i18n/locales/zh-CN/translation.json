@@ -711,6 +711,7 @@
 	},
 	"latencyTestDialog": {
 		"title": "打轴延迟测试",
+		"description": "请选择自己喜欢的 BPM，并在每个蜂鸣声响起时按下 <0/> 键，以测量音频/输入延迟差",
 		"latencyDisplay": {
 			"fastest": "最快",
 			"current": {
