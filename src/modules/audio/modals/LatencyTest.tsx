@@ -1,7 +1,7 @@
 import { Button, Dialog, Flex, Text, TextField } from "@radix-ui/themes";
 import { useAtom, useAtomValue } from "jotai";
 import { memo, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { KeyBinding } from "$/components/KeyBinding";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import {
@@ -207,13 +207,11 @@ export const LatencyTestDialog = memo(() => {
 				</Dialog.Title>
 				<Flex direction="column" gap="2">
 					<Text>
-						{t(
-							"latencyTestDialog.description",
-							"请选择自己喜欢的 BPM，并在每个蜂鸣声响起时按下 {key} 键，以测量音频/输入延迟差",
-							{
-								key: <KeyBinding kbdAtom={keySyncNextAtom} />,
-							},
-						)}
+						<Trans
+							i18nKey="latencyTestDialog.description"
+							defaults="Select your preferred BPM, and press the <0/> key whenever each beep sounds to measure audio and input latency."
+							components={[<KeyBinding key="key" kbdAtom={keySyncNextAtom} />]}
+						/>
 					</Text>
 
 					<Flex
