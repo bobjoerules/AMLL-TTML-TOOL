@@ -280,7 +280,7 @@ export const LineTimingTools = () => {
 	}, [editLyricLines, store, t]);
 
 	return (
-		<Flex gap="1" align="center" justify="center" style={{ height: "100%" }}>
+		<Flex gap="2" align="center" justify="center" style={{ height: "100%" }}>
 			<Tooltip content={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}>
 				<IconButton
 					size="2"
