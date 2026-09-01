@@ -1230,7 +1230,7 @@ export const ImportLyricsDialog = ({
 							</Flex>
 						)}
 
-						{!hasSearched && !searching && (
+						{!hasSearched && !searching && results.length === 0 && (
 							<Flex
 								direction="column"
 								align="center"
