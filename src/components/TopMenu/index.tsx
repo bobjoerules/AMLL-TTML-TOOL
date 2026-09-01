@@ -208,7 +208,8 @@ export const TopMenu: FC = () => {
 	if (isMac) {
 		return (
 			<Flex
-				p="2"
+				py="0"
+				px="2"
 				pr="0"
 				align="center"
 				gap="1"
@@ -217,6 +218,7 @@ export const TopMenu: FC = () => {
 					minWidth: 0,
 					flexShrink: 1,
 					overflow: "hidden",
+					height: "100%",
 				}}
 			>
 				<HeaderFileInfo />
