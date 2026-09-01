@@ -16,6 +16,7 @@ import {
 	Flex,
 	Grid,
 	IconButton,
+	Popover,
 	SegmentedControl,
 	Slider,
 	Switch,
@@ -658,207 +659,296 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						</Flex>
 					}
 				>
-					<Grid
-						columns="max-content auto"
-						gap="2"
-						gapY="1"
-						flexGrow="1"
+					<Flex
 						align="center"
+						justify="center"
+						px="1"
+						style={{ height: "100%" }}
 					>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Eye16Regular />
-								{t("ribbonBar.syncMode.showTimestampUpdate", "呈现时间戳更新")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={visualizeTimestampUpdate}
-							onCheckedChange={(v) => setVisualizeTimestampUpdate(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<DocumentSync16Regular />
-								{t("ribbonBar.syncMode.touchSyncPanel", "触控打轴辅助面板")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={showTouchSyncPanel}
-							onCheckedChange={(v) => setShowTouchSyncPanel(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Flow16Regular />
-								{t("ribbonBar.syncMode.mainLyricIgnoreSync", "主歌词忽略打轴")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={mainLyricIgnoreSync}
-							onCheckedChange={(v) => {
-								const next = !!v;
-								setMainLyricIgnoreSync(next);
-								editLyricLines((state) => {
-									for (const line of state.lyricLines) {
-										if (!line.isBG) {
-											line.ignoreSync = next;
-										}
-									}
-									return state;
-								});
-							}}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Flow16Regular />
-								{t("ribbonBar.syncMode.bgLyricIgnoreSync", "背景歌词忽略打轴")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={bgLyricIgnoreSync}
-							onCheckedChange={(v) => {
-								const next = !!v;
-								setBgLyricIgnoreSync(next);
-								editLyricLines((state) => {
-									for (const line of state.lyricLines) {
-										if (line.isBG) {
-											line.ignoreSync = next;
-										}
-									}
-									return state;
-								});
-							}}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Timer16Regular />
-								{t(
-									"ribbonBar.syncMode.manualTimestampEdit",
-									"Manual Timestamp Editing",
-								)}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={enableManualTimestampEdit}
-							onCheckedChange={(v) => setEnableManualTimestampEdit(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Keyboard16Regular />
-								{t(
-									"ribbonBar.syncMode.doubleClickEdit",
-									"Double-Click Word Editing",
-								)}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={enableTimeModeDoubleClickEdit}
-							onCheckedChange={(v) => setEnableTimeModeDoubleClickEdit(!!v)}
-						/>
-					</Grid>
+						<Popover.Root>
+							<Popover.Trigger>
+								<Button
+									size="2"
+									variant="soft"
+									color="gray"
+									style={{
+										cursor: "pointer",
+										borderRadius: "8px",
+										fontWeight: 500,
+									}}
+								>
+									<Beaker24Regular style={{ width: "16px", height: "16px" }} />
+									<span>
+										{t("ribbonBar.syncMode.assistSettings", "辅助设置")}
+									</span>
+								</Button>
+							</Popover.Trigger>
+							<Popover.Content
+								size="2"
+								style={{ width: 280, maxWidth: "90vw" }}
+							>
+								<Flex direction="column" gap="3">
+									<Text size="2" weight="bold">
+										{t("ribbonBar.syncMode.assistSettings", "辅助设置")}
+									</Text>
+									<Grid
+										columns="auto max-content"
+										gap="3"
+										gapY="2"
+										align="center"
+									>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Eye16Regular />
+												{t(
+													"ribbonBar.syncMode.showTimestampUpdate",
+													"呈现时间戳更新",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={visualizeTimestampUpdate}
+											onCheckedChange={(v) => setVisualizeTimestampUpdate(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<DocumentSync16Regular />
+												{t(
+													"ribbonBar.syncMode.touchSyncPanel",
+													"触控打轴辅助面板",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={showTouchSyncPanel}
+											onCheckedChange={(v) => setShowTouchSyncPanel(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Flow16Regular />
+												{t(
+													"ribbonBar.syncMode.mainLyricIgnoreSync",
+													"主歌词忽略打轴",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={mainLyricIgnoreSync}
+											onCheckedChange={(v) => {
+												const next = !!v;
+												setMainLyricIgnoreSync(next);
+												editLyricLines((state) => {
+													for (const line of state.lyricLines) {
+														if (!line.isBG) {
+															line.ignoreSync = next;
+														}
+													}
+													return state;
+												});
+											}}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Flow16Regular />
+												{t(
+													"ribbonBar.syncMode.bgLyricIgnoreSync",
+													"背景歌词忽略打轴",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={bgLyricIgnoreSync}
+											onCheckedChange={(v) => {
+												const next = !!v;
+												setBgLyricIgnoreSync(next);
+												editLyricLines((state) => {
+													for (const line of state.lyricLines) {
+														if (line.isBG) {
+															line.ignoreSync = next;
+														}
+													}
+													return state;
+												});
+											}}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Timer16Regular />
+												{t(
+													"ribbonBar.syncMode.manualTimestampEdit",
+													"Manual Timestamp Editing",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={enableManualTimestampEdit}
+											onCheckedChange={(v) => setEnableManualTimestampEdit(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Keyboard16Regular />
+												{t(
+													"ribbonBar.syncMode.doubleClickEdit",
+													"Double-Click Word Editing",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={enableTimeModeDoubleClickEdit}
+											onCheckedChange={(v) =>
+												setEnableTimeModeDoubleClickEdit(!!v)
+											}
+										/>
+									</Grid>
+								</Flex>
+							</Popover.Content>
+						</Popover.Root>
+					</Flex>
 				</RibbonSection>
 			)}
 			{showAdvanced && (
 				<RibbonSection
 					isSidebar={isSidebar}
-					label={t("ribbonBar.syncMode.displayOptions", "显示选项")}
+					label={
+						<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
+							<Eye16Regular style={{ width: "12px", height: "12px" }} />
+							<span>{t("ribbonBar.syncMode.displayOptions", "显示选项")}</span>
+						</Flex>
+					}
 				>
-					<Grid
-						columns="max-content auto"
-						gap="2"
-						gapY="1"
-						flexGrow="1"
+					<Flex
 						align="center"
+						justify="center"
+						px="1"
+						style={{ height: "100%" }}
 					>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Eye16Regular />
-								{t("ribbonBar.syncMode.showTimestamps", "显示时间戳")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={showTimestamps}
-							onCheckedChange={(v) => setShowTimestamps(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Lightbulb16Regular />
-								{t("ribbonBar.syncMode.highlightActiveWord", "高亮当前音节")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={highlightActiveWord}
-							onCheckedChange={(v) => setHighlightActiveWord(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Sparkle16Regular />
-								{t(
-									"ribbonBar.syncMode.enableGlowAnimation",
-									"启用高亮动态特效",
-								)}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={enableSyncGlowAnimation}
-							onCheckedChange={(v) => setEnableSyncGlowAnimation(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Flash16Regular />
-								{t("ribbonBar.previewMode.instantFade", "即时淡出")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={instantFade}
-							onCheckedChange={(v) => setInstantFade(!!v)}
-						/>
-
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<Warning16Regular />
-								{t("ribbonBar.syncMode.highlightErrors", "高亮错误")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={highlightErrors}
-							onCheckedChange={(v) => setHighlightErrors(!!v)}
-						/>
-
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<DocumentSync16Regular />
-								{t(
-									"ribbonBar.syncMode.onlyShowSyncLineOnSpectrogram",
-									"仅在频谱图显示当前打轴行",
-								)}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={spectrogramOnlyShowSyncLine}
-							onCheckedChange={(v) => setSpectrogramOnlyShowSyncLine(!!v)}
-						/>
-
-						{showWordRomanizationInput && (
-							<>
-								<Text
-									wrap="nowrap"
-									size="1"
-									style={{ color: "var(--accent-11)" }}
+						<Popover.Root>
+							<Popover.Trigger>
+								<Button
+									size="2"
+									variant="soft"
+									color="gray"
+									style={{
+										cursor: "pointer",
+										borderRadius: "8px",
+										fontWeight: 500,
+									}}
 								>
-									<Flex gap="1" align="center">
-										<LocalLanguage16Regular />
-										{t(
-											"ribbonBar.syncMode.showPerWordRomanization",
-											"显示逐字音译",
+									<Eye16Regular style={{ width: "16px", height: "16px" }} />
+									<span>
+										{t("ribbonBar.syncMode.displayOptions", "显示选项")}
+									</span>
+								</Button>
+							</Popover.Trigger>
+							<Popover.Content
+								size="2"
+								style={{ width: 290, maxWidth: "90vw" }}
+							>
+								<Flex direction="column" gap="3">
+									<Text size="2" weight="bold">
+										{t("ribbonBar.syncMode.displayOptions", "显示选项")}
+									</Text>
+									<Grid
+										columns="auto max-content"
+										gap="3"
+										gapY="2"
+										align="center"
+									>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Eye16Regular />
+												{t("ribbonBar.syncMode.showTimestamps", "显示时间戳")}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={showTimestamps}
+											onCheckedChange={(v) => setShowTimestamps(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Lightbulb16Regular />
+												{t(
+													"ribbonBar.syncMode.highlightActiveWord",
+													"高亮当前音节",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={highlightActiveWord}
+											onCheckedChange={(v) => setHighlightActiveWord(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Sparkle16Regular />
+												{t(
+													"ribbonBar.syncMode.enableGlowAnimation",
+													"启用高亮动态特效",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={enableSyncGlowAnimation}
+											onCheckedChange={(v) => setEnableSyncGlowAnimation(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Flash16Regular />
+												{t("ribbonBar.previewMode.instantFade", "即时淡出")}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={instantFade}
+											onCheckedChange={(v) => setInstantFade(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Warning16Regular />
+												{t("ribbonBar.syncMode.highlightErrors", "高亮错误")}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={highlightErrors}
+											onCheckedChange={(v) => setHighlightErrors(!!v)}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<DocumentSync16Regular />
+												{t(
+													"ribbonBar.syncMode.onlyShowSyncLineOnSpectrogram",
+													"仅在频谱图显示当前打轴行",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={spectrogramOnlyShowSyncLine}
+											onCheckedChange={(v) =>
+												setSpectrogramOnlyShowSyncLine(!!v)
+											}
+										/>
+										{showWordRomanizationInput && (
+											<>
+												<Text size="2" style={{ color: "var(--accent-11)" }}>
+													<Flex gap="2" align="center">
+														<LocalLanguage16Regular />
+														{t(
+															"ribbonBar.syncMode.showPerWordRomanization",
+															"显示逐字音译",
+														)}
+													</Flex>
+												</Text>
+												<Checkbox
+													checked={displayRomanizationInSync}
+													onCheckedChange={(v) =>
+														setdisplayRomanizationInSync(!!v)
+													}
+												/>
+											</>
 										)}
-									</Flex>
-								</Text>
-								<Checkbox
-									checked={displayRomanizationInSync}
-									onCheckedChange={(v) => setdisplayRomanizationInSync(!!v)}
-								/>
-							</>
-						)}
-					</Grid>
+									</Grid>
+								</Flex>
+							</Popover.Content>
+						</Popover.Root>
+					</Flex>
 				</RibbonSection>
 			)}
 			<RibbonSection
