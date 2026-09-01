@@ -44,6 +44,8 @@ import {
 	discordStatusBadgeAtom,
 	discordLargeImageModeAtom,
 	discordSmallImageModeAtom,
+	discordIdleLargeImageModeAtom,
+	discordIdleSmallImageModeAtom,
 	discordPrivacyPresetAtom,
 	discordShowProgressTimerAtom,
 	discordGeneralActivityTextAtom,
@@ -156,6 +158,13 @@ export function DiscordPresenceSettings() {
 	const [smallImageMode, setSmallImageMode] = useAtom(
 		discordSmallImageModeAtom,
 	);
+	const [idleLargeImageMode, setIdleLargeImageMode] = useAtom(
+		discordIdleLargeImageModeAtom,
+	);
+	const [idleSmallImageMode, setIdleSmallImageMode] = useAtom(
+		discordIdleSmallImageModeAtom,
+	);
+	const [previewTab, setPreviewTab] = useState<"active" | "empty">("active");
 	const [privacyPreset, setPrivacyPreset] = useAtom(discordPrivacyPresetAtom);
 	const [showProgressTimer, setShowProgressTimer] = useAtom(
 		discordShowProgressTimerAtom,
@@ -305,26 +314,35 @@ export function DiscordPresenceSettings() {
 		return undefined;
 	};
 
-	const largeImgSrc = getPreviewImageUrl(largeImageMode);
-	const smallImgSrc = getPreviewImageUrl(smallImageMode);
+	const largeImgSrc =
+		previewTab === "empty"
+			? getPreviewImageUrl(idleLargeImageMode)
+			: getPreviewImageUrl(largeImageMode);
+	const smallImgSrc =
+		previewTab === "empty"
+			? getPreviewImageUrl(idleSmallImageMode)
+			: getPreviewImageUrl(smallImageMode);
 
-	// Preview details and state texts based on privacy preset
+	// Preview details and state texts based on privacy preset and previewTab
 	const detailsPreviewText = useMemo(() => {
+		if (previewTab === "empty") return "AMLL TTML Tool";
 		if (privacyPreset === "none") return undefined;
 		if (privacyPreset === "minimal") return "AMLL TTML Tool";
 		return (
 			detailsPreview ||
 			`Editing ${fileName || "Charlie Puth - Left and Right.ttml"}`
 		);
-	}, [privacyPreset, detailsPreview, fileName]);
+	}, [previewTab, privacyPreset, detailsPreview, fileName]);
 
 	const statePreviewText = useMemo(() => {
+		if (previewTab === "empty") return generalActivityText || "No file open";
 		if (privacyPreset === "none") return undefined;
 		if (privacyPreset === "minimal") return generalActivityText;
 		return statePreview || "Charlie Puth • Line 19 of 19";
-	}, [privacyPreset, statePreview, generalActivityText]);
+	}, [previewTab, privacyPreset, statePreview, generalActivityText]);
 
 	const bottomLinePreviewText = useMemo(() => {
+		if (previewTab === "empty") return undefined;
 		if (privacyPreset === "none") return undefined;
 		if (privacyPreset === "minimal") return undefined;
 		return (
@@ -333,10 +351,37 @@ export function DiscordPresenceSettings() {
 				? `${context.templateContext.title} - ${context.templateContext.artist}`
 				: "Ginseng Strip 2002 - Yung Lean")
 		);
-	}, [privacyPreset, bottomLinePreview, context.templateContext]);
+	}, [previewTab, privacyPreset, bottomLinePreview, context.templateContext]);
 
 	return (
 		<Flex direction="column" gap="4">
+			{/* Discord Preview Card Section */}
+			<Flex justify="between" align="center" mt="1">
+				<Text
+					size="2"
+					weight="bold"
+					style={{
+						color: "var(--gray-11)",
+						textTransform: "uppercase",
+						letterSpacing: "0.5px",
+					}}
+				>
+					{t("settings.discord.previewSection", "Live Preview")}
+				</Text>
+				<SegmentedControl.Root
+					value={previewTab}
+					onValueChange={(val: any) => setPreviewTab(val)}
+					size="1"
+				>
+					<SegmentedControl.Item value="active">
+						{t("settings.discord.previewActive", "Active Song")}
+					</SegmentedControl.Item>
+					<SegmentedControl.Item value="empty">
+						{t("settings.discord.previewIdle", "Nothing Loaded")}
+					</SegmentedControl.Item>
+				</SegmentedControl.Root>
+			</Flex>
+
 			{/* Discord Preview Card */}
 			<Box
 				style={{
@@ -845,23 +890,23 @@ export function DiscordPresenceSettings() {
 					<Card style={{ padding: "0 16px" }}>
 						<SettingRow
 							icon={<Image24Regular />}
-							title={t("settings.discord.largeImage", "Large Image")}
+							title={t("settings.discord.largeImage", "Large Image (Active)")}
 							description={t(
 								"settings.discord.largeImageDesc",
-								"Choose the content shown in the large image slot.",
+								"Choose the content shown in the large image slot when working on a song.",
 							)}
 							control={
 								<Select.Root
 									value={largeImageMode}
 									onValueChange={(val: any) => setLargeImageMode(val)}
 								>
-									<Select.Trigger style={{ width: "120px" }} />
+									<Select.Trigger style={{ width: "130px" }} />
 									<Select.Content>
 										<Select.Item value="artwork">Artwork</Select.Item>
-										<Select.Item value="icon">Icon</Select.Item>
-										<Select.Item value="profile">Profile</Select.Item>
-										<Select.Item value="state">State</Select.Item>
-										<Select.Item value="tab">Tab</Select.Item>
+										<Select.Item value="icon">App Icon</Select.Item>
+										<Select.Item value="profile">Profile Photo</Select.Item>
+										<Select.Item value="state">Playback State</Select.Item>
+										<Select.Item value="tab">Mode / Tab</Select.Item>
 										<Select.Item value="none">None</Select.Item>
 									</Select.Content>
 								</Select.Root>
@@ -869,23 +914,73 @@ export function DiscordPresenceSettings() {
 						/>
 						<SettingRow
 							icon={<Image24Regular />}
-							title={t("settings.discord.smallImage", "Small Image")}
+							title={t("settings.discord.smallImage", "Small Image (Active)")}
 							description={t(
 								"settings.discord.smallImageDesc",
-								"Choose the content shown in the small image slot.",
+								"Choose the content shown in the small image badge when working on a song.",
 							)}
 							control={
 								<Select.Root
 									value={smallImageMode}
 									onValueChange={(val: any) => setSmallImageMode(val)}
 								>
-									<Select.Trigger style={{ width: "120px" }} />
+									<Select.Trigger style={{ width: "130px" }} />
 									<Select.Content>
-										<Select.Item value="profile">Profile</Select.Item>
-										<Select.Item value="tab">Tab</Select.Item>
-										<Select.Item value="state">State</Select.Item>
-										<Select.Item value="icon">Icon</Select.Item>
+										<Select.Item value="profile">Profile Photo</Select.Item>
+										<Select.Item value="tab">Mode / Tab</Select.Item>
+										<Select.Item value="state">Playback State</Select.Item>
+										<Select.Item value="icon">App Icon</Select.Item>
 										<Select.Item value="artwork">Artwork</Select.Item>
+										<Select.Item value="none">None</Select.Item>
+									</Select.Content>
+								</Select.Root>
+							}
+						/>
+						<SettingRow
+							icon={<Image24Regular />}
+							title={t(
+								"settings.discord.idleLargeImage",
+								"Large Image (Nothing Loaded)",
+							)}
+							description={t(
+								"settings.discord.idleLargeImageDesc",
+								"Choose the large image shown when no song or file is loaded.",
+							)}
+							control={
+								<Select.Root
+									value={idleLargeImageMode}
+									onValueChange={(val: any) => setIdleLargeImageMode(val)}
+								>
+									<Select.Trigger style={{ width: "130px" }} />
+									<Select.Content>
+										<Select.Item value="icon">App Icon</Select.Item>
+										<Select.Item value="profile">Profile Photo</Select.Item>
+										<Select.Item value="tab">Mode / Tab</Select.Item>
+										<Select.Item value="none">None</Select.Item>
+									</Select.Content>
+								</Select.Root>
+							}
+						/>
+						<SettingRow
+							icon={<Image24Regular />}
+							title={t(
+								"settings.discord.idleSmallImage",
+								"Small Image (Nothing Loaded)",
+							)}
+							description={t(
+								"settings.discord.idleSmallImageDesc",
+								"Choose the small badge shown when no song or file is loaded.",
+							)}
+							control={
+								<Select.Root
+									value={idleSmallImageMode}
+									onValueChange={(val: any) => setIdleSmallImageMode(val)}
+								>
+									<Select.Trigger style={{ width: "130px" }} />
+									<Select.Content>
+										<Select.Item value="profile">Profile Photo</Select.Item>
+										<Select.Item value="icon">App Icon</Select.Item>
+										<Select.Item value="tab">Mode / Tab</Select.Item>
 										<Select.Item value="none">None</Select.Item>
 									</Select.Content>
 								</Select.Root>

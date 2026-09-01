@@ -477,6 +477,20 @@
 			"paletteCustom": "自定义",
 			"gradientEditorDesc": "Pos 值为 0.0 对应最安静的部分，1.0 对应最响亮的部分。建议在更大的 Pos 值时使用更亮的颜色。",
 			"addStop": "添加色标"
+		},
+		"discord": {
+			"previewSection": "实时预览",
+			"previewActive": "进行中的歌曲",
+			"previewIdle": "未加载歌曲",
+			"imagesSection": "图像设置",
+			"largeImage": "大图（进行中）",
+			"largeImageDesc": "选择制作歌曲时在 Discord 大图槽位显示的内容。",
+			"smallImage": "小徽章（进行中）",
+			"smallImageDesc": "选择制作歌曲时在 Discord 右下角小徽章显示的内容。",
+			"idleLargeImage": "大图（未加载歌曲）",
+			"idleLargeImageDesc": "选择没有加载歌曲或处于闲置状态时显示的大图。",
+			"idleSmallImage": "小徽章（未加载歌曲）",
+			"idleSmallImageDesc": "选择没有加载歌曲或处于闲置状态时显示的小徽章。"
 		}
 	},
 	"timingOverview": {

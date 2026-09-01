@@ -16,6 +16,8 @@ import {
 	discordPrivacyPresetAtom,
 	discordLargeImageModeAtom,
 	discordSmallImageModeAtom,
+	discordIdleLargeImageModeAtom,
+	discordIdleSmallImageModeAtom,
 	discordGeneralActivityTextAtom,
 	discordShowProgressTimerAtom,
 	discordActivityTypeAtom,
@@ -67,6 +69,8 @@ export function DiscordPresence() {
 	const privacyPreset = useAtomValue(discordPrivacyPresetAtom);
 	const largeImageMode = useAtomValue(discordLargeImageModeAtom);
 	const smallImageMode = useAtomValue(discordSmallImageModeAtom);
+	const idleLargeImageMode = useAtomValue(discordIdleLargeImageModeAtom);
+	const idleSmallImageMode = useAtomValue(discordIdleSmallImageModeAtom);
 	const generalActivityText = useAtomValue(discordGeneralActivityTextAtom);
 	const showProgressTimer = useAtomValue(discordShowProgressTimerAtom);
 	const activityType = useAtomValue(discordActivityTypeAtom);
@@ -165,7 +169,13 @@ export function DiscordPresence() {
 				selectedWordIds,
 			});
 			const payload = inactive
-				? createInactiveDiscordActivity(generalActivityText, activityType)
+				? createInactiveDiscordActivity(generalActivityText, activityType, {
+						idleLargeImageMode,
+						idleSmallImageMode,
+						userProfilePhoto: user?.photoURL,
+						userDisplayName: user?.displayName || user?.email?.split("@")[0],
+						mode,
+					})
 				: formatNativeDiscordActivity(snapshot, context, {
 						detailsTemplate: safeDetailsTemplate,
 						stateTemplate: safeStateTemplate,
@@ -178,6 +188,8 @@ export function DiscordPresence() {
 						privacyPreset,
 						largeImageMode,
 						smallImageMode,
+						idleLargeImageMode,
+						idleSmallImageMode,
 						generalActivityText,
 						showProgressTimer,
 					});
@@ -211,6 +223,8 @@ export function DiscordPresence() {
 		privacyPreset,
 		largeImageMode,
 		smallImageMode,
+		idleLargeImageMode,
+		idleSmallImageMode,
 		generalActivityText,
 		showProgressTimer,
 		user,
