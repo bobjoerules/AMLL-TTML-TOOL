@@ -46,6 +46,7 @@ import {
 	discordSmallImageModeAtom,
 	discordIdleLargeImageModeAtom,
 	discordIdleSmallImageModeAtom,
+	discordIdleBottomTextAtom,
 	discordPrivacyPresetAtom,
 	discordShowProgressTimerAtom,
 	discordGeneralActivityTextAtom,
@@ -163,6 +164,9 @@ export function DiscordPresenceSettings() {
 	);
 	const [idleSmallImageMode, setIdleSmallImageMode] = useAtom(
 		discordIdleSmallImageModeAtom,
+	);
+	const [idleBottomText, setIdleBottomText] = useAtom(
+		discordIdleBottomTextAtom,
 	);
 	const [previewTab, setPreviewTab] = useState<"active" | "empty">("active");
 	const [privacyPreset, setPrivacyPreset] = useAtom(discordPrivacyPresetAtom);
@@ -342,8 +346,25 @@ export function DiscordPresenceSettings() {
 	}, [previewTab, privacyPreset, statePreview, generalActivityText]);
 
 	const bottomLinePreviewText = useMemo(() => {
-		if (previewTab === "empty") return undefined;
 		if (privacyPreset === "none") return undefined;
+		if (previewTab === "empty") {
+			try {
+				const rendered = renderDiscordTemplate(
+					idleBottomText,
+					context.templateContext,
+				);
+				return (
+					rendered ||
+					user?.displayName ||
+					user?.email?.split("@")[0] ||
+					"AMLL TTML Tool"
+				);
+			} catch {
+				return (
+					user?.displayName || user?.email?.split("@")[0] || "AMLL TTML Tool"
+				);
+			}
+		}
 		if (privacyPreset === "minimal") return undefined;
 		return (
 			bottomLinePreview ||
@@ -351,7 +372,14 @@ export function DiscordPresenceSettings() {
 				? `${context.templateContext.title} - ${context.templateContext.artist}`
 				: "Ginseng Strip 2002 - Yung Lean")
 		);
-	}, [previewTab, privacyPreset, bottomLinePreview, context.templateContext]);
+	}, [
+		previewTab,
+		privacyPreset,
+		bottomLinePreview,
+		idleBottomText,
+		context.templateContext,
+		user,
+	]);
 
 	return (
 		<Flex direction="column" gap="4">
@@ -532,7 +560,8 @@ export function DiscordPresenceSettings() {
 							)}
 
 							{/* Line 4: Progress / Timer */}
-							{showPlaybackTimeline && (
+							{((previewTab === "active" && showPlaybackTimeline) ||
+								(previewTab === "empty" && showProgressTimer)) && (
 								<Text
 									size="2"
 									style={{
@@ -543,7 +572,7 @@ export function DiscordPresenceSettings() {
 										fontSize: "12px",
 									}}
 								>
-									<span>♫</span> 2:28:13
+									<span>♫</span> {previewTab === "empty" ? "1:33" : "2:28:13"}
 								</Text>
 							)}
 						</Flex>
@@ -1050,6 +1079,64 @@ export function DiscordPresenceSettings() {
 									variant="soft"
 									onClick={() => setGeneralActivityText("Working on lyrics")}
 									disabled={generalActivityText === "Working on lyrics"}
+								>
+									<ArrowUndo24Regular
+										style={{ width: "14px", height: "14px" }}
+									/>
+								</Button>
+							</Flex>
+						</Flex>
+					</Card>
+
+					{/* Idle Third Line / Bottom Text */}
+					<Card style={{ padding: "16px" }} mt="3">
+						<Flex align="center" justify="between" gap="4">
+							<Flex align="center" gap="3" style={{ minWidth: 0 }}>
+								<Box
+									style={{
+										color: "var(--accent-9)",
+										display: "flex",
+										alignItems: "center",
+										flexShrink: 0,
+									}}
+								>
+									<Edit24Regular />
+								</Box>
+								<Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+									<Text size="2" weight="medium">
+										{t(
+											"settings.discord.idleBottomText",
+											"Third Line (Nothing Loaded)",
+										)}
+									</Text>
+									<Text
+										size="1"
+										color="gray"
+										style={{
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+										}}
+									>
+										{t(
+											"settings.discord.idleBottomTextDesc",
+											"Text displayed on the third line (large image hover text) when no song is loaded.",
+										)}
+									</Text>
+								</Flex>
+							</Flex>
+							<Flex gap="2" align="center" style={{ flexShrink: 0 }}>
+								<TextField.Root
+									value={idleBottomText}
+									onChange={(event) => setIdleBottomText(event.target.value)}
+									placeholder="{{username}}"
+									style={{ width: "160px" }}
+								/>
+								<Button
+									size="1"
+									variant="soft"
+									onClick={() => setIdleBottomText("{{username}}")}
+									disabled={idleBottomText === "{{username}}"}
 								>
 									<ArrowUndo24Regular
 										style={{ width: "14px", height: "14px" }}

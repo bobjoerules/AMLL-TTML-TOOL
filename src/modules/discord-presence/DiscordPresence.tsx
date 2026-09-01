@@ -18,6 +18,7 @@ import {
 	discordSmallImageModeAtom,
 	discordIdleLargeImageModeAtom,
 	discordIdleSmallImageModeAtom,
+	discordIdleBottomTextAtom,
 	discordGeneralActivityTextAtom,
 	discordShowProgressTimerAtom,
 	discordActivityTypeAtom,
@@ -71,6 +72,7 @@ export function DiscordPresence() {
 	const smallImageMode = useAtomValue(discordSmallImageModeAtom);
 	const idleLargeImageMode = useAtomValue(discordIdleLargeImageModeAtom);
 	const idleSmallImageMode = useAtomValue(discordIdleSmallImageModeAtom);
+	const idleBottomText = useAtomValue(discordIdleBottomTextAtom);
 	const generalActivityText = useAtomValue(discordGeneralActivityTextAtom);
 	const showProgressTimer = useAtomValue(discordShowProgressTimerAtom);
 	const activityType = useAtomValue(discordActivityTypeAtom);
@@ -190,6 +192,7 @@ export function DiscordPresence() {
 						smallImageMode,
 						idleLargeImageMode,
 						idleSmallImageMode,
+						idleBottomTextTemplate: idleBottomText,
 						generalActivityText,
 						showProgressTimer,
 					});
@@ -225,6 +228,7 @@ export function DiscordPresence() {
 		smallImageMode,
 		idleLargeImageMode,
 		idleSmallImageMode,
+		idleBottomText,
 		generalActivityText,
 		showProgressTimer,
 		user,

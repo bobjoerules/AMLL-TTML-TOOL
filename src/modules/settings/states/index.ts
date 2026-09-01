@@ -134,6 +134,10 @@ export const discordGeneralActivityTextAtom = atomWithStorage(
 	"discordGeneralActivityText",
 	"Working on lyrics",
 );
+export const discordIdleBottomTextAtom = atomWithStorage(
+	"discordIdleBottomText",
+	"{{username}}",
+);
 
 export const showTimestampsAtom = atomWithStorage("showTimestamps", true);
 export const enableManualTimestampEditAtom = atomWithStorage(

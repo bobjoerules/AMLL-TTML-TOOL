@@ -490,7 +490,9 @@
 			"idleLargeImage": "大图（未加载歌曲）",
 			"idleLargeImageDesc": "选择没有加载歌曲或处于闲置状态时显示的大图。",
 			"idleSmallImage": "小徽章（未加载歌曲）",
-			"idleSmallImageDesc": "选择没有加载歌曲或处于闲置状态时显示的小徽章。"
+			"idleSmallImageDesc": "选择没有加载歌曲或处于闲置状态时显示的小徽章。",
+			"idleBottomText": "第三行文字（未加载歌曲）",
+			"idleBottomTextDesc": "选择或输入未加载歌曲时在第三行（大图悬停文本）显示的文字。"
 		}
 	},
 	"timingOverview": {
