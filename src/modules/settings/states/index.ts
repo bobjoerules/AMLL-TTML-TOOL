@@ -107,6 +107,7 @@ export type DiscordImageMode =
 	| "tab"
 	| "profile"
 	| "none";
+export type DiscordIdleImageMode = "icon" | "profile" | "tab" | "none";
 export type DiscordPrivacyPreset = "rich" | "minimal" | "none";
 
 export const discordLargeImageModeAtom = atomWithStorage<DiscordImageMode>(
@@ -117,6 +118,10 @@ export const discordSmallImageModeAtom = atomWithStorage<DiscordImageMode>(
 	"discordSmallImageMode",
 	"state",
 );
+export const discordIdleLargeImageModeAtom =
+	atomWithStorage<DiscordIdleImageMode>("discordIdleLargeImageMode", "icon");
+export const discordIdleSmallImageModeAtom =
+	atomWithStorage<DiscordIdleImageMode>("discordIdleSmallImageMode", "profile");
 export const discordPrivacyPresetAtom = atomWithStorage<DiscordPrivacyPreset>(
 	"discordPrivacyPreset",
 	"rich",

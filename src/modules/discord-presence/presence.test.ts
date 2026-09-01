@@ -562,4 +562,55 @@ describe("Discord presence", () => {
 		expect(payload.smallImage).toBe("https://i.imgur.com/custom_avatar.png");
 		expect(payload.smallImageText).toBe("LyricMaster");
 	});
+
+	it("identifies empty/idle project and applies configurable idle images", () => {
+		const emptySnapshot = createPresenceSnapshot({
+			lyrics: { lyricLines: [], metadata: [] } as any,
+			fileName: "lyric.ttml",
+			mode: ToolMode.Edit,
+			selectedLineIds: new Set(),
+			playing: false,
+			positionSeconds: 0,
+			durationSeconds: 0,
+			playbackRate: 1,
+			userProfilePhoto: "https://i.imgur.com/custom_avatar.png",
+			userDisplayName: "LyricMaster",
+		});
+
+		expect(emptySnapshot.hasFile).toBe(false);
+
+		const context = createDiscordTemplateContext({
+			snapshot: emptySnapshot,
+			lyrics: { lyricLines: [], metadata: [] } as any,
+			fileName: "lyric.ttml",
+			selectedLineIds: new Set(),
+			selectedWordIds: new Set(),
+		});
+
+		const payload = formatNativeDiscordActivity(emptySnapshot, context, {
+			detailsTemplate: "{{mode}} {{title}}",
+			stateTemplate: "{{lineProgress}}",
+			showPlaybackTimeline: false,
+			showProjectElapsed: false,
+			showRepositoryButton: true,
+			showStatusBadge: false,
+			privacyPreset: "rich",
+			largeImageMode: "artwork",
+			smallImageMode: "state",
+			idleLargeImageMode: "profile",
+			idleSmallImageMode: "tab",
+			generalActivityText: "Ready to sync",
+			showProgressTimer: true,
+		});
+
+		expect(payload).toMatchObject({
+			details: "AMLL TTML Tool",
+			state: "No file open",
+			playing: false,
+			largeImage: "https://i.imgur.com/custom_avatar.png",
+			largeImageText: "LyricMaster",
+			smallImage: DISCORD_EDIT_URL,
+			smallImageText: "Editing",
+		});
+	});
 });

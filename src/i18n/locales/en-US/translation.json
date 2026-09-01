@@ -510,6 +510,20 @@
 			"paletteCustom": "Custom",
 			"gradientEditorDesc": "A Pos value of 0.0 corresponds to the quietest part, and 1.0 corresponds to the loudest part. It is recommended to use brighter colors for larger Pos values.",
 			"addStop": "Add Color Stop"
+		},
+		"discord": {
+			"previewSection": "Live Preview",
+			"previewActive": "Active Song",
+			"previewIdle": "Nothing Loaded",
+			"imagesSection": "Images",
+			"largeImage": "Large Image (Active)",
+			"largeImageDesc": "Choose the content shown in the large image slot when working on a song.",
+			"smallImage": "Small Image (Active)",
+			"smallImageDesc": "Choose the content shown in the small image badge when working on a song.",
+			"idleLargeImage": "Large Image (Nothing Loaded)",
+			"idleLargeImageDesc": "Choose the large image shown when no song or file is loaded.",
+			"idleSmallImage": "Small Image (Nothing Loaded)",
+			"idleSmallImageDesc": "Choose the small badge shown when no song or file is loaded."
 		}
 	},
 	"timingOverview": {

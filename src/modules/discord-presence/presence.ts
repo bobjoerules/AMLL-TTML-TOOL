@@ -95,6 +95,8 @@ export interface DiscordActivityOptions {
 	privacyPreset: "rich" | "minimal" | "none";
 	largeImageMode: "icon" | "artwork" | "state" | "tab" | "profile" | "none";
 	smallImageMode: "icon" | "artwork" | "state" | "tab" | "profile" | "none";
+	idleLargeImageMode?: "icon" | "profile" | "tab" | "none";
+	idleSmallImageMode?: "icon" | "profile" | "tab" | "none";
 	generalActivityText: string;
 	showProgressTimer: boolean;
 }
@@ -152,12 +154,28 @@ export function createPresenceSnapshot({
 			.find((entry) => entry.key.toLowerCase() === "cover_art")
 			?.value.find((value) => value.trim().length > 0) ?? null;
 
-	const musicName = firstMetadataValue(lyrics, "musicName");
+	const musicName = firstMetadataValue(lyrics, "musicName").trim();
+	const artistName = firstMetadataValue(lyrics, "artists").trim();
+	const hasMeaningfulLines = lyrics.lyricLines.some(
+		(line) =>
+			(line.words &&
+				line.words.some((w) => Boolean(w.word && w.word.trim().length > 0))) ||
+			(typeof (line as any).main === "string" &&
+				(line as any).main.trim().length > 0),
+	);
+	const hasCustomFileName =
+		Boolean(fileName) &&
+		fileName !== "lyric.ttml" &&
+		fileName !== "lyric" &&
+		fileName !== "untitled.ttml" &&
+		fileName !== "untitled";
+
 	const hasFile =
-		lyrics.lyricLines.length > 0 ||
-		lyrics.metadata.length > 0 ||
+		hasMeaningfulLines ||
 		durationSeconds > 0 ||
-		(Boolean(fileName) && fileName !== "lyric.ttml");
+		Boolean(musicName) ||
+		Boolean(artistName) ||
+		hasCustomFileName;
 
 	const title = hasFile
 		? musicName || fileName.replace(/\.(?:ttml|lrc|txt)$/i, "").trim()
@@ -167,7 +185,7 @@ export function createPresenceSnapshot({
 		version: PRESENCE_BRIDGE_VERSION,
 		mode,
 		title,
-		artist: hasFile ? firstMetadataValue(lyrics, "artists") : "",
+		artist: hasFile ? artistName : "",
 		currentLine: currentIndex >= 0 ? currentIndex + 1 : null,
 		totalLines: primaryLines.length,
 		playing,
@@ -395,6 +413,35 @@ export function formatNativeDiscordActivity(
 				showRepositoryButton: false,
 			};
 		}
+
+		const getIdleImageUrl = (
+			mode: "icon" | "profile" | "tab" | "none",
+		): string | undefined => {
+			if (mode === "icon") return DISCORD_LOGO_URL;
+			if (mode === "profile")
+				return snapshot.userProfilePhoto || DISCORD_LOGO_URL;
+			if (mode === "tab") return getTabImageUrl(snapshot.mode);
+			return undefined;
+		};
+
+		const getIdleImageText = (
+			mode: "icon" | "profile" | "tab" | "none",
+		): string | undefined => {
+			if (mode === "icon") return "AMLL TTML Tool";
+			if (mode === "profile")
+				return snapshot.userDisplayName || "AMLL TTML Tool";
+			if (mode === "tab") return getTabImageText(snapshot.mode);
+			return undefined;
+		};
+
+		const idleLargeMode = options.idleLargeImageMode || "icon";
+		const idleSmallMode = options.idleSmallImageMode || "profile";
+
+		const largeImage = getIdleImageUrl(idleLargeMode);
+		const largeImageText = getIdleImageText(idleLargeMode);
+		const smallImage = getIdleImageUrl(idleSmallMode);
+		const smallImageText = getIdleImageText(idleSmallMode);
+
 		return {
 			details: "AMLL TTML Tool",
 			state:
@@ -404,8 +451,8 @@ export function formatNativeDiscordActivity(
 			playing: false,
 			...(options.activityType ? { activityType: options.activityType } : {}),
 			showRepositoryButton: options.showRepositoryButton,
-			largeImage: DISCORD_LOGO_URL,
-			largeImageText: "AMLL TTML Tool",
+			...(largeImage ? { largeImage, largeImageText } : {}),
+			...(smallImage ? { smallImage, smallImageText } : {}),
 		};
 	}
 
@@ -516,13 +563,53 @@ export function formatNativeDiscordActivity(
 export function createInactiveDiscordActivity(
 	generalActivityText = "Working on lyrics",
 	activityType?: string,
+	options?: {
+		idleLargeImageMode?: "icon" | "profile" | "tab" | "none";
+		idleSmallImageMode?: "icon" | "profile" | "tab" | "none";
+		userProfilePhoto?: string | null;
+		userDisplayName?: string | null;
+		mode?: ToolMode;
+	},
 ): DiscordActivityPayload {
+	const idleLargeMode = options?.idleLargeImageMode;
+	const idleSmallMode = options?.idleSmallImageMode;
+
+	const getIdleImageUrl = (
+		mode: "icon" | "profile" | "tab" | "none",
+	): string | undefined => {
+		if (mode === "icon") return DISCORD_LOGO_URL;
+		if (mode === "profile")
+			return options?.userProfilePhoto || DISCORD_LOGO_URL;
+		if (mode === "tab") return getTabImageUrl(options?.mode || ToolMode.Edit);
+		return undefined;
+	};
+
+	const getIdleImageText = (
+		mode: "icon" | "profile" | "tab" | "none",
+	): string | undefined => {
+		if (mode === "icon") return "AMLL TTML Tool";
+		if (mode === "profile") return options?.userDisplayName || "AMLL TTML Tool";
+		if (mode === "tab") return getTabImageText(options?.mode || ToolMode.Edit);
+		return undefined;
+	};
+
+	const largeImage = idleLargeMode ? getIdleImageUrl(idleLargeMode) : undefined;
+	const largeImageText = idleLargeMode
+		? getIdleImageText(idleLargeMode)
+		: undefined;
+	const smallImage = idleSmallMode ? getIdleImageUrl(idleSmallMode) : undefined;
+	const smallImageText = idleSmallMode
+		? getIdleImageText(idleSmallMode)
+		: undefined;
+
 	return {
 		details: "AMLL TTML Tool",
 		state: generalActivityText,
 		playing: false,
 		...(activityType ? { activityType } : {}),
 		showRepositoryButton: false,
+		...(largeImage ? { largeImage, largeImageText } : {}),
+		...(smallImage ? { smallImage, smallImageText } : {}),
 	};
 }
 
