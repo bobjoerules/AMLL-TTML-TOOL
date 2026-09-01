@@ -190,7 +190,7 @@ export const HeaderFileInfo = () => {
 				<Tooltip
 					content={t(
 						"header.syncProgressTooltip",
-						"Lines Synced: {{timedLines}}/{{totalLines}} ({{linePercent}}%) • Words Synced: {{timedWords}}/{{totalWords}} ({{wordPercent}}%)",
+						"Lines Synced: {timedLines}/{totalLines} ({linePercent}%) • Words Synced: {timedWords}/{totalWords} ({wordPercent}%)",
 						{
 							timedLines: syncProgress.timedLines,
 							totalLines: syncProgress.totalLines,

@@ -589,7 +589,8 @@
 	"header": {
 		"status": {
 			"autoSavedAt": "Autosaved at {time}"
-		}
+		},
+		"syncProgressTooltip": "Lines Synced: {timedLines}/{totalLines} ({linePercent}%) • Words Synced: {timedWords}/{totalWords} ({wordPercent}%)"
 	},
 	"contextMenu": {
 		"deleteWords": "Delete {count} word(s)",
