@@ -1,0 +1,10 @@
+.buttonLabel {
+	display: inline;
+	white-space: nowrap;
+}
+
+@media screen and (max-width: 720px) {
+	.buttonLabel {
+		display: none !important;
+	}
+}

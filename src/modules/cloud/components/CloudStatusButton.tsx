@@ -10,6 +10,8 @@ import {
 	currentUserAtom,
 } from "../states";
 
+import styles from "./CloudStatusButton.module.css";
+
 export const CloudStatusButton: FC = () => {
 	const { t } = useTranslation();
 	const user = useAtomValue(currentUserAtom);
@@ -36,17 +38,18 @@ export const CloudStatusButton: FC = () => {
 				style={{
 					borderRadius: 16,
 					paddingLeft: 8,
-					paddingRight: 10,
+					paddingRight: 8,
 					height: 26,
 					cursor: "pointer",
 					display: "flex",
 					alignItems: "center",
 					gap: 5,
+					flexShrink: 0,
 				}}
 				title={t("cloud.signInTooltip", "Sign in to TTML Cloud")}
 			>
 				<Cloud24Regular style={{ width: 15, height: 15 }} />
-				<Text size="1" weight="medium">
+				<Text size="1" weight="medium" className={styles.buttonLabel}>
 					{t("cloud.signIn", "Cloud")}
 				</Text>
 			</Button>
@@ -63,13 +66,15 @@ export const CloudStatusButton: FC = () => {
 					style={{
 						borderRadius: 16,
 						paddingLeft: 4,
-						paddingRight: 8,
+						paddingRight: 6,
 						height: 26,
 						cursor: "pointer",
 						display: "flex",
 						alignItems: "center",
 						gap: 6,
+						flexShrink: 0,
 					}}
+					title={user.displayName || "Cloud Account"}
 				>
 					<Avatar
 						size="1"
@@ -77,7 +82,13 @@ export const CloudStatusButton: FC = () => {
 						fallback={user.displayName?.[0]?.toUpperCase() || "U"}
 						radius="full"
 					/>
-					<Text size="1" weight="medium" truncate style={{ maxWidth: 80 }}>
+					<Text
+						size="1"
+						weight="medium"
+						truncate
+						className={styles.buttonLabel}
+						style={{ maxWidth: 80 }}
+					>
 						{user.displayName?.split(" ")[0] || "Account"}
 					</Text>
 				</Button>

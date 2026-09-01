@@ -211,9 +211,12 @@ export const TopMenu: FC = () => {
 				p="2"
 				pr="0"
 				align="center"
-				gap="2"
+				gap="1"
 				style={{
 					whiteSpace: "nowrap",
+					minWidth: 0,
+					flexShrink: 1,
+					overflow: "hidden",
 				}}
 			>
 				<HeaderFileInfo />

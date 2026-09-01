@@ -119,14 +119,14 @@ export default function WindowControls(props: WindowControlsProps) {
 		<div className={styles.windowControls}>
 			<div className={styles.leftSide}>
 				{placeLeft && systemControls}
-				<div className={styles.slot}>{props.startChildren}</div>
+				<div className={styles.leftSlot}>{props.startChildren}</div>
 				<div
 					className={styles.spacer}
 					onClick={props.onSpacerClicked}
 					data-tauri-drag-region
 				/>
 			</div>
-			<div className={styles.slot} data-tauri-drag-region>
+			<div className={styles.centerSlot} data-tauri-drag-region>
 				{props.titleChildren}
 			</div>
 			<div className={styles.rightSide}>
@@ -135,7 +135,7 @@ export default function WindowControls(props: WindowControlsProps) {
 					onClick={props.onSpacerClicked}
 					data-tauri-drag-region
 				/>
-				<div className={styles.slot}>{props.endChildren}</div>
+				<div className={styles.rightSlot}>{props.endChildren}</div>
 				{!placeLeft && systemControls}
 			</div>
 		</div>
