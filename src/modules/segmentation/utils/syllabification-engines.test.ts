@@ -42,6 +42,18 @@ describe("syllabification engines", () => {
 		}
 	});
 
+	it("never splits 'oh' or similar interjections", () => {
+		for (const interjection of ["oh", "Oh", "OH", "ooh", "whoa", "yeah"]) {
+			const word = { ...newLyricWord(), word: interjection };
+			expect(
+				segmentWord(word, prosodicConfig).map((part) => part.word),
+			).toEqual([interjection]);
+			expect(getSyllabificationEngine("prosodic").split(interjection)).toEqual([
+				interjection,
+			]);
+		}
+	});
+
 	it("keeps basic and none engines unsplit", () => {
 		expect(getSyllabificationEngine("basic").split("beautiful")).toEqual([
 			"beautiful",
