@@ -64,14 +64,32 @@ async function startApp() {
 		integrations: [],
 	});
 
-	createRoot(rootEl).render(
-		<StrictMode>
-			<Provider store={globalStore}>
-				<App />
-				{/* <DevTools position="bottom-right" /> */}
-			</Provider>
-		</StrictMode>,
-	);
+	try {
+		createRoot(rootEl).render(
+			<StrictMode>
+				<Provider store={globalStore}>
+					<App />
+					{/* <DevTools position="bottom-right" /> */}
+				</Provider>
+			</StrictMode>,
+		);
+	} catch (e) {
+		console.error("Fatal error rendering React root:", e);
+		if (import.meta.env.TAURI_ENV_PLATFORM) {
+			try {
+				const { getCurrentWindow } = await import("@tauri-apps/api/window");
+				await getCurrentWindow().show();
+			} catch {}
+		}
+	}
 }
 
-startApp();
+startApp().catch(async (e) => {
+	console.error("Fatal error starting app:", e);
+	if (import.meta.env.TAURI_ENV_PLATFORM) {
+		try {
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			await getCurrentWindow().show();
+		} catch {}
+	}
+});

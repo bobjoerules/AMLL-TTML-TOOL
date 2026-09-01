@@ -382,6 +382,25 @@ pub fn run() {
                     }
                 });
             }
+
+            // Safety fallback: Ensure main window is made visible after 1.5s even if frontend has delay or error
+            #[cfg(desktop)]
+            {
+                use tauri::Manager;
+                if let Some(main_window) = app.get_webview_window("main") {
+                    let fallback_window = main_window.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(1500));
+                        if let Ok(is_visible) = fallback_window.is_visible() {
+                            if !is_visible {
+                                log::info!("Safety fallback triggered: force-showing main window");
+                                let _ = fallback_window.show();
+                            }
+                        }
+                    });
+                }
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
