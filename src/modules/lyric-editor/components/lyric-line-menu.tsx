@@ -1,5 +1,6 @@
 import { ContextMenu } from "@radix-ui/themes";
-import { atom, useAtomValue, useSetAtom } from "jotai";
+import { atom, useAtomValue, useSetAtom, useStore } from "jotai";
+import { selectAtom } from "jotai/utils";
 import { useSetImmerAtom } from "jotai-immer";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -13,29 +14,44 @@ import { mergeLyricLines } from "../utils/merge-lines";
 import { MergeLineDialog } from "../modals/MergeLineDialog";
 
 const selectedLinesSizeAtom = atom((get) => get(selectedLinesAtom).size);
+const totalLinesAtom = selectAtom(
+	lyricLinesAtom,
+	(state) => state.lyricLines.length,
+);
 
 export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 	const { t } = useTranslation();
+	const store = useStore();
 	const setGlobalEnableInsert = useSetAtom(globalEnableInsertAtom);
 	const setTimingCopyPlacement = useSetAtom(timingCopyPlacementAtom);
 
 	const selectedLinesSize = useAtomValue(selectedLinesSizeAtom);
 	const selectedLines = useAtomValue(selectedLinesAtom);
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
+	const totalLines = useAtomValue(totalLinesAtom);
 
-	const lineObjs = useAtomValue(lyricLinesAtom);
-	const totalLines = lineObjs.lyricLines.length;
-	const selectedLineObjs = lineObjs.lyricLines.filter((line) =>
-		selectedLines.has(line.id),
-	);
 	const [mergePickerOpen, setMergePickerOpen] = React.useState(false);
 
 	const [Bgchecked, setBgChecked] = React.useState(() => {
+		const lines = store.get(lyricLinesAtom).lyricLines;
+		const selected = store.get(selectedLinesAtom);
+		const selectedLineObjs = lines.filter((line) => selected.has(line.id));
+		if (selectedLineObjs.length === 0) {
+			const cur = lines[lineIndex];
+			return cur?.isBG ?? false;
+		}
 		if (selectedLineObjs.every((line) => line.isBG)) return true;
 		else if (selectedLineObjs.every((line) => !line.isBG)) return false;
 		else return "indeterminate" as const;
 	});
 	const [DuetChecked, setDuetChecked] = React.useState(() => {
+		const lines = store.get(lyricLinesAtom).lyricLines;
+		const selected = store.get(selectedLinesAtom);
+		const selectedLineObjs = lines.filter((line) => selected.has(line.id));
+		if (selectedLineObjs.length === 0) {
+			const cur = lines[lineIndex];
+			return cur?.isDuet ?? false;
+		}
 		if (selectedLineObjs.every((line) => line.isDuet)) return true;
 		else if (selectedLineObjs.every((line) => !line.isDuet)) return false;
 		else return "indeterminate" as const;
@@ -127,11 +143,13 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 
 	return (
 		<>
-			<MergeLineDialog
-				sourceLineIndex={lineIndex}
-				open={mergePickerOpen}
-				onOpenChange={setMergePickerOpen}
-			/>
+			{mergePickerOpen && (
+				<MergeLineDialog
+					sourceLineIndex={lineIndex}
+					open={mergePickerOpen}
+					onOpenChange={setMergePickerOpen}
+				/>
+			)}
 			<ContextMenu.CheckboxItem checked={Bgchecked} onCheckedChange={bgOnCheck}>
 				{t("contextMenu.bgLyric", "背景歌词")}
 			</ContextMenu.CheckboxItem>
