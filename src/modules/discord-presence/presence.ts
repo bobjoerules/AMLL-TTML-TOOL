@@ -105,7 +105,7 @@ export interface DiscordActivityOptions {
 	idleLargeImageMode?: "icon" | "profile" | "tab" | "none";
 	idleSmallImageMode?: "icon" | "profile" | "tab" | "none";
 	idleBottomTextTemplate?: string;
-	generalActivityText: string;
+	generalActivityText?: string;
 	showProgressTimer: boolean;
 }
 
@@ -479,10 +479,7 @@ export function formatNativeDiscordActivity(
 
 		const payload: DiscordActivityPayload = {
 			details: "AMLL TTML Tool",
-			state:
-				options.privacyPreset === "minimal"
-					? options.generalActivityText
-					: "No file open",
+			state: "No file open",
 			playing: false,
 			...(options.activityType ? { activityType: options.activityType } : {}),
 			showRepositoryButton: options.showRepositoryButton,
@@ -518,7 +515,7 @@ export function formatNativeDiscordActivity(
 		);
 	} else if (options.privacyPreset === "minimal") {
 		details = "AMLL TTML Tool";
-		state = options.generalActivityText;
+		state = options.generalActivityText || "Working on lyrics";
 		showRepositoryButton = false;
 	} else if (options.privacyPreset === "none") {
 		details = undefined;

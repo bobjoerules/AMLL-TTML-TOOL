@@ -19,50 +19,12 @@
 	padding: 4px 8px;
 	background: var(--gray-a2, rgba(255, 255, 255, 0.03));
 	border-bottom: 1px solid var(--gray-a4);
-	min-height: 32px;
+	min-height: 34px;
 	user-select: none;
-}
-
-.tabItem {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 3px 8px;
-	border-radius: var(--radius-2, 6px);
-	background: var(--accent-a3, rgba(255, 255, 255, 0.08));
-	border: 1px solid var(--accent-a5, rgba(255, 255, 255, 0.12));
-	color: var(--accent-11, #fff);
-	font-size: 12px;
-	font-weight: 500;
-	transition:
-		background 0.15s ease,
-		border-color 0.15s ease;
+	gap: 8px;
 }
 
 .closeButton {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 16px;
-	height: 16px;
-	border-radius: 50%;
-	border: none;
-	background: transparent;
-	color: var(--gray-10, #aaa);
-	cursor: pointer;
-	padding: 0;
-	margin-left: 2px;
-	transition:
-		background 0.15s ease,
-		color 0.15s ease;
-}
-
-.closeButton:hover {
-	background: var(--red-a4, rgba(255, 0, 0, 0.2));
-	color: var(--red-11, #ff5555);
-}
-
-.addButton {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -73,14 +35,15 @@
 	background: transparent;
 	color: var(--gray-10, #aaa);
 	cursor: pointer;
+	padding: 0;
 	transition:
 		background 0.15s ease,
 		color 0.15s ease;
 }
 
-.addButton:hover {
-	background: var(--gray-a3, rgba(255, 255, 255, 0.1));
-	color: var(--gray-12, #fff);
+.closeButton:hover {
+	background: var(--red-a4, rgba(255, 0, 0, 0.2));
+	color: var(--red-11, #ff5555);
 }
 
 .previewBody {
