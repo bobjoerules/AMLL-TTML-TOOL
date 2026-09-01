@@ -15,11 +15,13 @@ import {
 	Checkbox,
 	Flex,
 	Grid,
+	IconButton,
 	SegmentedControl,
 	Slider,
 	Switch,
 	Text,
 	TextField,
+	Tooltip,
 } from "@radix-ui/themes";
 import { useAtom, useAtomValue, useStore } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
@@ -277,44 +279,52 @@ export const LineTimingTools = () => {
 	}, [editLyricLines, store, t]);
 
 	return (
-		<Flex direction="column" gap="1" justify="center">
-			<Flex gap="1" align="center">
-				<Button
-					size="1"
+		<Flex gap="1" align="center" justify="center" style={{ height: "100%" }}>
+			<Tooltip content={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}>
+				<IconButton
+					size="2"
 					variant="soft"
 					onClick={handleCopyTimings}
-					title={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}
-					style={{ flex: 1 }}
+					aria-label={t("ribbonBar.timingTools.copyTimings", "Copy Timings")}
+					style={{ cursor: "pointer", borderRadius: "6px" }}
 				>
 					<Copy16Regular />
-					<span>{t("ribbonBar.timingTools.copy", "Copy Timings")}</span>
-				</Button>
-				<Button
-					size="1"
+				</IconButton>
+			</Tooltip>
+			<Tooltip
+				content={t("ribbonBar.timingTools.pasteTimings", "Paste Timings")}
+			>
+				<IconButton
+					size="2"
 					variant="soft"
 					onClick={handlePasteTimings}
 					disabled={!copiedTimings}
-					title={t("ribbonBar.timingTools.pasteTimings", "Paste Timings")}
-					style={{ flex: 1 }}
+					aria-label={t("ribbonBar.timingTools.pasteTimings", "Paste Timings")}
+					style={{ cursor: "pointer", borderRadius: "6px" }}
 				>
 					<ClipboardPaste16Regular />
-					<span>{t("ribbonBar.timingTools.paste", "Paste Timings")}</span>
-				</Button>
-			</Flex>
-			<Button
-				size="1"
-				variant="soft"
-				color="indigo"
-				onClick={handleSnapToPlayhead}
-				title={t(
+				</IconButton>
+			</Tooltip>
+			<Tooltip
+				content={t(
 					"ribbonBar.timingTools.snapPlayhead",
 					"Snap Timings to Playhead",
 				)}
-				style={{ width: "100%", justifyContent: "center" }}
 			>
-				<FastForward16Regular />
-				<span>{t("ribbonBar.timingTools.snap", "Snap to Playhead")}</span>
-			</Button>
+				<IconButton
+					size="2"
+					variant="soft"
+					color="indigo"
+					onClick={handleSnapToPlayhead}
+					aria-label={t(
+						"ribbonBar.timingTools.snapPlayhead",
+						"Snap Timings to Playhead",
+					)}
+					style={{ cursor: "pointer", borderRadius: "6px" }}
+				>
+					<FastForward16Regular />
+				</IconButton>
+			</Tooltip>
 		</Flex>
 	);
 };
