@@ -232,7 +232,6 @@ export function DiscordPresence() {
 		idleLargeImageMode,
 		idleSmallImageMode,
 		idleBottomText,
-		generalActivityText,
 		showProgressTimer,
 		user,
 		checklistTotal,
