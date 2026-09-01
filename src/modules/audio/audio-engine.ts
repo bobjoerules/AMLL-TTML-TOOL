@@ -207,6 +207,8 @@ class AudioEngine extends EventTarget {
 					this._needsFreshContext = true;
 				}
 			}, 2000);
+
+			this.setupMediaSession();
 		}
 	}
 
@@ -285,6 +287,8 @@ class AudioEngine extends EventTarget {
 		this._audioEl = document.createElement("audio");
 		this._audioEl.crossOrigin = "anonymous";
 		this._audioEl.volume = this._volume;
+		// Keep muted so macOS WebKit/TouchBar never plays duplicate audio
+		this._audioEl.muted = true;
 		this._audioEl.preload = "metadata";
 		return this._audioEl;
 	}
@@ -351,6 +355,78 @@ class AudioEngine extends EventTarget {
 		audioEl.addEventListener("volumechange", () => {
 			this.volume = audioEl.volume;
 		});
+		audioEl.addEventListener("play", () => {
+			if (this.musicBuffer && !this._isPlaying) {
+				void this.resumeOrSeekMusic(this._pausedPosition);
+			}
+		});
+		audioEl.addEventListener("pause", () => {
+			if (this.musicBuffer && this._isPlaying) {
+				this.pauseMusic();
+			}
+		});
+		audioEl.addEventListener("seeked", () => {
+			if (
+				this.musicBuffer &&
+				Math.abs(this.musicCurrentTime - audioEl.currentTime) > 0.3
+			) {
+				this.seekMusic(audioEl.currentTime);
+			}
+		});
+	}
+
+	private setupMediaSession() {
+		if (typeof navigator === "undefined" || !("mediaSession" in navigator))
+			return;
+
+		navigator.mediaSession.setActionHandler("play", () => {
+			void this.resumeOrSeekMusic();
+		});
+		navigator.mediaSession.setActionHandler("pause", () => {
+			this.pauseMusic();
+		});
+		navigator.mediaSession.setActionHandler("stop", () => {
+			this.pauseMusic();
+			this.seekMusic(0);
+		});
+		navigator.mediaSession.setActionHandler("seekto", (details) => {
+			if (typeof details.seekTime === "number") {
+				this.seekMusic(details.seekTime);
+			}
+		});
+		navigator.mediaSession.setActionHandler("seekforward", (details) => {
+			const offset = details.seekOffset || 5;
+			this.seekMusic(this.musicCurrentTime + offset);
+		});
+		navigator.mediaSession.setActionHandler("seekbackward", (details) => {
+			const offset = details.seekOffset || 5;
+			this.seekMusic(this.musicCurrentTime - offset);
+		});
+	}
+
+	public updateMediaSessionState() {
+		if (typeof navigator === "undefined" || !("mediaSession" in navigator))
+			return;
+		navigator.mediaSession.playbackState = this._isPlaying
+			? "playing"
+			: "paused";
+		if (
+			"setPositionState" in navigator.mediaSession &&
+			this.musicDuration > 0
+		) {
+			try {
+				navigator.mediaSession.setPositionState({
+					duration: this.musicDuration,
+					playbackRate: this._musicPlayBackRate,
+					position: Math.min(
+						this.musicDuration,
+						Math.max(0, this.musicCurrentTime),
+					),
+				});
+			} catch {
+				// Ignore if state transition is transient
+			}
+		}
 	}
 	//#endregion
 
@@ -501,12 +577,14 @@ class AudioEngine extends EventTarget {
 					this._activeSourceNode = null;
 					this._isPlaying = false;
 					this._pausedPosition = this.musicDuration;
+					this.updateMediaSessionState();
 					this.dispatchEvent(new Event("music-pause"));
 					this.dispatchEvent(new Event("music-seeked"));
 				}
 			};
 
 			source.start(0, clampedOffset);
+			this.updateMediaSessionState();
 			this.dispatchEvent(new Event("music-resume"));
 		} catch (err) {
 			console.warn(
@@ -530,12 +608,14 @@ class AudioEngine extends EventTarget {
 					this._activeSourceNode = null;
 					this._isPlaying = false;
 					this._pausedPosition = this.musicDuration;
+					this.updateMediaSessionState();
 					this.dispatchEvent(new Event("music-pause"));
 					this.dispatchEvent(new Event("music-seeked"));
 				}
 			};
 
 			source.start(0, clampedOffset);
+			this.updateMediaSessionState();
 			this.dispatchEvent(new Event("music-resume"));
 		}
 	}
@@ -544,6 +624,7 @@ class AudioEngine extends EventTarget {
 		if (!this._isPlaying) {
 			if (this._audioEl && !this._audioEl.paused) {
 				this._audioEl.pause();
+				this.updateMediaSessionState();
 				this.dispatchEvent(new Event("music-pause"));
 			}
 			return;
@@ -566,6 +647,7 @@ class AudioEngine extends EventTarget {
 			this._audioEl.currentTime = this._pausedPosition;
 		}
 
+		this.updateMediaSessionState();
 		this.dispatchEvent(new Event("music-pause"));
 	}
 
