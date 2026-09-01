@@ -303,162 +303,172 @@ export const ImportLyricsDialog = ({
 			if (prefill && prefill.source === source) {
 				const currentPrefill = prefill;
 				setPrefill(null);
+				const searchQuery = (
+					currentPrefill.query ||
+					(currentPrefill.track
+						? `${currentPrefill.track.artist ? `${currentPrefill.track.artist} - ` : ""}${currentPrefill.track.name}`
+						: "")
+				).trim();
 
-				if (currentPrefill.track) {
-					const track = currentPrefill.track;
-					let hit: ImportTrack;
-					if (source === "genius") {
-						hit = {
-							id: track.id ? Number(track.id) : 0,
-							name: track.name,
-							artist: track.artist,
-							album: track.album,
-							cover: track.cover,
-							fetchLyrics: async () => {
-								if (track.id) {
-									try {
-										const l = await GeniusApi.getLyrics(Number(track.id));
-										if (l) return l;
-									} catch (err) {
-										console.warn(
-											"Genius getLyrics failed, fallback to search:",
-											err,
-										);
-									}
-								}
-								const searchRes = await GeniusApi.search(
-									`${track.artist} ${track.name}`,
-									geniusApiKey,
-								);
-								const first = searchRes.response.hits[0]?.result;
-								if (first) {
-									return GeniusApi.getLyrics(first.id);
-								}
-								const lyrRes = await LyricallyApi.search(
-									`${track.artist} ${track.name}`,
-								);
-								if (lyrRes[0]) {
-									const d = await LyricallyApi.getLyrics(
-										lyrRes[0].name,
-										lyrRes[0].artist,
-									);
-									return d.lyrics || "";
-								}
-								return "";
-							},
-							fetchSongwriters: async () => {
-								try {
-									let songId = track.id ? Number(track.id) : null;
-									if (!songId) {
-										const searchRes = await GeniusApi.search(
-											`${track.artist} ${track.name}`,
-											geniusApiKey,
-										);
-										songId = searchRes.response.hits[0]?.result?.id || null;
-									}
-									if (songId) {
-										const artists = (
-											await GeniusApi.getSongById(songId, geniusApiKey)
-										).response.song.writer_artists;
-										return artists.map((a: any) => a.name);
-									}
-									return [track.artist];
-								} catch {
-									return [track.artist];
-								}
-							},
-						};
-					} else if (source === "lrclib") {
-						hit = {
-							id: track.id ? Number(track.id) : 0,
-							name: track.name,
-							artist: track.artist,
-							album: track.album,
-							cover: track.cover,
-							lyrics: track.lyrics || "",
-							fetchLyrics: async () => {
-								if (track.id) {
-									try {
-										const res = await LrcLibApi.get(Number(track.id));
-										const l =
-											res.plainLyrics ||
-											(res.syncedLyrics
-												? lrcToPlainLyrics(res.syncedLyrics)
-												: "");
-										if (l) return l;
-									} catch (err) {
-										console.warn("LRCLIB get failed, fallback to search:", err);
-									}
-								}
-								const searchRes = await LrcLibApi.search(
-									`${track.artist} ${track.name}`,
-								);
-								const first = searchRes[0];
-								return (
-									first?.plainLyrics ||
-									(first?.syncedLyrics
-										? lrcToPlainLyrics(first.syncedLyrics)
-										: "") ||
-									""
-								);
-							},
-							source: "LRCLIB",
-						};
-					} else {
-						hit = {
-							id: track.id || `${track.artist}-${track.name}`,
-							name: track.name,
-							artist: track.artist,
-							album: track.album,
-							cover: track.cover,
-							lyrics: track.lyrics || "",
-							fetchLyrics: async () => {
-								try {
-									const d = await LyricallyApi.getLyrics(
-										track.name,
-										track.artist,
-									);
-									if (d?.lyrics) return d.lyrics;
-								} catch (err) {
-									console.warn(
-										"Lyrically getLyrics failed, fallback to search:",
-										err,
-									);
-								}
-								const searchRes = await LyricallyApi.search(
-									`${track.artist} ${track.name}`,
-								);
-								if (searchRes[0]) {
-									const d = await LyricallyApi.getLyrics(
-										searchRes[0].name,
-										searchRes[0].artist,
-									);
-									return d.lyrics || "";
-								}
-								return "";
-							},
-						};
-					}
-					void handleSelectSong(hit);
-					return;
-				}
-
-				if (currentPrefill.query) {
-					setQuery(currentPrefill.query);
+				if (searchQuery) {
+					setQuery(searchQuery);
 					setSearching(true);
 					setHasSearched(true);
 					setResults([]);
 					setSelectedHit(null);
 					setEditableLyrics("");
 					setIsEditing(false);
-					const q = currentPrefill.query;
+
+					// If track has pre-defined id/lyrics, set it as initial selected hit
+					if (currentPrefill.track) {
+						const track = currentPrefill.track;
+						let hit: ImportTrack;
+						if (source === "genius") {
+							hit = {
+								id: track.id ? Number(track.id) : 0,
+								name: track.name,
+								artist: track.artist,
+								album: track.album,
+								cover: track.cover,
+								fetchLyrics: async () => {
+									if (track.id) {
+										try {
+											const l = await GeniusApi.getLyrics(Number(track.id));
+											if (l) return l;
+										} catch (err) {
+											console.warn(
+												"Genius getLyrics failed, fallback to search:",
+												err,
+											);
+										}
+									}
+									const searchRes = await GeniusApi.search(
+										`${track.artist} ${track.name}`,
+										geniusApiKey,
+									);
+									const first = searchRes.response.hits[0]?.result;
+									if (first) {
+										return GeniusApi.getLyrics(first.id);
+									}
+									const lyrRes = await LyricallyApi.search(
+										`${track.artist} ${track.name}`,
+									);
+									if (lyrRes[0]) {
+										const d = await LyricallyApi.getLyrics(
+											lyrRes[0].name,
+											lyrRes[0].artist,
+										);
+										return d.lyrics || "";
+									}
+									return "";
+								},
+								fetchSongwriters: async () => {
+									try {
+										let songId = track.id ? Number(track.id) : null;
+										if (!songId) {
+											const searchRes = await GeniusApi.search(
+												`${track.artist} ${track.name}`,
+												geniusApiKey,
+											);
+											songId = searchRes.response.hits[0]?.result?.id || null;
+										}
+										if (songId) {
+											const artists = (
+												await GeniusApi.getSongById(songId, geniusApiKey)
+											).response.song.writer_artists;
+											return artists.map((a: any) => a.name);
+										}
+										return [track.artist];
+									} catch {
+										return [track.artist];
+									}
+								},
+							};
+						} else if (source === "lrclib") {
+							hit = {
+								id: track.id ? Number(track.id) : 0,
+								name: track.name,
+								artist: track.artist,
+								album: track.album,
+								cover: track.cover,
+								lyrics: track.lyrics || "",
+								fetchLyrics: async () => {
+									if (track.id) {
+										try {
+											const res = await LrcLibApi.get(Number(track.id));
+											const l =
+												res.plainLyrics ||
+												(res.syncedLyrics
+													? lrcToPlainLyrics(res.syncedLyrics)
+													: "");
+											if (l) return l;
+										} catch (err) {
+											console.warn(
+												"LRCLIB get failed, fallback to search:",
+												err,
+											);
+										}
+									}
+									const searchRes = await LrcLibApi.search(
+										`${track.artist} ${track.name}`,
+									);
+									const first = searchRes[0];
+									return (
+										first?.plainLyrics ||
+										(first?.syncedLyrics
+											? lrcToPlainLyrics(first.syncedLyrics)
+											: "") ||
+										""
+									);
+								},
+								source: "LRCLIB",
+							};
+						} else {
+							hit = {
+								id: track.id || `${track.artist}-${track.name}`,
+								name: track.name,
+								artist: track.artist,
+								album: track.album,
+								cover: track.cover,
+								lyrics: track.lyrics || "",
+								fetchLyrics: async () => {
+									try {
+										const d = await LyricallyApi.getLyrics(
+											track.name,
+											track.artist,
+										);
+										if (d?.lyrics) return d.lyrics;
+									} catch (err) {
+										console.warn(
+											"Lyrically getLyrics failed, fallback to search:",
+											err,
+										);
+									}
+									const searchRes = await LyricallyApi.search(
+										`${track.artist} ${track.name}`,
+									);
+									if (searchRes[0]) {
+										const d = await LyricallyApi.getLyrics(
+											searchRes[0].name,
+											searchRes[0].artist,
+										);
+										return d.lyrics || "";
+									}
+									return "";
+								},
+							};
+						}
+						void handleSelectSong(hit);
+					}
+
+					// Simultaneously search provider to populate results list and ensure matches
 					(async () => {
 						try {
 							let hits: ImportTrack[] = [];
 							if (source === "genius") {
 								try {
 									hits = (
-										await GeniusApi.search(q, geniusApiKey)
+										await GeniusApi.search(searchQuery, geniusApiKey)
 									).response.hits.map(({ result }) => ({
 										id: result.id,
 										name: result.title,
@@ -484,17 +494,19 @@ export const ImportLyricsDialog = ({
 										"Genius search failed in prefill, fallback to Lyrically:",
 										err,
 									);
-									hits = (await LyricallyApi.search(q)).map((track, index) => ({
-										id: `${track.artist}-${track.name}-${index}`,
-										...track,
-										fetchLyrics: () =>
-											LyricallyApi.getLyrics(track.name, track.artist).then(
-												(detail) => detail.lyrics || "",
-											),
-									}));
+									hits = (await LyricallyApi.search(searchQuery)).map(
+										(track, index) => ({
+											id: `${track.artist}-${track.name}-${index}`,
+											...track,
+											fetchLyrics: () =>
+												LyricallyApi.getLyrics(track.name, track.artist).then(
+													(detail) => detail.lyrics || "",
+												),
+										}),
+									);
 								}
 							} else if (source === "lrclib") {
-								hits = (await LrcLibApi.search(q)).map((track) => ({
+								hits = (await LrcLibApi.search(searchQuery)).map((track) => ({
 									id: track.id,
 									name: track.name,
 									artist: track.artistName,
@@ -509,17 +521,19 @@ export const ImportLyricsDialog = ({
 										: "LRCLIB",
 								}));
 							} else {
-								hits = (await LyricallyApi.search(q)).map((track, index) => ({
-									id: `${track.artist}-${track.name}-${index}`,
-									...track,
-									fetchLyrics: () =>
-										LyricallyApi.getLyrics(track.name, track.artist).then(
-											(detail) => detail.lyrics || "",
-										),
-								}));
+								hits = (await LyricallyApi.search(searchQuery)).map(
+									(track, index) => ({
+										id: `${track.artist}-${track.name}-${index}`,
+										...track,
+										fetchLyrics: () =>
+											LyricallyApi.getLyrics(track.name, track.artist).then(
+												(detail) => detail.lyrics || "",
+											),
+									}),
+								);
 							}
 							setResults(hits);
-							if (hits.length > 0) {
+							if (hits.length > 0 && !currentPrefill.track) {
 								void handleSelectSong(hits[0]);
 							}
 						} catch (e) {
