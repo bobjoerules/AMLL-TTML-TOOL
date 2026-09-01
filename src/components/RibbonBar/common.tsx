@@ -22,7 +22,7 @@ import {
 } from "react";
 
 export const RibbonSection: FC<
-	PropsWithChildren<{ label: ReactNode; isSidebar?: boolean }>
+	PropsWithChildren<{ label?: ReactNode; isSidebar?: boolean }>
 > = ({ children, label, isSidebar }) => (
 	<>
 		<Flex
@@ -44,23 +44,6 @@ export const RibbonSection: FC<
 			>
 				{children}
 			</Flex>
-			{!isSidebar && (
-				<Flex
-					align="center"
-					justify="center"
-					px="2"
-					style={{
-						color: "var(--accent-11)",
-						fontSize: "var(--font-size-1)",
-						whiteSpace: "nowrap",
-						lineHeight: "1.4",
-						minHeight: "18px",
-						paddingBottom: "2px",
-					}}
-				>
-					{label}
-				</Flex>
-			)}
 			{isSidebar && label && (
 				<Flex
 					px="3"
@@ -106,14 +89,6 @@ const RibbonHeightReserve: FC<{ rows: number }> = ({ rows }) => (
 		}}
 	>
 		<Grid rows={`repeat(${rows}, var(--space-5))`} gapY="1" />
-		<Flex
-			align="center"
-			justify="center"
-			px="2"
-			style={{ fontSize: "var(--font-size-1)", whiteSpace: "nowrap" }}
-		>
-			Reserve
-		</Flex>
 	</Flex>
 );
 
