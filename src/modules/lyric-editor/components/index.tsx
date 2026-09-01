@@ -303,6 +303,53 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 			animationFrame = requestAnimationFrame(scrollWhileDragging);
 		};
 
+		const scrollWithWheel = (event: WheelEvent) => {
+			if (!store.get(lineDragAtom)?.isDragging || event.deltaY === 0) return;
+			const computedLineHeight = Number.parseFloat(
+				getComputedStyle(viewEl).lineHeight,
+			);
+			const lineHeight = Number.isFinite(computedLineHeight)
+				? computedLineHeight
+				: 16;
+			const delta = normalizeWheelDelta(
+				event.deltaY,
+				event.deltaMode,
+				lineHeight,
+				viewEl.clientHeight,
+			);
+			const maxScrollTop = viewEl.scrollHeight - viewEl.clientHeight;
+			viewEl.scrollTop = clampScrollTop(viewEl.scrollTop, delta, maxScrollTop);
+			event.preventDefault();
+		};
+
+		const cleanupActiveDragListeners = () => {
+			window.removeEventListener("pointermove", updatePointer, true);
+			window.removeEventListener("pointerup", finishDragging, true);
+			window.removeEventListener("pointercancel", finishDragging, true);
+			window.removeEventListener("wheel", scrollWithWheel, true);
+			window.removeEventListener("blur", handleWindowBlur);
+		};
+
+		const updatePointer = (event: PointerEvent) => {
+			const drag = store.get(lineDragAtom);
+			if (!drag || drag.pointerId !== event.pointerId) return;
+			if (!drag.isDragging) {
+				if (
+					Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) <
+					5
+				)
+					return;
+				store.set(lineDragAtom, { ...drag, isDragging: true });
+				store.set(draggingIdAtom, drag.id);
+				showDragPreview(drag.id);
+			}
+			event.preventDefault();
+			pointer = { x: event.clientX, y: event.clientY };
+			updateDragPreview();
+			updateDropTarget();
+			ensureScrolling();
+		};
+
 		const startPointerDrag = (event: PointerEvent) => {
 			if (!event.isPrimary || event.button !== 0) return;
 			const target = event.target;
@@ -324,25 +371,15 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 				startY: event.clientY,
 				isDragging: false,
 			});
-		};
-		const updatePointer = (event: PointerEvent) => {
-			const drag = store.get(lineDragAtom);
-			if (!drag || drag.pointerId !== event.pointerId) return;
-			if (!drag.isDragging) {
-				if (
-					Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) <
-					5
-				)
-					return;
-				store.set(lineDragAtom, { ...drag, isDragging: true });
-				store.set(draggingIdAtom, drag.id);
-				showDragPreview(drag.id);
-			}
-			event.preventDefault();
-			pointer = { x: event.clientX, y: event.clientY };
-			updateDragPreview();
-			updateDropTarget();
-			ensureScrolling();
+
+			window.addEventListener("pointermove", updatePointer, true);
+			window.addEventListener("pointerup", finishDragging, true);
+			window.addEventListener("pointercancel", finishDragging, true);
+			window.addEventListener("wheel", scrollWithWheel, {
+				capture: true,
+				passive: false,
+			});
+			window.addEventListener("blur", handleWindowBlur);
 		};
 
 		const finishDragging = (event?: PointerEvent) => {
@@ -381,46 +418,17 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 			store.set(lineDragAtom, null);
 			store.set(draggingIdAtom, "");
 			stopScrolling();
+			cleanupActiveDragListeners();
 		};
 
-		const scrollWithWheel = (event: WheelEvent) => {
-			if (!store.get(lineDragAtom)?.isDragging || event.deltaY === 0) return;
-			const computedLineHeight = Number.parseFloat(
-				getComputedStyle(viewEl).lineHeight,
-			);
-			const lineHeight = Number.isFinite(computedLineHeight)
-				? computedLineHeight
-				: 16;
-			const delta = normalizeWheelDelta(
-				event.deltaY,
-				event.deltaMode,
-				lineHeight,
-				viewEl.clientHeight,
-			);
-			const maxScrollTop = viewEl.scrollHeight - viewEl.clientHeight;
-			viewEl.scrollTop = clampScrollTop(viewEl.scrollTop, delta, maxScrollTop);
-			event.preventDefault();
-		};
 		const handleWindowBlur = () => finishDragging();
 
 		window.addEventListener("pointerdown", startPointerDrag, true);
-		window.addEventListener("pointermove", updatePointer, true);
-		window.addEventListener("pointerup", finishDragging, true);
-		window.addEventListener("pointercancel", finishDragging, true);
-		window.addEventListener("wheel", scrollWithWheel, {
-			capture: true,
-			passive: false,
-		});
-		window.addEventListener("blur", handleWindowBlur);
 
 		return () => {
 			finishDragging();
 			window.removeEventListener("pointerdown", startPointerDrag, true);
-			window.removeEventListener("pointermove", updatePointer, true);
-			window.removeEventListener("pointerup", finishDragging, true);
-			window.removeEventListener("pointercancel", finishDragging, true);
-			window.removeEventListener("wheel", scrollWithWheel, true);
-			window.removeEventListener("blur", handleWindowBlur);
+			cleanupActiveDragListeners();
 		};
 	}, [editLyric.length, editLyricLines, store, toolMode]);
 
