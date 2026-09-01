@@ -56,6 +56,48 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.1.1
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 1, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Mac Media Keys & Touch Bar Audio Sync:</b> Fixed
+									duplicate / dual audio playback on macOS and fully integrated
+									native MediaSession controls for keyboard media keys and Touch
+									Bar playback.
+								</Text>
+								<Text size="2">
+									• <b>Compact & Sleek Toolbars:</b> Removed bottom caption
+									labels across all mode toolbars, consolidated Assistant
+									Settings and Display Options into spacious popover menus, and
+									aligned Timing Tools into a single row.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Action Buttons & Empty State Polish:</b>{" "}
+									Converted checklist song row actions to compact icon-only
+									symbol buttons with consistent styling and tooltips to prevent
+									overflow, and fixed search prompt visibility during lyrics
+									import.
+								</Text>
+								<Text size="2">
+									• <b>Segmentation Improvements:</b> Guaranteed interjections
+									like
+									<code>oh</code>, <code>ooh</code>, <code>ah</code>, and{" "}
+									<code>yeah</code>
+									are never erroneously split by Quick Segment.
+								</Text>
+								<Text size="2">
+									• <b>TitleBar Layout & Height Fix:</b> Corrected vertical
+									alignment and explicit height in WindowControls to prevent
+									titlebar clipping on macOS.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.1.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
