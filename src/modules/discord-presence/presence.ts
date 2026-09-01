@@ -43,6 +43,10 @@ export const DISCORD_TEMPLATE_VARIABLES = [
 	"projectElapsed",
 	"appName",
 	"username",
+	"checklistCompleted",
+	"checklistTotal",
+	"checklistPercentage",
+	"checklistProgress",
 ] as const;
 
 export type DiscordTemplateVariable =
@@ -65,6 +69,8 @@ export interface PresenceSnapshot {
 	userProfilePhoto?: string | null;
 	userDisplayName?: string | null;
 	hasFile?: boolean;
+	checklistTotal?: number;
+	checklistCompleted?: number;
 }
 
 export interface DiscordActivityPayload {
@@ -124,6 +130,8 @@ export function createPresenceSnapshot({
 	projectElapsedSeconds,
 	userProfilePhoto,
 	userDisplayName,
+	checklistTotal,
+	checklistCompleted,
 }: {
 	lyrics: TTMLLyric;
 	fileName: string;
@@ -136,6 +144,8 @@ export function createPresenceSnapshot({
 	projectElapsedSeconds?: number;
 	userProfilePhoto?: string | null;
 	userDisplayName?: string | null;
+	checklistTotal?: number;
+	checklistCompleted?: number;
 }): PresenceSnapshot {
 	const primaryLines = lyrics.lyricLines.filter((line) => !line.isBG);
 	let currentIndex = -1;
@@ -199,6 +209,8 @@ export function createPresenceSnapshot({
 		userProfilePhoto,
 		userDisplayName,
 		hasFile,
+		checklistTotal: Math.max(0, checklistTotal ?? 0),
+		checklistCompleted: Math.max(0, checklistCompleted ?? 0),
 	};
 }
 
@@ -399,6 +411,13 @@ export function createDiscordTemplateContext({
 			: "",
 		appName: "AMLL TTML Tool",
 		username: snapshot.userDisplayName || "AMLL User",
+		checklistCompleted: (snapshot.checklistCompleted ?? 0).toString(),
+		checklistTotal: (snapshot.checklistTotal ?? 0).toString(),
+		checklistPercentage:
+			(snapshot.checklistTotal ?? 0) > 0
+				? `${Math.round(((snapshot.checklistCompleted ?? 0) / (snapshot.checklistTotal ?? 0)) * 100)}%`
+				: "0%",
+		checklistProgress: `${snapshot.checklistCompleted ?? 0}/${snapshot.checklistTotal ?? 0}`,
 	};
 }
 
