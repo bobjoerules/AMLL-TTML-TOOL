@@ -307,9 +307,9 @@ pub fn run() {
                 let file_menu = Submenu::new(app, "File", true)?;
                 let new_file_item = MenuItem::with_id(app, "menu-new-file", "New File", true, Some("CmdOrCtrl+N"))?;
                 let open_file_item = MenuItem::with_id(app, "menu-open-file", "Open File...", true, Some("CmdOrCtrl+O"))?;
-                let open_cloud_item = MenuItem::with_id(app, "menu-cloud-open", "Open from Cloud...", true, None::<&str>)?;
+                let open_cloud_item = MenuItem::with_id(app, "menu-cloud-open", "Open from Cloud...", true, Some("CmdOrCtrl+Shift+O"))?;
                 let save_file_item = MenuItem::with_id(app, "menu-save-file", "Save File", true, Some("CmdOrCtrl+S"))?;
-                let save_cloud_item = MenuItem::with_id(app, "menu-cloud-save", "Save to Cloud...", true, None::<&str>)?;
+                let save_cloud_item = MenuItem::with_id(app, "menu-cloud-save", "Save to Cloud...", true, Some("CmdOrCtrl+Shift+S"))?;
                 let metadata_item = MenuItem::with_id(app, "menu-metadata", "Metadata Editor...", true, None::<&str>)?;
                 file_menu.append(&new_file_item)?;
                 file_menu.append(&open_file_item)?;
