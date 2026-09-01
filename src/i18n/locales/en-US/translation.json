@@ -523,7 +523,9 @@
 			"idleLargeImage": "Large Image (Nothing Loaded)",
 			"idleLargeImageDesc": "Choose the large image shown when no song or file is loaded.",
 			"idleSmallImage": "Small Image (Nothing Loaded)",
-			"idleSmallImageDesc": "Choose the small badge shown when no song or file is loaded."
+			"idleSmallImageDesc": "Choose the small badge shown when no song or file is loaded.",
+			"idleBottomText": "Third Line (Nothing Loaded)",
+			"idleBottomTextDesc": "Text displayed on the third line (large image hover text) when no song is loaded."
 		}
 	},
 	"timingOverview": {

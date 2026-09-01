@@ -42,6 +42,7 @@ export const DISCORD_TEMPLATE_VARIABLES = [
 	"playbackRate",
 	"projectElapsed",
 	"appName",
+	"username",
 ] as const;
 
 export type DiscordTemplateVariable =
@@ -97,6 +98,7 @@ export interface DiscordActivityOptions {
 	smallImageMode: "icon" | "artwork" | "state" | "tab" | "profile" | "none";
 	idleLargeImageMode?: "icon" | "profile" | "tab" | "none";
 	idleSmallImageMode?: "icon" | "profile" | "tab" | "none";
+	idleBottomTextTemplate?: string;
 	generalActivityText: string;
 	showProgressTimer: boolean;
 }
@@ -396,6 +398,7 @@ export function createDiscordTemplateContext({
 			? formatElapsed(snapshot.projectElapsedSeconds ?? 0)
 			: "",
 		appName: "AMLL TTML Tool",
+		username: snapshot.userDisplayName || "AMLL User",
 	};
 }
 
@@ -438,11 +441,24 @@ export function formatNativeDiscordActivity(
 		const idleSmallMode = options.idleSmallImageMode || "profile";
 
 		const largeImage = getIdleImageUrl(idleLargeMode);
-		const largeImageText = getIdleImageText(idleLargeMode);
+		let largeImageText = getIdleImageText(idleLargeMode);
+		if (options.idleBottomTextTemplate && options.privacyPreset !== "none") {
+			try {
+				const rendered = renderDiscordTemplate(
+					options.idleBottomTextTemplate,
+					context,
+				);
+				if (rendered) {
+					largeImageText = truncateDiscordText(rendered);
+				}
+			} catch {
+				// use default fallback
+			}
+		}
 		const smallImage = getIdleImageUrl(idleSmallMode);
 		const smallImageText = getIdleImageText(idleSmallMode);
 
-		return {
+		const payload: DiscordActivityPayload = {
 			details: "AMLL TTML Tool",
 			state:
 				options.privacyPreset === "minimal"
@@ -454,6 +470,18 @@ export function formatNativeDiscordActivity(
 			...(largeImage ? { largeImage, largeImageText } : {}),
 			...(smallImage ? { smallImage, smallImageText } : {}),
 		};
+
+		if (
+			options.showProgressTimer &&
+			options.privacyPreset !== "none" &&
+			(snapshot.projectElapsedSeconds ?? 0) > 0
+		) {
+			payload.startTimestamp = Math.floor(
+				nowSeconds - (snapshot.projectElapsedSeconds ?? 0),
+			);
+		}
+
+		return payload;
 	}
 
 	let details: string | undefined = undefined;

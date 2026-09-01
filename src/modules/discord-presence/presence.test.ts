@@ -267,6 +267,7 @@ describe("Discord presence", () => {
 			playbackRate: "1.25×",
 			projectElapsed: "2h 14m",
 			appName: "AMLL TTML Tool",
+			username: "AMLL User",
 		});
 	});
 
@@ -612,5 +613,28 @@ describe("Discord presence", () => {
 			smallImage: DISCORD_EDIT_URL,
 			smallImageText: "Editing",
 		});
+
+		const customBottomPayload = formatNativeDiscordActivity(
+			emptySnapshot,
+			context,
+			{
+				detailsTemplate: "{{mode}} {{title}}",
+				stateTemplate: "{{lineProgress}}",
+				idleBottomTextTemplate: "User: {{username}}",
+				showPlaybackTimeline: false,
+				showProjectElapsed: false,
+				showRepositoryButton: true,
+				showStatusBadge: false,
+				privacyPreset: "rich",
+				largeImageMode: "artwork",
+				smallImageMode: "state",
+				idleLargeImageMode: "profile",
+				idleSmallImageMode: "tab",
+				generalActivityText: "Ready to sync",
+				showProgressTimer: true,
+			},
+		);
+
+		expect(customBottomPayload.largeImageText).toBe("User: LyricMaster");
 	});
 });
