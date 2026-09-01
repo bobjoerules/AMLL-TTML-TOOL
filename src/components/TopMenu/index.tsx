@@ -134,6 +134,15 @@ export const TopMenu: FC = () => {
 				e.preventDefault();
 				e.stopPropagation();
 				menuRef.current.onOpenFromCloud();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "c" &&
+				e.shiftKey &&
+				!e.altKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onOpenTTMLChecklist();
 			}
 		};
 		window.addEventListener("keydown", onKeyDown, { capture: true });

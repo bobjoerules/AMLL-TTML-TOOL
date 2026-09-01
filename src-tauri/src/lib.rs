@@ -339,7 +339,7 @@ pub fn run() {
                 let segment_item = MenuItem::with_id(app, "menu-quick-segment", "Quick Segment", true, Some("CmdOrCtrl+L"))?;
                 let time_shift_item = MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
                 let time_stretch_item = MenuItem::with_id(app, "menu-time-stretch", "Time Stretch...", true, None::<&str>)?;
-                let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, None::<&str>)?;
+                let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, Some("CmdOrCtrl+Shift+C"))?;
                 tools_menu.append(&segment_item)?;
                 tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&time_shift_item)?;
