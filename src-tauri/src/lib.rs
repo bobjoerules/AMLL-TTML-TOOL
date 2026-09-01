@@ -319,8 +319,6 @@ pub fn run() {
                 file_menu.append(&save_cloud_item)?;
                 file_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 file_menu.append(&metadata_item)?;
-                file_menu.append(&PredefinedMenuItem::separator(app)?)?;
-                file_menu.append(&PredefinedMenuItem::close_window(app, None)?)?;
 
                 // 3. Edit menu
                 let edit_menu = Submenu::new(app, "Edit", true)?;
