@@ -830,7 +830,7 @@ const ChecklistEntryCard = ({
 				</Flex>
 
 				{/* Action Buttons */}
-				<Flex gap="1" align="center">
+				<Flex gap="1" align="center" style={{ flexShrink: 0 }}>
 					{/* Download / Open Cloud TTML Button */}
 					{entry.cloudDocId && (
 						<Tooltip
@@ -839,16 +839,15 @@ const ChecklistEntryCard = ({
 								"Download & load linked TTML from Cloud",
 							)}
 						>
-							<Button
+							<IconButton
 								size="2"
 								variant="surface"
 								color="sky"
 								disabled={isLoadingCloud}
 								onClick={() => onLoadCloud?.(entry.cloudDocId!)}
+								aria-label={t("ttmlChecklist.loadCloudTTML", "Download TTML")}
 								style={{
-									height: "32px",
 									borderRadius: "8px",
-									fontWeight: 500,
 									cursor: "pointer",
 								}}
 							>
@@ -857,8 +856,7 @@ const ChecklistEntryCard = ({
 								) : (
 									<CloudArrowDown16Regular />
 								)}
-								{t("ttmlChecklist.loadCloudTTML", "Download TTML")}
-							</Button>
+							</IconButton>
 						</Tooltip>
 					)}
 
@@ -869,18 +867,19 @@ const ChecklistEntryCard = ({
 							"Open lyrics import & review page for this song",
 						)}
 					>
-						<Button
+						<IconButton
 							size="2"
 							variant="soft"
 							color="indigo"
 							onClick={() => onImportLyrics(entry)}
-							style={{ height: "32px", borderRadius: "8px", fontWeight: 500 }}
+							aria-label={t("ttmlChecklist.importLyrics", "Import Lyrics")}
+							style={{ borderRadius: "8px", cursor: "pointer" }}
 						>
 							<ArrowDownload16Regular />
-							{t("ttmlChecklist.importLyrics", "Import Lyrics")}
-						</Button>
+						</IconButton>
 					</Tooltip>
 
+					{/* Done / Reopen Button */}
 					<Tooltip
 						content={
 							entry.completed
@@ -888,30 +887,33 @@ const ChecklistEntryCard = ({
 								: t("ttmlChecklist.markDone", "Done")
 						}
 					>
-						<Button
+						<IconButton
 							size="2"
 							variant={entry.completed ? "surface" : "soft"}
 							color={entry.completed ? "gray" : "green"}
 							onClick={() => onComplete(!entry.completed)}
-							style={{ height: "32px", borderRadius: "8px", fontWeight: 500 }}
+							aria-label={
+								entry.completed
+									? t("ttmlChecklist.reopen", "Reopen")
+									: t("ttmlChecklist.markDone", "Done")
+							}
+							style={{ borderRadius: "8px", cursor: "pointer" }}
 						>
 							{entry.completed ? (
 								<Circle16Regular />
 							) : (
 								<CheckmarkCircle16Filled />
 							)}
-							{entry.completed
-								? t("ttmlChecklist.reopen", "Reopen")
-								: t("ttmlChecklist.markDone", "Done")}
-						</Button>
+						</IconButton>
 					</Tooltip>
+
 					<Tooltip content={t("ttmlChecklist.edit", "Edit checklist item")}>
 						<IconButton
 							variant="ghost"
 							color="gray"
 							onClick={() => setEditing(true)}
 							aria-label={t("ttmlChecklist.edit", "Edit checklist item")}
-							style={{ borderRadius: "8px" }}
+							style={{ borderRadius: "8px", cursor: "pointer" }}
 						>
 							<Edit16Regular />
 						</IconButton>
@@ -922,7 +924,7 @@ const ChecklistEntryCard = ({
 							color="red"
 							onClick={onDelete}
 							aria-label={t("ttmlChecklist.delete", "Delete checklist item")}
-							style={{ borderRadius: "8px" }}
+							style={{ borderRadius: "8px", cursor: "pointer" }}
 						>
 							<Delete16Regular />
 						</IconButton>
