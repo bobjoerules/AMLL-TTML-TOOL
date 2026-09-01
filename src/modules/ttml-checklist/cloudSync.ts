@@ -44,15 +44,13 @@ export async function saveChecklistToCloud(
 		}
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
-		// Strip undefined fields which cause Firestore setDoc to throw
-		const cleanEntries = JSON.parse(
-			JSON.stringify(normalizeChecklistEntries(entries)),
-		);
-		const data: CloudChecklistData = {
-			entries: cleanEntries,
+		const rawData = {
+			entries: normalizeChecklistEntries(entries),
 			updatedAt: Date.now(),
 		};
-		await setDoc(docRef, data, { merge: true });
+		// Deep clean to strip all undefined fields which cause Firestore setDoc to throw
+		const cleanData = JSON.parse(JSON.stringify(rawData));
+		await setDoc(docRef, cleanData, { merge: true });
 		return { success: true };
 	} catch (err: any) {
 		console.error("Failed to save checklist to Firebase:", err);
