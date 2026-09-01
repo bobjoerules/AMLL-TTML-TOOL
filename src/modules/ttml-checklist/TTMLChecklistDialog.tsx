@@ -1195,10 +1195,16 @@ export const TTMLChecklistDialog = () => {
 								>
 									<IconButton
 										size="2"
-										variant="soft"
+										variant="surface"
 										color="gray"
 										disabled={isSyncingCloud}
 										onClick={handlePullFromCloud}
+										style={{
+											height: "32px",
+											width: "32px",
+											borderRadius: "8px",
+											cursor: "pointer",
+										}}
 										aria-label={t(
 											"ttmlChecklist.downloadCloud",
 											"Download from Cloud",
@@ -1207,7 +1213,9 @@ export const TTMLChecklistDialog = () => {
 										{isSyncingCloud ? (
 											<Spinner size="1" />
 										) : (
-											<CloudArrowDown16Regular />
+											<CloudArrowDown16Regular
+												style={{ width: "18px", height: "18px" }}
+											/>
 										)}
 									</IconButton>
 								</Tooltip>
@@ -1220,16 +1228,24 @@ export const TTMLChecklistDialog = () => {
 								>
 									<IconButton
 										size="2"
-										variant="soft"
+										variant="surface"
 										color="gray"
 										disabled={isSyncingCloud}
 										onClick={handlePushToCloud}
+										style={{
+											height: "32px",
+											width: "32px",
+											borderRadius: "8px",
+											cursor: "pointer",
+										}}
 										aria-label={t("ttmlChecklist.pushCloud", "Push to Cloud")}
 									>
 										{isSyncingCloud ? (
 											<Spinner size="1" />
 										) : (
-											<CloudArrowUp16Regular />
+											<CloudArrowUp16Regular
+												style={{ width: "18px", height: "18px" }}
+											/>
 										)}
 									</IconButton>
 								</Tooltip>
@@ -1244,16 +1260,24 @@ export const TTMLChecklistDialog = () => {
 							>
 								<IconButton
 									size="2"
-									variant="soft"
+									variant="surface"
 									color="gray"
 									disabled={isExporting}
 									onClick={handleExportChecklist}
+									style={{
+										height: "32px",
+										width: "32px",
+										borderRadius: "8px",
+										cursor: "pointer",
+									}}
 									aria-label={t(
 										"ttmlChecklist.downloadJson",
 										"Download / Export JSON",
 									)}
 								>
-									<DocumentArrowDown16Regular />
+									<DocumentArrowDown16Regular
+										style={{ width: "18px", height: "18px" }}
+									/>
 								</IconButton>
 							</Tooltip>
 
@@ -1263,12 +1287,20 @@ export const TTMLChecklistDialog = () => {
 							>
 								<IconButton
 									size="2"
-									variant="soft"
+									variant="surface"
 									color="gray"
 									onClick={() => fileInputRef.current?.click()}
+									style={{
+										height: "32px",
+										width: "32px",
+										borderRadius: "8px",
+										cursor: "pointer",
+									}}
 									aria-label={t("ttmlChecklist.importJson", "Import JSON file")}
 								>
-									<DocumentArrowUp16Regular />
+									<DocumentArrowUp16Regular
+										style={{ width: "18px", height: "18px" }}
+									/>
 								</IconButton>
 							</Tooltip>
 
@@ -1278,7 +1310,11 @@ export const TTMLChecklistDialog = () => {
 								variant={showAddForm ? "soft" : "solid"}
 								color={showAddForm ? "gray" : "accent"}
 								onClick={() => setShowAddForm((prev) => !prev)}
-								style={{ borderRadius: "8px" }}
+								style={{
+									height: "32px",
+									borderRadius: "8px",
+									cursor: "pointer",
+								}}
 							>
 								{showAddForm ? <Dismiss16Regular /> : <Add16Regular />}
 								{showAddForm
