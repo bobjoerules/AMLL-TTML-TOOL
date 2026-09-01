@@ -116,6 +116,24 @@ export const TopMenu: FC = () => {
 				e.preventDefault();
 				e.stopPropagation();
 				menuRef.current.onSaveFile();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "s" &&
+				e.shiftKey &&
+				!e.altKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onSaveToCloud();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "o" &&
+				e.shiftKey &&
+				!e.altKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onOpenFromCloud();
 			}
 		};
 		window.addEventListener("keydown", onKeyDown, { capture: true });
