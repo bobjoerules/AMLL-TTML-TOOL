@@ -56,6 +56,33 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.1.2
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 1, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>TTML Checklist Deduplication:</b> Automatically detects
+									and merges duplicate songs (supporting typographic apostrophes
+									and formatting variations) while preserving completion status
+									and cloud links.
+								</Text>
+								<Text size="2">
+									• <b>Action Buttons Spacing & Visibility:</b> Added clean
+									spacing between song card action buttons, ensured the delete
+									button is always comfortably visible, and added margin
+									separation before the New Song button.
+								</Text>
+								<Text size="2">
+									• <b>Timing Tools Polish:</b> Improved spacing on the
+									single-row Timing Tools toolbar in sync mode.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.1.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
