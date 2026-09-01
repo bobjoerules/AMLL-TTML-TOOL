@@ -168,7 +168,6 @@ export function DiscordPresenceSettings() {
 	const [idleBottomText, setIdleBottomText] = useAtom(
 		discordIdleBottomTextAtom,
 	);
-	const [previewTab, setPreviewTab] = useState<"active" | "empty">("active");
 	const [privacyPreset, setPrivacyPreset] = useAtom(discordPrivacyPresetAtom);
 	const [showProgressTimer, setShowProgressTimer] = useAtom(
 		discordShowProgressTimerAtom,
@@ -197,21 +196,38 @@ export function DiscordPresenceSettings() {
 	const durationSeconds = useAtomValue(currentDurationAtom) / 1000;
 	const playbackRate = useAtomValue(playbackRateAtom);
 
+	const isIdle = useMemo(() => {
+		const hasWords = Boolean(
+			lyrics?.lyricLines?.some((l) =>
+				l.words?.some((w) => Boolean(w.word && w.word.trim().length > 0)),
+			),
+		);
+		const hasCustomFile = Boolean(
+			fileName &&
+				fileName !== "lyric.ttml" &&
+				fileName !== "lyric" &&
+				fileName !== "untitled.ttml" &&
+				fileName !== "untitled",
+		);
+		const hasDuration = durationSeconds > 0;
+		return !hasWords && !hasCustomFile && !hasDuration;
+	}, [lyrics, fileName, durationSeconds]);
+
 	const detailsError = validateDiscordTemplate(detailsDraft);
 	const stateError = validateDiscordTemplate(stateDraft);
 	const bottomLineError = validateDiscordTemplate(bottomLineDraft);
 	const context = useMemo(() => {
 		const snapshot = createPresenceSnapshot({
 			lyrics:
-				lyrics.lyricLines?.length > 0
+				lyrics?.lyricLines?.length > 0
 					? lyrics
 					: ({ lyricLines: [], metadata: [] } as any),
-			fileName: fileName || "Charlie Puth - Left and Right.ttml",
+			fileName: fileName || "",
 			mode,
 			selectedLineIds,
 			playing,
 			positionSeconds,
-			durationSeconds: durationSeconds || 154,
+			durationSeconds: durationSeconds || 0,
 			playbackRate,
 			projectElapsedSeconds: 3,
 			userProfilePhoto: user?.photoURL,
@@ -220,10 +236,10 @@ export function DiscordPresenceSettings() {
 		const templateContext = createDiscordTemplateContext({
 			snapshot,
 			lyrics:
-				lyrics.lyricLines?.length > 0
+				lyrics?.lyricLines?.length > 0
 					? lyrics
 					: ({ lyricLines: [], metadata: [] } as any),
-			fileName: fileName || "Charlie Puth - Left and Right.ttml",
+			fileName: fileName || "",
 			selectedLineIds,
 			selectedWordIds,
 		});
@@ -318,36 +334,33 @@ export function DiscordPresenceSettings() {
 		return undefined;
 	};
 
-	const largeImgSrc =
-		previewTab === "empty"
-			? getPreviewImageUrl(idleLargeImageMode)
-			: getPreviewImageUrl(largeImageMode);
-	const smallImgSrc =
-		previewTab === "empty"
-			? getPreviewImageUrl(idleSmallImageMode)
-			: getPreviewImageUrl(smallImageMode);
+	const largeImgSrc = isIdle
+		? getPreviewImageUrl(idleLargeImageMode)
+		: getPreviewImageUrl(largeImageMode);
+	const smallImgSrc = isIdle
+		? getPreviewImageUrl(idleSmallImageMode)
+		: getPreviewImageUrl(smallImageMode);
 
-	// Preview details and state texts based on privacy preset and previewTab
+	// Preview details and state texts based on privacy preset and idle state
 	const detailsPreviewText = useMemo(() => {
-		if (previewTab === "empty") return "AMLL TTML Tool";
 		if (privacyPreset === "none") return undefined;
+		if (isIdle) return "AMLL TTML Tool";
 		if (privacyPreset === "minimal") return "AMLL TTML Tool";
 		return (
-			detailsPreview ||
-			`Editing ${fileName || "Charlie Puth - Left and Right.ttml"}`
+			detailsPreview || (fileName ? `Editing ${fileName}` : "AMLL TTML Tool")
 		);
-	}, [previewTab, privacyPreset, detailsPreview, fileName]);
+	}, [isIdle, privacyPreset, detailsPreview, fileName]);
 
 	const statePreviewText = useMemo(() => {
-		if (previewTab === "empty") return generalActivityText || "No file open";
 		if (privacyPreset === "none") return undefined;
+		if (isIdle) return generalActivityText || "No file open";
 		if (privacyPreset === "minimal") return generalActivityText;
-		return statePreview || "Charlie Puth • Line 19 of 19";
-	}, [previewTab, privacyPreset, statePreview, generalActivityText]);
+		return statePreview || generalActivityText;
+	}, [isIdle, privacyPreset, statePreview, generalActivityText]);
 
 	const bottomLinePreviewText = useMemo(() => {
 		if (privacyPreset === "none") return undefined;
-		if (previewTab === "empty") {
+		if (isIdle) {
 			try {
 				const rendered = renderDiscordTemplate(
 					idleBottomText,
@@ -370,10 +383,10 @@ export function DiscordPresenceSettings() {
 			bottomLinePreview ||
 			(context.templateContext.title && context.templateContext.artist
 				? `${context.templateContext.title} - ${context.templateContext.artist}`
-				: "Ginseng Strip 2002 - Yung Lean")
+				: undefined)
 		);
 	}, [
-		previewTab,
+		isIdle,
 		privacyPreset,
 		bottomLinePreview,
 		idleBottomText,
@@ -384,31 +397,18 @@ export function DiscordPresenceSettings() {
 	return (
 		<Flex direction="column" gap="4">
 			{/* Discord Preview Card Section */}
-			<Flex justify="between" align="center" mt="1">
-				<Text
-					size="2"
-					weight="bold"
-					style={{
-						color: "var(--gray-11)",
-						textTransform: "uppercase",
-						letterSpacing: "0.5px",
-					}}
-				>
-					{t("settings.discord.previewSection", "Live Preview")}
-				</Text>
-				<SegmentedControl.Root
-					value={previewTab}
-					onValueChange={(val: any) => setPreviewTab(val)}
-					size="1"
-				>
-					<SegmentedControl.Item value="active">
-						{t("settings.discord.previewActive", "Active Song")}
-					</SegmentedControl.Item>
-					<SegmentedControl.Item value="empty">
-						{t("settings.discord.previewIdle", "Nothing Loaded")}
-					</SegmentedControl.Item>
-				</SegmentedControl.Root>
-			</Flex>
+			<Text
+				size="2"
+				weight="bold"
+				mt="1"
+				style={{
+					color: "var(--gray-11)",
+					textTransform: "uppercase",
+					letterSpacing: "0.5px",
+				}}
+			>
+				{t("settings.discord.previewSection", "Live Preview")}
+			</Text>
 
 			{/* Discord Preview Card */}
 			<Box
@@ -560,8 +560,8 @@ export function DiscordPresenceSettings() {
 							)}
 
 							{/* Line 4: Progress / Timer */}
-							{((previewTab === "active" && showPlaybackTimeline) ||
-								(previewTab === "empty" && showProgressTimer)) && (
+							{((!isIdle && showPlaybackTimeline) ||
+								(isIdle && showProgressTimer)) && (
 								<Text
 									size="2"
 									style={{
@@ -572,7 +572,7 @@ export function DiscordPresenceSettings() {
 										fontSize: "12px",
 									}}
 								>
-									<span>♫</span> {previewTab === "empty" ? "1:33" : "2:28:13"}
+									<span>♫</span> {isIdle ? "1:33" : "2:28:13"}
 								</Text>
 							)}
 						</Flex>
