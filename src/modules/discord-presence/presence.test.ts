@@ -268,6 +268,10 @@ describe("Discord presence", () => {
 			projectElapsed: "2h 14m",
 			appName: "AMLL TTML Tool",
 			username: "AMLL User",
+			checklistCompleted: "0",
+			checklistTotal: "0",
+			checklistPercentage: "0%",
+			checklistProgress: "0/0",
 		});
 	});
 
@@ -636,5 +640,42 @@ describe("Discord presence", () => {
 		);
 
 		expect(customBottomPayload.largeImageText).toBe("User: LyricMaster");
+	});
+
+	it("formats TTML checklist percentage and amount done accurately", () => {
+		const snapshot = createPresenceSnapshot({
+			lyrics: { lyricLines: [], metadata: [] } as any,
+			fileName: "lyric.ttml",
+			mode: ToolMode.Sync,
+			selectedLineIds: new Set(),
+			playing: false,
+			positionSeconds: 0,
+			durationSeconds: 0,
+			playbackRate: 1,
+			checklistTotal: 25,
+			checklistCompleted: 10,
+		});
+
+		expect(snapshot.checklistTotal).toBe(25);
+		expect(snapshot.checklistCompleted).toBe(10);
+
+		const context = createDiscordTemplateContext({
+			snapshot,
+			lyrics: { lyricLines: [], metadata: [] } as any,
+			fileName: "lyric.ttml",
+			selectedLineIds: new Set(),
+			selectedWordIds: new Set(),
+		});
+
+		expect(context.checklistTotal).toBe("25");
+		expect(context.checklistCompleted).toBe("10");
+		expect(context.checklistPercentage).toBe("40%");
+		expect(context.checklistProgress).toBe("10/25");
+
+		const rendered = renderDiscordTemplate(
+			"Checklist: {{checklistProgress}} ({{checklistPercentage}})",
+			context,
+		);
+		expect(rendered).toBe("Checklist: 10/25 (40%)");
 	});
 });

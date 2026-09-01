@@ -53,6 +53,7 @@ import {
 	discordActivityTypeAtom,
 } from "$/modules/settings/states";
 import { currentUserAtom } from "$/modules/cloud/states";
+import { ttmlChecklistAtom } from "$/modules/ttml-checklist/states";
 import {
 	lyricLinesAtom,
 	saveFileNameAtom,
@@ -195,6 +196,9 @@ export function DiscordPresenceSettings() {
 	const positionSeconds = useAtomValue(currentTimeAtom) / 1000;
 	const durationSeconds = useAtomValue(currentDurationAtom) / 1000;
 	const playbackRate = useAtomValue(playbackRateAtom);
+	const checklist = useAtomValue(ttmlChecklistAtom);
+	const checklistTotal = checklist?.length ?? 0;
+	const checklistCompleted = checklist?.filter((e) => e.completed).length ?? 0;
 
 	const isIdle = useMemo(() => {
 		const hasWords = Boolean(
@@ -232,6 +236,8 @@ export function DiscordPresenceSettings() {
 			projectElapsedSeconds: 3,
 			userProfilePhoto: user?.photoURL,
 			userDisplayName: user?.displayName || user?.email?.split("@")[0],
+			checklistTotal,
+			checklistCompleted,
 		});
 		const templateContext = createDiscordTemplateContext({
 			snapshot,
@@ -255,6 +261,8 @@ export function DiscordPresenceSettings() {
 		selectedLineIds,
 		selectedWordIds,
 		user,
+		checklistTotal,
+		checklistCompleted,
 	]);
 
 	const detailsPreview = detailsError
@@ -711,6 +719,18 @@ export function DiscordPresenceSettings() {
 								>
 									Default
 								</Button>
+								<Button
+									size="1"
+									variant="outline"
+									onClick={() =>
+										updateTemplate(
+											"state",
+											"📋 Checklist: {{checklistProgress}} ({{checklistPercentage}})",
+										)
+									}
+								>
+									📋 Checklist
+								</Button>
 							</Flex>
 						</Flex>
 						<TextArea
@@ -781,6 +801,18 @@ export function DiscordPresenceSettings() {
 									}
 								>
 									Full Sync Stats
+								</Button>
+								<Button
+									size="1"
+									variant="outline"
+									onClick={() =>
+										updateTemplate(
+											"bottomLine",
+											"📋 Checklist: {{checklistCompleted}}/{{checklistTotal}} ({{checklistPercentage}})",
+										)
+									}
+								>
+									📋 Checklist Stats
 								</Button>
 							</Flex>
 						</Flex>
@@ -1086,6 +1118,36 @@ export function DiscordPresenceSettings() {
 								</Button>
 							</Flex>
 						</Flex>
+						<Flex gap="1" mt="2" wrap="wrap">
+							<Button
+								size="1"
+								variant="ghost"
+								onClick={() =>
+									setGeneralActivityText(
+										"Checklist: {{checklistProgress}} ({{checklistPercentage}})",
+									)
+								}
+								style={{ fontSize: "11px", padding: "2px 6px" }}
+							>
+								📋 Checklist: {checklistCompleted}/{checklistTotal} (
+								{checklistTotal > 0
+									? `${Math.round((checklistCompleted / checklistTotal) * 100)}%`
+									: "0%"}
+								)
+							</Button>
+							<Button
+								size="1"
+								variant="ghost"
+								onClick={() =>
+									setGeneralActivityText(
+										"{{checklistCompleted}}/{{checklistTotal}} Songs Synced",
+									)
+								}
+								style={{ fontSize: "11px", padding: "2px 6px" }}
+							>
+								✅ {checklistCompleted}/{checklistTotal} Synced
+							</Button>
+						</Flex>
 					</Card>
 
 					{/* Idle Third Line / Bottom Text */}
@@ -1143,6 +1205,36 @@ export function DiscordPresenceSettings() {
 									/>
 								</Button>
 							</Flex>
+						</Flex>
+						<Flex gap="1" mt="2" wrap="wrap">
+							<Button
+								size="1"
+								variant="ghost"
+								onClick={() =>
+									setIdleBottomText(
+										"Checklist: {{checklistProgress}} ({{checklistPercentage}})",
+									)
+								}
+								style={{ fontSize: "11px", padding: "2px 6px" }}
+							>
+								📋 Checklist: {checklistCompleted}/{checklistTotal} (
+								{checklistTotal > 0
+									? `${Math.round((checklistCompleted / checklistTotal) * 100)}%`
+									: "0%"}
+								)
+							</Button>
+							<Button
+								size="1"
+								variant="ghost"
+								onClick={() =>
+									setIdleBottomText(
+										"{{username}} • {{checklistPercentage}} Done",
+									)
+								}
+								style={{ fontSize: "11px", padding: "2px 6px" }}
+							>
+								👤 User & Percentage
+							</Button>
 						</Flex>
 					</Card>
 

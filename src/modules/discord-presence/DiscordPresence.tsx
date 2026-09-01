@@ -24,6 +24,7 @@ import {
 	discordActivityTypeAtom,
 } from "$/modules/settings/states";
 import { currentUserAtom } from "$/modules/cloud/states";
+import { ttmlChecklistAtom } from "$/modules/ttml-checklist/states";
 import {
 	lyricLinesAtom,
 	projectIdAtom,
@@ -83,6 +84,9 @@ export function DiscordPresence() {
 		trackerRef.current = new ProjectTimeTracker(window.localStorage);
 	}
 	const tracker = trackerRef.current;
+	const checklist = useAtomValue(ttmlChecklistAtom);
+	const checklistTotal = checklist?.length ?? 0;
+	const checklistCompleted = checklist?.filter((e) => e.completed).length ?? 0;
 
 	useEffect(() => {
 		if (!isTauri) return;
@@ -141,6 +145,8 @@ export function DiscordPresence() {
 			projectElapsedSeconds,
 			userProfilePhoto: user?.photoURL,
 			userDisplayName: user?.displayName || user?.email?.split("@")[0],
+			checklistTotal,
+			checklistCompleted,
 		});
 
 		let meta = document.head.querySelector<HTMLMetaElement>(
@@ -232,6 +238,8 @@ export function DiscordPresence() {
 		generalActivityText,
 		showProgressTimer,
 		user,
+		checklistTotal,
+		checklistCompleted,
 	]);
 
 	useEffect(() => {
