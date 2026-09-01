@@ -1021,17 +1021,18 @@ export const TTMLChecklistDialog = () => {
 		}
 		try {
 			setIsSyncingCloud(true);
-			const ok = await saveChecklistToCloud(entries, user.uid);
-			if (ok) {
+			const result = await saveChecklistToCloud(entries, user.uid);
+			if (result.success) {
 				toast.success(
 					t("ttmlChecklist.pushSuccess", "Pushed checklist to cloud!"),
 				);
 			} else {
 				toast.error(
-					t(
-						"ttmlChecklist.pushFailed",
-						"Could not push to cloud. Check network or permissions.",
-					),
+					result.error ||
+						t(
+							"ttmlChecklist.pushFailed",
+							"Could not push to cloud. Check network or permissions.",
+						),
 				);
 			}
 		} catch (err) {
@@ -1043,7 +1044,6 @@ export const TTMLChecklistDialog = () => {
 			setIsSyncingCloud(false);
 		}
 	};
-
 	const handlePullFromCloud = async () => {
 		if (!user?.uid) {
 			openAccountSettings();
@@ -1051,27 +1051,30 @@ export const TTMLChecklistDialog = () => {
 		}
 		try {
 			setIsSyncingCloud(true);
-			const remoteEntries = await loadChecklistFromCloud(user.uid);
-			if (remoteEntries && remoteEntries.length > 0) {
-				save(remoteEntries);
+			const result = await loadChecklistFromCloud(user.uid);
+			if (result.entries && result.entries.length > 0) {
+				save(result.entries);
 				toast.success(
 					t(
 						"ttmlChecklist.pullSuccess",
-						"Downloaded {count} items from cloud!",
-						{ count: remoteEntries.length },
+						"Synced {count} songs from cloud checklist!",
+						{ count: result.entries.length },
 					),
 				);
-			} else if (remoteEntries && remoteEntries.length === 0) {
-				toast.info(t("ttmlChecklist.cloudEmpty", "Cloud checklist is empty."));
+			} else if (result.entries) {
+				toast.info(
+					t("ttmlChecklist.cloudEmpty", "Cloud checklist is currently empty."),
+				);
 			} else {
 				toast.error(
-					t("ttmlChecklist.pullFailed", "Failed to download from cloud."),
+					result.error ||
+						t("ttmlChecklist.pullFailed", "Could not fetch cloud checklist."),
 				);
 			}
 		} catch (err) {
 			toast.error(
 				(err as Error)?.message ||
-					t("ttmlChecklist.pullFailed", "Download from cloud failed."),
+					t("ttmlChecklist.pullFailed", "Could not fetch cloud checklist."),
 			);
 		} finally {
 			setIsSyncingCloud(false);

@@ -21,18 +21,24 @@ export interface CloudChecklistData {
 export async function saveChecklistToCloud(
 	entries: TTMLChecklistEntry[],
 	uid?: string,
-): Promise<boolean> {
-	if (!isFirebaseConfigured()) return false;
+): Promise<{ success: boolean; error?: string }> {
+	if (!isFirebaseConfigured()) {
+		return { success: false, error: "Firebase is not configured." };
+	}
 
 	try {
 		const db = getFirebaseFirestore();
-		if (!db) return false;
+		if (!db) {
+			return { success: false, error: "Firestore instance is not available." };
+		}
 
 		const targetUid =
 			uid ||
 			globalStore.get(currentUserAtom)?.uid ||
 			getFirebaseAuth()?.currentUser?.uid;
-		if (!targetUid) return false;
+		if (!targetUid) {
+			return { success: false, error: "No user account or UID found." };
+		}
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
 		const data: CloudChecklistData = {
@@ -40,40 +46,52 @@ export async function saveChecklistToCloud(
 			updatedAt: Date.now(),
 		};
 		await setDoc(docRef, data, { merge: true });
-		return true;
-	} catch (err) {
-		console.warn("Failed to save checklist to Firebase:", err);
-		return false;
+		return { success: true };
+	} catch (err: any) {
+		console.error("Failed to save checklist to Firebase:", err);
+		return {
+			success: false,
+			error: err?.message || "Failed to write to Firestore.",
+		};
 	}
 }
 
 export async function loadChecklistFromCloud(
 	uid?: string,
-): Promise<TTMLChecklistEntry[] | null> {
-	if (!isFirebaseConfigured()) return null;
+): Promise<{ entries: TTMLChecklistEntry[] | null; error?: string }> {
+	if (!isFirebaseConfigured()) {
+		return { entries: null, error: "Firebase is not configured." };
+	}
 
 	try {
 		const db = getFirebaseFirestore();
-		if (!db) return null;
+		if (!db) {
+			return { entries: null, error: "Firestore instance is not available." };
+		}
 
 		const targetUid =
 			uid ||
 			globalStore.get(currentUserAtom)?.uid ||
 			getFirebaseAuth()?.currentUser?.uid;
-		if (!targetUid) return null;
+		if (!targetUid) {
+			return { entries: null, error: "No user account or UID found." };
+		}
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
 		const snap = await getDoc(docRef);
 		if (snap.exists()) {
 			const data = snap.data() as Partial<CloudChecklistData>;
 			if (Array.isArray(data.entries)) {
-				return normalizeChecklistEntries(data.entries);
+				return { entries: normalizeChecklistEntries(data.entries) };
 			}
 		}
-		return null;
-	} catch (err) {
-		console.warn("Failed to load checklist from Firebase:", err);
-		return null;
+		return { entries: [] };
+	} catch (err: any) {
+		console.error("Failed to load checklist from Firebase:", err);
+		return {
+			entries: null,
+			error: err?.message || "Failed to read from Firestore.",
+		};
 	}
 }
 

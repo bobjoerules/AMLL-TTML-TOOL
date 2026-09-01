@@ -16,12 +16,12 @@ vi.mock("save-file", () => ({
 }));
 
 describe("TTML checklist cloud sync & file helpers", () => {
-	it("gracefully returns false/null when Firebase is not configured", async () => {
+	it("gracefully returns failure when Firebase is not configured", async () => {
 		const saved = await saveChecklistToCloud([], "user-123");
-		expect(saved).toBe(false);
+		expect(saved.success).toBe(false);
 
 		const loaded = await loadChecklistFromCloud("user-123");
-		expect(loaded).toBeNull();
+		expect(loaded.entries).toBeNull();
 	});
 
 	it("parses valid JSON array of checklist entries", () => {
