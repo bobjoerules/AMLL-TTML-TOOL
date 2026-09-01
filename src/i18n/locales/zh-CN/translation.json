@@ -555,7 +555,8 @@
 	"header": {
 		"status": {
 			"autoSavedAt": "已在 {time} 自动保存"
-		}
+		},
+		"syncProgressTooltip": "已打轴行数: {timedLines}/{totalLines} ({linePercent}%) • 已打轴词数: {timedWords}/{totalWords} ({wordPercent}%)"
 	},
 	"contextMenu": {
 		"deleteWords": "删除 {count} 个单词",
