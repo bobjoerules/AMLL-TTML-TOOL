@@ -1,5 +1,5 @@
 import { uid } from "uid";
-import { readTTMLText } from "$/modules/project/logic/ttml-parser";
+import { parseLyric } from "$/modules/project/logic/ttml-parser";
 
 export interface TTMLChecklistEntry {
 	id: string;
@@ -220,7 +220,7 @@ export function linkUploadedTTMLToChecklist(
 	let isCompleted = uploaded.isCompleted ?? false;
 	if (!isCompleted && uploaded.rawTTML) {
 		try {
-			const parsed = readTTMLText(uploaded.rawTTML);
+			const parsed = parseLyric(uploaded.rawTTML);
 			isCompleted = isTTML100PercentCompleted(parsed);
 		} catch {
 			// ignore parse error
