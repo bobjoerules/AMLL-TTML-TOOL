@@ -11,8 +11,8 @@ vi.mock("$/modules/cloud/firebase", () => ({
 	isFirebaseConfigured: vi.fn().mockReturnValue(false),
 }));
 
-vi.mock("save-file", () => ({
-	default: vi.fn().mockResolvedValue(true),
+vi.mock("$/utils/fileSystem", () => ({
+	saveFile: vi.fn().mockResolvedValue("ttml-checklist.json"),
 }));
 
 describe("TTML checklist cloud sync & file helpers", () => {
