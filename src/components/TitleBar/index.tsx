@@ -84,23 +84,39 @@ export const TitleBar: FC = () => {
 				<SegmentedControl.Root
 					value={toolMode}
 					onValueChange={(v) => setToolMode(v as ToolMode)}
+					size="1"
 				>
-					<SegmentedControl.Item value={ToolMode.Edit}>
+					<SegmentedControl.Item
+						value={ToolMode.Edit}
+						title={t("topBar.modeBtns.edit", "编辑")}
+					>
 						<Flex align="center" gap="1">
 							<Edit24Regular style={{ width: "16px", height: "16px" }} />
-							{t("topBar.modeBtns.edit", "编辑")}
+							<span className={styles.tabLabel}>
+								{t("topBar.modeBtns.edit", "编辑")}
+							</span>
 						</Flex>
 					</SegmentedControl.Item>
-					<SegmentedControl.Item value={ToolMode.Sync}>
+					<SegmentedControl.Item
+						value={ToolMode.Sync}
+						title={t("topBar.modeBtns.sync", "打轴")}
+					>
 						<Flex align="center" gap="1">
 							<Timer24Regular style={{ width: "16px", height: "16px" }} />
-							{t("topBar.modeBtns.sync", "打轴")}
+							<span className={styles.tabLabel}>
+								{t("topBar.modeBtns.sync", "打轴")}
+							</span>
 						</Flex>
 					</SegmentedControl.Item>
-					<SegmentedControl.Item value={ToolMode.Preview}>
+					<SegmentedControl.Item
+						value={ToolMode.Preview}
+						title={t("topBar.modeBtns.preview", "预览")}
+					>
 						<Flex align="center" gap="1">
 							<Play24Regular style={{ width: "16px", height: "16px" }} />
-							{t("topBar.modeBtns.preview", "预览")}
+							<span className={styles.tabLabel}>
+								{t("topBar.modeBtns.preview", "预览")}
+							</span>
 						</Flex>
 					</SegmentedControl.Item>
 				</SegmentedControl.Root>
@@ -121,6 +137,17 @@ export const TitleBar: FC = () => {
 								color={showPreviewPanel ? "indigo" : "gray"}
 								onClick={() => setShowPreviewPanel((prev) => !prev)}
 								style={{ cursor: "pointer", fontWeight: 500 }}
+								title={
+									showPreviewPanel
+										? t(
+												"topBar.menu.hidePreviewPanel",
+												"Hide Side Preview Panel",
+											)
+										: t(
+												"topBar.menu.showPreviewPanel",
+												"Show Side Preview Panel",
+											)
+								}
 							>
 								{showPreviewPanel ? (
 									<PanelRight24Filled
@@ -131,7 +158,9 @@ export const TitleBar: FC = () => {
 										style={{ width: "14px", height: "14px" }}
 									/>
 								)}
-								<span>{t("topBar.sidePreview", "Preview Panel")}</span>
+								<span className={styles.previewPanelLabel}>
+									{t("topBar.sidePreview", "Preview Panel")}
+								</span>
 							</Button>
 						</Tooltip>
 					)}

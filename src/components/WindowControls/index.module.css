@@ -1,22 +1,25 @@
 .windowControls {
 	display: flex;
-	align-items: stretch;
+	align-items: center;
 	width: 100%;
 	font-size: 12px;
 	user-select: none;
 	background-color: var(--titlebar-bg, var(--color-panel-translucent));
 	backdrop-filter: blur(var(--custom-backdrop-blur, 16px)) saturate(160%);
 	border-bottom: 1px solid var(--gray-a4);
+	min-width: 0;
+	overflow: hidden;
 }
 
 .spacer {
 	flex-grow: 1;
 	align-self: stretch;
+	min-width: 4px;
 }
 
 .slot {
 	flex-grow: 0;
-	flex-shrink: 1;
+	flex-shrink: 0;
 	margin: auto 0;
 }
 
@@ -25,4 +28,11 @@
 	display: flex;
 	width: 0;
 	flex: 1;
+	min-width: 0;
+	align-items: center;
+	overflow: hidden;
+}
+
+.rightSide {
+	justify-content: flex-end;
 }
