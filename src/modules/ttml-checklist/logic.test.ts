@@ -143,19 +143,57 @@ describe("TTML checklist", () => {
 		});
 	});
 
-	it("adds new checklist entry when uploaded TTML does not exist", () => {
-		const existing: any[] = [];
-		const res = linkUploadedTTMLToChecklist(existing, {
-			title: "New Track",
-			artist: "New Artist",
-			docId: "doc-123",
-			isCompleted: false,
+	it("deduplicates entries with different apostrophes and merges rich fields", () => {
+		const entries = normalizeChecklistEntries([
+			{
+				id: "item-1",
+				song: "wanna grow old (i won't let go)",
+				artist: "XXXTENTACION",
+				cloudDocId: "cloud-123",
+				completed: false,
+				createdAt: 100,
+			},
+			{
+				id: "item-2",
+				song: "wanna grow old (i won’t let go)",
+				artist: "XXXTENTACION",
+				source: "genius",
+				completed: true,
+				createdAt: 200,
+			},
+		]);
+
+		expect(entries).toHaveLength(1);
+		expect(entries[0]).toMatchObject({
+			song: "wanna grow old (i won't let go)",
+			artist: "XXXTENTACION",
+			cloudDocId: "cloud-123",
+			source: "genius",
+			completed: true,
+		});
+	});
+
+	it("prevents duplicate entry when adding existing song", () => {
+		const initial = [
+			{
+				id: "existing-1",
+				song: "Together on the Sand",
+				artist: "NOFX",
+				notes: "Original",
+				completed: true,
+				createdAt: 100,
+			},
+		];
+
+		const result = addChecklistEntry(initial, {
+			song: "together on the sand",
+			artist: "NOFX",
+			notes: "New Note",
 		});
 
-		expect(res.added).toBe(true);
-		expect(res.entries).toHaveLength(1);
-		expect(res.entries[0].song).toBe("New Track");
-		expect(res.entries[0].cloudDocId).toBe("doc-123");
-		expect(res.entries[0].completed).toBe(false);
+		expect(result).toHaveLength(1);
+		expect(result[0].id).toBe("existing-1");
+		expect(result[0].completed).toBe(true);
+		expect(result[0].notes).toContain("Original");
 	});
 });

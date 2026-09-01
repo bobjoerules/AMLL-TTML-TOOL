@@ -647,7 +647,8 @@ const ChecklistEntryCard = ({
 			variant="surface"
 			style={{
 				width: "100%",
-				padding: "12px 14px",
+				boxSizing: "border-box",
+				padding: "10px 12px",
 				border: "1px solid var(--gray-a4)",
 				borderRadius: "12px",
 				backgroundColor: entry.completed
@@ -657,12 +658,13 @@ const ChecklistEntryCard = ({
 				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
 			}}
 		>
-			<Flex gap="3" align="center">
+			<Flex gap="3" align="center" style={{ width: "100%", minWidth: 0 }}>
 				{/* Song Cover Art */}
 				<Box
 					style={{
-						width: "52px",
-						height: "52px",
+						width: "48px",
+						height: "48px",
+						minWidth: "48px",
 						borderRadius: "10px",
 						overflow: "hidden",
 						backgroundColor: "var(--gray-a4)",
@@ -830,7 +832,11 @@ const ChecklistEntryCard = ({
 				</Flex>
 
 				{/* Action Buttons */}
-				<Flex gap="2" align="center" style={{ flexShrink: 0 }}>
+				<Flex
+					gap="1.5"
+					align="center"
+					style={{ flexShrink: 0, marginLeft: "auto" }}
+				>
 					{/* Download / Open Cloud TTML Button */}
 					{entry.cloudDocId && (
 						<Tooltip
@@ -849,6 +855,7 @@ const ChecklistEntryCard = ({
 								style={{
 									borderRadius: "8px",
 									cursor: "pointer",
+									flexShrink: 0,
 								}}
 							>
 								{isLoadingCloud ? (
@@ -873,7 +880,11 @@ const ChecklistEntryCard = ({
 							color="indigo"
 							onClick={() => onImportLyrics(entry)}
 							aria-label={t("ttmlChecklist.importLyrics", "Import Lyrics")}
-							style={{ borderRadius: "8px", cursor: "pointer" }}
+							style={{
+								borderRadius: "8px",
+								cursor: "pointer",
+								flexShrink: 0,
+							}}
 						>
 							<ArrowDownload16Regular />
 						</IconButton>
@@ -897,7 +908,11 @@ const ChecklistEntryCard = ({
 									? t("ttmlChecklist.reopen", "Reopen")
 									: t("ttmlChecklist.markDone", "Done")
 							}
-							style={{ borderRadius: "8px", cursor: "pointer" }}
+							style={{
+								borderRadius: "8px",
+								cursor: "pointer",
+								flexShrink: 0,
+							}}
 						>
 							{entry.completed ? (
 								<Circle16Regular />
@@ -914,7 +929,11 @@ const ChecklistEntryCard = ({
 							color="gray"
 							onClick={() => setEditing(true)}
 							aria-label={t("ttmlChecklist.edit", "Edit checklist item")}
-							style={{ borderRadius: "8px", cursor: "pointer" }}
+							style={{
+								borderRadius: "8px",
+								cursor: "pointer",
+								flexShrink: 0,
+							}}
 						>
 							<Edit16Regular />
 						</IconButton>
@@ -926,7 +945,11 @@ const ChecklistEntryCard = ({
 							color="red"
 							onClick={onDelete}
 							aria-label={t("ttmlChecklist.delete", "Delete checklist item")}
-							style={{ borderRadius: "8px", cursor: "pointer" }}
+							style={{
+								borderRadius: "8px",
+								cursor: "pointer",
+								flexShrink: 0,
+							}}
 						>
 							<Delete16Regular />
 						</IconButton>
@@ -961,6 +984,12 @@ export const TTMLChecklistDialog = () => {
 		() => normalizeChecklistEntries(storedEntries),
 		[storedEntries],
 	);
+
+	useEffect(() => {
+		if (entries.length !== storedEntries.length) {
+			setStoredEntries(entries);
+		}
+	}, [entries, storedEntries.length, setStoredEntries]);
 
 	const totalCount = entries.length;
 	const completedCount = entries.filter((e) => e.completed).length;
@@ -1217,7 +1246,8 @@ export const TTMLChecklistDialog = () => {
 		<Dialog.Root open={open} onOpenChange={setOpen}>
 			<Dialog.Content
 				style={{
-					maxWidth: 780,
+					maxWidth: 820,
+					width: "min(820px, 96vw)",
 					height: "640px",
 					maxHeight: "88vh",
 					borderRadius: "16px",

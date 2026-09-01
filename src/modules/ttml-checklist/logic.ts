@@ -81,12 +81,86 @@ export function isTTML100PercentCompleted(lines: {
 	});
 }
 
+export function normalizeSongKey(str: string): string {
+	return str
+		.toLowerCase()
+		.normalize("NFKD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[’'"`´]/g, "")
+		.replace(/[\s\-_.,/\\()[\]{}!?:;]/g, "")
+		.trim();
+}
+
+export function areChecklistEntriesDuplicate(
+	a: Partial<TTMLChecklistEntry>,
+	b: Partial<TTMLChecklistEntry>,
+): boolean {
+	if (a.cloudDocId && b.cloudDocId && a.cloudDocId === b.cloudDocId) {
+		return true;
+	}
+	if (!a.song || !b.song) return false;
+	const normA = normalizeSongKey(a.song);
+	const normB = normalizeSongKey(b.song);
+	if (normA !== normB) return false;
+
+	const artistA = normalizeSongKey(a.artist || "");
+	const artistB = normalizeSongKey(b.artist || "");
+	if (artistA && artistB && artistA !== artistB) {
+		return false;
+	}
+	return true;
+}
+
+export function mergeChecklistEntries(
+	primary: TTMLChecklistEntry,
+	secondary: TTMLChecklistEntry,
+): TTMLChecklistEntry {
+	return {
+		id: primary.id,
+		song: primary.song || secondary.song,
+		artist: primary.artist || secondary.artist,
+		album: primary.album || secondary.album,
+		coverArt: primary.coverArt || secondary.coverArt,
+		source: primary.source || secondary.source,
+		sourceId: primary.sourceId ?? secondary.sourceId,
+		sourceUrl: primary.sourceUrl || secondary.sourceUrl,
+		cloudDocId: primary.cloudDocId || secondary.cloudDocId,
+		cloudAudioUrl: primary.cloudAudioUrl || secondary.cloudAudioUrl,
+		notes:
+			primary.notes && secondary.notes && primary.notes !== secondary.notes
+				? `${primary.notes}\n${secondary.notes}`
+				: primary.notes || secondary.notes,
+		completed: primary.completed || secondary.completed,
+		createdAt: Math.max(primary.createdAt, secondary.createdAt),
+	};
+}
+
+export function deduplicateChecklistEntries(
+	entries: TTMLChecklistEntry[],
+): TTMLChecklistEntry[] {
+	const result: TTMLChecklistEntry[] = [];
+	for (const entry of entries) {
+		const existingIndex = result.findIndex((item) =>
+			areChecklistEntriesDuplicate(item, entry),
+		);
+		if (existingIndex >= 0) {
+			result[existingIndex] = mergeChecklistEntries(
+				result[existingIndex],
+				entry,
+			);
+		} else {
+			result.push(entry);
+		}
+	}
+	return result;
+}
+
 export function normalizeChecklistEntries(
 	value: unknown,
 ): TTMLChecklistEntry[] {
 	if (!Array.isArray(value)) return [];
 
-	return value
+	const raw = value
 		.map((item, index): TTMLChecklistEntry | null => {
 			if (!isRecord(item) || typeof item.song !== "string") return null;
 			const song = item.song.trim();
@@ -130,12 +204,15 @@ export function normalizeChecklistEntries(
 						: 0,
 			};
 		})
-		.filter((item): item is TTMLChecklistEntry => item !== null)
-		.sort((a, b) => {
-			if (a.completed !== b.completed)
-				return Number(a.completed) - Number(b.completed);
-			return b.createdAt - a.createdAt;
-		});
+		.filter((item): item is TTMLChecklistEntry => item !== null);
+
+	const deduplicated = deduplicateChecklistEntries(raw);
+
+	return deduplicated.sort((a, b) => {
+		if (a.completed !== b.completed)
+			return Number(a.completed) - Number(b.completed);
+		return b.createdAt - a.createdAt;
+	});
 }
 
 export function createChecklistEntry(
@@ -168,6 +245,17 @@ export function addChecklistEntry(
 ): TTMLChecklistEntry[] {
 	const entry = createChecklistEntry(input, createdAt, id);
 	if (!entry.song) return entries;
+	const existingIndex = entries.findIndex((item) =>
+		areChecklistEntriesDuplicate(item, entry),
+	);
+	if (existingIndex >= 0) {
+		const updated = [...entries];
+		updated[existingIndex] = mergeChecklistEntries(
+			updated[existingIndex],
+			entry,
+		);
+		return normalizeChecklistEntries(updated);
+	}
 	return normalizeChecklistEntries([...entries, entry]);
 }
 
@@ -227,23 +315,15 @@ export function linkUploadedTTMLToChecklist(
 		}
 	}
 
-	const norm = (s: string) =>
-		s
-			.toLowerCase()
-			.replace(/[\s\-_.,/\\'"]/g, "")
-			.trim();
-	const normTitle = norm(title);
-	const normArtist = norm(artist);
-
 	let found = false;
 	const nextEntries = entries.map((entry) => {
-		const entryNormTitle = norm(entry.song);
-		const entryNormArtist = norm(entry.artist);
-
 		const isMatch =
 			(entry.cloudDocId && entry.cloudDocId === docId) ||
-			(entryNormTitle === normTitle &&
-				(!normArtist || !entryNormArtist || entryNormArtist === normArtist));
+			areChecklistEntriesDuplicate(entry, {
+				song: title,
+				artist,
+				cloudDocId: docId,
+			});
 
 		if (isMatch) {
 			found = true;
