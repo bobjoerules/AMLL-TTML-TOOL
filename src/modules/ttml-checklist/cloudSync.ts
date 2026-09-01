@@ -2,8 +2,10 @@ import { useEffect, useRef } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import saveFile from "save-file";
+import { globalStore } from "$/states/store";
 import { currentUserAtom } from "$/modules/cloud/states";
 import {
+	getFirebaseAuth,
 	getFirebaseFirestore,
 	isFirebaseConfigured,
 } from "$/modules/cloud/firebase";
@@ -28,9 +30,8 @@ export async function saveChecklistToCloud(
 
 		const targetUid =
 			uid ||
-			(await import("firebase/auth").then(
-				(m) => m.getAuth()?.currentUser?.uid,
-			));
+			globalStore.get(currentUserAtom)?.uid ||
+			getFirebaseAuth()?.currentUser?.uid;
 		if (!targetUid) return false;
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
@@ -57,9 +58,8 @@ export async function loadChecklistFromCloud(
 
 		const targetUid =
 			uid ||
-			(await import("firebase/auth").then(
-				(m) => m.getAuth()?.currentUser?.uid,
-			));
+			globalStore.get(currentUserAtom)?.uid ||
+			getFirebaseAuth()?.currentUser?.uid;
 		if (!targetUid) return null;
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
