@@ -7,8 +7,30 @@
 	}
 }
 
-@media screen and (max-width: 768px) {
+.tabLabel {
+	display: inline;
+	white-space: nowrap;
+}
+
+.previewPanelLabel {
+	display: inline;
+	white-space: nowrap;
+}
+
+@media screen and (max-width: 850px) {
+	.previewPanelLabel {
+		display: none;
+	}
+}
+
+@media screen and (max-width: 720px) {
 	.title {
+		display: none;
+	}
+	.tabLabel {
+		display: none;
+	}
+	.previewPanelLabel {
 		display: none;
 	}
 }

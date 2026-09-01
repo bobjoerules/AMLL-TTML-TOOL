@@ -164,7 +164,7 @@ export const HeaderFileInfo = () => {
 							<Flex
 								align="center"
 								style={{
-									maxWidth: "10rem",
+									maxWidth: "clamp(4.5rem, 9vw, 9.5rem)",
 									overflow: "hidden",
 									whiteSpace: "nowrap",
 								}}
