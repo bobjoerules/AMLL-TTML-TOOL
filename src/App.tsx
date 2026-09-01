@@ -733,17 +733,17 @@ function App() {
 			accentColor={accentColor}
 			className={styles.radixTheme}
 		>
-			<MigrationNotice />
-			<DiscordPresence />
-			<BeginnerGuide />
-			<ChecklistBackgroundSync />
-			{customStyleString ? <style>{customStyleString}</style> : null}
 			<ErrorBoundary
 				FallbackComponent={AppErrorPage}
 				onReset={(_details) => {
 					// TODO
 				}}
 			>
+				<MigrationNotice />
+				<DiscordPresence />
+				<BeginnerGuide />
+				<ChecklistBackgroundSync />
+				{customStyleString ? <style>{customStyleString}</style> : null}
 				{hasBackground && (
 					<div className={styles.customBackgroundLayer} aria-hidden="true">
 						<div
