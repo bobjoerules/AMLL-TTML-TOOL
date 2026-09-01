@@ -19,7 +19,6 @@ import {
 	discordIdleLargeImageModeAtom,
 	discordIdleSmallImageModeAtom,
 	discordIdleBottomTextAtom,
-	discordGeneralActivityTextAtom,
 	discordShowProgressTimerAtom,
 	discordActivityTypeAtom,
 } from "$/modules/settings/states";
@@ -74,7 +73,6 @@ export function DiscordPresence() {
 	const idleLargeImageMode = useAtomValue(discordIdleLargeImageModeAtom);
 	const idleSmallImageMode = useAtomValue(discordIdleSmallImageModeAtom);
 	const idleBottomText = useAtomValue(discordIdleBottomTextAtom);
-	const generalActivityText = useAtomValue(discordGeneralActivityTextAtom);
 	const showProgressTimer = useAtomValue(discordShowProgressTimerAtom);
 	const activityType = useAtomValue(discordActivityTypeAtom);
 	const projectId = useAtomValue(projectIdAtom);
@@ -177,7 +175,7 @@ export function DiscordPresence() {
 				selectedWordIds,
 			});
 			const payload = inactive
-				? createInactiveDiscordActivity(generalActivityText, activityType, {
+				? createInactiveDiscordActivity("Working on lyrics", activityType, {
 						idleLargeImageMode,
 						idleSmallImageMode,
 						userProfilePhoto: user?.photoURL,
@@ -199,7 +197,6 @@ export function DiscordPresence() {
 						idleLargeImageMode,
 						idleSmallImageMode,
 						idleBottomTextTemplate: idleBottomText,
-						generalActivityText,
 						showProgressTimer,
 					});
 

@@ -700,13 +700,19 @@ const ChecklistEntryCard = ({
 
 				{/* Song & Meta Info */}
 				<Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
-					<Flex align="center" gap="2" wrap="wrap">
+					<Flex align="center" gap="2" style={{ minWidth: 0, width: "100%" }}>
 						<Text
 							weight="bold"
 							size="3"
+							title={entry.song}
 							style={{
 								textDecoration: entry.completed ? "line-through" : undefined,
 								color: entry.completed ? "var(--gray-10)" : "inherit",
+								whiteSpace: "nowrap",
+								overflow: "hidden",
+								textOverflow: "ellipsis",
+								minWidth: 0,
+								flexShrink: 1,
 							}}
 						>
 							{entry.song}
@@ -722,7 +728,11 @@ const ChecklistEntryCard = ({
 											: "indigo"
 								}
 								variant="surface"
-								style={{ fontWeight: 600, letterSpacing: "0.4px" }}
+								style={{
+									fontWeight: 600,
+									letterSpacing: "0.4px",
+									flexShrink: 0,
+								}}
 							>
 								{entry.source.toUpperCase()}
 							</Badge>
@@ -732,31 +742,59 @@ const ChecklistEntryCard = ({
 								size="1"
 								color="sky"
 								variant="surface"
-								style={{ fontWeight: 600 }}
+								style={{ fontWeight: 600, flexShrink: 0 }}
 							>
 								{t("ttmlChecklist.cloudLinked", "Cloud Linked")}
 							</Badge>
 						)}
 						{entry.completed && (
-							<Badge size="1" color="green" variant="soft">
+							<Badge
+								size="1"
+								color="green"
+								variant="soft"
+								style={{ flexShrink: 0 }}
+							>
 								{t("ttmlChecklist.completed", "Completed")}
 							</Badge>
 						)}
 					</Flex>
 
-					<Flex align="center" gap="2" wrap="wrap">
+					<Flex align="center" gap="2" style={{ minWidth: 0, width: "100%" }}>
 						{entry.artist && (
-							<Text size="2" color="gray">
+							<Text
+								size="2"
+								color="gray"
+								title={entry.artist}
+								style={{
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									minWidth: 0,
+									flexShrink: 1,
+								}}
+							>
 								{entry.artist}
 							</Text>
 						)}
 						{entry.artist && entry.album && (
-							<Text size="1" color="gray">
+							<Text size="1" color="gray" style={{ flexShrink: 0 }}>
 								•
 							</Text>
 						)}
 						{entry.album && (
-							<Badge size="1" color="gray" variant="surface">
+							<Badge
+								size="1"
+								color="gray"
+								variant="surface"
+								title={entry.album}
+								style={{
+									maxWidth: "200px",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									whiteSpace: "nowrap",
+									flexShrink: 1,
+								}}
+							>
 								{entry.album}
 							</Badge>
 						)}

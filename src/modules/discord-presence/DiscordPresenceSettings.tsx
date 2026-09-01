@@ -49,7 +49,6 @@ import {
 	discordIdleBottomTextAtom,
 	discordPrivacyPresetAtom,
 	discordShowProgressTimerAtom,
-	discordGeneralActivityTextAtom,
 	discordActivityTypeAtom,
 } from "$/modules/settings/states";
 import { currentUserAtom } from "$/modules/cloud/states";
@@ -172,9 +171,6 @@ export function DiscordPresenceSettings() {
 	const [privacyPreset, setPrivacyPreset] = useAtom(discordPrivacyPresetAtom);
 	const [showProgressTimer, setShowProgressTimer] = useAtom(
 		discordShowProgressTimerAtom,
-	);
-	const [generalActivityText, setGeneralActivityText] = useAtom(
-		discordGeneralActivityTextAtom,
 	);
 	const [activityType, setActivityType] = useAtom(discordActivityTypeAtom);
 
@@ -361,10 +357,10 @@ export function DiscordPresenceSettings() {
 
 	const statePreviewText = useMemo(() => {
 		if (privacyPreset === "none") return undefined;
-		if (isIdle) return generalActivityText || "No file open";
-		if (privacyPreset === "minimal") return generalActivityText;
-		return statePreview || generalActivityText;
-	}, [isIdle, privacyPreset, statePreview, generalActivityText]);
+		if (isIdle) return "No file open";
+		if (privacyPreset === "minimal") return "Working on lyrics";
+		return statePreview || "Working on lyrics";
+	}, [isIdle, privacyPreset, statePreview]);
 
 	const bottomLinePreviewText = useMemo(() => {
 		if (privacyPreset === "none") return undefined;
@@ -1064,94 +1060,8 @@ export function DiscordPresenceSettings() {
 						{t("settings.discord.stateTextsSection", "State Texts")}
 					</Text>
 
-					{/* General Activity Text */}
-					<Card style={{ padding: "16px" }}>
-						<Flex align="center" justify="between" gap="4">
-							<Flex align="center" gap="3" style={{ minWidth: 0 }}>
-								<Box
-									style={{
-										color: "var(--accent-9)",
-										display: "flex",
-										alignItems: "center",
-										flexShrink: 0,
-									}}
-								>
-									<Edit24Regular />
-								</Box>
-								<Flex direction="column" gap="1" style={{ minWidth: 0 }}>
-									<Text size="2" weight="medium">
-										{t("settings.discord.generalActivity", "General Activity")}
-									</Text>
-									<Text
-										size="1"
-										color="gray"
-										style={{
-											overflow: "hidden",
-											textOverflow: "ellipsis",
-											whiteSpace: "nowrap",
-										}}
-									>
-										{t(
-											"settings.discord.generalActivityDesc",
-											"The activity state shown when idle or general editing.",
-										)}
-									</Text>
-								</Flex>
-							</Flex>
-							<Flex gap="2" align="center" style={{ flexShrink: 0 }}>
-								<TextField.Root
-									value={generalActivityText}
-									onChange={(event) =>
-										setGeneralActivityText(event.target.value)
-									}
-									style={{ width: "160px" }}
-								/>
-								<Button
-									size="1"
-									variant="soft"
-									onClick={() => setGeneralActivityText("Working on lyrics")}
-									disabled={generalActivityText === "Working on lyrics"}
-								>
-									<ArrowUndo24Regular
-										style={{ width: "14px", height: "14px" }}
-									/>
-								</Button>
-							</Flex>
-						</Flex>
-						<Flex gap="1" mt="2" wrap="wrap">
-							<Button
-								size="1"
-								variant="ghost"
-								onClick={() =>
-									setGeneralActivityText(
-										"Checklist: {{checklistProgress}} ({{checklistPercentage}})",
-									)
-								}
-								style={{ fontSize: "11px", padding: "2px 6px" }}
-							>
-								📋 Checklist: {checklistCompleted}/{checklistTotal} (
-								{checklistTotal > 0
-									? `${Math.round((checklistCompleted / checklistTotal) * 100)}%`
-									: "0%"}
-								)
-							</Button>
-							<Button
-								size="1"
-								variant="ghost"
-								onClick={() =>
-									setGeneralActivityText(
-										"{{checklistCompleted}}/{{checklistTotal}} Songs Synced",
-									)
-								}
-								style={{ fontSize: "11px", padding: "2px 6px" }}
-							>
-								✅ {checklistCompleted}/{checklistTotal} Synced
-							</Button>
-						</Flex>
-					</Card>
-
 					{/* Idle Third Line / Bottom Text */}
-					<Card style={{ padding: "16px" }} mt="3">
+					<Card style={{ padding: "16px" }}>
 						<Flex align="center" justify="between" gap="4">
 							<Flex align="center" gap="3" style={{ minWidth: 0 }}>
 								<Box
@@ -1206,16 +1116,16 @@ export function DiscordPresenceSettings() {
 								</Button>
 							</Flex>
 						</Flex>
-						<Flex gap="1" mt="2" wrap="wrap">
+						<Flex gap="2" mt="3" wrap="wrap">
 							<Button
 								size="1"
-								variant="ghost"
+								variant="surface"
 								onClick={() =>
 									setIdleBottomText(
 										"Checklist: {{checklistProgress}} ({{checklistPercentage}})",
 									)
 								}
-								style={{ fontSize: "11px", padding: "2px 6px" }}
+								style={{ fontSize: "11px", padding: "4px 8px" }}
 							>
 								📋 Checklist: {checklistCompleted}/{checklistTotal} (
 								{checklistTotal > 0
@@ -1225,15 +1135,31 @@ export function DiscordPresenceSettings() {
 							</Button>
 							<Button
 								size="1"
-								variant="ghost"
+								variant="surface"
+								onClick={() => setIdleBottomText("{{username}}")}
+								style={{ fontSize: "11px", padding: "4px 8px" }}
+							>
+								👤 Username
+							</Button>
+							<Button
+								size="1"
+								variant="surface"
 								onClick={() =>
 									setIdleBottomText(
 										"{{username}} • {{checklistPercentage}} Done",
 									)
 								}
-								style={{ fontSize: "11px", padding: "2px 6px" }}
+								style={{ fontSize: "11px", padding: "4px 8px" }}
 							>
 								👤 User & Percentage
+							</Button>
+							<Button
+								size="1"
+								variant="surface"
+								onClick={() => setIdleBottomText("AMLL TTML Tool")}
+								style={{ fontSize: "11px", padding: "4px 8px" }}
+							>
+								📁 Tool Name
 							</Button>
 						</Flex>
 					</Card>
