@@ -245,13 +245,17 @@ export const FinishedTTMLsPage: React.FC = () => {
                           ? 'Moderator action: remove from public finished list'
                           : 'Remove from public finished list'
                       }
+                      aria-label={
+                        isUserModerator(user.uid) && user.uid !== item.authorUid
+                          ? 'Moderator action: remove from public finished list'
+                          : 'Remove from public finished list'
+                      }
                     >
                       {deletingId === item.id ? (
-                        <Loader2 size={15} className="spin" />
+                        <Loader2 size={16} className="spin" />
                       ) : (
-                        <Trash2 size={15} color="#fa2d48" />
+                        <Trash2 size={16} color="#fa2d48" />
                       )}
-                      <span>{isUserModerator(user.uid) && user.uid !== item.authorUid ? 'Mod Remove' : 'Remove'}</span>
                     </button>
                   )}
                 </div>
