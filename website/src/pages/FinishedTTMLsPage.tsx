@@ -8,19 +8,33 @@ import {
   FileText,
   Sparkles,
   RefreshCw,
-  ExternalLink
+  Trash2,
+  Loader2,
+  ShieldAlert,
 } from 'lucide-react';
+import type { User } from 'firebase/auth';
 import {
   fetchFinishedTTMLs,
   downloadTTMLFile,
-  type FinishedTTML
+  removeFromFinishedList,
+  subscribeToAuth,
+  isUserModerator,
+  type FinishedTTML,
 } from '../utils/firebase';
 
 export const FinishedTTMLsPage: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
   const [ttmls, setTtmls] = useState<FinishedTTML[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuth((u) => setUser(u));
+    return () => unsubscribe();
+  }, []);
 
   const loadTTMLs = async () => {
     setLoading(true);
@@ -44,6 +58,38 @@ export const FinishedTTMLsPage: React.FC = () => {
       downloadTTMLFile(item);
     } finally {
       setTimeout(() => setDownloadingId(null), 1000);
+    }
+  };
+
+  const handleDelete = async (item: FinishedTTML) => {
+    if (!user) return;
+    const isMod = isUserModerator(user.uid);
+    const isAuthor = item.authorUid === user.uid;
+
+    const confirmMsg = isMod && !isAuthor
+      ? `Are you sure you want to remove "${item.title}" by ${item.artist} from the public Finished list? (Note: this only removes it from the website Finished list; it does NOT delete it from the creator's private cloud saves).`
+      : `Are you sure you want to remove "${item.title}" from the public Finished list? (Note: it will still remain safely saved in your private cloud library).`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    setDeletingId(item.id);
+    setFeedback(null);
+    try {
+      await removeFromFinishedList(item, user.uid);
+      setTtmls((prev) => prev.filter((t) => t.id !== item.id));
+      setFeedback({
+        type: 'success',
+        message: `"${item.title}" was removed from the Finished list. (Cloud save preserved)`,
+      });
+      setTimeout(() => setFeedback(null), 4000);
+    } catch (err: any) {
+      console.error('Delete error:', err);
+      setFeedback({
+        type: 'error',
+        message: err?.message || 'Failed to remove song from Finished list.',
+      });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -77,6 +123,15 @@ export const FinishedTTMLsPage: React.FC = () => {
           Browse and download studio-quality, syllable-synced Apple Music TTML files created in the app and tagged as finished.
         </p>
       </div>
+
+      {feedback && (
+        <div
+          className={feedback.type === 'success' ? 'auth-success-banner' : 'auth-error-banner'}
+          style={{ maxWidth: 640, margin: '0 auto 24px', textAlign: 'center' }}
+        >
+          {feedback.message}
+        </div>
+      )}
 
       {/* Search and Action Bar */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginBottom: 40, flexWrap: 'wrap' }}>
@@ -146,6 +201,12 @@ export const FinishedTTMLsPage: React.FC = () => {
                   </p>
                 )}
 
+                {item.authorName && (
+                  <p className="ttml-author" style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Uploaded by <span style={{ color: 'var(--text-secondary)' }}>{item.authorName}</span>
+                  </p>
+                )}
+
                 <div className="ttml-meta-bar">
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     {item.lineCount ? (
@@ -163,16 +224,36 @@ export const FinishedTTMLsPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div style={{ marginTop: 14 }}>
+                <div style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'center' }}>
                   <button
                     className="btn btn-primary"
-                    style={{ width: '100%', padding: '10px 16px', fontSize: 14 }}
+                    style={{ flex: 1, padding: '10px 16px', fontSize: 14 }}
                     onClick={() => handleDownload(item)}
-                    disabled={downloadingId === item.id}
+                    disabled={downloadingId === item.id || deletingId === item.id}
                   >
                     <Download size={16} />
                     <span>{downloadingId === item.id ? 'Downloaded!' : 'Download TTML'}</span>
                   </button>
+
+                  {user && (user.uid === item.authorUid || isUserModerator(user.uid)) && (
+                    <button
+                      className="btn btn-secondary btn-delete-card"
+                      onClick={() => handleDelete(item)}
+                      disabled={deletingId === item.id}
+                      title={
+                        isUserModerator(user.uid) && user.uid !== item.authorUid
+                          ? 'Moderator action: remove from public finished list'
+                          : 'Remove from public finished list'
+                      }
+                    >
+                      {deletingId === item.id ? (
+                        <Loader2 size={15} className="spin" />
+                      ) : (
+                        <Trash2 size={15} color="#fa2d48" />
+                      )}
+                      <span>{isUserModerator(user.uid) && user.uid !== item.authorUid ? 'Mod Remove' : 'Remove'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

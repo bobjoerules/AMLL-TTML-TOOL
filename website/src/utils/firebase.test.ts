@@ -69,3 +69,39 @@ describe("Website Finished TTML Deduplication", () => {
 		expect(wannaGrowOld?.updatedAt).toBe(5000);
 	});
 });
+
+describe("Website Moderator and Permissions", () => {
+	it("recognizes the designated moderator user ID", async () => {
+		const { isUserModerator } = await import("./firebase");
+		expect(isUserModerator("s41Sey8PJUSYHQUsS6aLLb7lsf02")).toBe(true);
+		expect(isUserModerator("someOtherUser123")).toBe(false);
+		expect(isUserModerator(null)).toBe(false);
+		expect(isUserModerator(undefined)).toBe(false);
+	});
+
+	it("authorizes deletion only for authors and moderators", async () => {
+		const { isUserModerator } = await import("./firebase");
+		const song: FinishedTTML = {
+			id: "song-1",
+			title: "Test Song",
+			artist: "Test Artist",
+			authorUid: "author-123",
+		};
+
+		const canAuthorDelete =
+			Boolean(song.authorUid && song.authorUid === "author-123") ||
+			isUserModerator("author-123");
+		expect(canAuthorDelete).toBe(true);
+
+		const canStrangerDelete =
+			Boolean(song.authorUid && song.authorUid === "stranger-999") ||
+			isUserModerator("stranger-999");
+		expect(canStrangerDelete).toBe(false);
+
+		const canModDelete =
+			Boolean(
+				song.authorUid && song.authorUid === "s41Sey8PJUSYHQUsS6aLLb7lsf02",
+			) || isUserModerator("s41Sey8PJUSYHQUsS6aLLb7lsf02");
+		expect(canModDelete).toBe(true);
+	});
+});
