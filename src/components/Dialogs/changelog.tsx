@@ -56,6 +56,33 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.1.3
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 2, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Opt-In Community Library Publishing:</b> Cloud-saved
+									lyrics are now kept private by default. Users can explicitly
+									opt in via a toggle to publish finished tracks to the website
+									community library.
+								</Text>
+								<Text size="2">
+									• <b>Website Song Deduplication:</b> The community library now
+									intelligently deduplicates uploads and showcases only the
+									latest version of each song.
+								</Text>
+								<Text size="2">
+									• <b>Spectrogram Web Compatibility:</b> Added automatic
+									fallback to the serial WebAssembly renderer on web browsers
+									when multithreading / SharedArrayBuffer is unavailable.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.1.2
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
