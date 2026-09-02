@@ -8,6 +8,7 @@ import {
 	IconButton,
 	ScrollArea,
 	Spinner,
+	Switch,
 	Tabs,
 	Text,
 	TextField,
@@ -60,6 +61,7 @@ export const CloudFileManagerModal: FC = () => {
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
+	const [publishToCommunity, setPublishToCommunity] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 	const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
 	const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
@@ -124,6 +126,7 @@ export const CloudFileManagerModal: FC = () => {
 			setSaveTitle(currentTrackInfo.title);
 			setSaveArtist(currentTrackInfo.artist);
 			setSaveAlbum(currentTrackInfo.album);
+			setPublishToCommunity(false);
 			if (user) {
 				fetchUserTTMLList().catch(console.error);
 			}
@@ -169,6 +172,7 @@ export const CloudFileManagerModal: FC = () => {
 				includeAudio: false,
 				audioBlob: null,
 				audioFileName: null,
+				publishToCommunity,
 				onProgress: (pct) => setUploadProgress(pct),
 			});
 			toast.success(
@@ -473,6 +477,51 @@ export const CloudFileManagerModal: FC = () => {
 													)}
 												</Text>
 											</Flex>
+
+											<Card
+												variant="surface"
+												style={{
+													background: "var(--gray-a3)",
+													padding: "10px 12px",
+													marginTop: 4,
+													border: "1px solid var(--gray-a4)",
+												}}
+											>
+												<Flex align="center" justify="between" gap="3">
+													<Flex direction="column" gap="1">
+														<Flex align="center" gap="2">
+															<Text size="2" weight="bold">
+																🌐{" "}
+																{t(
+																	"cloud.publishToCommunity",
+																	"Publish to Website Library",
+																)}
+															</Text>
+															<Badge
+																color={publishToCommunity ? "green" : "gray"}
+																size="1"
+															>
+																{publishToCommunity
+																	? t("cloud.publicBadge", "Public")
+																	: t(
+																			"cloud.privateBadge",
+																			"Private (Default)",
+																		)}
+															</Badge>
+														</Flex>
+														<Text size="1" color="gray">
+															{t(
+																"cloud.publishToCommunityDesc",
+																"Opt-in to showcase this finished song in the public library on ttml.bobjoerules.com (#finished).",
+															)}
+														</Text>
+													</Flex>
+													<Switch
+														checked={publishToCommunity}
+														onCheckedChange={setPublishToCommunity}
+													/>
+												</Flex>
+											</Card>
 										</Flex>
 									</Card>
 

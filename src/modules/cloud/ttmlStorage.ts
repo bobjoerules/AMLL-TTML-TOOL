@@ -30,6 +30,7 @@ export interface SaveCloudTTMLInput {
 	audioBlob?: Blob | null;
 	audioFileName?: string | null;
 	onProgress?: (percent: number) => void;
+	publishToCommunity?: boolean;
 }
 
 export async function uploadAudioToCloud(
@@ -185,10 +186,12 @@ export async function saveTTMLToCloud(
 		coverArt = coverMatch[1] || coverMatch[0];
 	}
 
+	const isPublished = Boolean(input.publishToCommunity);
 	const data: Omit<CloudTTMLDocument, "id"> & {
 		coverArt?: string | null;
 		tags?: string[];
 		finished?: boolean;
+		publishedToCommunity?: boolean;
 	} = {
 		title: input.title || "Untitled",
 		artist: input.artist || "",
@@ -206,18 +209,26 @@ export async function saveTTMLToCloud(
 		audioFileName,
 		audioSize,
 		coverArt,
-		tags: ["finished"],
-		finished: true,
+		tags: isPublished ? ["finished", "community"] : [],
+		finished: isPublished,
+		publishedToCommunity: isPublished,
 	};
 
 	await setDoc(docRef, data, { merge: true });
 
-	// Mirror to finished_ttmls and public_ttmls collections
+	// Mirror to or remove from finished_ttmls and public_ttmls collections
 	try {
 		const finishedDocRef = doc(collection(db, "finished_ttmls"), docRef.id);
-		await setDoc(finishedDocRef, data, { merge: true });
+		const publicDocRef = doc(collection(db, "public_ttmls"), docRef.id);
+		if (isPublished) {
+			await setDoc(finishedDocRef, data, { merge: true });
+			await setDoc(publicDocRef, data, { merge: true }).catch(() => {});
+		} else {
+			await deleteDoc(finishedDocRef).catch(() => {});
+			await deleteDoc(publicDocRef).catch(() => {});
+		}
 	} catch (err) {
-		console.warn("Could not mirror to finished_ttmls:", err);
+		console.warn("Could not update finished_ttmls / public_ttmls:", err);
 	}
 
 	// Refresh the local list
@@ -422,6 +433,12 @@ export async function deleteTTMLFromCloud(docId: string): Promise<void> {
 	const db = getFirebaseFirestore();
 	const docRef = doc(db, "users", user.uid, "ttmls", docId);
 	await deleteDoc(docRef);
+
+	// Also remove from public/finished collections if present
+	try {
+		await deleteDoc(doc(db, "finished_ttmls", docId)).catch(() => {});
+		await deleteDoc(doc(db, "public_ttmls", docId)).catch(() => {});
+	} catch {}
 
 	// Refresh the local list
 	await fetchUserTTMLList();
