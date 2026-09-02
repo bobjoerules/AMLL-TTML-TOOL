@@ -161,10 +161,9 @@ class AudioEngine extends EventTarget {
 				const now = Date.now();
 				const elapsed = now - lastHeartbeat;
 				lastHeartbeat = now;
-				const idleTime = now - this._lastAudioActivityTime;
 
-				if (elapsed > 4000 || idleTime > 15000) {
-					// Woke up from sleep or away/idle for more than 15s
+				if (elapsed > 4000) {
+					// Woke up from sleep
 					this._needsFreshContext = true;
 				}
 				if (
@@ -305,16 +304,13 @@ class AudioEngine extends EventTarget {
 
 	/** Handle browser autoplay policy, macOS sleep, device changes and interruption */
 	public async resumeContext() {
-		const now = Date.now();
-		const idleTime = now - this._lastAudioActivityTime;
-		this._lastAudioActivityTime = now;
+		this._lastAudioActivityTime = Date.now();
 
 		if (
 			this._needsFreshContext ||
 			!this._ctx ||
 			this._ctx.state === "closed" ||
-			this._ctx.state === "interrupted" ||
-			(!this._isPlaying && idleTime > 15000)
+			this._ctx.state === "interrupted"
 		) {
 			this._needsFreshContext = false;
 			await this.recreateContext();
@@ -354,24 +350,6 @@ class AudioEngine extends EventTarget {
 		});
 		audioEl.addEventListener("volumechange", () => {
 			this.volume = audioEl.volume;
-		});
-		audioEl.addEventListener("play", () => {
-			if (this.musicBuffer && !this._isPlaying) {
-				void this.resumeOrSeekMusic(this._pausedPosition);
-			}
-		});
-		audioEl.addEventListener("pause", () => {
-			if (this.musicBuffer && this._isPlaying) {
-				this.pauseMusic();
-			}
-		});
-		audioEl.addEventListener("seeked", () => {
-			if (
-				this.musicBuffer &&
-				Math.abs(this.musicCurrentTime - audioEl.currentTime) > 0.3
-			) {
-				this.seekMusic(audioEl.currentTime);
-			}
 		});
 	}
 
