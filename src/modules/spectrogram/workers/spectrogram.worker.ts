@@ -16,18 +16,29 @@ let audioSampleRate: number = 0;
 let wasmInitialized: Promise<void> | null = null;
 let currentPalette: Uint8Array | null = null;
 
-const useSerialRenderer = Boolean(import.meta.env.TAURI_ENV_PLATFORM);
+let useSerialRenderer =
+	Boolean(import.meta.env.TAURI_ENV_PLATFORM) ||
+	typeof SharedArrayBuffer === "undefined" ||
+	!Boolean(self.crossOriginIsolated);
 
 async function initializeWasm() {
 	if (!wasmInitialized) {
 		wasmInitialized = (async () => {
-			if (useSerialRenderer) {
-				await initSerial();
-				return;
+			if (!useSerialRenderer) {
+				try {
+					await initThreaded();
+					await initThreadPool(Math.max(1, navigator.hardwareConcurrency || 1));
+					return;
+				} catch (e) {
+					console.warn(
+						"[SpectrogramWorker] Threaded WASM init failed, falling back to serial renderer:",
+						e,
+					);
+					useSerialRenderer = true;
+				}
 			}
 
-			await initThreaded();
-			await initThreadPool(Math.max(1, navigator.hardwareConcurrency || 1));
+			await initSerial();
 		})();
 	}
 	await wasmInitialized;
