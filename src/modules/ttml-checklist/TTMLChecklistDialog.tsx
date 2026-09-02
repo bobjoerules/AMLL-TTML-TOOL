@@ -73,7 +73,7 @@ import {
 	loadChecklistFromCloud,
 	parseChecklistJson,
 	saveChecklistToCloud,
-	useChecklistCloudSync,
+	useChecklistSyncStatus,
 } from "./cloudSync";
 import { ttmlChecklistAtom } from "./states";
 
@@ -380,16 +380,19 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 												key={hit.id}
 												justify="between"
 												align="center"
+												gap="2"
 												p="2"
 												style={{
 													borderRadius: "6px",
 													backgroundColor: "var(--gray-a2)",
 													cursor: "pointer",
 													transition: "background 0.1s",
+													minWidth: 0,
+													overflow: "hidden",
 												}}
 												onClick={() => handleSelectSearchResult(hit)}
 											>
-												<Flex gap="2" align="center" style={{ minWidth: 0 }}>
+												<Flex gap="2" align="center" style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
 													{hit.cover ? (
 														<img
 															src={hit.cover}
@@ -399,6 +402,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 																height: "28px",
 																borderRadius: "4px",
 																objectFit: "cover",
+																flexShrink: 0,
 															}}
 														/>
 													) : (
@@ -411,6 +415,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 																display: "flex",
 																alignItems: "center",
 																justifyContent: "center",
+																flexShrink: 0,
 															}}
 														>
 															<MusicNote2Filled
@@ -418,16 +423,16 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 															/>
 														</Box>
 													)}
-													<Flex direction="column" style={{ minWidth: 0 }}>
-														<Text size="1" weight="bold" truncate>
+													<Flex direction="column" style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+														<Text size="1" weight="bold" truncate style={{ maxWidth: "100%", display: "block" }}>
 															{hit.name}
 														</Text>
-														<Text size="1" color="gray" truncate>
+														<Text size="1" color="gray" truncate style={{ maxWidth: "100%", display: "block" }}>
 															{hit.artist} {hit.album ? `• ${hit.album}` : ""}
 														</Text>
 													</Flex>
 												</Flex>
-												<Badge size="1" variant="soft" color="indigo">
+												<Badge size="1" variant="soft" color="indigo" style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
 													Select
 												</Badge>
 											</Flex>
@@ -973,7 +978,7 @@ export const TTMLChecklistDialog = () => {
 		"default" | "title-asc" | "title-desc" | "artist-asc" | "artist-desc"
 	>("default");
 
-	const { isLoggedIn, user } = useChecklistCloudSync();
+	const { isLoggedIn, user } = useChecklistSyncStatus();
 	const openAccountSettings = useSetAtom(openAccountSettingsAtom);
 	const setImportLyricsPrefill = useSetAtom(importLyricsPrefillAtom);
 	const setGeniusImportDialog = useSetAtom(geniusImportLyricsDialogAtom);
