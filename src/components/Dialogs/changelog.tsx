@@ -56,6 +56,28 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.1.4
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 2, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>TTML Checklist Cloud Sync Protection:</b> Prevented data wipeout race conditions when logging in from new devices and locations; local and cloud lists are now seamlessly merged.
+								</Text>
+								<Text size="2">
+									• <b>Finished Cloud TTML Auto-Import:</b> Automatically scans your cloud library on login or sync and integrates any finished TTML lyrics directly into your checklist.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Provider Search Truncation:</b> Long song and artist names now truncate cleanly with ellipsis in search results, keeping the Select button aligned and visible.
+								</Text>
+								<Text size="2">
+									• <b>Website Theme & Mobile Redesign:</b> Removed blue tint across the companion website in favor of sleek Apple Music dark neutral tones and crimson glows; added a fully responsive mobile navigation drawer.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.1.3
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

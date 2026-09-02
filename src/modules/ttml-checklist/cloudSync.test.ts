@@ -67,4 +67,14 @@ describe("TTML checklist cloud sync & file helpers", () => {
 			]),
 		).resolves.not.toThrow();
 	});
+
+	it("gracefully handles syncFinishedCloudTTMLsToChecklist when Firebase is not configured", async () => {
+		const { syncFinishedCloudTTMLsToChecklist } = await import("./cloudSync");
+		const res = await syncFinishedCloudTTMLsToChecklist(
+			[{ id: "1", song: "S", artist: "A", completed: false, createdAt: 1 }],
+			"user-123",
+		);
+		expect(res.importedCount).toBe(0);
+		expect(res.entries).toHaveLength(1);
+	});
 });

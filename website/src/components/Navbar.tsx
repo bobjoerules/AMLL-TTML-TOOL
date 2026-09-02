@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield } from 'lucide-react';
+import { Flame, Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield, Menu, X } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import { GithubIcon } from './GithubIcon';
 import { AuthModal } from './AuthModal';
@@ -15,6 +15,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAuth((currentUser) => {
@@ -29,7 +30,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
     <>
       <header className="navbar">
         <div className="container nav-content">
-          <div className="nav-brand" onClick={() => onSelectTab('home')}>
+          <div
+            className="nav-brand"
+            onClick={() => {
+              onSelectTab('home');
+              setMobileMenuOpen(false);
+            }}
+          >
             <img
               src="/logo.svg"
               alt="AMLL TTML Tool Logo"
@@ -38,7 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
             <span>AMLL TTML Tool</span>
           </div>
 
-          <nav>
+          <nav className="nav-desktop-only">
             <ul className="nav-links">
               <li>
                 <button
@@ -75,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               href="https://ttmleditor.bobjoerules.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary btn-sm"
+              className="btn btn-secondary btn-sm nav-desktop-action"
               style={{ borderColor: 'rgba(250, 45, 72, 0.4)', background: 'rgba(250, 45, 72, 0.1)' }}
             >
               <Globe size={15} color="var(--accent-pink)" />
@@ -86,7 +93,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               href="https://github.com/bobjoerules/AMLL-TTML-TOOL"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary btn-sm"
+              className="btn btn-secondary btn-sm nav-desktop-action"
             >
               <GithubIcon size={16} />
               <span>GitHub</span>
@@ -95,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               href="https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-primary btn-sm"
+              className="btn btn-primary btn-sm nav-desktop-action"
             >
               <Download size={16} />
               <span>Download</span>
@@ -131,8 +138,90 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 <span>Sign In</span>
               </button>
             )}
+
+            <button
+              className="nav-mobile-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Drawer */}
+        {mobileMenuOpen && (
+          <div className="nav-mobile-drawer">
+            <div className="nav-mobile-links">
+              <button
+                className={`nav-mobile-link ${currentTab === 'home' ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectTab('home');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Home
+              </button>
+              <button
+                className={`nav-mobile-link ${currentTab === 'finished' ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectTab('finished');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Finished TTMLs
+              </button>
+              <button
+                className={`nav-mobile-link ${currentTab === 'spicy' ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectTab('spicy');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <Flame size={16} color="#ff416c" />
+                  Spicy Player
+                </span>
+              </button>
+            </div>
+
+            <div className="nav-mobile-divider" />
+
+            <div className="nav-mobile-actions">
+              <a
+                href="https://ttmleditor.bobjoerules.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary btn-sm nav-mobile-action-btn"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Globe size={15} color="var(--accent-pink)" />
+                <span>Open in Browser</span>
+                <ExternalLink size={12} style={{ opacity: 0.7 }} />
+              </a>
+              <a
+                href="https://github.com/bobjoerules/AMLL-TTML-TOOL"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary btn-sm nav-mobile-action-btn"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <GithubIcon size={16} />
+                <span>GitHub</span>
+              </a>
+              <a
+                href="https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary btn-sm nav-mobile-action-btn"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Download size={16} />
+                <span>Download App</span>
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       <AuthModal

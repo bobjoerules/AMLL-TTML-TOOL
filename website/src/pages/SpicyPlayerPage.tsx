@@ -92,7 +92,7 @@ export const SpicyPlayerPage: React.FC = () => {
           Interface Gallery
         </h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 24 }}>
           {SPICY_GALLERY.map((item) => (
             <div
               key={item.id}

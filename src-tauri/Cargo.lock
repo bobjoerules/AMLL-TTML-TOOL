@@ -51,7 +51,7 @@ dependencies = [
 
 [[package]]
 name = "amll-ttml-tool"
-version = "1.1.3"
+version = "1.1.4"
 dependencies = [
  "discord-rich-presence",
  "log",
@@ -3450,7 +3450,7 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.1.3"
+version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "146c9e247ccc180c1f61615433868c99f3de3ae256a30a43b49f67c2d9171f34"
 dependencies = [

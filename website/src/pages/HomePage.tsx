@@ -120,7 +120,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
-          <span>AMLL TTML Tool v1.0.6 Released</span>
+          <span>AMLL TTML Tool v1.1.4 Released</span>
         </div>
 
         <h1 className="hero-title">
@@ -259,7 +259,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8' }}>
+            <div className="feature-icon" style={{ background: 'rgba(244, 63, 94, 0.12)', color: '#fb7185' }}>
               <Layers size={24} />
             </div>
             <h3 className="feature-title">Apple Music & Spicy Visuals</h3>
@@ -279,7 +279,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(0, 240, 255, 0.1)', color: '#22d3ee' }}>
+            <div className="feature-icon" style={{ background: 'rgba(217, 70, 239, 0.12)', color: '#e879f9' }}>
               <Cloud size={24} />
             </div>
             <h3 className="feature-title">Cloud Storage & Collaboration</h3>
