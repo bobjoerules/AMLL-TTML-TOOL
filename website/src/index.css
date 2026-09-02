@@ -1035,16 +1035,25 @@ body {
 }
 
 .btn-delete-card {
-  padding: 10px 14px !important;
-  font-size: 13px !important;
+  width: 42px;
+  height: 42px;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   border-color: rgba(250, 45, 72, 0.35) !important;
   color: #ff5277 !important;
   background: rgba(250, 45, 72, 0.08) !important;
+  border-radius: var(--radius-md) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-delete-card:hover {
   background: rgba(250, 45, 72, 0.2) !important;
   border-color: rgba(250, 45, 72, 0.6) !important;
+  transform: translateY(-1px);
 }
 
 @keyframes fadeIn {
