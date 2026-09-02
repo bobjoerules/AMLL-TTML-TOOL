@@ -1,12 +1,25 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  type Auth,
+  type User,
+} from 'firebase/auth';
+import {
   getFirestore,
   collection,
   collectionGroup,
   getDocs,
   query,
-  orderBy,
   limit,
+  doc,
+  deleteDoc,
+  updateDoc,
+  setDoc,
   type Firestore,
   type DocumentData
 } from 'firebase/firestore';
@@ -21,9 +34,17 @@ export interface FinishedTTML {
   durationMs?: number;
   tags?: string[];
   rawTTML?: string;
+  authorUid?: string;
+  authorName?: string;
   createdAt?: number;
   updatedAt?: number;
   downloadUrl?: string;
+}
+
+export const MODERATOR_UIDS = new Set(["s41Sey8PJUSYHQUsS6aLLb7lsf02"]);
+
+export function isUserModerator(uid?: string | null): boolean {
+  return Boolean(uid && MODERATOR_UIDS.has(uid));
 }
 
 export function normalizeSongKey(str: string): string {
@@ -53,6 +74,7 @@ const FIREBASE_CONFIG = {
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
+let auth: Auth | null = null;
 
 try {
   if (getApps().length === 0) {
@@ -61,8 +83,77 @@ try {
     app = getApps()[0];
   }
   db = getFirestore(app);
+  auth = getAuth(app);
 } catch (e) {
   console.warn("Firebase initialization failed:", e);
+}
+
+export function getWebsiteAuth(): Auth | null {
+  return auth;
+}
+
+export async function signInWithEmail(email: string, pass: string): Promise<User> {
+  if (!auth) throw new Error("Firebase Auth not initialized");
+  const result = await signInWithEmailAndPassword(auth, email.trim(), pass);
+  return result.user;
+}
+
+export async function signUpWithEmail(email: string, pass: string, displayName?: string): Promise<User> {
+  if (!auth) throw new Error("Firebase Auth not initialized");
+  const result = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+  if (displayName && result.user) {
+    await updateProfile(result.user, { displayName: displayName.trim() });
+  }
+  return result.user;
+}
+
+export async function signOutUser(): Promise<void> {
+  if (!auth) return;
+  await signOut(auth);
+}
+
+export function subscribeToAuth(callback: (user: User | null) => void): () => void {
+  if (!auth) {
+    callback(null);
+    return () => {};
+  }
+  return onAuthStateChanged(auth, callback);
+}
+
+export async function updateUserProfile(updates: { displayName?: string; photoURL?: string }): Promise<void> {
+  if (!auth?.currentUser) throw new Error("Not signed in");
+  const user = auth.currentUser;
+  await updateProfile(user, updates);
+  if (db) {
+    await setDoc(doc(db, "users", user.uid), { ...updates, updatedAt: Date.now() }, { merge: true }).catch(() => {});
+  }
+}
+
+export async function removeFromFinishedList(ttml: FinishedTTML, currentUserUid: string): Promise<void> {
+  if (!db) throw new Error("Database not connected");
+  const isOwner = Boolean(ttml.authorUid && ttml.authorUid === currentUserUid);
+  const isMod = isUserModerator(currentUserUid);
+
+  if (!isOwner && !isMod) {
+    throw new Error("You do not have permission to remove this song from the Finished list.");
+  }
+
+  // 1. Delete from public finished lists
+  await deleteDoc(doc(db, "finished_ttmls", ttml.id));
+  await deleteDoc(doc(db, "public_ttmls", ttml.id)).catch(() => {});
+
+  // 2. Safely toggle public status in author's cloud saves WITHOUT deleting the private file
+  if (ttml.authorUid) {
+    try {
+      await updateDoc(doc(db, "users", ttml.authorUid, "ttmls", ttml.id), {
+        finished: false,
+        publishedToCommunity: false,
+        tags: [],
+      });
+    } catch {
+      // User doc may not exist if it was directly in finished_ttmls
+    }
+  }
 }
 
 function parseTTMLDoc(id: string, data: DocumentData): FinishedTTML {
@@ -106,6 +197,8 @@ function parseTTMLDoc(id: string, data: DocumentData): FinishedTTML {
     durationMs: data.durationMs || 0,
     tags: data.tags || (data.finished ? ["finished"] : ["community"]),
     rawTTML,
+    authorUid: data.authorUid || data.author_uid || data.userId || undefined,
+    authorName: data.authorName || data.author_name || data.author || undefined,
     createdAt,
     updatedAt,
     downloadUrl: data.downloadUrl || data.audioUrl,
