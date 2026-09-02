@@ -22,7 +22,24 @@ export interface FinishedTTML {
   tags?: string[];
   rawTTML?: string;
   createdAt?: number;
+  updatedAt?: number;
   downloadUrl?: string;
+}
+
+export function normalizeSongKey(str: string): string {
+  return (str || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’'`´"]/g, "")
+    .replace(/&/g, "and")
+    .replace(/[\s\-_.,/\\()[\]{}!?:;+*]/g, "");
+}
+
+export function getSongKey(title: string, artist: string): string {
+  const nTitle = normalizeSongKey(title);
+  const nArtist = normalizeSongKey(artist);
+  return `${nTitle}:::${nArtist}`;
 }
 
 const FIREBASE_CONFIG = {
@@ -76,6 +93,9 @@ function parseTTMLDoc(id: string, data: DocumentData): FinishedTTML {
     if (artistMatch) artist = artistMatch[1];
   }
 
+  const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt || Date.now();
+  const updatedAt = data.updatedAt?.toMillis ? data.updatedAt.toMillis() : data.updatedAt || createdAt;
+
   return {
     id,
     title: title || "Untitled",
@@ -86,7 +106,8 @@ function parseTTMLDoc(id: string, data: DocumentData): FinishedTTML {
     durationMs: data.durationMs || 0,
     tags: data.tags || (data.finished ? ["finished"] : ["community"]),
     rawTTML,
-    createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt || Date.now(),
+    createdAt,
+    updatedAt,
     downloadUrl: data.downloadUrl || data.audioUrl,
   };
 }
@@ -94,40 +115,40 @@ function parseTTMLDoc(id: string, data: DocumentData): FinishedTTML {
 export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
   if (!db) return FEATURED_FINISHED_TTMLS;
 
-  const resultsMap = new Map<string, FinishedTTML>();
+  const rawDocs: FinishedTTML[] = [];
 
   try {
-    // 1. Try querying collection "finished_ttmls"
+    // 1. Query collection "finished_ttmls" (opt-in community shares)
     try {
-      const snap = await getDocs(query(collection(db, "finished_ttmls"), limit(60)));
+      const snap = await getDocs(query(collection(db, "finished_ttmls"), limit(100)));
       snap.forEach((docSnap) => {
-        const item = parseTTMLDoc(docSnap.id, docSnap.data());
-        resultsMap.set(item.id, item);
+        rawDocs.push(parseTTMLDoc(docSnap.id, docSnap.data()));
       });
     } catch (e) {
       console.warn("Could not read finished_ttmls collection:", e);
     }
 
-    // 2. Try querying collection "public_ttmls"
+    // 2. Query collection "public_ttmls"
     try {
-      const snap = await getDocs(query(collection(db, "public_ttmls"), limit(60)));
+      const snap = await getDocs(query(collection(db, "public_ttmls"), limit(100)));
       snap.forEach((docSnap) => {
-        const item = parseTTMLDoc(docSnap.id, docSnap.data());
-        if (!resultsMap.has(item.id)) {
-          resultsMap.set(item.id, item);
-        }
+        rawDocs.push(parseTTMLDoc(docSnap.id, docSnap.data()));
       });
     } catch (e) {
       console.warn("Could not read public_ttmls collection:", e);
     }
 
-    // 3. Try querying collectionGroup "ttmls" (all user uploaded tracks)
+    // 3. Query collectionGroup "ttmls", but ONLY include documents where user opted in
     try {
-      const snap = await getDocs(query(collectionGroup(db, "ttmls"), limit(60)));
+      const snap = await getDocs(query(collectionGroup(db, "ttmls"), limit(100)));
       snap.forEach((docSnap) => {
-        const item = parseTTMLDoc(docSnap.id, docSnap.data());
-        if (!resultsMap.has(item.id)) {
-          resultsMap.set(item.id, item);
+        const data = docSnap.data();
+        const isOptedIn =
+          data.publishedToCommunity === true ||
+          data.finished === true ||
+          (Array.isArray(data.tags) && (data.tags.includes("finished") || data.tags.includes("community")));
+        if (isOptedIn) {
+          rawDocs.push(parseTTMLDoc(docSnap.id, data));
         }
       });
     } catch (e) {
@@ -137,14 +158,45 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
     console.error("Error connecting to Firebase:", err);
   }
 
-  // Include featured verified tracks if library has few items
-  for (const featured of FEATURED_FINISHED_TTMLS) {
-    if (!resultsMap.has(featured.id)) {
-      resultsMap.set(featured.id, featured);
+  // Deduplicate by song key so that ONLY THE NEWEST VERSION of each song is shown
+  const latestBySong = new Map<string, FinishedTTML>();
+
+  for (const item of rawDocs) {
+    const key = getSongKey(item.title, item.artist);
+    const existing = latestBySong.get(key);
+
+    if (!existing) {
+      latestBySong.set(key, item);
+      continue;
+    }
+
+    const itemTime = item.updatedAt || item.createdAt || 0;
+    const existingTime = existing.updatedAt || existing.createdAt || 0;
+
+    if (itemTime > existingTime) {
+      latestBySong.set(key, item);
+    } else if (itemTime === existingTime) {
+      // Tie-breaker: keep the version with more lyrics or rich metadata
+      if (
+        (item.lineCount || 0) > (existing.lineCount || 0) ||
+        (item.rawTTML?.length || 0) > (existing.rawTTML?.length || 0)
+      ) {
+        latestBySong.set(key, item);
+      }
     }
   }
 
-  return Array.from(resultsMap.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  // Include featured verified tracks if not already superseded by a live upload
+  for (const featured of FEATURED_FINISHED_TTMLS) {
+    const key = getSongKey(featured.title, featured.artist);
+    if (!latestBySong.has(key)) {
+      latestBySong.set(key, featured);
+    }
+  }
+
+  return Array.from(latestBySong.values()).sort(
+    (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
+  );
 }
 
 // Built-in showcase finished TTMLs crafted with syllable-level timings
