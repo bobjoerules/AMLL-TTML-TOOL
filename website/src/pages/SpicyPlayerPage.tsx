@@ -75,14 +75,6 @@ export const SpicyPlayerPage: React.FC = () => {
             <span>View on GitHub</span>
             <ExternalLink size={14} />
           </a>
-          <a
-            href="https://github.com/bobjoerules/Spicy-Player/releases"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-secondary"
-          >
-            <span>Download Releases</span>
-          </a>
         </div>
       </div>
 

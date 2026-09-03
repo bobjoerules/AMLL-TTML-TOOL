@@ -91,33 +91,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     <div className="container" style={{ paddingBottom: 80 }}>
       {/* Hero Section */}
       <section className="hero-section">
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <div style={{ position: 'relative' }}>
-            <div
-              style={{
-                position: 'absolute',
-                inset: -10,
-                background: 'radial-gradient(circle, rgba(250, 45, 72, 0.45) 0%, transparent 70%)',
-                filter: 'blur(20px)',
-                borderRadius: '50%',
-                zIndex: 0,
-              }}
-            />
-            <img
-              src="/logo.svg"
-              alt="AMLL TTML Tool"
-              style={{
-                position: 'relative',
-                zIndex: 1,
-                width: 72,
-                height: 72,
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 4px 16px rgba(250, 45, 72, 0.35))',
-              }}
-            />
-          </div>
-        </div>
-
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
           <span>AMLL TTML Tool v1.1.4 Released</span>

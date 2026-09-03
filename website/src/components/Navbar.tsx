@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               alt="AMLL TTML Tool Logo"
               style={{ width: 32, height: 32, objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(250, 45, 72, 0.4))' }}
             />
-            <span>AMLL TTML Tool</span>
+            <span className="nav-brand-title">AMLL TTML Tool</span>
           </div>
 
           <nav className="nav-desktop-only">

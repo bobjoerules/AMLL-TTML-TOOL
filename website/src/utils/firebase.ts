@@ -325,3 +325,79 @@ export function downloadTTMLFile(ttml: FinishedTTML) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Reads and compresses an image File into a square JPEG data URL (~512x512 max).
+ */
+export async function compressImageToDataUrl(file: File, maxSize = 512, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Failed to read image file"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Failed to decode image"));
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const width = img.width;
+        const height = img.height;
+
+        // Center-crop to a square aspect ratio
+        const size = Math.min(width, height);
+        const startX = (width - size) / 2;
+        const startY = (height - size) / 2;
+
+        const targetSize = Math.min(size, maxSize);
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(reader.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, startX, startY, size, size, 0, 0, targetSize, targetSize);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Updates the cover art of a song across Firestore documents.
+ */
+export async function updateSongCoverArt(
+  ttml: FinishedTTML,
+  coverArtDataUrl: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!db) return { success: false, error: "Firestore is not connected." };
+
+  try {
+    const payload = {
+      coverArt: coverArtDataUrl,
+      updatedAt: Date.now(),
+    };
+    const promises: Promise<any>[] = [];
+
+    if (ttml.authorUid) {
+      const userDocRef = doc(db, "users", ttml.authorUid, "ttmls", ttml.id);
+      promises.push(setDoc(userDocRef, payload, { merge: true }).catch(() => {}));
+    }
+
+    const finishedRef = doc(db, "finished_ttmls", ttml.id);
+    promises.push(setDoc(finishedRef, payload, { merge: true }).catch(() => {}));
+
+    const publicRef = doc(db, "public_ttmls", ttml.id);
+    promises.push(setDoc(publicRef, payload, { merge: true }).catch(() => {}));
+
+    await Promise.all(promises);
+    return { success: true };
+  } catch (err: any) {
+    console.error("Error updating song cover art:", err);
+    return { success: false, error: err?.message || "Failed to update artwork in Firestore." };
+  }
+}
+

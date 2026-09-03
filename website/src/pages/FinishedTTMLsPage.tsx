@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Download,
   Search,
@@ -11,12 +11,15 @@ import {
   Trash2,
   Loader2,
   ShieldAlert,
+  ImagePlus,
 } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import {
   fetchFinishedTTMLs,
   downloadTTMLFile,
   removeFromFinishedList,
+  updateSongCoverArt,
+  compressImageToDataUrl,
   subscribeToAuth,
   isUserModerator,
   type FinishedTTML,
@@ -29,6 +32,9 @@ export const FinishedTTMLsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [uploadingCoverId, setUploadingCoverId] = useState<string | null>(null);
+  const [activeTrackForUpload, setActiveTrackForUpload] = useState<FinishedTTML | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
@@ -93,6 +99,51 @@ export const FinishedTTMLsPage: React.FC = () => {
     }
   };
 
+  const handleOpenArtworkPicker = (item: FinishedTTML) => {
+    setActiveTrackForUpload(item);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleArtworkFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeTrackForUpload) return;
+
+    const track = activeTrackForUpload;
+    setUploadingCoverId(track.id);
+
+    try {
+      const dataUrl = await compressImageToDataUrl(file);
+      const res = await updateSongCoverArt(track, dataUrl);
+      if (res.success) {
+        setTtmls((prev) =>
+          prev.map((t) => (t.id === track.id ? { ...t, coverArt: dataUrl } : t))
+        );
+        setFeedback({
+          type: 'success',
+          message: `Artwork updated successfully for "${track.title}"!`,
+        });
+      } else {
+        setFeedback({
+          type: 'error',
+          message: res.error || 'Failed to update artwork in the cloud.',
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setFeedback({
+        type: 'error',
+        message: err?.message || 'Failed to process artwork image.',
+      });
+    } finally {
+      setUploadingCoverId(null);
+      setActiveTrackForUpload(null);
+      setTimeout(() => setFeedback(null), 5000);
+    }
+  };
+
   const filtered = ttmls.filter((item) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
@@ -113,6 +164,13 @@ export const FinishedTTMLsPage: React.FC = () => {
 
   return (
     <div className="container" style={{ padding: '60px 24px 100px' }}>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleArtworkFileChange}
+        accept="image/png,image/jpeg,image/webp"
+        style={{ display: 'none' }}
+      />
       <div className="section-header">
         <span className="section-tag">
           <CheckCircle2 size={13} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
@@ -120,7 +178,7 @@ export const FinishedTTMLsPage: React.FC = () => {
         </span>
         <h1 className="section-title">Finished TTML Lyrics</h1>
         <p className="section-desc">
-          Browse and download studio-quality, syllable-synced Apple Music TTML files created in the app and tagged as finished.
+          Browse and download TTML files created in the app and tagged as finished.
         </p>
       </div>
 
@@ -179,10 +237,46 @@ export const FinishedTTMLsPage: React.FC = () => {
             <div key={item.id} className="glass-panel ttml-card">
               <div className="ttml-cover-wrapper">
                 {item.coverArt ? (
-                  <img src={item.coverArt} alt={item.title} className="ttml-cover" />
+                  <>
+                    <img src={item.coverArt} alt={item.title} className="ttml-cover" />
+                    <button
+                      className="ttml-cover-edit-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenArtworkPicker(item);
+                      }}
+                      title="Change artwork"
+                      aria-label="Change artwork"
+                    >
+                      {uploadingCoverId === item.id ? (
+                        <Loader2 size={15} className="spin" />
+                      ) : (
+                        <ImagePlus size={15} />
+                      )}
+                    </button>
+                  </>
                 ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-tertiary)' }}>
-                    <Music size={40} color="var(--text-muted)" />
+                  <div
+                    className="ttml-cover-missing"
+                    onClick={() => handleOpenArtworkPicker(item)}
+                    role="button"
+                    tabIndex={0}
+                    title="Upload artwork for this song"
+                  >
+                    {uploadingCoverId === item.id ? (
+                      <>
+                        <Loader2 size={30} className="spin" color="var(--accent-pink)" />
+                        <span className="ttml-cover-missing-label">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="ttml-cover-missing-icon">
+                          <ImagePlus size={22} />
+                        </div>
+                        <span className="ttml-cover-missing-label">Add Artwork</span>
+                        <span className="ttml-cover-missing-sub">Click to upload cover</span>
+                      </>
+                    )}
                   </div>
                 )}
                 <span className="ttml-badge">Finished</span>
