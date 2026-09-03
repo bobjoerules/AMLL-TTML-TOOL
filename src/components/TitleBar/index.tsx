@@ -194,28 +194,6 @@ export const TitleBar: FC = () => {
 					>
 						<Beaker24Regular />
 					</IconButton>
-
-					{!import.meta.env.TAURI_ENV_PLATFORM && (
-						<Flex
-							direction="column"
-							align="end"
-							justify="center"
-							style={{ lineHeight: 1.2 }}
-						>
-							<Text
-								style={{ color: "var(--accent-11)" }}
-								wrap="nowrap"
-								size="2"
-							>
-								<span className={styles.title}>
-									{t("topBar.appName", "Apple Music-like Lyrics TTML Tool")}
-								</span>
-							</Text>
-							<Text size="1" color="gray" style={{ opacity: 0.7 }}>
-								Forked by Bobjoerules
-							</Text>
-						</Flex>
-					)}
 				</Flex>
 			}
 			onSpacerClicked={() => {

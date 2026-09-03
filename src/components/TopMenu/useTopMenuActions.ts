@@ -41,7 +41,6 @@ import {
 	metadataEditorDialogAtom,
 	openAccountSettingsAtom,
 	settingsDialogAtom,
-	submitToAMLLDBDialogAtom,
 	timeShiftDialogAtom,
 	timeStretchDialogAtom,
 	ttmlChecklistDialogAtom,
@@ -367,10 +366,6 @@ export const useTopMenuActions = () => {
 		}
 	}, [store, setConfirmDialog, t]);
 
-	const onSubmitToAMLLDB = useCallback(() => {
-		store.set(submitToAMLLDBDialogAtom, true);
-	}, [store]);
-
 	const onOpenMetadataEditor = useCallback(() => {
 		setMetadataEditorOpened(true);
 	}, [setMetadataEditorOpened]);
@@ -649,7 +644,6 @@ export const useTopMenuActions = () => {
 		onOpenCloudAuth,
 		onOpenHistoryRestore,
 		onSaveFileToClipboard,
-		onSubmitToAMLLDB,
 		onUndo,
 		onRedo,
 		onSelectAll,
