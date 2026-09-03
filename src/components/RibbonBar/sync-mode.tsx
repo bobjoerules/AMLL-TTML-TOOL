@@ -654,13 +654,14 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					isSidebar={isSidebar}
 					label={
 						<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
-							<Beaker24Regular style={{ width: "12px", height: "12px" }} />
-							<span>{t("ribbonBar.syncMode.assistSettings", "辅助设置")}</span>
+							<Settings24Regular style={{ width: "12px", height: "12px" }} />
+							<span>{t("ribbonBar.syncMode.options", "Options")}</span>
 						</Flex>
 					}
 				>
 					<Flex
-						align="center"
+						direction="column"
+						gap="1"
 						justify="center"
 						px="1"
 						style={{ height: "100%" }}
@@ -668,18 +669,20 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						<Popover.Root>
 							<Popover.Trigger>
 								<Button
-									size="2"
+									size="1"
 									variant="soft"
 									color="gray"
 									style={{
 										cursor: "pointer",
-										borderRadius: "8px",
+										borderRadius: "6px",
 										fontWeight: 500,
+										width: "100%",
+										justifyContent: "flex-start",
 									}}
 								>
-									<Beaker24Regular style={{ width: "16px", height: "16px" }} />
+									<Beaker24Regular style={{ width: "14px", height: "14px" }} />
 									<span>
-										{t("ribbonBar.syncMode.assistSettings", "辅助设置")}
+										{t("ribbonBar.syncMode.assistSettings", "Assistant Settings")}
 									</span>
 								</Button>
 							</Popover.Trigger>
@@ -689,7 +692,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							>
 								<Flex direction="column" gap="3">
 									<Text size="2" weight="bold">
-										{t("ribbonBar.syncMode.assistSettings", "辅助设置")}
+										{t("ribbonBar.syncMode.assistSettings", "Assistant Settings")}
 									</Text>
 									<Grid
 										columns="auto max-content"
@@ -702,7 +705,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												<Eye16Regular />
 												{t(
 													"ribbonBar.syncMode.showTimestampUpdate",
-													"呈现时间戳更新",
+													"Show Timestamp Updates",
 												)}
 											</Flex>
 										</Text>
@@ -715,7 +718,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												<DocumentSync16Regular />
 												{t(
 													"ribbonBar.syncMode.touchSyncPanel",
-													"触控打轴辅助面板",
+													"Touch Sync Panel",
 												)}
 											</Flex>
 										</Text>
@@ -728,7 +731,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												<Flow16Regular />
 												{t(
 													"ribbonBar.syncMode.mainLyricIgnoreSync",
-													"主歌词忽略打轴",
+													"Ignore Main Vocals",
 												)}
 											</Flex>
 										</Text>
@@ -752,7 +755,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												<Flow16Regular />
 												{t(
 													"ribbonBar.syncMode.bgLyricIgnoreSync",
-													"背景歌词忽略打轴",
+													"Ignore Background Vocals",
 												)}
 											</Flex>
 										</Text>
@@ -803,40 +806,24 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 								</Flex>
 							</Popover.Content>
 						</Popover.Root>
-					</Flex>
-				</RibbonSection>
-			)}
-			{showAdvanced && (
-				<RibbonSection
-					isSidebar={isSidebar}
-					label={
-						<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
-							<Eye16Regular style={{ width: "12px", height: "12px" }} />
-							<span>{t("ribbonBar.syncMode.displayOptions", "显示选项")}</span>
-						</Flex>
-					}
-				>
-					<Flex
-						align="center"
-						justify="center"
-						px="1"
-						style={{ height: "100%" }}
-					>
+
 						<Popover.Root>
 							<Popover.Trigger>
 								<Button
-									size="2"
+									size="1"
 									variant="soft"
 									color="gray"
 									style={{
 										cursor: "pointer",
-										borderRadius: "8px",
+										borderRadius: "6px",
 										fontWeight: 500,
+										width: "100%",
+										justifyContent: "flex-start",
 									}}
 								>
-									<Eye16Regular style={{ width: "16px", height: "16px" }} />
+									<Eye16Regular style={{ width: "14px", height: "14px" }} />
 									<span>
-										{t("ribbonBar.syncMode.displayOptions", "显示选项")}
+										{t("ribbonBar.syncMode.displayOptions", "Display Options")}
 									</span>
 								</Button>
 							</Popover.Trigger>
@@ -846,7 +833,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							>
 								<Flex direction="column" gap="3">
 									<Text size="2" weight="bold">
-										{t("ribbonBar.syncMode.displayOptions", "显示选项")}
+										{t("ribbonBar.syncMode.displayOptions", "Display Options")}
 									</Text>
 									<Grid
 										columns="auto max-content"
@@ -857,7 +844,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 										<Text size="2" style={{ color: "var(--accent-11)" }}>
 											<Flex gap="2" align="center">
 												<Eye16Regular />
-												{t("ribbonBar.syncMode.showTimestamps", "显示时间戳")}
+												{t("ribbonBar.syncMode.showTimestamps", "Show Timestamps")}
 											</Flex>
 										</Text>
 										<Checkbox
@@ -869,7 +856,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												<Lightbulb16Regular />
 												{t(
 													"ribbonBar.syncMode.highlightActiveWord",
-													"高亮当前音节",
+													"Highlight Active Word",
 												)}
 											</Flex>
 										</Text>
@@ -882,7 +869,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												<Sparkle16Regular />
 												{t(
 													"ribbonBar.syncMode.enableGlowAnimation",
-													"启用高亮动态特效",
+													"Enable Glow Animation",
 												)}
 											</Flex>
 										</Text>
@@ -893,7 +880,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 										<Text size="2" style={{ color: "var(--accent-11)" }}>
 											<Flex gap="2" align="center">
 												<Flash16Regular />
-												{t("ribbonBar.previewMode.instantFade", "即时淡出")}
+												{t("ribbonBar.previewMode.instantFade", "Instant Fade Out")}
 											</Flex>
 										</Text>
 										<Checkbox
@@ -903,7 +890,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 										<Text size="2" style={{ color: "var(--accent-11)" }}>
 											<Flex gap="2" align="center">
 												<Warning16Regular />
-												{t("ribbonBar.syncMode.highlightErrors", "高亮错误")}
+												{t("ribbonBar.syncMode.highlightErrors", "Highlight Errors")}
 											</Flex>
 										</Text>
 										<Checkbox
@@ -915,7 +902,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												<DocumentSync16Regular />
 												{t(
 													"ribbonBar.syncMode.onlyShowSyncLineOnSpectrogram",
-													"仅在频谱图显示当前打轴行",
+													"Only Show Synced Line on Spectrogram",
 												)}
 											</Flex>
 										</Text>
@@ -932,7 +919,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 														<LocalLanguage16Regular />
 														{t(
 															"ribbonBar.syncMode.showPerWordRomanization",
-															"显示逐字音译",
+															"Show Per-Word Romanization",
 														)}
 													</Flex>
 												</Text>

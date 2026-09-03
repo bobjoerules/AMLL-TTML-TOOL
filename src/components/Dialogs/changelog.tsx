@@ -56,6 +56,28 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.1.5
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 3, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Preview Mode Ribbon Layout:</b> Stacked V-Sync and Show FPS controls vertically into a single unified Render section for a cleaner toolbar.
+								</Text>
+								<Text size="2">
+									• <b>Sync Mode Ribbon Layout:</b> Combined Assistant Settings and Display Options into a stacked Options section.
+								</Text>
+								<Text size="2">
+									• <b>Native macOS & Web Menu Alignment:</b> Enhanced Tools and Help menus across desktop and browser with Start Guide, GitHub, What's New, Changelog, About, and Segmentation tools.
+								</Text>
+								<Text size="2">
+									• <b>Community Artwork Uploads:</b> Allowed users to upload album covers directly on the website for tracks with missing artwork.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.1.4
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
