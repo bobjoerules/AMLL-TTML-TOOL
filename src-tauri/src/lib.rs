@@ -336,20 +336,52 @@ pub fn run() {
 
                 // 4. Tools menu
                 let tools_menu = Submenu::new(app, "Tools", true)?;
-                let segment_item = MenuItem::with_id(app, "menu-quick-segment", "Quick Segment", true, Some("CmdOrCtrl+L"))?;
+                let preview_panel_item = MenuItem::with_id(app, "menu-toggle-preview-panel", "Toggle Side Preview Panel", true, None::<&str>)?;
+                
+                let segment_menu = Submenu::new(app, "Segmentation", true)?;
+                let auto_segment_item = MenuItem::with_id(app, "menu-auto-segment", "Auto Segment", true, Some("CmdOrCtrl+L"))?;
+                let ruby_segment_item = MenuItem::with_id(app, "menu-ruby-segment", "Ruby Segmentation", true, None::<&str>)?;
+                let adv_segment_item = MenuItem::with_id(app, "menu-advanced-segment", "Advanced Segmentation...", true, None::<&str>)?;
+                let learned_splits_item = MenuItem::with_id(app, "menu-learned-splits", "Learned Splits...", true, None::<&str>)?;
+                segment_menu.append(&auto_segment_item)?;
+                segment_menu.append(&ruby_segment_item)?;
+                segment_menu.append(&adv_segment_item)?;
+                segment_menu.append(&learned_splits_item)?;
+
+                let sync_timestamps_item = MenuItem::with_id(app, "menu-sync-line-timestamps", "Sync Line Timestamps", true, None::<&str>)?;
                 let time_shift_item = MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
                 let time_stretch_item = MenuItem::with_id(app, "menu-time-stretch", "Time Stretch...", true, None::<&str>)?;
                 let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, Some("CmdOrCtrl+Shift+C"))?;
-                tools_menu.append(&segment_item)?;
+                let latency_item = MenuItem::with_id(app, "menu-latency-test", "Latency Test...", true, None::<&str>)?;
+
+                tools_menu.append(&preview_panel_item)?;
+                tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
+                tools_menu.append(&segment_menu)?;
+                tools_menu.append(&sync_timestamps_item)?;
                 tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&time_shift_item)?;
                 tools_menu.append(&time_stretch_item)?;
+                tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&checklist_item)?;
+                tools_menu.append(&latency_item)?;
 
                 // 5. Help menu
                 let help_menu = Submenu::new(app, "Help", true)?;
-                let latency_item = MenuItem::with_id(app, "menu-latency-test", "Latency Test...", true, None::<&str>)?;
-                help_menu.append(&latency_item)?;
+                let start_guide_item = MenuItem::with_id(app, "menu-start-guide", "Start Guide", true, None::<&str>)?;
+                let github_item = MenuItem::with_id(app, "menu-github", "GitHub", true, None::<&str>)?;
+                let wiki_item = MenuItem::with_id(app, "menu-wiki", "Documentation & Wiki", true, None::<&str>)?;
+                let whats_new_item = MenuItem::with_id(app, "menu-whats-new", "What's New", true, None::<&str>)?;
+                let changelog_item = MenuItem::with_id(app, "menu-changelog", "Changelog & Updates", true, None::<&str>)?;
+                let about_item = MenuItem::with_id(app, "menu-about", "About AMLL TTML Tool", true, None::<&str>)?;
+
+                help_menu.append(&start_guide_item)?;
+                help_menu.append(&github_item)?;
+                help_menu.append(&wiki_item)?;
+                help_menu.append(&PredefinedMenuItem::separator(app)?)?;
+                help_menu.append(&whats_new_item)?;
+                help_menu.append(&changelog_item)?;
+                help_menu.append(&PredefinedMenuItem::separator(app)?)?;
+                help_menu.append(&about_item)?;
 
                 let menu = Menu::with_items(app, &[
                     &app_menu,

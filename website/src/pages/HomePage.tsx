@@ -91,10 +91,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     <div className="container" style={{ paddingBottom: 80 }}>
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-badge">
-          <span className="hero-badge-dot"></span>
-          <span>AMLL TTML Tool v1.1.4 Released</span>
-        </div>
 
         <h1 className="hero-title">
           Sync Every Syllable.<br />
@@ -104,6 +100,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         <p className="hero-subtitle">
           The ultimate desktop app and suite for creating, timing, editing, and previewing Apple Music style syllable TTML lyrics with studio precision.
         </p>
+
+        <div className="hero-badge">
+          <span className="hero-badge-dot"></span>
+          <span>AMLL TTML Tool v1.1.4 Released</span>
+        </div>
 
         <div className="hero-buttons">
           <a
@@ -286,7 +287,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {/* Spicy Player Callout */}
       <section className="glass-panel" style={{ padding: 48, marginTop: 40, border: '1px solid rgba(255, 65, 108, 0.25)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -50, right: -50, width: 250, height: 250, background: 'radial-gradient(circle, rgba(255, 65, 108, 0.2) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
-        
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32 }}>
           <div style={{ maxWidth: 640 }}>
             <span className="section-tag section-tag-spicy">Featured Companion App</span>

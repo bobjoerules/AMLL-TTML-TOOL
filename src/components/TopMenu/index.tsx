@@ -1,9 +1,22 @@
 import { Box, Flex } from "@radix-ui/themes";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useStore } from "jotai";
 import { Toolbar } from "radix-ui";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { CloudStatusButton } from "$/modules/cloud/components/CloudStatusButton";
 import { autoSegmentDoublePressAtom } from "$/modules/keyboard/states";
+import {
+	changelogDialogAtom,
+	settingsDialogAtom,
+	settingsTabAtom,
+	whatsNewDialogAtom,
+} from "$/states/dialogs.ts";
+import {
+	guideExportedAtom,
+	guidePanelOpenAtom,
+	guideStepAtom,
+	guideWelcomeOpenAtom,
+} from "$/modules/onboarding/states";
+import { showPreviewPanelAtom } from "$/states/main";
 import {
 	keyAutoSegmentAtom,
 	keyDeleteSelectionAtom,
@@ -53,6 +66,7 @@ const useWindowSize = () => {
 };
 
 export const TopMenu: FC = () => {
+	const store = useStore();
 	const { width } = useWindowSize();
 	const showHomeButton = width < 800;
 	const menu = useTopMenuActions();
@@ -174,12 +188,32 @@ export const TopMenu: FC = () => {
 				"menu-redo": () => menuRef.current.onRedo(),
 				"menu-select-all": () => menuRef.current.onSelectAll(),
 				"menu-quick-segment": () => menuRef.current.onQuickAutoSegment(),
+				"menu-auto-segment": () => menuRef.current.onAutoSegment(),
+				"menu-ruby-segment": () => menuRef.current.onRubySegment(),
+				"menu-advanced-segment": () => menuRef.current.onOpenAdvancedSegmentation(),
+				"menu-learned-splits": () => menuRef.current.onOpenLearnedSplits(),
+				"menu-sync-line-timestamps": () => menuRef.current.onSyncLineTimestamps(),
+				"menu-toggle-preview-panel": () => store.set(showPreviewPanelAtom, (prev) => !prev),
 				"menu-time-shift": () => menuRef.current.onOpenTimeShift(),
 				"menu-time-stretch": () => menuRef.current.onOpenTimeStretch(),
 				"menu-metadata": () => menuRef.current.onOpenMetadataEditor(),
 				"menu-settings": () => menuRef.current.onOpenSettings(),
 				"menu-latency-test": () => menuRef.current.onOpenLatencyTest(),
 				"menu-checklist": () => menuRef.current.onOpenTTMLChecklist(),
+				"menu-start-guide": () => {
+					store.set(guideWelcomeOpenAtom, false);
+					store.set(guideExportedAtom, false);
+					store.set(guideStepAtom, 0);
+					store.set(guidePanelOpenAtom, true);
+				},
+				"menu-github": () => menuRef.current.onOpenGitHub(),
+				"menu-wiki": () => menuRef.current.onOpenWiki(),
+				"menu-whats-new": () => store.set(whatsNewDialogAtom, true),
+				"menu-changelog": () => store.set(changelogDialogAtom, true),
+				"menu-about": () => {
+					store.set(settingsTabAtom, "about");
+					store.set(settingsDialogAtom, true);
+				},
 			};
 
 			for (const [event, action] of Object.entries(mappings)) {
