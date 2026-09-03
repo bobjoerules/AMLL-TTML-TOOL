@@ -505,6 +505,98 @@ body {
   object-fit: cover;
 }
 
+/* Missing artwork upload card state */
+.ttml-cover-missing {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 2px dashed rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 16px;
+  text-align: center;
+}
+
+.ttml-cover-missing:hover {
+  background: rgba(250, 45, 72, 0.08);
+  border-color: rgba(250, 45, 72, 0.45);
+  transform: scale(1.02);
+}
+
+.ttml-cover-missing-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.ttml-cover-missing:hover .ttml-cover-missing-icon {
+  background: rgba(250, 45, 72, 0.2);
+  color: #ff416c;
+  transform: scale(1.1);
+}
+
+.ttml-cover-missing-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+}
+
+.ttml-cover-missing:hover .ttml-cover-missing-label {
+  color: white;
+}
+
+.ttml-cover-missing-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ttml-cover-edit-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.ttml-cover-wrapper:hover .ttml-cover-edit-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ttml-cover-edit-btn:hover {
+  background: rgba(250, 45, 72, 0.85);
+  border-color: rgba(250, 45, 72, 1);
+  transform: scale(1.1);
+}
+
 .ttml-badge {
   position: absolute;
   top: 10px;
@@ -682,7 +774,8 @@ body {
 /* Responsive Styles */
 @media (max-width: 768px) {
   .nav-desktop-only,
-  .nav-desktop-action {
+  .nav-desktop-action,
+  .nav-brand-title {
     display: none !important;
   }
 
