@@ -51,6 +51,9 @@ const HelpMenuItems = () => {
 				{t("beginnerGuide.menu", "Start Guide")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenGitHub}>GitHub</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={menu.onOpenWiki}>
+				{t("topBar.menu.helpDoc", "Documentation & Wiki")}
+			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => setWhatsNewOpen(true)}>
 				What's New
@@ -71,7 +74,7 @@ export const HelpMenu = (props: HelpMenuProps) => {
 		return (
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger>
-					<Trans i18nKey="topBar.menu.help">帮助</Trans>
+					<Trans i18nKey="topBar.menu.help">Help</Trans>
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent>
 					<HelpMenuItems />
@@ -85,7 +88,7 @@ export const HelpMenu = (props: HelpMenuProps) => {
 			<Toolbar.Button asChild>
 				<DropdownMenu.Trigger>
 					<Button variant="soft" style={props.buttonStyle}>
-						<Trans i18nKey="topBar.menu.help">帮助</Trans>
+						<Trans i18nKey="topBar.menu.help">Help</Trans>
 					</Button>
 				</DropdownMenu.Trigger>
 			</Toolbar.Button>
