@@ -288,7 +288,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<FastForward24Regular />
-							{t("ribbonBar.previewMode.render", "渲染")}
+							{t("ribbonBar.previewMode.render", "Render")}
 						</Flex>
 					}
 				>
@@ -306,26 +306,6 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							</Flex>
 						</Text>
 						<Checkbox checked={vsync} onCheckedChange={(v) => setVsync(!!v)} />
-					</Grid>
-				</RibbonSection>
-			)}
-			{showAdvanced && (
-				<RibbonSection
-					isSidebar={isSidebar}
-					label={
-						<Flex gap="1" align="center">
-							<Wrench24Regular />
-							{t("ribbonBar.previewMode.dev", "Dev")}
-						</Flex>
-					}
-				>
-					<Grid
-						columns="max-content auto"
-						gap="2"
-						gapY="1"
-						flexGrow="1"
-						align="center"
-					>
 						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 							<Flex gap="1" align="center">
 								<TopSpeed16Regular />
