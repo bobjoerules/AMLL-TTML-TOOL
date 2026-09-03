@@ -14,7 +14,6 @@ import { ImportLyricsDialog } from "$/modules/lyrics-import/modals/ImportLyricsD
 import { HistoryRestoreDialog } from "$/modules/project/modals/HistoryRestore.tsx";
 import { ImportFromText } from "$/modules/project/modals/ImportFromText.tsx";
 import { MetadataEditor } from "$/modules/project/modals/MetadataEditor.tsx";
-import { SubmitToAMLLDBDialog } from "$/modules/project/modals/SubmitToAmll.tsx";
 import { AdvancedSegmentationDialog } from "$/modules/segmentation/components/AdvancedSegmentation.tsx";
 import { AutoSegmentDialog } from "$/modules/segmentation/components/AutoSegmentDialog.tsx";
 import { LearnedSplitsDialog } from "$/modules/segmentation/components/LearnedSplits.tsx";
@@ -46,7 +45,6 @@ export const Dialogs = () => {
 			<CombineWordsDialog />
 			<ReplaceWordDialog />
 			<ReplaceRomanizationDialog />
-			<SubmitToAMLLDBDialog />
 			<LatencyTestDialog />
 			<TTMLChecklistDialog />
 			<ConfirmationDialog />
