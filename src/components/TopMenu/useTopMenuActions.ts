@@ -44,6 +44,7 @@ import {
 	timeShiftDialogAtom,
 	timeStretchDialogAtom,
 	ttmlChecklistDialogAtom,
+	spotMatchDialogAtom,
 } from "$/states/dialogs.ts";
 import {
 	keyDeleteSelectionAtom,
@@ -97,6 +98,7 @@ export const useTopMenuActions = () => {
 	const setTimeShiftDialog = useSetAtom(timeShiftDialogAtom);
 	const setTimeStretchDialog = useSetAtom(timeStretchDialogAtom);
 	const setTTMLChecklistDialog = useSetAtom(ttmlChecklistDialogAtom);
+	const setSpotMatchDialog = useSetAtom(spotMatchDialogAtom);
 	const { openFile } = useFileOpener();
 	const setProjectId = useSetAtom(projectIdAtom);
 	const { config: segmentationConfig } = useSegmentationConfig();
@@ -400,6 +402,10 @@ export const useTopMenuActions = () => {
 		setTTMLChecklistDialog(true);
 	}, [setTTMLChecklistDialog]);
 
+	const onOpenSpotMatch = useCallback(() => {
+		setSpotMatchDialog(true);
+	}, [setSpotMatchDialog]);
+
 	const onOpenGitHub = useCallback(async () => {
 		if (import.meta.env.TAURI_ENV_PLATFORM) {
 			await open("https://github.com/bobjoerules/AMLL-TTML-TOOL");
@@ -683,6 +689,7 @@ export const useTopMenuActions = () => {
 		onSyncLineTimestamps,
 		onOpenLatencyTest,
 		onOpenTTMLChecklist,
+		onOpenSpotMatch,
 		onOpenGitHub,
 		onOpenWiki,
 	};

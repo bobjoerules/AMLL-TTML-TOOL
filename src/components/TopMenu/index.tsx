@@ -212,6 +212,7 @@ export const TopMenu: FC = () => {
 				"menu-settings": () => menuRef.current.onOpenSettings(),
 				"menu-latency-test": () => menuRef.current.onOpenLatencyTest(),
 				"menu-checklist": () => menuRef.current.onOpenTTMLChecklist(),
+				"menu-spotmatch": () => menuRef.current.onOpenSpotMatch(),
 				"menu-start-guide": () => {
 					store.set(guideWelcomeOpenAtom, false);
 					store.set(guideExportedAtom, false);

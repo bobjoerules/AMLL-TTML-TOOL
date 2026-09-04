@@ -227,7 +227,8 @@ export function normalizeChecklistEntries(
 			const sourceVal =
 				item.source === "genius" ||
 				item.source === "lyrically" ||
-				item.source === "lrclib"
+				item.source === "lrclib" ||
+				item.source === "spotify"
 					? item.source
 					: undefined;
 			return {

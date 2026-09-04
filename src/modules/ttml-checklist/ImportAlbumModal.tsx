@@ -17,10 +17,16 @@ import {
 	TextField,
 } from "@radix-ui/themes";
 import { useAtomValue } from "jotai";
-import React, { useCallback, useState } from "react";
+import type React from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { GeniusApi } from "$/modules/genius/api/client";
+import {
+	GeniusApi,
+	GeniusResolver,
+	isGeniusAlbumUrl,
+	isGeniusSongUrl,
+} from "$/modules/genius/api/client";
 import type { GeniusAlbumSummary } from "$/modules/genius/types";
 import { geniusApiKeyAtom } from "$/modules/settings/states/index.ts";
 import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
@@ -92,7 +98,8 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 						const detail = await GeniusApi.getAlbumById(album.id, geniusApiKey);
 						albumCover =
 							detail.response?.album?.cover_art_url ||
-							(detail.response?.album as unknown as Record<string, string>)?.header_image_url ||
+							(detail.response?.album as unknown as Record<string, string>)
+								?.header_image_url ||
 							"";
 					} catch {
 						// ignore
@@ -103,22 +110,24 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 					album.id,
 					geniusApiKey,
 				);
-				const formattedTracks: AlbumTrackItem[] = geniusTracks.map((item, idx) => ({
-					number: item.number || idx + 1,
-					song: item.song.title || item.song.title_with_featured,
-					artist:
-						item.song.primary_artist?.name ||
-						item.song.artist_names ||
-						album.artist,
-					album: album.name,
-					coverArt:
-						item.song.song_art_image_url ||
-						item.song.song_art_image_thumbnail_url ||
-						albumCover ||
-						undefined,
-					source: "genius",
-					sourceId: item.song.id,
-				}));
+				const formattedTracks: AlbumTrackItem[] = geniusTracks.map(
+					(item, idx) => ({
+						number: item.number || idx + 1,
+						song: item.song.title || item.song.title_with_featured,
+						artist:
+							item.song.primary_artist?.name ||
+							item.song.artist_names ||
+							album.artist,
+						album: album.name,
+						coverArt:
+							item.song.song_art_image_url ||
+							item.song.song_art_image_thumbnail_url ||
+							albumCover ||
+							undefined,
+						source: "genius",
+						sourceId: item.song.id,
+					}),
+				);
 
 				setAlbumSummary({
 					title: album.name,
@@ -127,9 +136,7 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 					source: "genius",
 				});
 				setTracks(formattedTracks);
-				setSelectedTrackIndices(
-					new Set(formattedTracks.map((_, i) => i)),
-				);
+				setSelectedTrackIndices(new Set(formattedTracks.map((_, i) => i)));
 				setAlbumList([]);
 			} catch (err) {
 				console.error("Failed to load Genius album tracks:", err);
@@ -180,9 +187,7 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 						source: "spotify",
 					});
 					setTracks(formattedTracks);
-					setSelectedTrackIndices(
-						new Set(formattedTracks.map((_, i) => i)),
-					);
+					setSelectedTrackIndices(new Set(formattedTracks.map((_, i) => i)));
 					return;
 				} else {
 					toast.warn(
@@ -195,7 +200,109 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 				}
 			}
 
-			// 2. Genius Album search / slug
+			// 2. Genius Album URL
+			if (isGeniusAlbumUrl(q)) {
+				const resolved = await GeniusResolver.resolveAlbum(q, geniusApiKey);
+				if (resolved && resolved.tracks.length > 0) {
+					const formattedTracks: AlbumTrackItem[] = resolved.tracks.map(
+						(item) => ({
+							number: item.number,
+							song: item.title,
+							artist: item.artist,
+							album: resolved.title,
+							coverArt: item.cover || resolved.cover,
+							source: "genius",
+							sourceId: item.id,
+						}),
+					);
+
+					setAlbumSummary({
+						title: resolved.title,
+						artist: resolved.artist,
+						cover: resolved.cover,
+						source: "genius",
+					});
+					setTracks(formattedTracks);
+					setSelectedTrackIndices(new Set(formattedTracks.map((_, i) => i)));
+					return;
+				} else {
+					toast.warn(
+						t(
+							"ttmlChecklist.geniusAlbumNotFound",
+							"Could not retrieve tracklist from this Genius album link.",
+						),
+					);
+					return;
+				}
+			}
+
+			// 3. Genius Song URL (User pasted song link into album importer)
+			if (isGeniusSongUrl(q)) {
+				const resolvedSong = await GeniusResolver.resolveSong(q, geniusApiKey);
+				if (resolvedSong) {
+					if (resolvedSong.albumId) {
+						const resolvedAlbum = await GeniusResolver.resolveAlbum(
+							`https://genius.com/albums/${resolvedSong.albumId}`,
+							geniusApiKey,
+						);
+						if (resolvedAlbum && resolvedAlbum.tracks.length > 0) {
+							const formattedTracks: AlbumTrackItem[] =
+								resolvedAlbum.tracks.map((item) => ({
+									number: item.number,
+									song: item.title,
+									artist: item.artist,
+									album: resolvedAlbum.title,
+									coverArt: item.cover || resolvedAlbum.cover,
+									source: "genius",
+									sourceId: item.id,
+								}));
+
+							setAlbumSummary({
+								title: resolvedAlbum.title,
+								artist: resolvedAlbum.artist,
+								cover: resolvedAlbum.cover,
+								source: "genius",
+							});
+							setTracks(formattedTracks);
+							setSelectedTrackIndices(
+								new Set(formattedTracks.map((_, i) => i)),
+							);
+							return;
+						}
+					}
+
+					// Standalone single fallback
+					const singleTrack: AlbumTrackItem = {
+						number: 1,
+						song: resolvedSong.title,
+						artist: resolvedSong.artist,
+						album: resolvedSong.album || resolvedSong.title,
+						coverArt: resolvedSong.cover,
+						source: "genius",
+						sourceId: resolvedSong.id,
+					};
+
+					setAlbumSummary({
+						title: resolvedSong.album || resolvedSong.title,
+						artist: resolvedSong.artist,
+						cover: resolvedSong.cover,
+						source: "genius",
+					});
+					setTracks([singleTrack]);
+					setSelectedTrackIndices(new Set([0]));
+					return;
+				} else {
+					toast.warn(
+						t(
+							"ttmlChecklist.geniusSongNotFound",
+							"Could not retrieve details for this Genius song link.",
+						),
+					);
+					return;
+				}
+			}
+
+			// 4. Genius Album search / slug
 			const albums = await GeniusApi.searchAlbums(q, geniusApiKey);
 			if (albums.length === 1) {
 				await loadGeniusAlbumTracks(albums[0]);
@@ -256,9 +363,13 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 
 		onImportTracks(selected);
 		toast.success(
-			t("ttmlChecklist.importAlbumSuccess", "Imported {count} songs into checklist!", {
-				count: selected.length,
-			}),
+			t(
+				"ttmlChecklist.importAlbumSuccess",
+				"Imported {count} songs into checklist!",
+				{
+					count: selected.length,
+				},
+			),
 		);
 		handleClose(false);
 	};
@@ -417,11 +528,9 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 										</Text>
 										<Flex gap="2" align="center" mt="1">
 											<Badge color="indigo" size="1">
-												{t(
-													"ttmlChecklist.trackCount",
-													"{count} tracks",
-													{ count: tracks.length },
-												)}
+												{t("ttmlChecklist.trackCount", "{count} tracks", {
+													count: tracks.length,
+												})}
 											</Badge>
 											<Badge color="gray" size="1">
 												{albumSummary.source.toUpperCase()}
@@ -479,7 +588,11 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 												{track.number}.
 											</Text>
 											<Flex direction="column" style={{ flex: 1, minWidth: 0 }}>
-												<Text size="2" weight={isChecked ? "bold" : "regular"} truncate>
+												<Text
+													size="2"
+													weight={isChecked ? "bold" : "regular"}
+													truncate
+												>
 													{track.song}
 												</Text>
 												{track.artist !== albumSummary.artist && (
@@ -507,9 +620,13 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 							disabled={selectedTrackIndices.size === 0}
 							onClick={handleImport}
 						>
-							{t("ttmlChecklist.importSelectedTracks", "Import {count} Tracks", {
-								count: selectedTrackIndices.size,
-							})}
+							{t(
+								"ttmlChecklist.importSelectedTracks",
+								"Import {count} Tracks",
+								{
+									count: selectedTrackIndices.size,
+								},
+							)}
 						</Button>
 					)}
 				</Flex>

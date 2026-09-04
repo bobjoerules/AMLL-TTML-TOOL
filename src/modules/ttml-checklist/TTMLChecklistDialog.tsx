@@ -36,6 +36,7 @@ import {
 	TextField,
 	Tooltip,
 } from "@radix-ui/themes";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
 	memo,
 	useCallback,
@@ -45,18 +46,22 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { ViewportList } from "react-viewport-list";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { ViewportList } from "react-viewport-list";
+import { useFileOpener } from "$/hooks/useFileOpener";
+import { extractSpotifyTrackId } from "$/modules/apple-ttml/api/client";
 import { audioCoverArtAtom } from "$/modules/audio/states";
-import { GeniusApi } from "$/modules/genius/api/client";
+import { loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
+import {
+	GeniusApi,
+	GeniusResolver,
+	isGeniusSongUrl,
+} from "$/modules/genius/api/client";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
 import { LyricallyApi } from "$/modules/lyrically/api/client";
 import { geniusApiKeyAtom } from "$/modules/settings/states/index.ts";
 import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
-import { extractSpotifyTrackId } from "$/modules/apple-ttml/api/client";
-import { ImportAlbumModal, type AlbumTrackItem } from "./ImportAlbumModal";
 import {
 	appleTtmlImportDialogAtom,
 	geniusImportLyricsDialogAtom,
@@ -67,8 +72,14 @@ import {
 	ttmlChecklistDialogAtom,
 } from "$/states/dialogs.ts";
 import { lyricLinesAtom, projectIdentityAtom } from "$/states/main.ts";
-import { useFileOpener } from "$/hooks/useFileOpener";
-import { loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
+import {
+	exportChecklistToFile,
+	loadChecklistFromCloud,
+	parseChecklistJson,
+	saveChecklistToCloud,
+	useChecklistSyncStatus,
+} from "./cloudSync";
+import { type AlbumTrackItem, ImportAlbumModal } from "./ImportAlbumModal";
 import {
 	addChecklistEntry,
 	createChecklistEntry,
@@ -79,13 +90,6 @@ import {
 	type TTMLChecklistEntryInput,
 	updateChecklistEntry,
 } from "./logic";
-import {
-	exportChecklistToFile,
-	loadChecklistFromCloud,
-	parseChecklistJson,
-	saveChecklistToCloud,
-	useChecklistSyncStatus,
-} from "./cloudSync";
 import { ttmlChecklistAtom } from "./states";
 
 type ProviderSearchResult = {
@@ -190,7 +194,12 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 		setProviderResults([]);
 
 		let effectiveQuery = providerQuery.trim();
-		let spotifyTrack: import("$/modules/spotify/client").ResolvedTrack | null = null;
+		let spotifyTrack: import("$/modules/spotify/client").ResolvedTrack | null =
+			null;
+		let geniusSong:
+			| import("$/modules/genius/api/client").GeniusResolvedSong
+			| null = null;
+
 		if (isSpotifyUrl(effectiveQuery)) {
 			try {
 				spotifyTrack = await SpotifyResolver.resolveTrack(effectiveQuery);
@@ -202,6 +211,21 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 				}
 			} catch (err) {
 				console.warn("Failed to resolve Spotify track link:", err);
+			}
+		} else if (isGeniusSongUrl(effectiveQuery)) {
+			try {
+				geniusSong = await GeniusResolver.resolveSong(
+					effectiveQuery,
+					geniusApiKey,
+				);
+				if (geniusSong) {
+					effectiveQuery = geniusSong.artist
+						? `${geniusSong.artist} ${geniusSong.title}`
+						: geniusSong.title;
+					setProviderQuery(effectiveQuery);
+				}
+			} catch (err) {
+				console.warn("Failed to resolve Genius song link:", err);
 			}
 		}
 
@@ -252,6 +276,24 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 					cover: spotifyTrack.cover,
 					source: "genius",
 				});
+			} else if (geniusSong) {
+				const currentGeniusSong = geniusSong;
+				const existingIndex = hits.findIndex(
+					(h) => Number(h.id) === currentGeniusSong.id,
+				);
+				if (existingIndex > 0) {
+					const [matched] = hits.splice(existingIndex, 1);
+					hits.unshift(matched);
+				} else if (existingIndex === -1) {
+					hits.unshift({
+						id: currentGeniusSong.id,
+						name: currentGeniusSong.title,
+						artist: currentGeniusSong.artist,
+						album: currentGeniusSong.album,
+						cover: currentGeniusSong.cover,
+						source: "genius",
+					});
+				}
 			}
 
 			setProviderResults(hits);
@@ -434,7 +476,11 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 												}}
 												onClick={() => handleSelectSearchResult(hit)}
 											>
-												<Flex gap="2" align="center" style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+												<Flex
+													gap="2"
+													align="center"
+													style={{ flex: 1, minWidth: 0, overflow: "hidden" }}
+												>
 													{hit.cover ? (
 														<img
 															src={hit.cover}
@@ -467,16 +513,34 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 															/>
 														</Box>
 													)}
-													<Flex direction="column" style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-														<Text size="1" weight="bold" truncate style={{ maxWidth: "100%", display: "block" }}>
+													<Flex
+														direction="column"
+														style={{ flex: 1, minWidth: 0, overflow: "hidden" }}
+													>
+														<Text
+															size="1"
+															weight="bold"
+															truncate
+															style={{ maxWidth: "100%", display: "block" }}
+														>
 															{hit.name}
 														</Text>
-														<Text size="1" color="gray" truncate style={{ maxWidth: "100%", display: "block" }}>
+														<Text
+															size="1"
+															color="gray"
+															truncate
+															style={{ maxWidth: "100%", display: "block" }}
+														>
 															{hit.artist} {hit.album ? `• ${hit.album}` : ""}
 														</Text>
 													</Flex>
 												</Flex>
-												<Badge size="1" variant="soft" color="indigo" style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
+												<Badge
+													size="1"
+													variant="soft"
+													color="indigo"
+													style={{ flexShrink: 0, whiteSpace: "nowrap" }}
+												>
 													Select
 												</Badge>
 											</Flex>
@@ -662,172 +726,113 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	);
 };
 
-const ChecklistEntryCard = memo(({
-	entry,
-	onComplete,
-	onDelete,
-	onEdit,
-	onImportLyrics,
-	onImportAppleTtml,
-	onLoadCloud,
-	isLoadingCloud,
-}: {
-	entry: TTMLChecklistEntry;
-	onComplete: (id: string, completed: boolean) => void;
-	onDelete: (id: string) => void;
-	onEdit: (id: string, input: TTMLChecklistEntryInput) => void;
-	onImportLyrics: (entry: TTMLChecklistEntry) => void;
-	onImportAppleTtml?: (entry: TTMLChecklistEntry) => void;
-	onLoadCloud?: (docId: string) => void;
-	isLoadingCloud?: boolean;
-}) => {
-	const { t } = useTranslation();
-	const [editing, setEditing] = useState(false);
+const ChecklistEntryCard = memo(
+	({
+		entry,
+		onComplete,
+		onDelete,
+		onEdit,
+		onImportLyrics,
+		onImportAppleTtml,
+		onLoadCloud,
+		isLoadingCloud,
+	}: {
+		entry: TTMLChecklistEntry;
+		onComplete: (id: string, completed: boolean) => void;
+		onDelete: (id: string) => void;
+		onEdit: (id: string, input: TTMLChecklistEntryInput) => void;
+		onImportLyrics: (entry: TTMLChecklistEntry) => void;
+		onImportAppleTtml?: (entry: TTMLChecklistEntry) => void;
+		onLoadCloud?: (docId: string) => void;
+		isLoadingCloud?: boolean;
+	}) => {
+		const { t } = useTranslation();
+		const [editing, setEditing] = useState(false);
 
-	if (editing) {
-		return (
-			<EntryForm
-				initial={entry}
-				onCancel={() => setEditing(false)}
-				onSubmit={(input) => {
-					onEdit(entry.id, input);
-					setEditing(false);
-				}}
-			/>
-		);
-	}
-
-	return (
-		<Card
-			variant="surface"
-			style={{
-				width: "100%",
-				boxSizing: "border-box",
-				padding: "10px 12px",
-				border: "1px solid var(--gray-a4)",
-				borderRadius: "12px",
-				backgroundColor: entry.completed
-					? "var(--gray-a2)"
-					: "var(--color-surface)",
-				opacity: entry.completed ? 0.78 : 1,
-				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
-				marginBottom: "8px",
-			}}
-		>
-			<Flex gap="3" align="center" style={{ width: "100%", minWidth: 0 }}>
-				{/* Song Cover Art */}
-				<Box
-					style={{
-						width: "48px",
-						height: "48px",
-						minWidth: "48px",
-						borderRadius: "10px",
-						overflow: "hidden",
-						backgroundColor: "var(--gray-a4)",
-						border: "1px solid var(--gray-a5)",
-						boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						flexShrink: 0,
+		if (editing) {
+			return (
+				<EntryForm
+					initial={entry}
+					onCancel={() => setEditing(false)}
+					onSubmit={(input) => {
+						onEdit(entry.id, input);
+						setEditing(false);
 					}}
-				>
-					{entry.coverArt ? (
-						<img
-							src={entry.coverArt}
-							alt={entry.song}
-							loading="lazy"
-							decoding="async"
-							style={{
-								width: "100%",
-								height: "100%",
-								objectFit: "cover",
-								filter: entry.completed
-									? "grayscale(70%) opacity(70%)"
-									: "none",
-							}}
-						/>
-					) : (
-						<MusicNote2Filled
-							style={{
-								width: "24px",
-								height: "24px",
-								color: entry.completed ? "var(--gray-7)" : "var(--accent-9)",
-							}}
-						/>
-					)}
-				</Box>
+				/>
+			);
+		}
 
-				{/* Song & Meta Info */}
-				<Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
-					<Flex align="center" gap="2" style={{ minWidth: 0, width: "100%" }}>
-						<Text
-							weight="bold"
-							size="3"
-							title={entry.song}
-							style={{
-								textDecoration: entry.completed ? "line-through" : undefined,
-								color: entry.completed ? "var(--gray-10)" : "inherit",
-								whiteSpace: "nowrap",
-								overflow: "hidden",
-								textOverflow: "ellipsis",
-								minWidth: 0,
-								flexShrink: 1,
-							}}
-						>
-							{entry.song}
-						</Text>
-						{entry.source && (
-							<Badge
-								size="1"
-								color={
-									entry.source === "genius"
-										? "amber"
-										: entry.source === "lrclib"
-											? "cyan"
-											: entry.source === "spotify"
-												? "green"
-												: "indigo"
-								}
-								variant="surface"
+		return (
+			<Card
+				variant="surface"
+				style={{
+					width: "100%",
+					boxSizing: "border-box",
+					padding: "10px 12px",
+					border: "1px solid var(--gray-a4)",
+					borderRadius: "12px",
+					backgroundColor: entry.completed
+						? "var(--gray-a2)"
+						: "var(--color-surface)",
+					opacity: entry.completed ? 0.78 : 1,
+					transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
+					marginBottom: "8px",
+				}}
+			>
+				<Flex gap="3" align="center" style={{ width: "100%", minWidth: 0 }}>
+					{/* Song Cover Art */}
+					<Box
+						style={{
+							width: "48px",
+							height: "48px",
+							minWidth: "48px",
+							borderRadius: "10px",
+							overflow: "hidden",
+							backgroundColor: "var(--gray-a4)",
+							border: "1px solid var(--gray-a5)",
+							boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexShrink: 0,
+						}}
+					>
+						{entry.coverArt ? (
+							<img
+								src={entry.coverArt}
+								alt={entry.song}
+								loading="lazy"
+								decoding="async"
 								style={{
-									fontWeight: 600,
-									letterSpacing: "0.4px",
-									flexShrink: 0,
+									width: "100%",
+									height: "100%",
+									objectFit: "cover",
+									filter: entry.completed
+										? "grayscale(70%) opacity(70%)"
+										: "none",
 								}}
-							>
-								{entry.source.toUpperCase()}
-							</Badge>
-						)}
-						{entry.cloudDocId && (
-							<Badge
-								size="1"
-								color="sky"
-								variant="surface"
-								style={{ fontWeight: 600, flexShrink: 0 }}
-							>
-								{t("ttmlChecklist.cloudLinked", "Cloud Linked")}
-							</Badge>
-						)}
-						{entry.completed && (
-							<Badge
-								size="1"
-								color="green"
-								variant="soft"
-								style={{ flexShrink: 0 }}
-							>
-								{t("ttmlChecklist.completed", "Completed")}
-							</Badge>
-						)}
-					</Flex>
-
-					<Flex align="center" gap="2" style={{ minWidth: 0, width: "100%" }}>
-						{entry.artist && (
-							<Text
-								size="2"
-								color="gray"
-								title={entry.artist}
+							/>
+						) : (
+							<MusicNote2Filled
 								style={{
+									width: "24px",
+									height: "24px",
+									color: entry.completed ? "var(--gray-7)" : "var(--accent-9)",
+								}}
+							/>
+						)}
+					</Box>
+
+					{/* Song & Meta Info */}
+					<Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
+						<Flex align="center" gap="2" style={{ minWidth: 0, width: "100%" }}>
+							<Text
+								weight="bold"
+								size="3"
+								title={entry.song}
+								style={{
+									textDecoration: entry.completed ? "line-through" : undefined,
+									color: entry.completed ? "var(--gray-10)" : "inherit",
 									whiteSpace: "nowrap",
 									overflow: "hidden",
 									textOverflow: "ellipsis",
@@ -835,217 +840,284 @@ const ChecklistEntryCard = memo(({
 									flexShrink: 1,
 								}}
 							>
-								{entry.artist}
+								{entry.song}
 							</Text>
-						)}
-						{entry.artist && entry.album && (
-							<Text size="1" color="gray" style={{ flexShrink: 0 }}>
-								•
-							</Text>
-						)}
-						{entry.album && (
-							<Badge
-								size="1"
-								color="gray"
-								variant="surface"
-								title={entry.album}
-								style={{
-									maxWidth: "200px",
-									overflow: "hidden",
-									textOverflow: "ellipsis",
-									whiteSpace: "nowrap",
-									flexShrink: 1,
-								}}
-							>
-								{entry.album}
-							</Badge>
+							{entry.source && (
+								<Badge
+									size="1"
+									color={
+										entry.source === "genius"
+											? "amber"
+											: entry.source === "lrclib"
+												? "cyan"
+												: entry.source === "spotify"
+													? "green"
+													: "indigo"
+									}
+									variant="surface"
+									style={{
+										fontWeight: 600,
+										letterSpacing: "0.4px",
+										flexShrink: 0,
+									}}
+								>
+									{entry.source.toUpperCase()}
+								</Badge>
+							)}
+							{entry.cloudDocId && (
+								<Badge
+									size="1"
+									color="sky"
+									variant="surface"
+									style={{ fontWeight: 600, flexShrink: 0 }}
+								>
+									{t("ttmlChecklist.cloudLinked", "Cloud Linked")}
+								</Badge>
+							)}
+							{entry.completed && (
+								<Badge
+									size="1"
+									color="green"
+									variant="soft"
+									style={{ flexShrink: 0 }}
+								>
+									{t("ttmlChecklist.completed", "Completed")}
+								</Badge>
+							)}
+						</Flex>
+
+						<Flex align="center" gap="2" style={{ minWidth: 0, width: "100%" }}>
+							{entry.artist && (
+								<Text
+									size="2"
+									color="gray"
+									title={entry.artist}
+									style={{
+										whiteSpace: "nowrap",
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										minWidth: 0,
+										flexShrink: 1,
+									}}
+								>
+									{entry.artist}
+								</Text>
+							)}
+							{entry.artist && entry.album && (
+								<Text size="1" color="gray" style={{ flexShrink: 0 }}>
+									•
+								</Text>
+							)}
+							{entry.album && (
+								<Badge
+									size="1"
+									color="gray"
+									variant="surface"
+									title={entry.album}
+									style={{
+										maxWidth: "200px",
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+										flexShrink: 1,
+									}}
+								>
+									{entry.album}
+								</Badge>
+							)}
+						</Flex>
+
+						{entry.notes && (
+							<details style={{ marginTop: "4px" }}>
+								<summary
+									style={{
+										fontSize: "12px",
+										color: "var(--gray-10)",
+										cursor: "pointer",
+									}}
+								>
+									{t("ttmlChecklist.showNotes", "Show notes")}
+								</summary>
+								<Text
+									size="2"
+									as="div"
+									mt="1"
+									style={{
+										whiteSpace: "pre-wrap",
+										color: "var(--gray-11)",
+										backgroundColor: "var(--gray-a3)",
+										padding: "6px 8px",
+										borderRadius: "6px",
+									}}
+								>
+									{entry.notes}
+								</Text>
+							</details>
 						)}
 					</Flex>
 
-					{entry.notes && (
-						<details style={{ marginTop: "4px" }}>
-							<summary
-								style={{
-									fontSize: "12px",
-									color: "var(--gray-10)",
-									cursor: "pointer",
-								}}
-							>
-								{t("ttmlChecklist.showNotes", "Show notes")}
-							</summary>
-							<Text
-								size="2"
-								as="div"
-								mt="1"
-								style={{
-									whiteSpace: "pre-wrap",
-									color: "var(--gray-11)",
-									backgroundColor: "var(--gray-a3)",
-									padding: "6px 8px",
-									borderRadius: "6px",
-								}}
-							>
-								{entry.notes}
-							</Text>
-						</details>
-					)}
-				</Flex>
-
-				{/* Action Buttons */}
-				<Flex
-					gap="2"
-					align="center"
-					style={{ flexShrink: 0, marginLeft: "auto" }}
-				>
-					{/* Download / Open Cloud TTML Button */}
-					{entry.cloudDocId && (
-						<Tooltip
-							content={t(
-								"ttmlChecklist.loadCloudTTMLTooltip",
-								"Download & load linked TTML from Cloud",
-							)}
-						>
-							<IconButton
-								size="2"
-								variant="surface"
-								color="sky"
-								disabled={isLoadingCloud}
-								onClick={() => onLoadCloud?.(entry.cloudDocId!)}
-								aria-label={t("ttmlChecklist.loadCloudTTML", "Download TTML")}
-								style={{
-									borderRadius: "8px",
-									cursor: "pointer",
-									flexShrink: 0,
-								}}
-							>
-								{isLoadingCloud ? (
-									<Spinner size="1" />
-								) : (
-									<CloudArrowDown16Regular />
-								)}
-							</IconButton>
-						</Tooltip>
-					)}
-
-					{/* 1-Click Import Lyrics Page */}
-					<Tooltip
-						content={t(
-							"ttmlChecklist.importLyricsTooltip",
-							"Open lyrics import & review page for this song",
-						)}
+					{/* Action Buttons */}
+					<Flex
+						gap="2"
+						align="center"
+						style={{ flexShrink: 0, marginLeft: "auto" }}
 					>
-						<IconButton
-							size="2"
-							variant="soft"
-							color="indigo"
-							onClick={() => onImportLyrics(entry)}
-							aria-label={t("ttmlChecklist.importLyrics", "Import Lyrics")}
-							style={{
-								borderRadius: "8px",
-								cursor: "pointer",
-								flexShrink: 0,
-							}}
-						>
-							<ArrowDownload16Regular />
-						</IconButton>
-					</Tooltip>
+						{/* Download / Open Cloud TTML Button */}
+						{entry.cloudDocId && (
+							<Tooltip
+								content={t(
+									"ttmlChecklist.loadCloudTTMLTooltip",
+									"Download & load linked TTML from Cloud",
+								)}
+							>
+								<IconButton
+									size="2"
+									variant="surface"
+									color="sky"
+									disabled={isLoadingCloud}
+									onClick={() => onLoadCloud?.(entry.cloudDocId!)}
+									aria-label={t("ttmlChecklist.loadCloudTTML", "Download TTML")}
+									style={{
+										borderRadius: "8px",
+										cursor: "pointer",
+										flexShrink: 0,
+									}}
+								>
+									{isLoadingCloud ? (
+										<Spinner size="1" />
+									) : (
+										<CloudArrowDown16Regular />
+									)}
+								</IconButton>
+							</Tooltip>
+						)}
 
-					{/* 1-Click Apple Music TTML (when Spotify ID/link available) */}
-					{(entry.source === "spotify" ||
-						isSpotifyUrl(String(entry.sourceId || "")) ||
-						isSpotifyUrl(String(entry.song || ""))) && onImportAppleTtml && (
+						{/* 1-Click Import Lyrics Page */}
 						<Tooltip
 							content={t(
-								"ttmlChecklist.importAppleTtmlTooltip",
-								"Import word-synced TTML from Apple Music",
+								"ttmlChecklist.importLyricsTooltip",
+								"Open lyrics import & review page for this song",
 							)}
 						>
 							<IconButton
 								size="2"
 								variant="soft"
-								color="crimson"
-								onClick={() => onImportAppleTtml(entry)}
-								aria-label={t("appleTtml.dialogTitle", "Import Apple Music TTML")}
+								color="indigo"
+								onClick={() => onImportLyrics(entry)}
+								aria-label={t("ttmlChecklist.importLyrics", "Import Lyrics")}
 								style={{
 									borderRadius: "8px",
 									cursor: "pointer",
 									flexShrink: 0,
 								}}
 							>
-								<MusicNote2Filled style={{ width: 16, height: 16 }} />
+								<ArrowDownload16Regular />
 							</IconButton>
 						</Tooltip>
-					)}
 
-					{/* Done / Reopen Button */}
-					<Tooltip
-						content={
-							entry.completed
-								? t("ttmlChecklist.reopen", "Reopen")
-								: t("ttmlChecklist.markDone", "Done")
-						}
-					>
-						<IconButton
-							size="2"
-							variant={entry.completed ? "surface" : "soft"}
-							color={entry.completed ? "gray" : "green"}
-							onClick={() => onComplete(entry.id, !entry.completed)}
-							aria-label={
+						{/* 1-Click Apple Music TTML (when Spotify ID/link available) */}
+						{(entry.source === "spotify" ||
+							isSpotifyUrl(String(entry.sourceId || "")) ||
+							isSpotifyUrl(String(entry.song || ""))) &&
+							onImportAppleTtml && (
+								<Tooltip
+									content={t(
+										"ttmlChecklist.importAppleTtmlTooltip",
+										"Import word-synced TTML from Apple Music",
+									)}
+								>
+									<IconButton
+										size="2"
+										variant="soft"
+										color="crimson"
+										onClick={() => onImportAppleTtml(entry)}
+										aria-label={t(
+											"appleTtml.dialogTitle",
+											"Import Apple Music TTML",
+										)}
+										style={{
+											borderRadius: "8px",
+											cursor: "pointer",
+											flexShrink: 0,
+										}}
+									>
+										<MusicNote2Filled style={{ width: 16, height: 16 }} />
+									</IconButton>
+								</Tooltip>
+							)}
+
+						{/* Done / Reopen Button */}
+						<Tooltip
+							content={
 								entry.completed
 									? t("ttmlChecklist.reopen", "Reopen")
 									: t("ttmlChecklist.markDone", "Done")
 							}
-							style={{
-								borderRadius: "8px",
-								cursor: "pointer",
-								flexShrink: 0,
-							}}
 						>
-							{entry.completed ? (
-								<Circle16Regular />
-							) : (
-								<CheckmarkCircle16Filled />
-							)}
-						</IconButton>
-					</Tooltip>
+							<IconButton
+								size="2"
+								variant={entry.completed ? "surface" : "soft"}
+								color={entry.completed ? "gray" : "green"}
+								onClick={() => onComplete(entry.id, !entry.completed)}
+								aria-label={
+									entry.completed
+										? t("ttmlChecklist.reopen", "Reopen")
+										: t("ttmlChecklist.markDone", "Done")
+								}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								{entry.completed ? (
+									<Circle16Regular />
+								) : (
+									<CheckmarkCircle16Filled />
+								)}
+							</IconButton>
+						</Tooltip>
 
-					<Tooltip content={t("ttmlChecklist.edit", "Edit checklist item")}>
-						<IconButton
-							size="2"
-							variant="soft"
-							color="gray"
-							onClick={() => setEditing(true)}
-							aria-label={t("ttmlChecklist.edit", "Edit checklist item")}
-							style={{
-								borderRadius: "8px",
-								cursor: "pointer",
-								flexShrink: 0,
-							}}
+						<Tooltip content={t("ttmlChecklist.edit", "Edit checklist item")}>
+							<IconButton
+								size="2"
+								variant="soft"
+								color="gray"
+								onClick={() => setEditing(true)}
+								aria-label={t("ttmlChecklist.edit", "Edit checklist item")}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								<Edit16Regular />
+							</IconButton>
+						</Tooltip>
+						<Tooltip
+							content={t("ttmlChecklist.delete", "Delete checklist item")}
 						>
-							<Edit16Regular />
-						</IconButton>
-					</Tooltip>
-					<Tooltip content={t("ttmlChecklist.delete", "Delete checklist item")}>
-						<IconButton
-							size="2"
-							variant="soft"
-							color="red"
-							onClick={() => onDelete(entry.id)}
-							aria-label={t("ttmlChecklist.delete", "Delete checklist item")}
-							style={{
-								borderRadius: "8px",
-								cursor: "pointer",
-								flexShrink: 0,
-							}}
-						>
-							<Delete16Regular />
-						</IconButton>
-					</Tooltip>
+							<IconButton
+								size="2"
+								variant="soft"
+								color="red"
+								onClick={() => onDelete(entry.id)}
+								aria-label={t("ttmlChecklist.delete", "Delete checklist item")}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								<Delete16Regular />
+							</IconButton>
+						</Tooltip>
+					</Flex>
 				</Flex>
-			</Flex>
-		</Card>
-	);
-});
+			</Card>
+		);
+	},
+);
 
 export const TTMLChecklistDialog = () => {
 	const { t } = useTranslation();
@@ -1137,7 +1209,9 @@ export const TTMLChecklistDialog = () => {
 
 	const handleComplete = useCallback(
 		(id: string, completed: boolean) => {
-			setStoredEntries((prev) => setChecklistEntryCompleted(prev, id, completed));
+			setStoredEntries((prev) =>
+				setChecklistEntryCompleted(prev, id, completed),
+			);
 		},
 		[setStoredEntries],
 	);
@@ -1275,8 +1349,12 @@ export const TTMLChecklistDialog = () => {
 		(entry: TTMLChecklistEntry) => {
 			const rawCandidate =
 				(entry.source === "spotify" ? String(entry.sourceId) : undefined) ||
-				(isSpotifyUrl(String(entry.sourceId || "")) ? String(entry.sourceId) : undefined) ||
-				(isSpotifyUrl(String(entry.song || "")) ? String(entry.song) : undefined) ||
+				(isSpotifyUrl(String(entry.sourceId || ""))
+					? String(entry.sourceId)
+					: undefined) ||
+				(isSpotifyUrl(String(entry.song || ""))
+					? String(entry.song)
+					: undefined) ||
 				String(entry.sourceId || "") ||
 				"";
 			const spotifyId = extractSpotifyTrackId(rawCandidate);
@@ -1535,7 +1613,12 @@ export const TTMLChecklistDialog = () => {
 							</Flex>
 						</Flex>
 
-						<Flex align="center" gap="2" wrap="nowrap" style={{ flexShrink: 0 }}>
+						<Flex
+							align="center"
+							gap="2"
+							wrap="nowrap"
+							style={{ flexShrink: 0 }}
+						>
 							{/* Cloud Pull Button */}
 							{isLoggedIn && (
 								<Tooltip

@@ -16,10 +16,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { geniusApiKeyAtom } from "$/modules/settings/states/index.ts";
+import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import { geniusSearchDialogAtom } from "$/states/dialogs.ts";
 import { lyricLinesAtom } from "$/states/main.ts";
 import { getGeniusKeyGuideUrl } from "$/utils/genius-guide";
-import { GeniusApi } from "../api/client";
+import { GeniusApi, GeniusResolver, isGeniusSongUrl } from "../api/client";
 import type { GeniusSearchHit } from "../types";
 import { getBetterGeniusCoverArt } from "../utils/image";
 import styles from "./GeniusSearchDialog.module.css";
@@ -65,14 +66,122 @@ export const GeniusSearchDialog = () => {
 	}, [isOpen, lyricLines.metadata]);
 
 	const handleSearch = useCallback(async () => {
-		if (!query.trim()) return;
+		const rawQuery = query.trim();
+		if (!rawQuery) return;
 		setLoading(true);
 		setHasSearched(true);
 		setResults([]);
 
+		let effectiveQuery = rawQuery;
+		let geniusSong: import("../utils/resolver").GeniusResolvedSong | null =
+			null;
+
+		if (isSpotifyUrl(effectiveQuery)) {
+			try {
+				const resolved = await SpotifyResolver.resolveTrack(effectiveQuery);
+				if (resolved) {
+					effectiveQuery = resolved.artist
+						? `${resolved.artist} ${resolved.title}`
+						: resolved.title;
+					setQuery(effectiveQuery);
+					toast.info(
+						t(
+							"lyricsImport.spotifyDetected",
+							"Spotify track detected: {track}",
+							{
+								track: resolved.artist
+									? `${resolved.artist} – ${resolved.title}`
+									: resolved.title,
+							},
+						),
+					);
+				}
+			} catch (err) {
+				console.warn(
+					"Failed to resolve Spotify link in GeniusSearchDialog:",
+					err,
+				);
+			}
+		} else if (isGeniusSongUrl(effectiveQuery)) {
+			try {
+				const resolved = await GeniusResolver.resolveSong(
+					effectiveQuery,
+					geniusApiKey,
+				);
+				if (resolved) {
+					geniusSong = resolved;
+					effectiveQuery = resolved.artist
+						? `${resolved.artist} ${resolved.title}`
+						: resolved.title;
+					setQuery(effectiveQuery);
+					toast.info(
+						t("lyricsImport.geniusDetected", "Genius track detected: {track}", {
+							track: resolved.artist
+								? `${resolved.artist} – ${resolved.title}`
+								: resolved.title,
+						}),
+					);
+				}
+			} catch (err) {
+				console.warn(
+					"Failed to resolve Genius song link in GeniusSearchDialog:",
+					err,
+				);
+			}
+		}
+
 		try {
-			const data = await GeniusApi.search(query, geniusApiKey);
-			const hits = data.response.hits;
+			const data = await GeniusApi.search(effectiveQuery, geniusApiKey);
+			const hits = [...data.response.hits];
+
+			if (geniusSong) {
+				const currentGeniusSong = geniusSong;
+				const existingIndex = hits.findIndex(
+					(h) => h.result.id === currentGeniusSong.id,
+				);
+				if (existingIndex > 0) {
+					const [matched] = hits.splice(existingIndex, 1);
+					hits.unshift(matched);
+				} else if (existingIndex === -1) {
+					const directHit: GeniusSearchHit = {
+						type: "song",
+						result: {
+							id: currentGeniusSong.id,
+							title: currentGeniusSong.title,
+							title_with_featured: currentGeniusSong.title,
+							song_art_image_url: currentGeniusSong.cover,
+							song_art_image_thumbnail_url: currentGeniusSong.cover,
+							header_image_url: currentGeniusSong.cover,
+							url: currentGeniusSong.url,
+							primary_artist: {
+								id: 0,
+								name: currentGeniusSong.artist,
+								api_path: "",
+								image_url: currentGeniusSong.cover || "",
+								header_image_url: currentGeniusSong.cover || "",
+								is_meme_verified: false,
+								is_verified: false,
+								url: "",
+								iq: 0,
+							},
+							artist_names: currentGeniusSong.artist,
+							album: currentGeniusSong.album
+								? {
+										id: currentGeniusSong.albumId || 0,
+										name: currentGeniusSong.album,
+										cover_art_url: currentGeniusSong.cover || "",
+										full_title: currentGeniusSong.album,
+										url: "",
+									}
+								: null,
+						} as any,
+						highlights: [],
+						index: "song",
+					};
+					hits.unshift(directHit);
+				}
+			}
+
 			setResults(hits);
 			if (hits.length > 0) {
 				toast.success(

@@ -3,6 +3,20 @@ import type {
 	GeniusSearchResponse,
 	GeniusSongResponse,
 } from "../types";
+import {
+	GeniusResolver,
+	isGeniusAlbumUrl,
+	isGeniusSongUrl,
+	isGeniusUrl,
+} from "../utils/resolver";
+
+export { GeniusResolver, isGeniusAlbumUrl, isGeniusSongUrl, isGeniusUrl };
+export type {
+	GeniusResolvedAlbum,
+	GeniusResolvedAlbumTrack,
+	GeniusResolvedEntity,
+	GeniusResolvedSong,
+} from "../utils/resolver";
 
 const BASE_URL = "https://api.genius.com";
 
@@ -118,7 +132,10 @@ export const GeniusApi = {
 					hits.map(async (hit) => {
 						if (hit.result && !hit.result.album) {
 							try {
-								const songDetail = await this.getSongById(hit.result.id, apiKey);
+								const songDetail = await this.getSongById(
+									hit.result.id,
+									apiKey,
+								);
 								if (songDetail.response?.song?.album) {
 									hit.result.album = {
 										id: songDetail.response.song.album.id,
@@ -304,7 +321,27 @@ export const GeniusApi = {
 		if (!query.trim()) return [];
 
 		// Check if the query is a direct Genius album URL
-		const albumUrlMatch = query.match(/genius\.com\/albums\/([^/]+)\/([^/?#]+)/i);
+		if (isGeniusAlbumUrl(query)) {
+			try {
+				const resolved = await GeniusResolver.resolveAlbum(query, apiKey);
+				if (resolved) {
+					return [
+						{
+							id: resolved.id,
+							name: resolved.title,
+							artist: resolved.artist,
+							cover_art_url: resolved.cover || "",
+						},
+					];
+				}
+			} catch (err) {
+				console.warn("Failed to directly resolve Genius album url:", err);
+			}
+		}
+
+		const albumUrlMatch = query.match(
+			/genius\.com\/albums\/([^/]+)\/([^/?#]+)/i,
+		);
 		if (albumUrlMatch) {
 			// Search the slug parts to locate matching album
 			const cleanSlug = `${albumUrlMatch[1]} ${albumUrlMatch[2]}`.replace(
@@ -339,13 +376,9 @@ export const GeniusApi = {
 								id: album.id,
 								name: album.name || album.title,
 								artist:
-									album.artist?.name ||
-									album.primary_artist_names ||
-									"Unknown",
+									album.artist?.name || album.primary_artist_names || "Unknown",
 								cover_art_url:
-									album.cover_art_url ||
-									album.cover_art_thumbnail_url ||
-									"",
+									album.cover_art_url || album.cover_art_thumbnail_url || "",
 							});
 						}
 					}

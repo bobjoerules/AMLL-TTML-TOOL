@@ -6,6 +6,7 @@ import {
 	CloudArrowDown24Regular,
 	MusicNote1Regular,
 	Open16Regular,
+	SearchRegular,
 	SettingsRegular,
 	StarRegular,
 } from "@fluentui/react-icons";
@@ -363,6 +364,27 @@ export const SettingsAboutTab = () => {
 										amll-dev/amll-editor
 									</Link>
 									, licensed under GNU AGPL-3.0-only.
+								</Text>
+							</Flex>
+						</Card>
+						<Card variant="classic" style={{ padding: "var(--space-3)" }}>
+							<Flex direction="column" gap="2">
+								<Flex align="center" gap="2">
+									<Box style={{ color: "var(--green-11)" }}>
+										<SearchRegular />
+									</Box>
+									<Heading size="3">SpotMatch</Heading>
+								</Flex>
+								<Text size="2" color="gray">
+									Alternate Spotify recording ID discovery tool and algorithm adapted from{" "}
+									<Link
+										href="https://github.com/TheX24/SpotMatch"
+										target="_blank"
+										rel="noreferrer"
+									>
+										SpotMatch
+									</Link>{" "}
+									by TheX24.
 								</Text>
 							</Flex>
 						</Card>

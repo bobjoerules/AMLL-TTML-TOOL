@@ -19,19 +19,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { uid } from "uid";
-import { GeniusApi } from "$/modules/genius/api/client";
+import {
+	GeniusApi,
+	GeniusResolver,
+	isGeniusSongUrl,
+} from "$/modules/genius/api/client";
 import { getBetterGeniusCoverArt } from "$/modules/genius/utils/image";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
 import { getGeniusHeader } from "$/modules/lyric-editor/utils/genius-sections.ts";
 import { applyReviewedSections } from "$/modules/lyric-editor/utils/section-system.ts";
 import { LyricallyApi } from "$/modules/lyrically/api/client";
-import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import {
 	geniusApiKeyAtom,
 	geniusCategorizationEnabledAtom,
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 } from "$/modules/settings/states/index.ts";
+import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import {
 	confirmDialogAtom,
 	geniusImportLyricsDialogAtom,
@@ -193,7 +197,12 @@ export const ImportLyricsDialog = ({
 		setIsEditing(false);
 
 		let effectiveQuery = query.trim();
-		let spotifyTrack: import("$/modules/spotify/client").ResolvedTrack | null = null;
+		let spotifyTrack: import("$/modules/spotify/client").ResolvedTrack | null =
+			null;
+		let geniusSong:
+			| import("$/modules/genius/api/client").GeniusResolvedSong
+			| null = null;
+
 		if (isSpotifyUrl(effectiveQuery)) {
 			try {
 				const resolved = await SpotifyResolver.resolveTrack(effectiveQuery);
@@ -218,78 +227,99 @@ export const ImportLyricsDialog = ({
 			} catch (err) {
 				console.warn("Failed to resolve Spotify track link:", err);
 			}
+		} else if (isGeniusSongUrl(effectiveQuery)) {
+			try {
+				const resolved = await GeniusResolver.resolveSong(
+					effectiveQuery,
+					geniusApiKey,
+				);
+				if (resolved) {
+					geniusSong = resolved;
+					effectiveQuery = resolved.artist
+						? `${resolved.artist} ${resolved.title}`
+						: resolved.title;
+					setQuery(effectiveQuery);
+					toast.info(
+						t("lyricsImport.geniusDetected", "Genius track detected: {track}", {
+							track: resolved.artist
+								? `${resolved.artist} – ${resolved.title}`
+								: resolved.title,
+						}),
+					);
+				}
+			} catch (err) {
+				console.warn("Failed to resolve Genius song link:", err);
+			}
 		}
 
 		try {
 			const hits: ImportTrack[] =
 				source === "genius"
-					? (await GeniusApi.search(effectiveQuery, geniusApiKey)).response.hits.map(
-							({ result }) => ({
-								id: result.id,
-								name: result.title,
-								artist: result.primary_artist.name,
-								album: result.album?.name,
-								cover:
-									result.song_art_image_url ||
-									result.song_art_image_thumbnail_url,
-								fetchLyrics: () => GeniusApi.getLyrics(result.id),
-								fetchSongwriters: async () => {
-									const artists = (
-										await GeniusApi.getSongById(result.id, geniusApiKey)
-									).response.song.writer_artists;
-									const realNames: string[] = [];
-									for (const artist of artists) {
-										try {
-											const detail = (
-												await GeniusApi.getArtistById(artist.id, geniusApiKey)
-											).response.artist;
-											const description = detail.description.plain || "";
-											const bornMatch = description.match(
-												/born\s+([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){1,4})/,
-											);
-											const realNameMatch = description.match(
-												/real\s+name\s+(?:is\s+)?([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){1,4})/i,
-											);
-											const potentialNames = detail.alternate_names.filter(
-												(name) => {
-													const lowerArtist = artist.name.toLowerCase();
-													return (
-														!name.toLowerCase().includes(lowerArtist) &&
-														!lowerArtist.includes(name.toLowerCase()) &&
-														name.split(" ").length >= 2 &&
-														name.split(" ").length <= 4 &&
-														![
-															"King ",
-															"The ",
-															"Mr. ",
-															"aka ",
-															"alias ",
-															"DJ ",
-														].some((prefix) => name.startsWith(prefix)) &&
-														name
-															.split(" ")
-															.every((word) => /^[A-Z]/.test(word)) &&
-														!name.includes("http") &&
-														!name.includes("www.")
-													);
-												},
-											);
-											realNames.push(
-												bornMatch?.[1] ||
-													realNameMatch?.[1] ||
-													potentialNames.sort(
-														(a, b) => a.length - b.length,
-													)[0] ||
-													artist.name,
-											);
-										} catch {
-											realNames.push(artist.name);
-										}
+					? (
+							await GeniusApi.search(effectiveQuery, geniusApiKey)
+						).response.hits.map(({ result }) => ({
+							id: result.id,
+							name: result.title,
+							artist: result.primary_artist.name,
+							album: result.album?.name,
+							cover:
+								result.song_art_image_url ||
+								result.song_art_image_thumbnail_url,
+							fetchLyrics: () => GeniusApi.getLyrics(result.id),
+							fetchSongwriters: async () => {
+								const artists = (
+									await GeniusApi.getSongById(result.id, geniusApiKey)
+								).response.song.writer_artists;
+								const realNames: string[] = [];
+								for (const artist of artists) {
+									try {
+										const detail = (
+											await GeniusApi.getArtistById(artist.id, geniusApiKey)
+										).response.artist;
+										const description = detail.description.plain || "";
+										const bornMatch = description.match(
+											/born\s+([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){1,4})/,
+										);
+										const realNameMatch = description.match(
+											/real\s+name\s+(?:is\s+)?([A-Z][a-zA-Z.]+(?:\s[A-Z][a-zA-Z.]+){1,4})/i,
+										);
+										const potentialNames = detail.alternate_names.filter(
+											(name) => {
+												const lowerArtist = artist.name.toLowerCase();
+												return (
+													!name.toLowerCase().includes(lowerArtist) &&
+													!lowerArtist.includes(name.toLowerCase()) &&
+													name.split(" ").length >= 2 &&
+													name.split(" ").length <= 4 &&
+													![
+														"King ",
+														"The ",
+														"Mr. ",
+														"aka ",
+														"alias ",
+														"DJ ",
+													].some((prefix) => name.startsWith(prefix)) &&
+													name
+														.split(" ")
+														.every((word) => /^[A-Z]/.test(word)) &&
+													!name.includes("http") &&
+													!name.includes("www.")
+												);
+											},
+										);
+										realNames.push(
+											bornMatch?.[1] ||
+												realNameMatch?.[1] ||
+												potentialNames.sort((a, b) => a.length - b.length)[0] ||
+												artist.name,
+										);
+									} catch {
+										realNames.push(artist.name);
 									}
-									return realNames;
-								},
-							}),
-						)
+								}
+								return realNames;
+							},
+						}))
 					: source === "lrclib"
 						? (await LrcLibApi.search(query)).map((track) => ({
 								id: track.id,
@@ -313,9 +343,46 @@ export const ImportLyricsDialog = ({
 										(detail) => detail.lyrics || "",
 									),
 							}));
+			if (geniusSong && source === "genius") {
+				const currentGeniusSong = geniusSong;
+				const existingIndex = hits.findIndex(
+					(h) => Number(h.id) === currentGeniusSong.id,
+				);
+				if (existingIndex > 0) {
+					const [matched] = hits.splice(existingIndex, 1);
+					hits.unshift(matched);
+				} else if (existingIndex === -1) {
+					hits.unshift({
+						id: currentGeniusSong.id,
+						name: currentGeniusSong.title,
+						artist: currentGeniusSong.artist,
+						album: currentGeniusSong.album,
+						cover: currentGeniusSong.cover,
+						fetchLyrics: () => GeniusApi.getLyrics(currentGeniusSong.id),
+						fetchSongwriters: async () => {
+							if (!geniusApiKey) return [currentGeniusSong.artist];
+							try {
+								const artists = (
+									await GeniusApi.getSongById(
+										currentGeniusSong.id,
+										geniusApiKey,
+									)
+								).response.song.writer_artists;
+								return artists.map((a: { name: string }) => a.name);
+							} catch {
+								return [currentGeniusSong.artist];
+							}
+						},
+					});
+				}
+			}
+
 			if (spotifyTrack && hits.length > 0) {
 				hits[0].album = hits[0].album || spotifyTrack.album;
 				hits[0].cover = hits[0].cover || spotifyTrack.cover;
+			} else if (geniusSong && hits.length > 0) {
+				hits[0].album = hits[0].album || geniusSong.album;
+				hits[0].cover = hits[0].cover || geniusSong.cover;
 			}
 			setResults(hits);
 		} catch (e) {

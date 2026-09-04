@@ -6,13 +6,54 @@
 
 A fork of the word-by-word lyrics editor designed specifically for the [Spicy Lyrics ecosystem](https://spicylyrics.org/).
 
-<img width="1312" alt="image" src="https://github.com/user-attachments/assets/4db81b29-df0c-4f6e-819a-3b956b28247c">
-<img width="1312" alt="image" src="https://github.com/user-attachments/assets/929eefee-ebda-43db-ad04-c0f099077053">
-<img width="1312" alt="image" src="https://github.com/user-attachments/assets/7c80902e-45a9-42ae-b980-f5500069acb8">
+<p align="center">
+  <img src="./images/preview%20tab.png" alt="AMLL TTML Tool - Apple Music Live Preview" width="100%">
+</p>
 
 [![Crowdin](https://badges.crowdin.net/very-cool-ttml-tool/localized.svg)](https://crowdin.com/project/very-cool-ttml-tool)
 
 </div>
+
+## Showcase & Screenshots
+
+<table width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <h3 align="center">Syllable Audio Syncing</h3>
+      <p align="center">Fast keyboard and waveform sync engine for recording precise start, end, and duration timestamps for every syllable.</p>
+      <img src="./images/sync%20tab.png" alt="Syllable Audio Syncing" width="100%">
+    </td>
+    <td width="50%" valign="top">
+      <h3 align="center">Full TTML Lyric Editor</h3>
+      <p align="center">Line-by-line management, auto syllabification, songwriter metadata extraction, and multi-track background vocal management.</p>
+      <img src="./images/edit%20tab.png" alt="Full TTML Lyric Editor" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3 align="center">Smart TTML Checklist</h3>
+      <p align="center">Song cover art thumbnails, live progress bar, direct lyric provider search, and 1-click lyric importing.</p>
+      <img src="./images/ttml%20checklist.png" alt="Smart TTML Checklist" width="100%">
+    </td>
+    <td width="50%" valign="top">
+      <h3 align="center">Cloud Sync & Library</h3>
+      <p align="center">Upload, manage, and share your synced TTML lyrics and audio files seamlessly with Firebase Cloud integration.</p>
+      <img src="./images/cloud.png" alt="Cloud Sync & Library" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3 align="center">Discord Rich Presence</h3>
+      <p align="center">Broadcast your live editing sessions, current song, album cover art, and progress directly to Discord.</p>
+      <img src="./images/rpc%20page.png" alt="Discord Rich Presence" width="100%">
+    </td>
+    <td width="50%" valign="top">
+      <h3 align="center">Custom Themes & Visuals</h3>
+      <p align="center">Extensive customization with custom background artwork, equalizer curves, latency testing, and UI styling.</p>
+      <img src="./images/theme%20settings.png" alt="Custom Themes & Visuals" width="100%">
+    </td>
+  </tr>
+</table>
 
 ## Usage
 
@@ -25,6 +66,8 @@ You can also use the Tauri desktop version built via GitHub Actions; see the [La
 
 ## New Editor Features over the Original AMLL TTML Tool
 
+- **SpotMatch (Alternate Spotify IDs)** — Built-in companion tool to find alternate Spotify recording IDs across singles, albums, deluxe editions, and remasters with zero authentication or API keys, with 1-click export formatted for the Spicy Lyrics bot (`id1,id2,id3`). Adapted from [SpotMatch](https://github.com/TheX24/SpotMatch) by TheX24.
+- **Apple Music TTML Import** — 1-click word-synced and line-synced TTML retrieval directly from Apple Music using Spotify track links or song searches.
 - **Guided Beginner Workflow** — Learn audio import, lyric review, timing, credits, export, and local testing through focused, state-aware steps using your own song; move the guide around the viewport or tuck it into a compact edge tab while working.
 - **Compact Lyric Workspace** — Use edge-to-edge audio and lyric areas, visually connected word and romanization groups, and compact whitespace chips sized by their space count, with an optional legacy label style.
 - **Discord Rich Presence & PreMiD Bridge** — The opt-in Tauri integration shares the current file or track, editor mode, line progress, playback state, and speed-aware timeline with Discord, preserves per-project elapsed time across app restarts, and exposes the same live state to PreMiD on the website while retaining a compatibility fallback for the original editor.

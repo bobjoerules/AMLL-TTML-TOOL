@@ -36,6 +36,22 @@ export function WhatsNewDialog() {
 
 	const features = [
 		{
+			title: "SpotMatch: Alternate Spotify IDs",
+			description:
+				"Find alternate Spotify recording IDs across singles, albums, deluxe editions, and remasters with zero authentication or API keys, featuring duration tolerance analysis and 1-click Spicy Lyrics bot export.",
+			icon: <Sparkle24Regular />,
+			color: "green",
+			info: "Open SpotMatch from Tools > SpotMatch (or from the TTML Checklist) to scan for all matching Spotify tracks with length verification.",
+		},
+		{
+			title: "Genius Link Resolver",
+			description:
+				"Paste direct Genius album or song links anywhere in the app to instantly extract full album tracklists or song metadata without needing a Genius API key.",
+			icon: <FlashRegular />,
+			color: "amber",
+			info: "Pasting a Genius album link into the Album Importer extracts all tracks and artwork directly. Pasting a song link in lyric import or search finds the song instantly.",
+		},
+		{
 			title: "Guided Beginner Workflow",
 			description:
 				"Learn the complete workflow in-app with focused, state-aware steps using your own song, then move the guide or tuck it into a compact edge tab while you work.",

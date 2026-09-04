@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import { uid } from "uid";
 
 import { audioCoverArtAtom } from "$/modules/audio/states";
+import { GeniusResolver, isGeniusSongUrl } from "$/modules/genius/api/client";
 import { parseLyric as parseTTML } from "$/modules/project/logic/ttml-parser";
 import {
 	normalizeApostrophesOnImportAtom,
@@ -112,8 +113,25 @@ export const ImportAppleTtmlDialog = () => {
 
 	const handleSearch = useCallback(
 		async (customQuery?: string) => {
-			const target = (customQuery ?? query).trim();
+			let target = (customQuery ?? query).trim();
 			if (!target) return;
+
+			if (isGeniusSongUrl(target)) {
+				try {
+					const resolved = await GeniusResolver.resolveSong(target);
+					if (resolved) {
+						target = resolved.artist
+							? `${resolved.artist} ${resolved.title}`
+							: resolved.title;
+						setQuery(target);
+					}
+				} catch (err) {
+					console.warn(
+						"Failed to resolve Genius song link in Apple TTML:",
+						err,
+					);
+				}
+			}
 
 			// If user provided a Spotify URL or direct 22-char ID, fetch directly!
 			const looksLikeId =
@@ -130,7 +148,9 @@ export const ImportAppleTtmlDialog = () => {
 				const results = await AppleTtmlApi.search(target);
 				setSearchResults(results);
 				if (results.length === 0) {
-					toast.info(t("appleTtml.noResults", "No songs found for your search."));
+					toast.info(
+						t("appleTtml.noResults", "No songs found for your search."),
+					);
 				}
 			} catch (err) {
 				console.error("Failed to search songs:", err);
@@ -227,7 +247,9 @@ export const ImportAppleTtmlDialog = () => {
 			const meta = [...lyricData.metadata];
 			const setMetaKey = (key: string, value: string) => {
 				if (!value) return;
-				const idx = meta.findIndex((m) => m.key.toLowerCase() === key.toLowerCase());
+				const idx = meta.findIndex(
+					(m) => m.key.toLowerCase() === key.toLowerCase(),
+				);
 				if (idx >= 0) {
 					if (!meta[idx].value.length || !meta[idx].value[0]) {
 						meta[idx] = { key, value: [value] };
@@ -370,7 +392,7 @@ export const ImportAppleTtmlDialog = () => {
 					<TextField.Root
 						placeholder={t(
 							"appleTtml.searchPlaceholder",
-							"Paste Spotify link, track ID, or search title & artist...",
+							"Paste Spotify / Genius link, track ID, or search title & artist...",
 						)}
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
@@ -381,7 +403,9 @@ export const ImportAppleTtmlDialog = () => {
 						size="3"
 					>
 						<TextField.Slot>
-							<Search24Regular style={{ width: 18, height: 18, opacity: 0.6 }} />
+							<Search24Regular
+								style={{ width: 18, height: 18, opacity: 0.6 }}
+							/>
 						</TextField.Slot>
 						{query && (
 							<TextField.Slot>
@@ -403,7 +427,8 @@ export const ImportAppleTtmlDialog = () => {
 					>
 						{isSearching || isFetchingSong ? (
 							<Spinner />
-						) : isSpotifyUrl(query) || /^[a-zA-Z0-9]{22}$/.test(query.trim()) ? (
+						) : isSpotifyUrl(query) ||
+							/^[a-zA-Z0-9]{22}$/.test(query.trim()) ? (
 							<>
 								<ArrowDownload24Regular style={{ width: 18, height: 18 }} />
 								{t("appleTtml.fetchLyrics", "Fetch TTML")}
@@ -419,7 +444,13 @@ export const ImportAppleTtmlDialog = () => {
 
 				{/* Loading indicator */}
 				{(isSearching || isFetchingSong) && (
-					<Flex direction="column" align="center" justify="center" py="6" gap="3">
+					<Flex
+						direction="column"
+						align="center"
+						justify="center"
+						py="6"
+						gap="3"
+					>
 						<Spinner size="3" />
 						<Text size="2" color="gray">
 							{isFetchingSong
@@ -478,10 +509,16 @@ export const ImportAppleTtmlDialog = () => {
 											flexShrink: 0,
 										}}
 									>
-										<MusicNote2Filled style={{ width: 32, height: 32, opacity: 0.4 }} />
+										<MusicNote2Filled
+											style={{ width: 32, height: 32, opacity: 0.4 }}
+										/>
 									</Box>
 								)}
-								<Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
+								<Flex
+									direction="column"
+									gap="1"
+									style={{ flex: 1, minWidth: 0 }}
+								>
 									<Heading size="3" style={{ wordBreak: "break-word" }}>
 										{selectedSong.name}
 									</Heading>
@@ -508,7 +545,10 @@ export const ImportAppleTtmlDialog = () => {
 											</Badge>
 										) : (
 											<Badge color="orange" size="1">
-												{t("appleTtml.badgeNoSyncedLyrics", "Plain Lyrics Only")}
+												{t(
+													"appleTtml.badgeNoSyncedLyrics",
+													"Plain Lyrics Only",
+												)}
 											</Badge>
 										)}
 										{selectedSong.hasDuetLyrics && (
@@ -522,7 +562,9 @@ export const ImportAppleTtmlDialog = () => {
 						</Card>
 
 						{/* Lyrics Preview */}
-						{(selectedSong.syncedLyrics || selectedSong.lyrics || selectedSong.ttml) && (
+						{(selectedSong.syncedLyrics ||
+							selectedSong.lyrics ||
+							selectedSong.ttml) && (
 							<Box>
 								<Text size="1" weight="bold" color="gray" mb="1" as="div">
 									{t("appleTtml.previewLyrics", "Lyrics Preview:")}
@@ -547,7 +589,10 @@ export const ImportAppleTtmlDialog = () => {
 										>
 											{selectedSong.syncedLyrics ||
 												selectedSong.lyrics ||
-												t("appleTtml.ttmlAvailable", "[TTML XML Data Available]")}
+												t(
+													"appleTtml.ttmlAvailable",
+													"[TTML XML Data Available]",
+												)}
 										</Text>
 									</ScrollArea>
 								</Card>
@@ -556,7 +601,11 @@ export const ImportAppleTtmlDialog = () => {
 
 						{/* Import action button */}
 						<Flex justify="end" gap="3" mt="2">
-							<Button variant="soft" color="gray" onClick={() => setIsOpen(false)}>
+							<Button
+								variant="soft"
+								color="gray"
+								onClick={() => setIsOpen(false)}
+							>
 								{t("common.cancel", "Cancel")}
 							</Button>
 							<Button
@@ -572,124 +621,152 @@ export const ImportAppleTtmlDialog = () => {
 				)}
 
 				{/* Search Results List */}
-				{!isSearching && !isFetchingSong && !selectedSong && searchResults.length > 0 && (
-					<Flex direction="column" gap="2">
-						<Text size="1" weight="bold" color="gray">
-							{t("appleTtml.selectTrack", "Select a track to fetch Apple Music TTML:")}
-						</Text>
-						<ScrollArea style={{ maxHeight: 320 }}>
-							<Flex direction="column" gap="2" pr="2">
-								{searchResults.map((item) => (
-									<Card
-										key={item.id}
-										asChild
-										variant="surface"
-										style={{
-											cursor: "pointer",
-											transition: "background 0.15s ease",
-											padding: "var(--space-2)",
-										}}
-									>
-										<button
-											type="button"
-											onClick={() => fetchSongDetails(item.id)}
+				{!isSearching &&
+					!isFetchingSong &&
+					!selectedSong &&
+					searchResults.length > 0 && (
+						<Flex direction="column" gap="2">
+							<Text size="1" weight="bold" color="gray">
+								{t(
+									"appleTtml.selectTrack",
+									"Select a track to fetch Apple Music TTML:",
+								)}
+							</Text>
+							<ScrollArea style={{ maxHeight: 320 }}>
+								<Flex direction="column" gap="2" pr="2">
+									{searchResults.map((item) => (
+										<Card
+											key={item.id}
+											asChild
+											variant="surface"
 											style={{
-												textAlign: "left",
-												background: "transparent",
-												border: "none",
-												width: "100%",
-												display: "flex",
-												alignItems: "center",
-												gap: "var(--space-3)",
+												cursor: "pointer",
+												transition: "background 0.15s ease",
+												padding: "var(--space-2)",
 											}}
 										>
-											{item.artwork ? (
-												<img
-													src={item.artwork}
-													alt={item.name}
-													crossOrigin="anonymous"
-													referrerPolicy="no-referrer"
+											<button
+												type="button"
+												onClick={() => fetchSongDetails(item.id)}
+												style={{
+													textAlign: "left",
+													background: "transparent",
+													border: "none",
+													width: "100%",
+													display: "flex",
+													alignItems: "center",
+													gap: "var(--space-3)",
+												}}
+											>
+												{item.artwork ? (
+													<img
+														src={item.artwork}
+														alt={item.name}
+														crossOrigin="anonymous"
+														referrerPolicy="no-referrer"
+														style={{
+															width: 48,
+															height: 48,
+															borderRadius: 6,
+															objectFit: "cover",
+															flexShrink: 0,
+														}}
+													/>
+												) : (
+													<Box
+														style={{
+															width: 48,
+															height: 48,
+															borderRadius: 6,
+															background: "var(--gray-4)",
+															display: "flex",
+															alignItems: "center",
+															justifyContent: "center",
+															flexShrink: 0,
+														}}
+													>
+														<MusicNote2Filled
+															style={{ width: 20, height: 20, opacity: 0.4 }}
+														/>
+													</Box>
+												)}
+												<Flex
+													direction="column"
+													gap="0"
+													style={{ flex: 1, minWidth: 0 }}
+												>
+													<Text size="2" weight="bold" truncate>
+														{item.name}
+													</Text>
+													<Text size="1" color="gray" truncate>
+														{item.artistNames || item.artist}
+													</Text>
+													{item.album && (
+														<Text
+															size="1"
+															color="gray"
+															truncate
+															style={{ opacity: 0.8 }}
+														>
+															{item.album}
+														</Text>
+													)}
+												</Flex>
+												<ArrowDownload24Regular
 													style={{
-														width: 48,
-														height: 48,
-														borderRadius: 6,
-														objectFit: "cover",
+														width: 18,
+														height: 18,
+														opacity: 0.5,
 														flexShrink: 0,
 													}}
 												/>
-											) : (
-												<Box
-													style={{
-														width: 48,
-														height: 48,
-														borderRadius: 6,
-														background: "var(--gray-4)",
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "center",
-														flexShrink: 0,
-													}}
-												>
-													<MusicNote2Filled
-														style={{ width: 20, height: 20, opacity: 0.4 }}
-													/>
-												</Box>
-											)}
-											<Flex direction="column" gap="0" style={{ flex: 1, minWidth: 0 }}>
-												<Text size="2" weight="bold" truncate>
-													{item.name}
-												</Text>
-												<Text size="1" color="gray" truncate>
-													{item.artistNames || item.artist}
-												</Text>
-												{item.album && (
-													<Text size="1" color="gray" truncate style={{ opacity: 0.8 }}>
-														{item.album}
-													</Text>
-												)}
-											</Flex>
-											<ArrowDownload24Regular
-												style={{ width: 18, height: 18, opacity: 0.5, flexShrink: 0 }}
-											/>
-										</button>
-									</Card>
-								))}
-							</Flex>
-						</ScrollArea>
-					</Flex>
-				)}
+											</button>
+										</Card>
+									))}
+								</Flex>
+							</ScrollArea>
+						</Flex>
+					)}
 
 				{/* Empty / Initial guide state */}
-				{!isSearching && !isFetchingSong && !selectedSong && searchResults.length === 0 && (
-					<Box
-						py="6"
-						px="4"
-						style={{
-							textAlign: "center",
-							background: "var(--gray-2)",
-							borderRadius: 8,
-							border: "1px dashed var(--gray-6)",
-						}}
-					>
-						<MusicNote2Filled
+				{!isSearching &&
+					!isFetchingSong &&
+					!selectedSong &&
+					searchResults.length === 0 && (
+						<Box
+							py="6"
+							px="4"
 							style={{
-								width: 32,
-								height: 32,
-								color: "var(--crimson-9, #e54666)",
-								marginBottom: 8,
+								textAlign: "center",
+								background: "var(--gray-2)",
+								borderRadius: 8,
+								border: "1px dashed var(--gray-6)",
 							}}
-						/>
-						<Text size="2" weight="bold" as="div" mb="1">
-							{t("appleTtml.guideTitle", "Quick TTML Import")}
-						</Text>
-						<Text size="1" color="gray" as="div" style={{ maxWidth: 440, margin: "0 auto" }}>
-							{t(
-								"appleTtml.guideText",
-								"Copy a track link from Spotify (e.g. open.spotify.com/track/...) or enter a song name above to retrieve word-timed Apple Music TTML.",
-							)}
-						</Text>
-					</Box>
-				)}
+						>
+							<MusicNote2Filled
+								style={{
+									width: 32,
+									height: 32,
+									color: "var(--crimson-9, #e54666)",
+									marginBottom: 8,
+								}}
+							/>
+							<Text size="2" weight="bold" as="div" mb="1">
+								{t("appleTtml.guideTitle", "Quick TTML Import")}
+							</Text>
+							<Text
+								size="1"
+								color="gray"
+								as="div"
+								style={{ maxWidth: 440, margin: "0 auto" }}
+							>
+								{t(
+									"appleTtml.guideText",
+									"Copy a track link from Spotify (e.g. open.spotify.com/track/...) or enter a song name above to retrieve word-timed Apple Music TTML.",
+								)}
+							</Text>
+						</Box>
+					)}
 			</Dialog.Content>
 		</Dialog.Root>
 	);
