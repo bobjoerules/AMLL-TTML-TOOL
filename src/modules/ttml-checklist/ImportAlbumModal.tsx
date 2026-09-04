@@ -86,6 +86,19 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 		async (album: GeniusAlbumSummary) => {
 			setLoading(true);
 			try {
+				let albumCover = album.cover_art_url;
+				if (!albumCover && geniusApiKey) {
+					try {
+						const detail = await GeniusApi.getAlbumById(album.id, geniusApiKey);
+						albumCover =
+							detail.response?.album?.cover_art_url ||
+							(detail.response?.album as unknown as Record<string, string>)?.header_image_url ||
+							"";
+					} catch {
+						// ignore
+					}
+				}
+
 				const geniusTracks = await GeniusApi.getAlbumTracks(
 					album.id,
 					geniusApiKey,
@@ -101,7 +114,8 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 					coverArt:
 						item.song.song_art_image_url ||
 						item.song.song_art_image_thumbnail_url ||
-						album.cover_art_url,
+						albumCover ||
+						undefined,
 					source: "genius",
 					sourceId: item.song.id,
 				}));
@@ -109,7 +123,7 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 				setAlbumSummary({
 					title: album.name,
 					artist: album.artist,
-					cover: album.cover_art_url,
+					cover: albumCover || undefined,
 					source: "genius",
 				});
 				setTracks(formattedTracks);

@@ -193,18 +193,24 @@ export const ImportLyricsDialog = ({
 		setIsEditing(false);
 
 		let effectiveQuery = query.trim();
+		let spotifyTrack: import("$/modules/spotify/client").ResolvedTrack | null = null;
 		if (isSpotifyUrl(effectiveQuery)) {
 			try {
 				const resolved = await SpotifyResolver.resolveTrack(effectiveQuery);
 				if (resolved) {
-					effectiveQuery = `${resolved.artist} ${resolved.title}`;
+					spotifyTrack = resolved;
+					effectiveQuery = resolved.artist
+						? `${resolved.artist} ${resolved.title}`
+						: resolved.title;
 					setQuery(effectiveQuery);
 					toast.info(
 						t(
 							"lyricsImport.spotifyDetected",
 							"Spotify track detected: {track}",
 							{
-								track: `${resolved.artist} – ${resolved.title}`,
+								track: resolved.artist
+									? `${resolved.artist} – ${resolved.title}`
+									: resolved.title,
 							},
 						),
 					);
@@ -307,6 +313,10 @@ export const ImportLyricsDialog = ({
 										(detail) => detail.lyrics || "",
 									),
 							}));
+			if (spotifyTrack && hits.length > 0) {
+				hits[0].album = hits[0].album || spotifyTrack.album;
+				hits[0].cover = hits[0].cover || spotifyTrack.cover;
+			}
 			setResults(hits);
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);

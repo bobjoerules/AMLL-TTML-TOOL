@@ -78,14 +78,21 @@ export const extractLyricsFromEmbed = (embedScript: string): string => {
 	}
 };
 
+const songDetailCache = new Map<number, GeniusSongResponse>();
+
 export const GeniusApi = {
 	/**
 	 * Search for a song on Genius
 	 * @param query The search query (e.g. "Artist - Song")
 	 * @param apiKey The Genius API key
+	 * @param options Optional parameters (e.g. enrichAlbums)
 	 * @returns A list of search hits
 	 */
-	async search(query: string, apiKey: string): Promise<GeniusSearchResponse> {
+	async search(
+		query: string,
+		apiKey: string,
+		options: { enrichAlbums?: boolean } = { enrichAlbums: true },
+	): Promise<GeniusSearchResponse> {
 		if (!query.trim()) {
 			return { meta: { status: 200 }, response: { hits: [] } };
 		}
@@ -101,7 +108,34 @@ export const GeniusApi = {
 				);
 			}
 
-			return (await response.json()) as GeniusSearchResponse;
+			const data = (await response.json()) as GeniusSearchResponse;
+			const hits = data.response?.hits || [];
+
+			// Genius /search does not return album metadata on search hits anymore.
+			// Enrich search hits in parallel using the song detail endpoint.
+			if (options.enrichAlbums !== false && hits.length > 0 && apiKey) {
+				await Promise.allSettled(
+					hits.map(async (hit) => {
+						if (hit.result && !hit.result.album) {
+							try {
+								const songDetail = await this.getSongById(hit.result.id, apiKey);
+								if (songDetail.response?.song?.album) {
+									hit.result.album = {
+										id: songDetail.response.song.album.id,
+										name: songDetail.response.song.album.name,
+										cover_art_url:
+											songDetail.response.song.album.cover_art_url || "",
+									};
+								}
+							} catch {
+								// non-fatal
+							}
+						}
+					}),
+				);
+			}
+
+			return data;
 		} catch (error) {
 			console.error("Genius API Error (Search):", error);
 			throw error;
@@ -115,6 +149,10 @@ export const GeniusApi = {
 	 * @returns The song detail response
 	 */
 	async getSongById(id: number, apiKey: string): Promise<GeniusSongResponse> {
+		if (songDetailCache.has(id)) {
+			return songDetailCache.get(id)!;
+		}
+
 		try {
 			const response = await fetch(
 				`${BASE_URL}/songs/${id}?access_token=${apiKey}`,
@@ -126,7 +164,9 @@ export const GeniusApi = {
 				);
 			}
 
-			return (await response.json()) as GeniusSongResponse;
+			const data = (await response.json()) as GeniusSongResponse;
+			songDetailCache.set(id, data);
+			return data;
 		} catch (error) {
 			console.error("Genius API Error (GetById):", error);
 			throw error;
@@ -274,9 +314,50 @@ export const GeniusApi = {
 			query = cleanSlug;
 		}
 
-		const searchRes = await this.search(query, apiKey);
-		const hits = searchRes.response.hits || [];
 		const albumsMap = new Map<number, import("../types").GeniusAlbumSummary>();
+
+		// 1. Try public/multi search endpoint which has a dedicated "album" section
+		try {
+			const multiRes = await fetch(
+				`https://genius.com/api/search/multi?q=${encodeURIComponent(query)}`,
+			);
+			if (multiRes.ok) {
+				const multiData = await multiRes.json();
+				const albumSections = (multiData.response?.sections || []).filter(
+					(s: any) => s.type === "album" || s.type === "top_hit",
+				);
+				for (const section of albumSections) {
+					for (const hit of section.hits || []) {
+						const album = hit.result;
+						if (
+							album &&
+							(album._type === "album" || hit.type === "album") &&
+							album.id &&
+							!albumsMap.has(album.id)
+						) {
+							albumsMap.set(album.id, {
+								id: album.id,
+								name: album.name || album.title,
+								artist:
+									album.artist?.name ||
+									album.primary_artist_names ||
+									"Unknown",
+								cover_art_url:
+									album.cover_art_url ||
+									album.cover_art_thumbnail_url ||
+									"",
+							});
+						}
+					}
+				}
+			}
+		} catch {
+			// ignore multi search failure
+		}
+
+		// 2. Also search songs and extract unique albums from enriched hits
+		const searchRes = await this.search(query, apiKey, { enrichAlbums: true });
+		const hits = searchRes.response.hits || [];
 
 		for (const hit of hits) {
 			const song = hit.result;

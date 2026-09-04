@@ -139,17 +139,76 @@ export function deduplicateChecklistEntries(
 	entries: TTMLChecklistEntry[],
 ): TTMLChecklistEntry[] {
 	const result: TTMLChecklistEntry[] = [];
+	const cloudMap = new Map<string, number>();
+	const songMap = new Map<string, number[]>();
+
+	const normSongCache = new WeakMap<TTMLChecklistEntry, string>();
+	const normArtistCache = new WeakMap<TTMLChecklistEntry, string>();
+
+	const getNormSong = (e: TTMLChecklistEntry): string => {
+		let val = normSongCache.get(e);
+		if (val === undefined) {
+			val = normalizeSongKey(e.song || "");
+			normSongCache.set(e, val);
+		}
+		return val;
+	};
+
+	const getNormArtist = (e: TTMLChecklistEntry): string => {
+		let val = normArtistCache.get(e);
+		if (val === undefined) {
+			val = normalizeSongKey(e.artist || "");
+			normArtistCache.set(e, val);
+		}
+		return val;
+	};
+
 	for (const entry of entries) {
-		const existingIndex = result.findIndex((item) =>
-			areChecklistEntriesDuplicate(item, entry),
-		);
+		let existingIndex = -1;
+
+		if (entry.cloudDocId && cloudMap.has(entry.cloudDocId)) {
+			existingIndex = cloudMap.get(entry.cloudDocId)!;
+		}
+
+		if (existingIndex === -1 && entry.song) {
+			const normSong = getNormSong(entry);
+			if (normSong) {
+				const candidates = songMap.get(normSong);
+				if (candidates) {
+					const normArtist = getNormArtist(entry);
+					for (const idx of candidates) {
+						const target = result[idx];
+						const targetArtist = getNormArtist(target);
+						if (!normArtist || !targetArtist || normArtist === targetArtist) {
+							existingIndex = idx;
+							break;
+						}
+					}
+				}
+			}
+		}
+
 		if (existingIndex >= 0) {
-			result[existingIndex] = mergeChecklistEntries(
-				result[existingIndex],
-				entry,
-			);
+			const merged = mergeChecklistEntries(result[existingIndex], entry);
+			result[existingIndex] = merged;
+			if (merged.cloudDocId) {
+				cloudMap.set(merged.cloudDocId, existingIndex);
+			}
 		} else {
+			const newIdx = result.length;
 			result.push(entry);
+			if (entry.cloudDocId) {
+				cloudMap.set(entry.cloudDocId, newIdx);
+			}
+			const normSong = getNormSong(entry);
+			if (normSong) {
+				const list = songMap.get(normSong);
+				if (list) {
+					list.push(newIdx);
+				} else {
+					songMap.set(normSong, [newIdx]);
+				}
+			}
 		}
 	}
 	return result;

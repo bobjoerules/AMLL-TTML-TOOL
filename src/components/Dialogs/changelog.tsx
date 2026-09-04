@@ -56,6 +56,28 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.2.4
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 4, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Spotify Link Artist Matching:</b> Resolved an issue where pasting Spotify track links could pick an incorrect artist with a matching song title; track queries now accurately target and verify artist and title together.
+								</Text>
+								<Text size="2">
+									• <b>Album Artwork & Metadata Enrichment:</b> Restored high-resolution album covers and metadata across Spotify track links, album imports, and Genius searches using CORS-free native fetching and resilient fallback resolution.
+								</Text>
+								<Text size="2">
+									• <b>Large Checklist Performance & Virtualization:</b> Eliminated UI lag when opening large TTML checklists by implementing virtualized list rendering, $O(N)$ fast deduplication, memoized checklist entry cards, and deferred search filtering.
+								</Text>
+								<Text size="2">
+									• <b>Album Import Artwork & Fallbacks:</b> Fixed missing album cover art when importing full albums and restored full iTunes album tracklist recovery.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.2.3
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
