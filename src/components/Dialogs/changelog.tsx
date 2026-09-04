@@ -56,6 +56,22 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.2.1
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 3, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Window Header Alignment:</b> Fixed extra space at the top of newly created windows by configuring macOS overlay titlebar styling and insets identical to the primary window.
+								</Text>
+								<Text size="2">
+									• <b>Updater Notice:</b> Removed the misleading in-app restart button on update completion to prevent webview reloads without fully restarting the updated desktop binary.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.2.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
