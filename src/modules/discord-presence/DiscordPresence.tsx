@@ -2,7 +2,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { audioEngine } from "$/modules/audio/audio-engine";
-import { audioPlayingAtom, playbackRateAtom } from "$/modules/audio/states";
+import {
+	audioCoverArtAtom,
+	audioPlayingAtom,
+	playbackRateAtom,
+} from "$/modules/audio/states";
 import {
 	discordDetailsTemplateAtom,
 	discordIdleTimeoutMinutesAtom,
@@ -58,6 +62,7 @@ export function DiscordPresence() {
 	const selectedWordIds = useAtomValue(selectedWordsAtom);
 	const playing = useAtomValue(audioPlayingAtom);
 	const playbackRate = useAtomValue(playbackRateAtom);
+	const audioCoverArt = useAtomValue(audioCoverArtAtom);
 	const enabled = useAtomValue(discordRichPresenceEnabledAtom);
 	const detailsTemplate = useAtomValue(discordDetailsTemplateAtom);
 	const stateTemplate = useAtomValue(discordStateTemplateAtom);
@@ -146,6 +151,7 @@ export function DiscordPresence() {
 			userDisplayName: user?.displayName || user?.email?.split("@")[0],
 			checklistTotal,
 			checklistCompleted,
+			audioCoverArt,
 		});
 
 		let meta = document.head.querySelector<HTMLMetaElement>(
@@ -237,6 +243,7 @@ export function DiscordPresence() {
 		user,
 		checklistTotal,
 		checklistCompleted,
+		audioCoverArt,
 	]);
 
 	useEffect(() => {

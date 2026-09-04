@@ -1,5 +1,6 @@
 import { BUILD_TIME, GIT_COMMIT } from "virtual:buildmeta";
 import {
+	ArrowSync24Regular,
 	BoxRegular,
 	CheckmarkCircle24Regular,
 	CloudArrowDown24Regular,
@@ -38,7 +39,14 @@ const openExternal = async (url: string) => {
 
 export const SettingsAboutTab = () => {
 	const { t } = useTranslation();
-	const { status, update, progress, installUpdate, checkUpdate } = useAppUpdate();
+	const {
+		status,
+		update,
+		progress,
+		installUpdate,
+		checkUpdate,
+		relaunchApp,
+	} = useAppUpdate();
 	const [cacheConfirmationOpen, setCacheConfirmationOpen] = useState(false);
 	const [recoveryAction, setRecoveryAction] = useState<
 		"refresh" | "clear" | null
@@ -67,34 +75,44 @@ export const SettingsAboutTab = () => {
 
 	return (
 		<Flex direction="column" gap="4">
-			<Flex direction="column" gap="1">
-				<Heading size="4">
-					{t("aboutModal.appName", "Apple Music-like lyrics TTML Tools")}
-				</Heading>
-				<Text as="div" size="2" color="gray">
-					{t(
-						"aboutModal.description",
-						"A TTML lyric and timing editor designed for the Apple Music-like lyrics ecosystem",
-					)}
-				</Text>
-			</Flex>
-
 			{/* Software Update at top (Desktop) */}
 			{!isWebsite && (
 				<Card>
 					<Flex direction="column" gap="3">
 						<Flex align="center" justify="between" wrap="wrap" gap="2">
 							<Flex align="center" gap="2">
-								<Heading size="3">
+								<Heading size="3" style={{ margin: 0 }}>
 									{t("settings.about.update", "Software Update")}
 								</Heading>
 								{status === "available" && (
-									<Badge color="ruby">
+									<Badge
+										color="ruby"
+										size="1"
+										variant="soft"
+										radius="full"
+										style={{
+											display: "inline-flex",
+											alignItems: "center",
+											padding: "2px 8px",
+											fontWeight: 500,
+										}}
+									>
 										{t("settings.about.newVersion", "New Version")}
 									</Badge>
 								)}
 								{status === "up-to-date" && (
-									<Badge color="green">
+									<Badge
+										color="green"
+										size="1"
+										variant="soft"
+										radius="full"
+										style={{
+											display: "inline-flex",
+											alignItems: "center",
+											padding: "2px 8px",
+											fontWeight: 500,
+										}}
+									>
 										{t("settings.about.upToDate", "Up to date")}
 									</Badge>
 								)}
@@ -105,6 +123,12 @@ export const SettingsAboutTab = () => {
 									<Button onClick={installUpdate}>
 										<CloudArrowDown24Regular />
 										{t("settings.about.updateNow", "Update Now")}
+									</Button>
+								)}
+								{status === "ready" && (
+									<Button onClick={relaunchApp}>
+										<ArrowSync24Regular />
+										{t("settings.about.restart", "Restart Application")}
 									</Button>
 								)}
 								{["idle", "up-to-date", "error"].includes(status) && (
@@ -155,14 +179,20 @@ export const SettingsAboutTab = () => {
 							)}
 
 							{status === "ready" && (
-								<Flex align="center" gap="2">
-									<CheckmarkCircle24Regular color="var(--ruby-9)" />
-									<Text size="2">
-										{t(
-											"settings.about.ready",
-											"Update ready, restart application to apply",
-										)}
-									</Text>
+								<Flex align="center" justify="between" wrap="wrap" gap="2">
+									<Flex align="center" gap="2">
+										<CheckmarkCircle24Regular color="var(--ruby-9)" />
+										<Text size="2">
+											{t(
+												"settings.about.ready",
+												"Update ready, restart application to apply",
+											)}
+										</Text>
+									</Flex>
+									<Button onClick={relaunchApp}>
+										<ArrowSync24Regular />
+										{t("settings.about.restart", "Restart Application")}
+									</Button>
 								</Flex>
 							)}
 
@@ -380,15 +410,6 @@ export const SettingsAboutTab = () => {
 							}
 						>
 							{t("aboutModal.github", "GitHub Repository")}
-						</Button>
-						<Button
-							variant="soft"
-							color="indigo"
-							onClick={() =>
-								openExternal("https://crowdin.com/project/very-cool-ttml-tool")
-							}
-						>
-							{t("aboutModal.crowdin", "Help Translate in Crowdin")}
 						</Button>
 					</Flex>
 				</Flex>

@@ -237,12 +237,25 @@ export const ImportAppleTtmlDialog = () => {
 				}
 			};
 
-			if (song.name) setMetaKey("title", song.name);
-			if (song.artist) setMetaKey("artist", song.artist);
+			if (song.name) {
+				setMetaKey("musicName", song.name);
+				setMetaKey("title", song.name);
+			}
+			if (song.artist) {
+				setMetaKey("artists", song.artist);
+				setMetaKey("artist", song.artist);
+			}
 			if (song.album) setMetaKey("album", song.album);
+			if (song.artwork) setMetaKey("cover_art", song.artwork);
 			if (song.isrc) setMetaKey("isrc", song.isrc);
-			if (song.id) setMetaKey("apple:track_id", song.id);
-			if (lastSpotifyId) setMetaKey("spotify:track_id", lastSpotifyId);
+			if (song.id) {
+				setMetaKey("appleMusicId", song.id);
+				setMetaKey("apple:track_id", song.id);
+			}
+			if (lastSpotifyId) {
+				setMetaKey("spotifyId", lastSpotifyId);
+				setMetaKey("spotify:track_id", lastSpotifyId);
+			}
 
 			lyricData.metadata = meta;
 

@@ -232,16 +232,6 @@ export const SettingsCommonTab = ({
 												})}
 											</Select.Content>
 										</Select.Root>
-										<Link
-											size="1"
-											href="https://crowdin.com/project/very-cool-ttml-tool"
-											target="_blank"
-										>
-											{t(
-												"settings.common.helpTranslate",
-												"Help translate this app",
-											)}
-										</Link>
 									</Flex>
 								</Flex>
 							</Box>

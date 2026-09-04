@@ -105,6 +105,22 @@ describe("Discord presence", () => {
 		expect(payload.largeImage).toBe("https://example.com/cover.jpg");
 	});
 
+	it("falls back to audioCoverArt when metadata lacks cover_art", () => {
+		const snapshot = createPresenceSnapshot({
+			lyrics,
+			fileName: "fallback.ttml",
+			mode: ToolMode.Sync,
+			selectedLineIds: new Set(),
+			playing: false,
+			positionSeconds: 0,
+			durationSeconds: 4,
+			playbackRate: 1,
+			audioCoverArt: "https://example.com/audio-cover.jpg",
+		});
+
+		expect(snapshot.coverUrl).toBe("https://example.com/audio-cover.jpg");
+	});
+
 	it("finds the timed preview line and corrects timestamps for playback rate", () => {
 		const snapshot = createPresenceSnapshot({
 			lyrics,

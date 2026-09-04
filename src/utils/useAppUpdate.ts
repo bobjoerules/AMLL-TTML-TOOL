@@ -91,6 +91,14 @@ export function useAppUpdate() {
 		}
 	}, [update, t, setStatus, setProgress, setErrorMsg]);
 
+	const relaunchApp = useCallback(async () => {
+		try {
+			await relaunch();
+		} catch (e) {
+			console.error("Manual relaunch failed", e);
+		}
+	}, []);
+
 	return {
 		status,
 		update,
@@ -98,5 +106,6 @@ export function useAppUpdate() {
 		errorMsg,
 		checkUpdate,
 		installUpdate,
+		relaunchApp,
 	};
 }

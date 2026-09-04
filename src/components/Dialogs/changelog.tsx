@@ -56,6 +56,28 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.2.3
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 4, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Windows Updater In-Place Fix:</b> Pinned Windows release bundles to NSIS so updates apply cleanly in-place without installer target mismatches, restored the restart application button, and enabled Tauri process relaunch permissions.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Tooltip Auto-Focus Fix:</b> Prevented dialog auto-focus from prematurely showing the Cloud Download tooltip upon opening the TTML Checklist.
+								</Text>
+								<Text size="2">
+									• <b>Apple Music TTML Import & Artwork:</b> Connected album artwork directly to project metadata and Discord RPC when importing Apple Music TTML tracks.
+								</Text>
+								<Text size="2">
+									• <b>Preferences UI & Badge Polish:</b> Refined Synced and Update pill badges, removed duplicate headers and excessive top spacing in the About tab, and cleaned up Crowdin translation links.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.2.2
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

@@ -1391,6 +1391,7 @@ export const TTMLChecklistDialog = () => {
 	return (
 		<Dialog.Root open={open} onOpenChange={setOpen}>
 			<Dialog.Content
+				onOpenAutoFocus={(e) => e.preventDefault()}
 				style={{
 					maxWidth: 1000,
 					width: "min(1000px, 96vw)",
