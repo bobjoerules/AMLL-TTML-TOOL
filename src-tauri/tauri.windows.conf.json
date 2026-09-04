@@ -29,5 +29,8 @@
 				"Cross-Origin-Embedder-Policy": "credentialless"
 			}
 		}
+	},
+	"bundle": {
+		"targets": ["nsis"]
 	}
 }

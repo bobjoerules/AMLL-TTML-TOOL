@@ -37,8 +37,10 @@ const SettingsPage = ({
 	children: ReactNode;
 }) => (
 	<Flex direction="column" gap="4" className={styles.page}>
-		<Box>
-			<Heading size="7">{title}</Heading>
+		<Box className={styles.pageHeader}>
+			<Heading size="6" className={styles.pageTitle}>
+				{title}
+			</Heading>
 			{description && (
 				<Text size="2" color="gray">
 					{description}
@@ -213,7 +215,13 @@ export const SettingsDialog = memo(() => {
 							</Tabs.Content>
 						)}
 						<Tabs.Content value="about" className={styles.tabContent}>
-							<SettingsPage title={t("common.about", "About")}>
+							<SettingsPage
+								title={t("common.about", "About")}
+								description={t(
+									"aboutModal.description",
+									"A TTML lyric and timing editor designed for the Apple Music-like lyrics ecosystem",
+								)}
+							>
 								<SettingsAboutTab />
 							</SettingsPage>
 						</Tabs.Content>

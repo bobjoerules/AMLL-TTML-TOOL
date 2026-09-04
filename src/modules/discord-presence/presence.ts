@@ -132,6 +132,7 @@ export function createPresenceSnapshot({
 	userDisplayName,
 	checklistTotal,
 	checklistCompleted,
+	audioCoverArt,
 }: {
 	lyrics: TTMLLyric;
 	fileName: string;
@@ -146,6 +147,7 @@ export function createPresenceSnapshot({
 	userDisplayName?: string | null;
 	checklistTotal?: number;
 	checklistCompleted?: number;
+	audioCoverArt?: string | null;
 }): PresenceSnapshot {
 	const primaryLines = lyrics.lyricLines.filter((line) => !line.isBG);
 	let currentIndex = -1;
@@ -161,13 +163,20 @@ export function createPresenceSnapshot({
 		);
 	}
 
-	const coverUrl =
+	const metadataCover =
 		lyrics.metadata
 			.find((entry) => entry.key.toLowerCase() === "cover_art")
 			?.value.find((value) => value.trim().length > 0) ?? null;
+	const coverUrl = metadataCover || audioCoverArt || null;
 
-	const musicName = firstMetadataValue(lyrics, "musicName").trim();
-	const artistName = firstMetadataValue(lyrics, "artists").trim();
+	const musicName = (
+		firstMetadataValue(lyrics, "musicName") ||
+		firstMetadataValue(lyrics, "title")
+	).trim();
+	const artistName = (
+		firstMetadataValue(lyrics, "artists") ||
+		firstMetadataValue(lyrics, "artist")
+	).trim();
 	const hasMeaningfulLines = lyrics.lyricLines.some(
 		(line) =>
 			(line.words &&

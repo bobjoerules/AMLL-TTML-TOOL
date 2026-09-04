@@ -431,8 +431,30 @@ export const SettingsAccountTab = memo(() => {
 								<Heading size="4">
 									{user.displayName || user.email?.split("@")[0]}
 								</Heading>
-								<Badge color="green" size="2" variant="surface">
-									● Synced
+								<Badge
+									color="green"
+									size="1"
+									variant="soft"
+									radius="full"
+									style={{
+										display: "inline-flex",
+										alignItems: "center",
+										gap: "5px",
+										padding: "2px 8px",
+										fontWeight: 500,
+									}}
+								>
+									<span
+										style={{
+											width: 6,
+											height: 6,
+											borderRadius: "50%",
+											backgroundColor: "var(--green-9)",
+											display: "inline-block",
+											flexShrink: 0,
+										}}
+									/>
+									{t("cloud.synced", "Synced")}
 								</Badge>
 							</Flex>
 							{user.email && (
