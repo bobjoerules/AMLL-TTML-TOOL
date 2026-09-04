@@ -62,6 +62,7 @@ import { currentTimeAtom } from "$/modules/audio/states/index.ts";
 import {
 	bgLyricIgnoreSyncAtom,
 	copiedTimingsAtom,
+	type CopiedTimingsData,
 	lyricLinesAtom,
 	mainLyricIgnoreSyncAtom,
 	selectedLinesAtom,
@@ -123,12 +124,22 @@ export const LineTimingTools = () => {
 					duration: Math.max(0, w.endTime - w.startTime),
 					emptyBeat: w.emptyBeat,
 				}));
-				setCopiedTimings({
+				const data: CopiedTimingsData = {
 					startTime: targetLine.startTime,
 					endTime: targetLine.endTime,
 					duration,
 					wordTimings,
-				});
+				};
+				setCopiedTimings(data);
+				try {
+					navigator?.clipboard?.writeText(
+						JSON.stringify({
+							type: "amll-timings",
+							version: 1,
+							...data,
+						}),
+					);
+				} catch {}
 				toast.success(
 					t(
 						"ribbonBar.timingTools.copiedLineTimings",
@@ -144,11 +155,21 @@ export const LineTimingTools = () => {
 				for (const word of line.words) {
 					if (selWords.has(word.id)) {
 						const duration = Math.max(0, word.endTime - word.startTime);
-						setCopiedTimings({
+						const data: CopiedTimingsData = {
 							startTime: word.startTime,
 							endTime: word.endTime,
 							duration,
-						});
+						};
+						setCopiedTimings(data);
+						try {
+							navigator?.clipboard?.writeText(
+								JSON.stringify({
+									type: "amll-timings",
+									version: 1,
+									...data,
+								}),
+							);
+						} catch {}
 						toast.success(
 							t(
 								"ribbonBar.timingTools.copiedWordTimings",
@@ -162,8 +183,39 @@ export const LineTimingTools = () => {
 		}
 	}, [setCopiedTimings, store, t]);
 
-	const handlePasteTimings = useCallback(() => {
-		if (!copiedTimings) {
+	const handlePasteTimings = useCallback(async () => {
+		let timingToApply = copiedTimings;
+
+		// Check system clipboard for timing JSON
+		try {
+			if (navigator?.clipboard?.readText) {
+				const clipText = await navigator.clipboard.readText();
+				if (clipText) {
+					const parsed = JSON.parse(clipText);
+					if (
+						parsed &&
+						(parsed.type === "amll-timings" ||
+							(typeof parsed.startTime === "number" &&
+								typeof parsed.endTime === "number"))
+					) {
+						timingToApply = {
+							startTime: parsed.startTime,
+							endTime: parsed.endTime,
+							duration:
+								typeof parsed.duration === "number"
+									? parsed.duration
+									: Math.max(0, parsed.endTime - parsed.startTime),
+							wordTimings: Array.isArray(parsed.wordTimings)
+								? parsed.wordTimings
+								: undefined,
+						};
+						setCopiedTimings(timingToApply);
+					}
+				}
+			}
+		} catch {}
+
+		if (!timingToApply) {
 			toast.info(
 				t("ribbonBar.timingTools.noTimingsCopied", "No timings copied yet"),
 			);
@@ -185,19 +237,19 @@ export const LineTimingTools = () => {
 		editLyricLines((state) => {
 			for (const line of state.lyricLines) {
 				if (selLines.has(line.id)) {
-					line.startTime = copiedTimings.startTime;
-					line.endTime = copiedTimings.endTime;
+					line.startTime = timingToApply.startTime;
+					line.endTime = timingToApply.endTime;
 					if (
-						copiedTimings.wordTimings &&
+						timingToApply.wordTimings &&
 						line.words &&
 						line.words.length > 0
 					) {
 						const count = Math.min(
 							line.words.length,
-							copiedTimings.wordTimings.length,
+							timingToApply.wordTimings.length,
 						);
 						for (let i = 0; i < count; i++) {
-							const wt = copiedTimings.wordTimings[i];
+							const wt = timingToApply.wordTimings[i];
 							line.words[i].startTime = line.startTime + wt.relativeStart;
 							line.words[i].endTime = line.words[i].startTime + wt.duration;
 							if (wt.emptyBeat !== undefined) {
@@ -209,8 +261,8 @@ export const LineTimingTools = () => {
 				if (selWords.size > 0) {
 					for (const word of line.words) {
 						if (selWords.has(word.id)) {
-							word.startTime = copiedTimings.startTime;
-							word.endTime = copiedTimings.endTime;
+							word.startTime = timingToApply.startTime;
+							word.endTime = timingToApply.endTime;
 						}
 					}
 				}
@@ -220,7 +272,7 @@ export const LineTimingTools = () => {
 		toast.success(
 			t("ribbonBar.timingTools.pastedTimings", "Pasted timings to selection"),
 		);
-	}, [copiedTimings, editLyricLines, store, t]);
+	}, [copiedTimings, editLyricLines, setCopiedTimings, store, t]);
 
 	const handleSnapToPlayhead = useCallback(() => {
 		const currentTime = Math.round(store.get(currentTimeAtom));

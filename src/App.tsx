@@ -568,11 +568,11 @@ function App() {
 		(g) => g.id === selectedGradientId,
 	);
 
-	const [hasBackground, setHasBackground] = useState(false);
+	const [hasCustomBackground, setHasCustomBackground] = useState(false);
 	const effectiveTheme = isDarkTheme ? "dark" : "light";
 
 	useEffect(() => {
-		setHasBackground(
+		setHasCustomBackground(
 			backgroundMode !== "none" &&
 				!!(customBackgroundImage || selectedGradient),
 		);
@@ -729,7 +729,7 @@ function App() {
 			appearance={effectiveTheme}
 			data-legacy-dark-theme={legacyDarkTheme || undefined}
 			panelBackground="translucent"
-			hasBackground={hasBackground}
+			hasBackground={true}
 			accentColor={accentColor}
 			className={styles.radixTheme}
 		>
@@ -744,7 +744,7 @@ function App() {
 				<BeginnerGuide />
 				<ChecklistBackgroundSync />
 				{customStyleString ? <style>{customStyleString}</style> : null}
-				{hasBackground && (
+				{hasCustomBackground && (
 					<div className={styles.customBackgroundLayer} aria-hidden="true">
 						<div
 							className={styles.customBackgroundImage}

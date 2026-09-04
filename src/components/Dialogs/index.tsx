@@ -1,3 +1,4 @@
+import { ImportAppleTtmlDialog } from "$/modules/apple-ttml/modals/ImportAppleTtmlDialog.tsx";
 import { LatencyTestDialog } from "$/modules/audio/modals/LatencyTest.tsx";
 import { CloudFileManagerModal } from "$/modules/cloud/modals/CloudFileManagerModal.tsx";
 import { GeniusImportLyricsDialog } from "$/modules/genius/modals/GeniusImportLyricsDialog.tsx";
@@ -39,6 +40,7 @@ export const Dialogs = () => {
 			<ImportFromText />
 			<ImportFromLRCLIB />
 			<ImportLyricsDialog />
+			<ImportAppleTtmlDialog />
 			<MetadataEditor />
 			<SettingsDialog />
 			<SplitWordDialog />

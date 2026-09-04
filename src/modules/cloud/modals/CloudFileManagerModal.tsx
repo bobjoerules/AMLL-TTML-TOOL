@@ -329,13 +329,13 @@ export const CloudFileManagerModal: FC = () => {
 												<Text size="2" color="gray">
 													{searchQuery
 														? t(
-																"cloud.noSearchResults",
-																"No cloud lyrics found matching your search.",
-															)
+															"cloud.noSearchResults",
+															"No cloud lyrics found matching your search.",
+														)
 														: t(
-																"cloud.emptyLibrary",
-																"No saved lyrics in your Cloud library yet.",
-															)}
+															"cloud.emptyLibrary",
+															"No saved lyrics in your Cloud library yet.",
+														)}
 												</Text>
 												<Button
 													size="1"
@@ -504,15 +504,15 @@ export const CloudFileManagerModal: FC = () => {
 																{publishToCommunity
 																	? t("cloud.publicBadge", "Public")
 																	: t(
-																			"cloud.privateBadge",
-																			"Private (Default)",
-																		)}
+																		"cloud.privateBadge",
+																		"Private (Default)",
+																	)}
 															</Badge>
 														</Flex>
 														<Text size="1" color="gray">
 															{t(
 																"cloud.publishToCommunityDesc",
-																"Opt-in to showcase this finished song in the public library on ttml.bobjoerules.com (#finished).",
+																"Opt-in to showcase this finished song in the public library on ttml.bobjoerules.com/#finished.",
 															)}
 														</Text>
 													</Flex>

@@ -127,3 +127,41 @@ export interface GeniusArtistResponse {
 		artist: GeniusArtistDetail;
 	};
 }
+
+export interface GeniusAlbumTrack {
+	number: number;
+	song: GeniusSong;
+}
+
+export interface GeniusAlbumTracksResponse {
+	meta: {
+		status: number;
+	};
+	response: {
+		tracks: GeniusAlbumTrack[];
+		next_page?: number | null;
+	};
+}
+
+export interface GeniusAlbumSummary {
+	id: number;
+	name: string;
+	artist: string;
+	cover_art_url: string;
+}
+
+export interface GeniusAlbumResponse {
+	meta: {
+		status: number;
+	};
+	response: {
+		album: {
+			id: number;
+			name: string;
+			full_title?: string;
+			cover_art_url: string;
+			artist: GeniusArtist;
+		};
+	};
+}
+

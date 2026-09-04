@@ -3,6 +3,7 @@ import {
 	DocumentText24Regular,
 	GlobeSearch24Regular,
 	MusicNote1Regular,
+	MusicNote2Filled,
 	Search24Regular,
 } from "@fluentui/react-icons";
 import {
@@ -19,6 +20,7 @@ import { useAtom, useSetAtom } from "jotai";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
+	appleTtmlImportDialogAtom,
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
 	importFromTextDialogAtom,
@@ -28,7 +30,7 @@ import {
 import styles from "./import-lyrics-chooser.module.css";
 
 type ImportChoice = {
-	id: "plainText" | "lrclib" | "lyrically" | "genius";
+	id: "plainText" | "lrclib" | "lyrically" | "genius" | "appleTtml";
 	icon: ReactNode;
 	color: string;
 	background: string;
@@ -42,8 +44,16 @@ export function ImportLyricsChooserDialog() {
 	const setImportFromLRCLIB = useSetAtom(importFromLRCLIBDialogAtom);
 	const setImportFromLyrically = useSetAtom(lyricallyImportLyricsDialogAtom);
 	const setImportFromGenius = useSetAtom(geniusImportLyricsDialogAtom);
+	const setImportFromAppleTtml = useSetAtom(appleTtmlImportDialogAtom);
 
 	const choices: ImportChoice[] = [
+		{
+			id: "appleTtml",
+			icon: <MusicNote2Filled />,
+			color: "var(--crimson-11)",
+			background: "var(--crimson-3)",
+			open: () => setImportFromAppleTtml(true),
+		},
 		{
 			id: "plainText",
 			icon: <DocumentText24Regular />,

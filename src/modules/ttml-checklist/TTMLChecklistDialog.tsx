@@ -1,5 +1,6 @@
 import {
 	Add16Regular,
+	Album20Regular,
 	ArrowDownload16Regular,
 	ArrowSort16Regular,
 	ArrowSync16Regular,
@@ -40,7 +41,7 @@ import {
 	Tooltip,
 } from "@radix-ui/themes";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { audioCoverArtAtom } from "$/modules/audio/states";
@@ -48,7 +49,11 @@ import { GeniusApi } from "$/modules/genius/api/client";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
 import { LyricallyApi } from "$/modules/lyrically/api/client";
 import { geniusApiKeyAtom } from "$/modules/settings/states/index.ts";
+import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
+import { extractSpotifyTrackId } from "$/modules/apple-ttml/api/client";
+import { ImportAlbumModal, type AlbumTrackItem } from "./ImportAlbumModal";
 import {
+	appleTtmlImportDialogAtom,
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
 	importLyricsPrefillAtom,
@@ -61,6 +66,7 @@ import { useFileOpener } from "$/hooks/useFileOpener";
 import { loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
 import {
 	addChecklistEntry,
+	createChecklistEntry,
 	deleteChecklistEntry,
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
@@ -99,7 +105,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	const [album, setAlbum] = useState(initial?.album ?? "");
 	const [coverArt, setCoverArt] = useState(initial?.coverArt ?? "");
 	const [source, setSource] = useState<
-		"genius" | "lyrically" | "lrclib" | undefined
+		"genius" | "lyrically" | "lrclib" | "spotify" | undefined
 	>(initial?.source ?? "genius");
 	const [sourceId, setSourceId] = useState<string | number | undefined>(
 		initial?.sourceId,
@@ -179,10 +185,25 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 		setIsSearchingProvider(true);
 		setHasSearchedProvider(true);
 		setProviderResults([]);
+
+		let effectiveQuery = providerQuery.trim();
+		let spotifyTrack: import("$/modules/spotify/client").ResolvedTrack | null = null;
+		if (isSpotifyUrl(effectiveQuery)) {
+			try {
+				spotifyTrack = await SpotifyResolver.resolveTrack(effectiveQuery);
+				if (spotifyTrack) {
+					effectiveQuery = `${spotifyTrack.artist} ${spotifyTrack.title}`;
+					setProviderQuery(effectiveQuery);
+				}
+			} catch (err) {
+				console.warn("Failed to resolve Spotify track link:", err);
+			}
+		}
+
 		try {
 			let hits: ProviderSearchResult[] = [];
 			if (searchProvider === "genius") {
-				const res = await GeniusApi.search(providerQuery, geniusApiKey);
+				const res = await GeniusApi.search(effectiveQuery, geniusApiKey);
 				hits = res.response.hits.map(({ result }) => ({
 					id: result.id,
 					name: result.title,
@@ -193,7 +214,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 					source: "genius",
 				}));
 			} else if (searchProvider === "lrclib") {
-				const res = await LrcLibApi.search(providerQuery);
+				const res = await LrcLibApi.search(effectiveQuery);
 				hits = res.map((track) => ({
 					id: track.id,
 					name: track.name,
@@ -202,7 +223,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 					source: "lrclib",
 				}));
 			} else {
-				const res = await LyricallyApi.search(providerQuery);
+				const res = await LyricallyApi.search(effectiveQuery);
 				hits = res.map((track, idx) => ({
 					id: `${track.artist}-${track.name}-${idx}`,
 					name: track.name,
@@ -212,6 +233,18 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 					source: "lyrically",
 				}));
 			}
+
+			if (spotifyTrack) {
+				hits.unshift({
+					id: spotifyTrack.id,
+					name: spotifyTrack.title,
+					artist: spotifyTrack.artist,
+					album: spotifyTrack.album,
+					cover: spotifyTrack.cover,
+					source: "genius",
+				});
+			}
+
 			setProviderResults(hits);
 		} catch (err) {
 			console.error("Provider search failed:", err);
@@ -328,7 +361,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 										size="1"
 										placeholder={t(
 											"ttmlChecklist.searchProviderPlaceholder",
-											"Search song or artist...",
+											"Search song, artist, or paste Spotify track link…",
 										)}
 										value={providerQuery}
 										onChange={(e) => setProviderQuery(e.currentTarget.value)}
@@ -620,6 +653,7 @@ const ChecklistEntryCard = ({
 	onDelete,
 	onEdit,
 	onImportLyrics,
+	onImportAppleTtml,
 	onLoadCloud,
 	isLoadingCloud,
 }: {
@@ -628,6 +662,7 @@ const ChecklistEntryCard = ({
 	onDelete: () => void;
 	onEdit: (input: TTMLChecklistEntryInput) => void;
 	onImportLyrics: (entry: TTMLChecklistEntry) => void;
+	onImportAppleTtml?: (entry: TTMLChecklistEntry) => void;
 	onLoadCloud?: (docId: string) => void;
 	isLoadingCloud?: boolean;
 }) => {
@@ -732,7 +767,9 @@ const ChecklistEntryCard = ({
 										? "amber"
 										: entry.source === "lrclib"
 											? "cyan"
-											: "indigo"
+											: entry.source === "spotify"
+												? "green"
+												: "indigo"
 								}
 								variant="surface"
 								style={{
@@ -895,6 +932,33 @@ const ChecklistEntryCard = ({
 						</IconButton>
 					</Tooltip>
 
+					{/* 1-Click Apple Music TTML (when Spotify ID/link available) */}
+					{(entry.source === "spotify" ||
+						isSpotifyUrl(entry.sourceId || "") ||
+						isSpotifyUrl(entry.song || "")) && onImportAppleTtml && (
+						<Tooltip
+							content={t(
+								"ttmlChecklist.importAppleTtmlTooltip",
+								"Import word-synced TTML from Apple Music",
+							)}
+						>
+							<IconButton
+								size="2"
+								variant="soft"
+								color="crimson"
+								onClick={() => onImportAppleTtml(entry)}
+								aria-label={t("appleTtml.dialogTitle", "Import Apple Music TTML")}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								<MusicNote2Filled style={{ width: 16, height: 16 }} />
+							</IconButton>
+						</Tooltip>
+					)}
+
 					{/* Done / Reopen Button */}
 					<Tooltip
 						content={
@@ -984,6 +1048,7 @@ export const TTMLChecklistDialog = () => {
 	const setGeniusImportDialog = useSetAtom(geniusImportLyricsDialogAtom);
 	const setLyricallyImportDialog = useSetAtom(lyricallyImportLyricsDialogAtom);
 	const setLrclibImportDialog = useSetAtom(importFromLRCLIBDialogAtom);
+	const setAppleTtmlImportDialog = useSetAtom(appleTtmlImportDialogAtom);
 
 	const entries = useMemo(
 		() => normalizeChecklistEntries(storedEntries),
@@ -1035,7 +1100,7 @@ export const TTMLChecklistDialog = () => {
 			result.sort(
 				(a, b) =>
 					(b.artist || "").localeCompare(a.artist || "") ||
-					a.song.localeCompare(b.song),
+					b.song.localeCompare(a.song),
 			);
 		}
 
@@ -1045,6 +1110,44 @@ export const TTMLChecklistDialog = () => {
 	const save = (nextEntries: TTMLChecklistEntry[]) => {
 		setStoredEntries(nextEntries);
 	};
+
+	const [showAlbumImport, setShowAlbumImport] = useState(false);
+
+	const handleImportAlbumTracks = useCallback(
+		(albumTracks: AlbumTrackItem[]) => {
+			if (!albumTracks.length) return;
+
+			const existingKeys = new Set(
+				entries.map(
+					(item) => `${item.song.toLowerCase()}|${item.artist.toLowerCase()}`,
+				),
+			);
+
+			const newEntries: TTMLChecklistEntry[] = [];
+			for (const t of albumTracks) {
+				const key = `${t.song.toLowerCase()}|${t.artist.toLowerCase()}`;
+				if (!existingKeys.has(key)) {
+					existingKeys.add(key);
+					newEntries.push(
+						createChecklistEntry({
+							song: t.song,
+							artist: t.artist,
+							album: t.album,
+							coverArt: t.coverArt,
+							source: t.source,
+							sourceId: t.sourceId,
+						}),
+					);
+				}
+			}
+
+			if (newEntries.length > 0) {
+				const nextList = [...newEntries, ...entries];
+				save(nextList);
+			}
+		},
+		[entries],
+	);
 
 	const { openFile } = useFileOpener();
 	const [loadingCloudDocId, setLoadingCloudDocId] = useState<string | null>(
@@ -1076,17 +1179,26 @@ export const TTMLChecklistDialog = () => {
 	};
 
 	const handleImportLyricsForEntry = (entry: TTMLChecklistEntry) => {
-		const source = entry.source || "genius";
+		const source =
+			entry.source === "lrclib"
+				? "lrclib"
+				: entry.source === "lyrically"
+					? "lyrically"
+					: "genius";
+		const titleQuery = String(
+			entry.artist ? `${entry.artist} - ${entry.song}` : entry.song || "",
+		).trim();
+
 		setImportLyricsPrefill({
 			source,
 			track: {
-				id: entry.sourceId,
+				id: entry.sourceId ? String(entry.sourceId) : undefined,
 				name: entry.song,
 				artist: entry.artist,
 				album: entry.album,
 				cover: entry.coverArt,
 			},
-			query: entry.artist ? `${entry.artist} - ${entry.song}` : entry.song,
+			query: titleQuery,
 		});
 
 		// Open target provider dialog
@@ -1099,6 +1211,31 @@ export const TTMLChecklistDialog = () => {
 		}
 
 		// Close checklist so user sees the import review page immediately
+		setOpen(false);
+	};
+
+	const handleImportAppleTtmlForEntry = (entry: TTMLChecklistEntry) => {
+		const rawCandidate =
+			(entry.source === "spotify" ? entry.sourceId : undefined) ||
+			(isSpotifyUrl(entry.sourceId || "") ? entry.sourceId : undefined) ||
+			(isSpotifyUrl(entry.song || "") ? entry.song : undefined) ||
+			entry.sourceId ||
+			"";
+		const spotifyId = extractSpotifyTrackId(rawCandidate);
+
+		setImportLyricsPrefill({
+			source: "apple-ttml",
+			track: {
+				id: spotifyId,
+				name: entry.song,
+				artist: entry.artist,
+				album: entry.album,
+				cover: entry.coverArt,
+			},
+			query: spotifyId,
+		});
+
+		setAppleTtmlImportDialog(true);
 		setOpen(false);
 	};
 
@@ -1251,8 +1388,8 @@ export const TTMLChecklistDialog = () => {
 		<Dialog.Root open={open} onOpenChange={setOpen}>
 			<Dialog.Content
 				style={{
-					maxWidth: 820,
-					width: "min(820px, 96vw)",
+					maxWidth: 1000,
+					width: "min(1000px, 96vw)",
 					height: "640px",
 					maxHeight: "88vh",
 					borderRadius: "16px",
@@ -1337,7 +1474,7 @@ export const TTMLChecklistDialog = () => {
 							</Flex>
 						</Flex>
 
-						<Flex align="center" gap="2" wrap="wrap">
+						<Flex align="center" gap="2" wrap="nowrap" style={{ flexShrink: 0 }}>
 							{/* Cloud Pull Button */}
 							{isLoggedIn && (
 								<Tooltip
@@ -1457,6 +1594,31 @@ export const TTMLChecklistDialog = () => {
 								</IconButton>
 							</Tooltip>
 
+							{/* Import Album Button */}
+							<Tooltip
+								content={t(
+									"ttmlChecklist.importAlbumTooltip",
+									"Import full album from Genius or Spotify",
+								)}
+							>
+								<Button
+									size="2"
+									variant="surface"
+									color="gray"
+									onClick={() => setShowAlbumImport(true)}
+									style={{
+										height: "32px",
+										borderRadius: "8px",
+										cursor: "pointer",
+										marginLeft: "4px",
+									}}
+									aria-label={t("ttmlChecklist.importAlbum", "Import Album")}
+								>
+									<Album20Regular style={{ width: "16px", height: "16px" }} />
+									{t("ttmlChecklist.importAlbum", "Import Album")}
+								</Button>
+							</Tooltip>
+
 							{/* Add New Song Button */}
 							<Button
 								size="2"
@@ -1467,7 +1629,7 @@ export const TTMLChecklistDialog = () => {
 									height: "32px",
 									borderRadius: "8px",
 									cursor: "pointer",
-									marginLeft: "6px",
+									marginLeft: "4px",
 								}}
 							>
 								{showAddForm ? <Dismiss16Regular /> : <Add16Regular />}
@@ -1858,6 +2020,7 @@ export const TTMLChecklistDialog = () => {
 												save(updateChecklistEntry(entries, entry.id, input))
 											}
 											onImportLyrics={handleImportLyricsForEntry}
+											onImportAppleTtml={handleImportAppleTtmlForEntry}
 											onLoadCloud={handleLoadCloudTTML}
 											isLoadingCloud={loadingCloudDocId === entry.cloudDocId}
 										/>
@@ -1868,6 +2031,12 @@ export const TTMLChecklistDialog = () => {
 					</Flex>
 				)}
 			</Dialog.Content>
+
+			<ImportAlbumModal
+				open={showAlbumImport}
+				onOpenChange={setShowAlbumImport}
+				onImportTracks={handleImportAlbumTracks}
+			/>
 		</Dialog.Root>
 	);
 };

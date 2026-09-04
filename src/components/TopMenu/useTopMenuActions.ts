@@ -48,6 +48,7 @@ import {
 import {
 	keyDeleteSelectionAtom,
 	keyNewFileAtom,
+	keyNewWindowAtom,
 	keyOpenFileAtom,
 	keyRedoAtom,
 	keySaveFileAtom,
@@ -101,6 +102,7 @@ export const useTopMenuActions = () => {
 	const { config: segmentationConfig } = useSegmentationConfig();
 	const lyricLines = useAtomValue(lyricLinesAtom);
 	const newFileKey = useAtomValue(keyNewFileAtom);
+	const newWindowKey = useAtomValue(keyNewWindowAtom);
 	const openFileKey = useAtomValue(keyOpenFileAtom);
 	const saveFileKey = useAtomValue(keySaveFileAtom);
 	const undoKey = useAtomValue(keyUndoAtom);
@@ -172,6 +174,22 @@ export const useTopMenuActions = () => {
 		setProjectId,
 		setSaveFileName,
 	]);
+
+	const onNewWindow = useCallback(async () => {
+		if (import.meta.env.TAURI_ENV_PLATFORM) {
+			try {
+				const { invoke } = await import("@tauri-apps/api/core");
+				await invoke("create_new_window");
+			} catch (e) {
+				console.error("Failed to create new window via Tauri:", e);
+			}
+		} else {
+			window.open(
+				window.location.origin + window.location.pathname,
+				"_blank",
+			);
+		}
+	}, []);
 
 	const onOpenFile = useCallback(async () => {
 		const file = await openFileWithDialog({
@@ -624,6 +642,7 @@ export const useTopMenuActions = () => {
 
 	return {
 		newFileKey,
+		newWindowKey,
 		openFileKey,
 		saveFileKey,
 		undoKey,
@@ -636,6 +655,7 @@ export const useTopMenuActions = () => {
 		undoDisabled: !undoLyricLines.canUndo,
 		redoDisabled: !undoLyricLines.canRedo,
 		onNewFile,
+		onNewWindow,
 		onOpenFile,
 		onOpenFileFromClipboard,
 		onSaveFile,

@@ -96,6 +96,7 @@ export function DiscordPresence() {
 				setInactive(nextInactive);
 			},
 		);
+		timer.start();
 		const markActivity = (event: Event) => {
 			if (!shouldResetInactivity(event.isTrusted, document.visibilityState))
 				return;

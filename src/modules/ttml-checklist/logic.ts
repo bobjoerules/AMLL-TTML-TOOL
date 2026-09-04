@@ -7,7 +7,7 @@ export interface TTMLChecklistEntry {
 	artist: string;
 	album?: string;
 	coverArt?: string;
-	source?: "genius" | "lyrically" | "lrclib";
+	source?: "genius" | "lyrically" | "lrclib" | "spotify";
 	sourceId?: string | number;
 	sourceUrl?: string;
 	cloudDocId?: string;
@@ -22,7 +22,7 @@ export type TTMLChecklistEntryInput = {
 	artist?: string;
 	album?: string;
 	coverArt?: string;
-	source?: "genius" | "lyrically" | "lrclib";
+	source?: "genius" | "lyrically" | "lrclib" | "spotify";
 	sourceId?: string | number;
 	sourceUrl?: string;
 	cloudDocId?: string;

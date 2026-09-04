@@ -25,6 +25,7 @@ import { LrcLibApi } from "$/modules/lrclib/api/client";
 import { getGeniusHeader } from "$/modules/lyric-editor/utils/genius-sections.ts";
 import { applyReviewedSections } from "$/modules/lyric-editor/utils/section-system.ts";
 import { LyricallyApi } from "$/modules/lyrically/api/client";
+import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import {
 	geniusApiKeyAtom,
 	geniusCategorizationEnabledAtom,
@@ -190,10 +191,33 @@ export const ImportLyricsDialog = ({
 		setSelectedHit(null);
 		setEditableLyrics("");
 		setIsEditing(false);
+
+		let effectiveQuery = query.trim();
+		if (isSpotifyUrl(effectiveQuery)) {
+			try {
+				const resolved = await SpotifyResolver.resolveTrack(effectiveQuery);
+				if (resolved) {
+					effectiveQuery = `${resolved.artist} ${resolved.title}`;
+					setQuery(effectiveQuery);
+					toast.info(
+						t(
+							"lyricsImport.spotifyDetected",
+							"Spotify track detected: {track}",
+							{
+								track: `${resolved.artist} – ${resolved.title}`,
+							},
+						),
+					);
+				}
+			} catch (err) {
+				console.warn("Failed to resolve Spotify track link:", err);
+			}
+		}
+
 		try {
 			const hits: ImportTrack[] =
 				source === "genius"
-					? (await GeniusApi.search(query, geniusApiKey)).response.hits.map(
+					? (await GeniusApi.search(effectiveQuery, geniusApiKey)).response.hits.map(
 							({ result }) => ({
 								id: result.id,
 								name: result.title,
@@ -303,12 +327,12 @@ export const ImportLyricsDialog = ({
 			if (prefill && prefill.source === source) {
 				const currentPrefill = prefill;
 				setPrefill(null);
-				const searchQuery = (
-					currentPrefill.query ||
+				const rawQuery =
+					currentPrefill.query ??
 					(currentPrefill.track
 						? `${currentPrefill.track.artist ? `${currentPrefill.track.artist} - ` : ""}${currentPrefill.track.name}`
-						: "")
-				).trim();
+						: "");
+				const searchQuery = String(rawQuery || "").trim();
 
 				if (searchQuery) {
 					setQuery(searchQuery);
@@ -1130,7 +1154,10 @@ export const ImportLyricsDialog = ({
 					<TextField.Root
 						ref={inputRef}
 						style={{ flex: 1 }}
-						placeholder={t("genius.searchPlaceholder", "Artist – Song title…")}
+						placeholder={t(
+							"genius.searchPlaceholderWithLink",
+							"Artist – Song title, or paste Spotify link…",
+						)}
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}

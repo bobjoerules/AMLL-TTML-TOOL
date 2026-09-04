@@ -36,6 +36,10 @@
 			"genius": {
 				"title": "Genius",
 				"description": "Search Genius for lyrics and songwriter information using your access token."
+			},
+			"appleTtml": {
+				"title": "Apple Music TTML",
+				"description": "Import pre-existing word-timed Apple Music TTML lyrics directly using a Spotify track link or ID."
 			}
 		}
 	},
@@ -560,6 +564,7 @@
 			"editMetadata": "Edit lyrics metadata…",
 			"edit": "Edit",
 			"newLyric": "New lyrics",
+			"newWindow": "New window",
 			"openLyric": "Open lyrics",
 			"openFromClipboard": "Open TTML from clipboard",
 			"saveLyric": "Save lyrics",
@@ -581,6 +586,7 @@
 			"tool": "Tools",
 			"importLyric": {
 				"import": "Import lyrics",
+				"fromAppleTtml": "Import from Apple Music TTML (Spotify)…",
 				"fromPlainText": "Import from plain text…",
 				"fromLRCLIB": "Import from LRCLIB...",
 				"fromLyrically": "Import from Lyrically...",
@@ -656,6 +662,7 @@
 		},
 		"keybindings": {
 			"newFile": "New File",
+			"newWindow": "New Window",
 			"openFile": "Open File",
 			"saveFile": "Save File",
 			"undo": "Undo",
@@ -1365,5 +1372,31 @@
 		"audioDownloadFailed": "Loaded TTML, but could not download attached audio.",
 		"deletedSuccess": "Deleted \"{title}\" from Cloud.",
 		"confirmDelete": "Are you sure you want to delete \"{title}\" from your Cloud library?"
+	},
+	"appleTtml": {
+		"dialogTitle": "Import Apple Music TTML",
+		"dialogDescription": "Import pre-existing word-timed TTML lyrics directly from Apple Music using a Spotify track link or ID.",
+		"searchPlaceholder": "Paste Spotify link, track ID, or search title & artist...",
+		"fetchLyrics": "Fetch TTML",
+		"fetchingTtml": "Retrieving Apple Music TTML with word timestamps...",
+		"searchingTracks": "Searching Spotify tracks...",
+		"backToResults": "Back to search results",
+		"badgeWordSynced": "Word-Synced TTML",
+		"badgeLineSynced": "Line-Synced",
+		"badgeSyncedLyrics": "Time Synced",
+		"badgeNoSyncedLyrics": "Plain Lyrics Only",
+		"badgeDuet": "Duet",
+		"previewLyrics": "Lyrics Preview:",
+		"ttmlAvailable": "[Word-timed Apple Music TTML data loaded]",
+		"importIntoEditor": "Import TTML into Editor",
+		"selectTrack": "Select a track to fetch Apple Music TTML:",
+		"guideTitle": "Quick TTML Import",
+		"guideText": "Copy a track link from Spotify (e.g. open.spotify.com/track/...) or enter a song name above to retrieve word-timed Apple Music TTML.",
+		"importSuccess": "Imported Apple Music TTML with full timings successfully!",
+		"fetchError": "Failed to fetch Apple Music TTML.",
+		"searchError": "Failed to search songs.",
+		"noResults": "No songs found for your search.",
+		"noLyricsFound": "No time-synced lyrics or TTML found for this song.",
+		"parseError": "Failed to parse imported TTML."
 	}
 }

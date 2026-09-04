@@ -21,6 +21,7 @@ import {
 	keyAutoSegmentAtom,
 	keyDeleteSelectionAtom,
 	keyNewFileAtom,
+	keyNewWindowAtom,
 	keyOpenFileAtom,
 	keyRedoAtom,
 	keySaveFileAtom,
@@ -79,6 +80,7 @@ export const TopMenu: FC = () => {
 	}, [autoSegmentDoublePress, menu.onQuickAutoSegment]);
 
 	useKeyBindingAtom(keyNewFileAtom, menu.onNewFile, [menu.onNewFile]);
+	useKeyBindingAtom(keyNewWindowAtom, menu.onNewWindow, [menu.onNewWindow]);
 	useKeyBindingAtom(keyOpenFileAtom, menu.onOpenFile, [menu.onOpenFile]);
 	useKeyBindingAtom(keySaveFileAtom, menu.onSaveFile, [menu.onSaveFile]);
 	useKeyBindingAtom(keyUndoAtom, menu.onUndo, [menu.onUndo]);
@@ -157,6 +159,15 @@ export const TopMenu: FC = () => {
 				e.preventDefault();
 				e.stopPropagation();
 				menuRef.current.onOpenTTMLChecklist();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "n" &&
+				e.shiftKey &&
+				!e.altKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onNewWindow();
 			}
 		};
 		window.addEventListener("keydown", onKeyDown, { capture: true });
@@ -179,6 +190,7 @@ export const TopMenu: FC = () => {
 			if (isCleanedUp) return;
 			const mappings: Record<string, () => void> = {
 				"menu-new-file": () => menuRef.current.onNewFile(),
+				"menu-new-window": () => menuRef.current.onNewWindow(),
 				"menu-open-file": () => menuRef.current.onOpenFile(),
 				"menu-cloud-open": () => menuRef.current.onOpenFromCloud(),
 				"menu-save-file": () => menuRef.current.onSaveFile(),

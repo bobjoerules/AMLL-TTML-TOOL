@@ -53,6 +53,7 @@ export const whatsNewDialogAtom = atom(false);
 export const geniusImportLyricsDialogAtom = atom(false);
 export const fontSelectionDialogAtom = atom(false);
 export const lyricallyImportLyricsDialogAtom = atom(false);
+export const appleTtmlImportDialogAtom = atom(false);
 export const timeShiftPreviewOffsetAtom = atom(0);
 export const timeShiftPreviewActiveAtom = atom(false);
 export const timeShiftPreviewScopeAtom = atom<
@@ -77,7 +78,7 @@ export const suggestedSplitsDialogAtom = atom<{
 }>({ open: false });
 
 export interface ImportLyricsPrefill {
-	source: "genius" | "lyrically" | "lrclib";
+	source: "genius" | "lyrically" | "lrclib" | "apple-ttml" | "spotify";
 	query?: string;
 	track?: {
 		id?: string | number;

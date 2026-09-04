@@ -38,13 +38,12 @@ const openExternal = async (url: string) => {
 
 export const SettingsAboutTab = () => {
 	const { t } = useTranslation();
-	const { status, update, progress, installUpdate } = useAppUpdate();
+	const { status, update, progress, installUpdate, checkUpdate } = useAppUpdate();
 	const [cacheConfirmationOpen, setCacheConfirmationOpen] = useState(false);
 	const [recoveryAction, setRecoveryAction] = useState<
 		"refresh" | "clear" | null
 	>(null);
 
-	const showUpdateCard = ["available", "downloading", "ready"].includes(status);
 	const isWebsite = !import.meta.env.TAURI_ENV_PLATFORM;
 
 	const handleForceRefresh = async () => {
@@ -79,6 +78,146 @@ export const SettingsAboutTab = () => {
 					)}
 				</Text>
 			</Flex>
+
+			{/* Software Update at top (Desktop) */}
+			{!isWebsite && (
+				<Card>
+					<Flex direction="column" gap="3">
+						<Flex align="center" justify="between" wrap="wrap" gap="2">
+							<Flex align="center" gap="2">
+								<Heading size="3">
+									{t("settings.about.update", "Software Update")}
+								</Heading>
+								{status === "available" && (
+									<Badge color="ruby">
+										{t("settings.about.newVersion", "New Version")}
+									</Badge>
+								)}
+								{status === "up-to-date" && (
+									<Badge color="green">
+										{t("settings.about.upToDate", "Up to date")}
+									</Badge>
+								)}
+							</Flex>
+
+							<Flex gap="2">
+								{status === "available" && (
+									<Button onClick={installUpdate}>
+										<CloudArrowDown24Regular />
+										{t("settings.about.updateNow", "Update Now")}
+									</Button>
+								)}
+								{status === "ready" && (
+									<Button onClick={() => window.location.reload()}>
+										{t("settings.about.restart", "Restart Application")}
+									</Button>
+								)}
+								{["idle", "up-to-date", "error"].includes(status) && (
+									<Button
+										variant="soft"
+										onClick={() => checkUpdate(false)}
+										disabled={status === "checking"}
+									>
+										<CloudArrowDown24Regular />
+										{t("settings.about.checkUpdate", "Check for Updates")}
+									</Button>
+								)}
+							</Flex>
+						</Flex>
+
+						<Box>
+							{status === "available" && update && (
+								<Flex direction="column" gap="3">
+									<Flex
+										direction="column"
+										gap="1"
+										style={{
+											padding: "8px",
+											background: "var(--gray-3)",
+											borderRadius: "6px",
+										}}
+									>
+										<Text weight="bold" size="2">
+											{update.version}
+										</Text>
+										<Text size="1" style={{ whiteSpace: "pre-wrap" }}>
+											{update.body}
+										</Text>
+									</Flex>
+								</Flex>
+							)}
+
+							{status === "downloading" && (
+								<Flex direction="column" gap="2">
+									<Flex justify="between">
+										<Text size="2">
+											{t("settings.about.downloading", "Downloading update...")}
+										</Text>
+										<Text size="2">{progress.toFixed(0)}%</Text>
+									</Flex>
+									<Progress value={progress} />
+								</Flex>
+							)}
+
+							{status === "ready" && (
+								<Flex align="center" gap="2">
+									<CheckmarkCircle24Regular color="var(--ruby-9)" />
+									<Text size="2">
+										{t(
+											"settings.about.ready",
+											"Update ready, restart application to apply",
+										)}
+									</Text>
+								</Flex>
+							)}
+
+							{status === "checking" && (
+								<Text size="2" color="gray">
+									{t("settings.about.checking", "Checking for updates...")}
+								</Text>
+							)}
+						</Box>
+					</Flex>
+				</Card>
+			)}
+
+			{/* Website Update at top (Browser PWA) */}
+			{isWebsite && (
+				<Card>
+					<Flex direction="column" gap="3">
+						<Flex align="center" justify="between" wrap="wrap" gap="2">
+							<Heading size="3">
+								{t("settings.about.websiteUpdate", "Website Update")}
+							</Heading>
+							<Flex gap="2">
+								<Button
+									onClick={handleForceRefresh}
+									disabled={recoveryAction !== null}
+								>
+									{t("settings.about.forceRefresh", "Update Website Now")}
+								</Button>
+								<Button
+									variant="soft"
+									color="red"
+									onClick={() => setCacheConfirmationOpen(true)}
+									disabled={recoveryAction !== null}
+								>
+									{t(
+										"settings.about.clearWebsiteCache",
+										"Clear Cache",
+									)}
+								</Button>
+							</Flex>
+						</Flex>
+						<Text size="2" color="gray">
+							{t(
+								"settings.about.websiteUpdateDescription",
+								"Refresh the website to retrieve the latest version if an update prompt did not appear.",
+							)}
+						</Text>
+					</Flex>
+				</Card>
+			)}
 
 			<Card>
 				<Flex direction="column" gap="3">
@@ -260,41 +399,6 @@ export const SettingsAboutTab = () => {
 				</Flex>
 			</Card>
 
-			{isWebsite && (
-				<Card>
-					<Flex direction="column" gap="3">
-						<Heading size="3">
-							{t("settings.about.websiteUpdate", "Website Update")}
-						</Heading>
-						<Text size="2" color="gray">
-							{t(
-								"settings.about.websiteUpdateDescription",
-								"Refresh the website to retrieve the latest version if an update prompt did not appear.",
-							)}
-						</Text>
-						<Flex gap="3" wrap="wrap">
-							<Button
-								onClick={handleForceRefresh}
-								disabled={recoveryAction !== null}
-							>
-								{t("settings.about.forceRefresh", "Force refresh")}
-							</Button>
-							<Button
-								variant="soft"
-								color="red"
-								onClick={() => setCacheConfirmationOpen(true)}
-								disabled={recoveryAction !== null}
-							>
-								{t(
-									"settings.about.clearWebsiteCache",
-									"Clear cached website data",
-								)}
-							</Button>
-						</Flex>
-					</Flex>
-				</Card>
-			)}
-
 			<AlertDialog.Root
 				open={cacheConfirmationOpen}
 				onOpenChange={setCacheConfirmationOpen}
@@ -373,81 +477,6 @@ export const SettingsAboutTab = () => {
 					</Flex>
 				</Flex>
 			</Card>
-
-			{showUpdateCard && (
-				<Card>
-					<Flex direction="column" gap="3">
-						<Flex align="center" gap="2">
-							<Heading size="3">
-								{t("settings.about.update", "Software Update")}
-							</Heading>
-							{status === "available" && (
-								<Badge color="ruby">
-									{t("settings.about.newVersion", "New Version")}
-								</Badge>
-							)}
-						</Flex>
-
-						<Box>
-							{status === "available" && update && (
-								<Flex direction="column" gap="3">
-									<Flex
-										direction="column"
-										gap="1"
-										style={{
-											padding: "8px",
-											background: "var(--gray-3)",
-											borderRadius: "6px",
-										}}
-									>
-										<Text weight="bold" size="2">
-											{update.version}
-										</Text>
-										<Text size="1" style={{ whiteSpace: "pre-wrap" }}>
-											{update.body}
-										</Text>
-									</Flex>
-									<Flex gap="3">
-										<Button onClick={installUpdate}>
-											<CloudArrowDown24Regular />
-											{t("settings.about.updateNow", "Update Now")}
-										</Button>
-									</Flex>
-								</Flex>
-							)}
-
-							{status === "downloading" && (
-								<Flex direction="column" gap="2">
-									<Flex justify="between">
-										<Text size="2">
-											{t("settings.about.downloading", "Downloading update...")}
-										</Text>
-										<Text size="2">{progress.toFixed(0)}%</Text>
-									</Flex>
-									<Progress value={progress} />
-								</Flex>
-							)}
-
-							{status === "ready" && (
-								<Flex direction="column" gap="2">
-									<Flex align="center" gap="2">
-										<CheckmarkCircle24Regular color="var(--ruby-9)" />
-										<Text size="2">
-											{t(
-												"settings.about.ready",
-												"Update ready, restart application to apply",
-											)}
-										</Text>
-									</Flex>
-									<Button onClick={() => window.location.reload()}>
-										{t("settings.about.restart", "Restart Application")}
-									</Button>
-								</Flex>
-							)}
-						</Box>
-					</Flex>
-				</Card>
-			)}
 		</Flex>
 	);
 };
