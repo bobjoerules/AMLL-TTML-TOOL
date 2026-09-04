@@ -107,11 +107,6 @@ export const SettingsAboutTab = () => {
 										{t("settings.about.updateNow", "Update Now")}
 									</Button>
 								)}
-								{status === "ready" && (
-									<Button onClick={() => window.location.reload()}>
-										{t("settings.about.restart", "Restart Application")}
-									</Button>
-								)}
 								{["idle", "up-to-date", "error"].includes(status) && (
 									<Button
 										variant="soft"

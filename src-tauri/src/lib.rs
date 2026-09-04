@@ -254,7 +254,8 @@ fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
         .as_millis();
     let window_id = format!("window-{}", timestamp);
 
-    let builder = tauri::WebviewWindowBuilder::new(
+    #[allow(unused_mut)]
+    let mut builder = tauri::WebviewWindowBuilder::new(
         &app,
         &window_id,
         tauri::WebviewUrl::App("index.html".into()),
@@ -266,12 +267,20 @@ fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
     .devtools(true)
     .visible(false);
 
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder
+            .hidden_title(true)
+            .title_bar_style(tauri::TitleBarStyle::Overlay);
+    }
+
     let webview_window = builder.build().map_err(|e| e.to_string())?;
 
     #[cfg(target_os = "macos")]
     {
         use tauri_plugin_decorum::WebviewWindowExt;
         let _ = webview_window.set_traffic_lights_inset(16.0, 20.0);
+        let _ = webview_window.make_transparent();
         let win_clone = webview_window.clone();
         webview_window.on_window_event(move |evt| {
             if let tauri::WindowEvent::Resized(_) = evt {

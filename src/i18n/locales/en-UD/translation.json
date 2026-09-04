@@ -281,7 +281,7 @@
 			"newVersion": "New version",
 			"updateNow": "Update now",
 			"downloading": "Downloading update...",
-			"ready": "Update is ready. Restart the application for it to take effect.",
+			"ready": "Update is ready. Fully restart the application for it to take effect.",
 			"restart": "Restart"
 		},
 		"appearance": {
