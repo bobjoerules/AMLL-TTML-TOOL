@@ -20,6 +20,7 @@ import {
 	lyricTextNormalizationOptionsAtom,
 } from "$/modules/settings/states";
 import {
+	appleTtmlImportDialogAtom,
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
 	importFromTextDialogAtom,
@@ -37,6 +38,7 @@ export const ImportExportLyric = () => {
 	const setImportFromLRCLIBDialog = useSetAtom(importFromLRCLIBDialogAtom);
 	const setGeniusImportLyricsDialog = useSetAtom(geniusImportLyricsDialogAtom);
 	const setLyricallyImportDialog = useSetAtom(lyricallyImportLyricsDialogAtom);
+	const setAppleTtmlImportDialog = useSetAtom(appleTtmlImportDialogAtom);
 	const { openFile } = useFileOpener();
 	const { t } = useTranslation();
 
@@ -173,6 +175,12 @@ export const ImportExportLyric = () => {
 					{t("topBar.menu.importLyric.import", "导入歌词...")}
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent>
+					<DropdownMenu.Item onClick={() => setAppleTtmlImportDialog(true)}>
+						{t(
+							"topBar.menu.importLyric.fromAppleTtml",
+							"From Apple Music TTML (Spotify)...",
+						)}
+					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => setImportFromTextDialog(true)}>
 						{t("topBar.menu.importLyric.fromPlainText", "从纯文本导入")}
 					</DropdownMenu.Item>

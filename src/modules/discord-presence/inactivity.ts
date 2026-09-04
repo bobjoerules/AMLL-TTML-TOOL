@@ -29,9 +29,17 @@ export class InactivityTimer {
 		this.schedule();
 	}
 
+	reset() {
+		this.activity();
+	}
+
 	stop() {
 		if (this.timer) clearTimeout(this.timer);
 		this.timer = null;
+	}
+
+	cancel() {
+		this.stop();
 	}
 
 	private schedule() {

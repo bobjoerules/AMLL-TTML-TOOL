@@ -15,6 +15,7 @@ import {
 	cmdMovePrevWord,
 	cmdMovePrevWordAndPlay,
 	cmdNewFile,
+	cmdNewWindow,
 	cmdOpenFile,
 	cmdPlaybackRateDown,
 	cmdPlaybackRateReset,
@@ -51,6 +52,7 @@ export type KeyBindingAtom = WritableAtom<
 >;
 
 export const keyNewFileAtom = cmdNewFile.atom;
+export const keyNewWindowAtom = cmdNewWindow.atom;
 export const keyOpenFileAtom = cmdOpenFile.atom;
 export const keySaveFileAtom = cmdSaveFile.atom;
 

@@ -245,6 +245,79 @@ fn get_open_file_data() -> Option<OpenFileData> {
     None
 }
 
+#[tauri::command]
+fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+    let window_id = format!("window-{}", timestamp);
+
+    let builder = tauri::WebviewWindowBuilder::new(
+        &app,
+        &window_id,
+        tauri::WebviewUrl::App("index.html".into()),
+    )
+    .title("")
+    .inner_size(800.0, 600.0)
+    .min_inner_size(640.0, 480.0)
+    .resizable(true)
+    .devtools(true)
+    .visible(false);
+
+    let webview_window = builder.build().map_err(|e| e.to_string())?;
+
+    #[cfg(target_os = "macos")]
+    {
+        use tauri_plugin_decorum::WebviewWindowExt;
+        let _ = webview_window.set_traffic_lights_inset(16.0, 20.0);
+        let win_clone = webview_window.clone();
+        webview_window.on_window_event(move |evt| {
+            if let tauri::WindowEvent::Resized(_) = evt {
+                let _ = win_clone.set_traffic_lights_inset(16.0, 20.0);
+            }
+        });
+    }
+
+    let fallback_window = webview_window.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(1500));
+        if let Ok(is_visible) = fallback_window.is_visible() {
+            if !is_visible {
+                let _ = fallback_window.show();
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn fetch_apple_ttml(url: String) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .timeout(std::time::Duration::from_secs(20))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let resp = client.get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Network request failed: {e}"))?;
+
+    let status = resp.status();
+    if !status.is_success() {
+        if status.as_u16() == 404 {
+            return Err("Track or lyrics not found for this Spotify ID.".to_string());
+        }
+        return Err(format!("Server returned HTTP {}", status.as_u16()));
+    }
+
+    let body = resp.text().await.map_err(|e| e.to_string())?;
+    Ok(body)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[allow(clippy::missing_panics_doc)]
 pub fn run() {
@@ -306,12 +379,14 @@ pub fn run() {
                 // 2. File menu
                 let file_menu = Submenu::new(app, "File", true)?;
                 let new_file_item = MenuItem::with_id(app, "menu-new-file", "New File", true, Some("CmdOrCtrl+N"))?;
+                let new_window_item = MenuItem::with_id(app, "menu-new-window", "New Window", true, Some("CmdOrCtrl+Shift+N"))?;
                 let open_file_item = MenuItem::with_id(app, "menu-open-file", "Open File...", true, Some("CmdOrCtrl+O"))?;
                 let open_cloud_item = MenuItem::with_id(app, "menu-cloud-open", "Open from Cloud...", true, Some("CmdOrCtrl+Shift+O"))?;
                 let save_file_item = MenuItem::with_id(app, "menu-save-file", "Save File", true, Some("CmdOrCtrl+S"))?;
                 let save_cloud_item = MenuItem::with_id(app, "menu-cloud-save", "Save to Cloud...", true, Some("CmdOrCtrl+Shift+S"))?;
                 let metadata_item = MenuItem::with_id(app, "menu-metadata", "Metadata Editor...", true, None::<&str>)?;
                 file_menu.append(&new_file_item)?;
+                file_menu.append(&new_window_item)?;
                 file_menu.append(&open_file_item)?;
                 file_menu.append(&open_cloud_item)?;
                 file_menu.append(&PredefinedMenuItem::separator(app)?)?;
@@ -393,9 +468,11 @@ pub fn run() {
                 app.set_menu(menu)?;
 
                 let app_handle_clone = handle.clone();
-                app.on_menu_event(move |_app, event| {
+                app.on_menu_event(move |app_h, event| {
                     let id = event.id().0.as_str();
-                    if id.starts_with("menu-") {
+                    if id == "menu-new-window" {
+                        let _ = create_new_window(app_h.clone());
+                    } else if id.starts_with("menu-") {
                         let _ = app_handle_clone.emit(id, ());
                     }
                 });
@@ -438,6 +515,8 @@ pub fn run() {
             convert_audio_mp3_to_flac,
             set_discord_activity,
             clear_discord_activity,
+            create_new_window,
+            fetch_apple_ttml,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -6,12 +6,18 @@
 	font-weight: 400;
 
 	color: var(--gray-12);
-	background-color: transparent;
+	background-color: var(--color-background, #060607);
 
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background-color: var(--color-background, #060607);
 }
 
 .radix-themes {

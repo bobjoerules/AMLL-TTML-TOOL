@@ -16,6 +16,13 @@ export const cmdNewFile = registerCommand(
 	"File",
 );
 
+export const cmdNewWindow = registerCommand(
+	"newWindow",
+	[CONTROL_KEY, "Shift", "KeyN"],
+	t("settingsDialog.keybindings.newWindow"),
+	"File",
+);
+
 export const cmdOpenFile = registerCommand(
 	"openFile",
 	[CONTROL_KEY, "KeyO"],

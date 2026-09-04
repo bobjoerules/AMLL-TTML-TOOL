@@ -26,6 +26,12 @@ const FileMenuItems = () => {
 				<Trans i18nKey="topBar.menu.newLyric">New lyrics</Trans>
 			</DropdownMenu.Item>
 			<DropdownMenu.Item
+				onSelect={menu.onNewWindow}
+				shortcut={getShortcut(menu.newWindowKey)}
+			>
+				<Trans i18nKey="topBar.menu.newWindow">New window</Trans>
+			</DropdownMenu.Item>
+			<DropdownMenu.Item
 				onSelect={menu.onOpenFile}
 				shortcut={getShortcut(menu.openFileKey)}
 			>

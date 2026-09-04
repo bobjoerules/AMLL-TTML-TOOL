@@ -183,4 +183,117 @@ export const GeniusApi = {
 			throw error;
 		}
 	},
+
+	/**
+	 * Get detailed information about an album by ID
+	 * @param id The Genius album ID
+	 * @param apiKey The Genius API key
+	 * @returns The album detail response
+	 */
+	async getAlbumById(
+		id: number,
+		apiKey: string,
+	): Promise<import("../types").GeniusAlbumResponse> {
+		try {
+			const response = await fetch(
+				`${BASE_URL}/albums/${id}?access_token=${apiKey}`,
+			);
+			if (!response.ok) {
+				throw new Error(
+					`Genius Get Album failed: ${response.status} ${response.statusText}`,
+				);
+			}
+			return (await response.json()) as import("../types").GeniusAlbumResponse;
+		} catch (error) {
+			console.error("Genius API Error (GetAlbumById):", error);
+			throw error;
+		}
+	},
+
+	/**
+	 * Get all tracks for a Genius album by ID
+	 * @param id The Genius album ID
+	 * @param apiKey The Genius API key
+	 * @returns An array of tracks in the album
+	 */
+	async getAlbumTracks(
+		id: number,
+		apiKey: string,
+	): Promise<import("../types").GeniusAlbumTrack[]> {
+		const allTracks: import("../types").GeniusAlbumTrack[] = [];
+		let page = 1;
+		const maxPages = 5; // Safety bound (up to 250 tracks)
+
+		try {
+			while (page <= maxPages) {
+				const response = await fetch(
+					`${BASE_URL}/albums/${id}/tracks?page=${page}&per_page=50&access_token=${apiKey}`,
+				);
+				if (!response.ok) {
+					throw new Error(
+						`Genius Get Album Tracks failed: ${response.status} ${response.statusText}`,
+					);
+				}
+				const data =
+					(await response.json()) as import("../types").GeniusAlbumTracksResponse;
+				const tracks = data.response.tracks || [];
+				allTracks.push(...tracks);
+
+				if (!data.response.next_page || tracks.length === 0) {
+					break;
+				}
+				page = data.response.next_page;
+			}
+			return allTracks;
+		} catch (error) {
+			console.error("Genius API Error (GetAlbumTracks):", error);
+			throw error;
+		}
+	},
+
+	/**
+	 * Search for albums on Genius by querying songs and aggregating distinct albums
+	 * @param query Album search query
+	 * @param apiKey The Genius API key
+	 * @returns A list of unique albums
+	 */
+	async searchAlbums(
+		query: string,
+		apiKey: string,
+	): Promise<import("../types").GeniusAlbumSummary[]> {
+		if (!query.trim()) return [];
+
+		// Check if the query is a direct Genius album URL
+		const albumUrlMatch = query.match(/genius\.com\/albums\/([^/]+)\/([^/?#]+)/i);
+		if (albumUrlMatch) {
+			// Search the slug parts to locate matching album
+			const cleanSlug = `${albumUrlMatch[1]} ${albumUrlMatch[2]}`.replace(
+				/-/g,
+				" ",
+			);
+			query = cleanSlug;
+		}
+
+		const searchRes = await this.search(query, apiKey);
+		const hits = searchRes.response.hits || [];
+		const albumsMap = new Map<number, import("../types").GeniusAlbumSummary>();
+
+		for (const hit of hits) {
+			const song = hit.result;
+			if (song.album && song.album.id && !albumsMap.has(song.album.id)) {
+				albumsMap.set(song.album.id, {
+					id: song.album.id,
+					name: song.album.name,
+					artist: song.primary_artist?.name || song.artist_names || "Unknown",
+					cover_art_url:
+						song.album.cover_art_url ||
+						song.song_art_image_url ||
+						song.header_image_url ||
+						"",
+				});
+			}
+		}
+
+		return Array.from(albumsMap.values());
+	},
 };

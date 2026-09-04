@@ -196,4 +196,7 @@ export interface CopiedTimingsData {
 	}[];
 }
 
-export const copiedTimingsAtom = atom<CopiedTimingsData | null>(null);
+export const copiedTimingsAtom = atomWithStorage<CopiedTimingsData | null>(
+	"amll_copied_timings",
+	null,
+);

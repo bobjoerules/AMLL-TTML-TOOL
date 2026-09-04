@@ -51,4 +51,18 @@ describe("InactivityTimer", () => {
 		vi.advanceTimersByTime(100);
 		expect(onChange).not.toHaveBeenCalled();
 	});
+
+	it("supports reset() and cancel() aliases", () => {
+		vi.useFakeTimers();
+		const onChange = vi.fn();
+		const timer = new InactivityTimer(100, onChange);
+		timer.start();
+		vi.advanceTimersByTime(50);
+		timer.reset();
+		vi.advanceTimersByTime(50);
+		expect(onChange).not.toHaveBeenCalled();
+		timer.cancel();
+		vi.advanceTimersByTime(100);
+		expect(onChange).not.toHaveBeenCalled();
+	});
 });

@@ -527,6 +527,7 @@
 			"editMetadata": "编辑歌词元数据...",
 			"edit": "编辑",
 			"newLyric": "新建歌词",
+			"newWindow": "新建窗口",
 			"openLyric": "打开歌词",
 			"openFromClipboard": "从剪贴板打开 TTML",
 			"saveLyric": "保存歌词",
@@ -547,6 +548,7 @@
 			"tool": "工具",
 			"importLyric": {
 				"import": "导入歌词",
+				"fromAppleTtml": "从 Apple Music TTML (Spotify) 导入…",
 				"fromPlainText": "从纯文本导入...",
 				"fromLRCLIB": "从 LRCLIB 导入...",
 				"fromLyrically": "从 Lyrically 导入...",
@@ -618,6 +620,7 @@
 		},
 		"keybindings": {
 			"newFile": "新建文件",
+			"newWindow": "新建窗口",
 			"openFile": "打开文件",
 			"saveFile": "保存文件",
 			"undo": "撤销",
@@ -1307,5 +1310,57 @@
 		"audioDownloadFailed": "已加载 TTML 歌词，但下载关联音频失败。",
 		"deletedSuccess": "已从云端删除 \"{title}\"。",
 		"confirmDelete": "确定要从云端资料库中删除 \"{title}\" 吗？"
+	},
+	"importChooser": {
+		"title": "导入歌词",
+		"description": "请选择导入歌词的来源方式。",
+		"options": {
+			"plainText": {
+				"title": "纯文本",
+				"description": "粘贴歌词并自定义行、翻译、音译和分词方式。"
+			},
+			"lrclib": {
+				"title": "LRCLIB",
+				"description": "通过歌曲和歌手名搜索 LRCLIB 上的同步或纯文本歌词。"
+			},
+			"lyrically": {
+				"title": "Lyrically",
+				"description": "搜索 Lyrically 歌词源，无需设置 Genius 访问令牌。"
+			},
+			"genius": {
+				"title": "Genius",
+				"description": "使用 Access Token 搜索 Genius 歌词及词曲作者信息。"
+			},
+			"appleTtml": {
+				"title": "Apple Music TTML",
+				"description": "通过 Spotify 链接或歌曲 ID 直接导入 Apple Music 逐字时间轴 TTML 歌词。"
+			}
+		}
+	},
+	"appleTtml": {
+		"dialogTitle": "导入 Apple Music TTML",
+		"dialogDescription": "使用 Spotify 歌曲链接或 ID 直接从 Apple Music 导入带有逐字时间轴的 TTML 歌词。",
+		"searchPlaceholder": "粘贴 Spotify 歌曲链接、ID 或搜索歌曲名和歌手...",
+		"fetchLyrics": "获取 TTML",
+		"fetchingTtml": "正在获取带有逐字时间戳的 Apple Music TTML...",
+		"searchingTracks": "正在搜索 Spotify 曲目...",
+		"backToResults": "返回搜索结果",
+		"badgeWordSynced": "逐字时间轴 TTML",
+		"badgeLineSynced": "逐行时间轴",
+		"badgeSyncedLyrics": "时间同步",
+		"badgeNoSyncedLyrics": "纯文本歌词",
+		"badgeDuet": "对唱",
+		"previewLyrics": "歌词预览：",
+		"ttmlAvailable": "[已加载逐字时间轴 Apple Music TTML 数据]",
+		"importIntoEditor": "导入 TTML 到编辑器",
+		"selectTrack": "选择一首曲目以获取 Apple Music TTML：",
+		"guideTitle": "快速导入 TTML",
+		"guideText": "复制 Spotify 歌曲链接（例如 open.spotify.com/track/...）或在上方输入歌名，即可获取 Apple Music 原生逐字 TTML。",
+		"importSuccess": "已成功导入完整时间轴的 Apple Music TTML！",
+		"fetchError": "获取 Apple Music TTML 失败。",
+		"searchError": "搜索歌曲失败。",
+		"noResults": "未找到相关歌曲。",
+		"noLyricsFound": "该歌曲暂无同步歌词或 TTML。",
+		"parseError": "解析 TTML 失败。"
 	}
 }
