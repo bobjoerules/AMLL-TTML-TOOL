@@ -56,6 +56,22 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.2.2
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 3, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Windows Multi-Window Support:</b> Added complete multi-window support for Windows, matching the frameless, translucent, and Mica/Tabbed styling with custom controls and centered window placement.
+								</Text>
+								<Text size="2">
+									• <b>Windows Image Loading:</b> Resolved an issue where external album art and images were blocked on Windows by switching COEP to <code>credentialless</code> and updating asset protocol permissions.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.2.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

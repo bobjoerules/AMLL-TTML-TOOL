@@ -430,6 +430,8 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 														<img
 															src={hit.cover}
 															alt={hit.name}
+															crossOrigin="anonymous"
+															referrerPolicy="no-referrer"
 															style={{
 																width: "28px",
 																height: "28px",
@@ -509,6 +511,8 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 									<img
 										src={coverArt}
 										alt={song || "Cover Art"}
+										crossOrigin="anonymous"
+										referrerPolicy="no-referrer"
 										style={{
 											width: "100%",
 											height: "100%",
