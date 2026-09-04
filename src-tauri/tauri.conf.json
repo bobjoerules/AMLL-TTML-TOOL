@@ -1,7 +1,7 @@
 {
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "AMLL TTML Tool",
-	"version": "1.2.3",
+	"version": "1.2.4",
 	"identifier": "com.bobjoerules.amll-ttml-tool",
 	"build": {
 		"frontendDist": "../dist",

@@ -424,6 +424,9 @@ export const GeniusSearchDialog = () => {
 											</Text>
 											<Text size="1" color="gray" truncate>
 												{hit.result.primary_artist.name}
+												{hit.result.album?.name
+													? ` • ${hit.result.album.name}`
+													: ""}
 											</Text>
 										</Flex>
 										{isFetchingDetails && fetchingSongId === hit.result.id && (

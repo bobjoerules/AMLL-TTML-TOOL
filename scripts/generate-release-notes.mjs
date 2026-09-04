@@ -45,6 +45,7 @@ const renderChildren = (children) => {
 		if (content === null) return null;
 
 		switch (tagName) {
+			case "b":
 			case "strong":
 				append(`**${content.trim()}**`);
 				break;
@@ -90,16 +91,18 @@ export const generateReleaseNotes = (source, version) => {
 			(child) => getTagName(child.openingElement) === "Heading",
 		);
 		const heading = children[headingIndex];
-		const content = children[headingIndex + 1];
+		const content = children
+			.slice(headingIndex + 1)
+			.find((child) => getTagName(child.openingElement) === "Flex");
 		const headingText = heading && renderChildren(heading.children);
 
 		if (
 			headingText?.startsWith(`v${version}`) &&
-			getTagName(content?.openingElement) === "Flex"
+			content
 		) {
 			const entries = getElementChildren(content)
 				.filter((child) => getTagName(child.openingElement) === "Text")
-				.map((child) => renderChildren(child.children));
+				.map((child) => renderChildren(child.children)?.replace(/^•\s*/, ""));
 
 			if (entries.length > 0 && entries.every((entry) => entry)) {
 				result = entries.map((entry) => `- ${entry}`).join("\n");

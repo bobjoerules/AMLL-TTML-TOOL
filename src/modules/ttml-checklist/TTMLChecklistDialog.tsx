@@ -2,9 +2,6 @@ import {
 	Add16Regular,
 	Album20Regular,
 	ArrowDownload16Regular,
-	ArrowSort16Regular,
-	ArrowSync16Regular,
-	ArrowUpload16Regular,
 	CheckmarkCircle16Filled,
 	Circle16Regular,
 	Cloud24Regular,
@@ -32,7 +29,6 @@ import {
 	IconButton,
 	Progress,
 	ScrollArea,
-	SegmentedControl,
 	Select,
 	Spinner,
 	Text,
@@ -40,8 +36,17 @@ import {
 	TextField,
 	Tooltip,
 } from "@radix-ui/themes";
+import {
+	memo,
+	useCallback,
+	useDeferredValue,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import { ViewportList } from "react-viewport-list";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { audioCoverArtAtom } from "$/modules/audio/states";
@@ -110,9 +115,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	const [sourceId, setSourceId] = useState<string | number | undefined>(
 		initial?.sourceId,
 	);
-	const [sourceUrl, setSourceUrl] = useState<string | undefined>(
-		initial?.sourceUrl,
-	);
+	const sourceUrl = initial?.sourceUrl;
 	const [notes, setNotes] = useState(initial?.notes ?? "");
 
 	// Provider Search state
@@ -192,7 +195,9 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 			try {
 				spotifyTrack = await SpotifyResolver.resolveTrack(effectiveQuery);
 				if (spotifyTrack) {
-					effectiveQuery = `${spotifyTrack.artist} ${spotifyTrack.title}`;
+					effectiveQuery = spotifyTrack.artist
+						? `${spotifyTrack.artist} ${spotifyTrack.title}`
+						: spotifyTrack.title;
 					setProviderQuery(effectiveQuery);
 				}
 			} catch (err) {
@@ -202,36 +207,40 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 
 		try {
 			let hits: ProviderSearchResult[] = [];
-			if (searchProvider === "genius") {
-				const res = await GeniusApi.search(effectiveQuery, geniusApiKey);
-				hits = res.response.hits.map(({ result }) => ({
-					id: result.id,
-					name: result.title,
-					artist: result.primary_artist.name,
-					album: result.album?.name,
-					cover:
-						result.song_art_image_url || result.song_art_image_thumbnail_url,
-					source: "genius",
-				}));
-			} else if (searchProvider === "lrclib") {
-				const res = await LrcLibApi.search(effectiveQuery);
-				hits = res.map((track) => ({
-					id: track.id,
-					name: track.name,
-					artist: track.artistName,
-					album: track.albumName,
-					source: "lrclib",
-				}));
-			} else {
-				const res = await LyricallyApi.search(effectiveQuery);
-				hits = res.map((track, idx) => ({
-					id: `${track.artist}-${track.name}-${idx}`,
-					name: track.name,
-					artist: track.artist,
-					album: track.album,
-					cover: track.cover,
-					source: "lyrically",
-				}));
+			try {
+				if (searchProvider === "genius") {
+					const res = await GeniusApi.search(effectiveQuery, geniusApiKey);
+					hits = res.response.hits.map(({ result }) => ({
+						id: result.id,
+						name: result.title,
+						artist: result.primary_artist.name,
+						album: result.album?.name,
+						cover:
+							result.song_art_image_url || result.song_art_image_thumbnail_url,
+						source: "genius",
+					}));
+				} else if (searchProvider === "lrclib") {
+					const res = await LrcLibApi.search(effectiveQuery);
+					hits = res.map((track) => ({
+						id: track.id,
+						name: track.name,
+						artist: track.artistName,
+						album: track.albumName,
+						source: "lrclib",
+					}));
+				} else {
+					const res = await LyricallyApi.search(effectiveQuery);
+					hits = res.map((track, idx) => ({
+						id: `${track.artist}-${track.name}-${idx}`,
+						name: track.name,
+						artist: track.artist,
+						album: track.album,
+						cover: track.cover,
+						source: "lyrically",
+					}));
+				}
+			} catch (providerErr) {
+				console.warn("Provider query failed:", providerErr);
 			}
 
 			if (spotifyTrack) {
@@ -479,12 +488,14 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 							{!isSearchingProvider &&
 								hasSearchedProvider &&
 								providerResults.length === 0 && (
-									<Text size="1" color="gray" align="center" as="div" py="2">
-										{t(
-											"ttmlChecklist.noProviderResults",
-											"No results found from lyric providers.",
-										)}
-									</Text>
+									<Box py="2">
+										<Text size="1" color="gray" align="center" as="div">
+											{t(
+												"ttmlChecklist.noProviderResults",
+												"No results found from lyric providers.",
+											)}
+										</Text>
+									</Box>
 								)}
 						</Box>
 					)}
@@ -651,7 +662,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	);
 };
 
-const ChecklistEntryCard = ({
+const ChecklistEntryCard = memo(({
 	entry,
 	onComplete,
 	onDelete,
@@ -662,9 +673,9 @@ const ChecklistEntryCard = ({
 	isLoadingCloud,
 }: {
 	entry: TTMLChecklistEntry;
-	onComplete: (completed: boolean) => void;
-	onDelete: () => void;
-	onEdit: (input: TTMLChecklistEntryInput) => void;
+	onComplete: (id: string, completed: boolean) => void;
+	onDelete: (id: string) => void;
+	onEdit: (id: string, input: TTMLChecklistEntryInput) => void;
 	onImportLyrics: (entry: TTMLChecklistEntry) => void;
 	onImportAppleTtml?: (entry: TTMLChecklistEntry) => void;
 	onLoadCloud?: (docId: string) => void;
@@ -679,7 +690,7 @@ const ChecklistEntryCard = ({
 				initial={entry}
 				onCancel={() => setEditing(false)}
 				onSubmit={(input) => {
-					onEdit(input);
+					onEdit(entry.id, input);
 					setEditing(false);
 				}}
 			/>
@@ -700,6 +711,7 @@ const ChecklistEntryCard = ({
 					: "var(--color-surface)",
 				opacity: entry.completed ? 0.78 : 1,
 				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
+				marginBottom: "8px",
 			}}
 		>
 			<Flex gap="3" align="center" style={{ width: "100%", minWidth: 0 }}>
@@ -724,6 +736,8 @@ const ChecklistEntryCard = ({
 						<img
 							src={entry.coverArt}
 							alt={entry.song}
+							loading="lazy"
+							decoding="async"
 							style={{
 								width: "100%",
 								height: "100%",
@@ -938,8 +952,8 @@ const ChecklistEntryCard = ({
 
 					{/* 1-Click Apple Music TTML (when Spotify ID/link available) */}
 					{(entry.source === "spotify" ||
-						isSpotifyUrl(entry.sourceId || "") ||
-						isSpotifyUrl(entry.song || "")) && onImportAppleTtml && (
+						isSpotifyUrl(String(entry.sourceId || "")) ||
+						isSpotifyUrl(String(entry.song || ""))) && onImportAppleTtml && (
 						<Tooltip
 							content={t(
 								"ttmlChecklist.importAppleTtmlTooltip",
@@ -975,7 +989,7 @@ const ChecklistEntryCard = ({
 							size="2"
 							variant={entry.completed ? "surface" : "soft"}
 							color={entry.completed ? "gray" : "green"}
-							onClick={() => onComplete(!entry.completed)}
+							onClick={() => onComplete(entry.id, !entry.completed)}
 							aria-label={
 								entry.completed
 									? t("ttmlChecklist.reopen", "Reopen")
@@ -1016,7 +1030,7 @@ const ChecklistEntryCard = ({
 							size="2"
 							variant="soft"
 							color="red"
-							onClick={onDelete}
+							onClick={() => onDelete(entry.id)}
 							aria-label={t("ttmlChecklist.delete", "Delete checklist item")}
 							style={{
 								borderRadius: "8px",
@@ -1031,7 +1045,7 @@ const ChecklistEntryCard = ({
 			</Flex>
 		</Card>
 	);
-};
+});
 
 export const TTMLChecklistDialog = () => {
 	const { t } = useTranslation();
@@ -1042,9 +1056,12 @@ export const TTMLChecklistDialog = () => {
 		"all",
 	);
 	const [searchQuery, setSearchQuery] = useState("");
+	const deferredSearchQuery = useDeferredValue(searchQuery);
 	const [sortBy, setSortBy] = useState<
 		"default" | "title-asc" | "title-desc" | "artist-asc" | "artist-desc"
 	>("default");
+
+	const listScrollRef = useRef<HTMLDivElement>(null);
 
 	const { isLoggedIn, user } = useChecklistSyncStatus();
 	const openAccountSettings = useSetAtom(openAccountSettingsAtom);
@@ -1079,8 +1096,8 @@ export const TTMLChecklistDialog = () => {
 			result = result.filter((e) => e.completed);
 		}
 
-		if (searchQuery.trim()) {
-			const q = searchQuery.toLowerCase().trim();
+		const q = deferredSearchQuery.toLowerCase().trim();
+		if (q) {
 			result = result.filter(
 				(e) =>
 					e.song.toLowerCase().includes(q) ||
@@ -1109,11 +1126,35 @@ export const TTMLChecklistDialog = () => {
 		}
 
 		return result;
-	}, [entries, filterTab, searchQuery, sortBy]);
+	}, [entries, filterTab, deferredSearchQuery, sortBy]);
 
-	const save = (nextEntries: TTMLChecklistEntry[]) => {
-		setStoredEntries(nextEntries);
-	};
+	const save = useCallback(
+		(nextEntries: TTMLChecklistEntry[]) => {
+			setStoredEntries(nextEntries);
+		},
+		[setStoredEntries],
+	);
+
+	const handleComplete = useCallback(
+		(id: string, completed: boolean) => {
+			setStoredEntries((prev) => setChecklistEntryCompleted(prev, id, completed));
+		},
+		[setStoredEntries],
+	);
+
+	const handleDelete = useCallback(
+		(id: string) => {
+			setStoredEntries((prev) => deleteChecklistEntry(prev, id));
+		},
+		[setStoredEntries],
+	);
+
+	const handleEdit = useCallback(
+		(id: string, input: TTMLChecklistEntryInput) => {
+			setStoredEntries((prev) => updateChecklistEntry(prev, id, input));
+		},
+		[setStoredEntries],
+	);
 
 	const [showAlbumImport, setShowAlbumImport] = useState(false);
 
@@ -1150,7 +1191,7 @@ export const TTMLChecklistDialog = () => {
 				save(nextList);
 			}
 		},
-		[entries],
+		[entries, save],
 	);
 
 	const { openFile } = useFileOpener();
@@ -1158,90 +1199,105 @@ export const TTMLChecklistDialog = () => {
 		null,
 	);
 
-	const handleLoadCloudTTML = async (docId: string) => {
-		try {
-			setLoadingCloudDocId(docId);
-			const cloudDoc = await loadTTMLFromCloud(docId);
-			const file = new File(
-				[cloudDoc.rawTTML],
-				`${cloudDoc.title || "lyric"}.ttml`,
-				{ type: "application/xml" },
-			);
-			await openFile(file);
-			toast.success(
-				t("cloud.openedSuccess", 'Loaded "{title}" from Cloud', {
-					title: cloudDoc.title || "Untitled",
-				}),
-			);
+	const handleLoadCloudTTML = useCallback(
+		async (docId: string) => {
+			try {
+				setLoadingCloudDocId(docId);
+				const cloudDoc = await loadTTMLFromCloud(docId);
+				const file = new File(
+					[cloudDoc.rawTTML],
+					`${cloudDoc.title || "lyric"}.ttml`,
+					{ type: "application/xml" },
+				);
+				await openFile(file);
+				toast.success(
+					t("cloud.openedSuccess", 'Loaded "{title}" from Cloud', {
+						title: cloudDoc.title || "Untitled",
+					}),
+				);
+				setOpen(false);
+			} catch (err) {
+				console.error("Failed to load cloud TTML from checklist:", err);
+				toast.error((err as Error)?.message || "Failed to load cloud TTML.");
+			} finally {
+				setLoadingCloudDocId(null);
+			}
+		},
+		[openFile, setOpen, t],
+	);
+
+	const handleImportLyricsForEntry = useCallback(
+		(entry: TTMLChecklistEntry) => {
+			const source =
+				entry.source === "lrclib"
+					? "lrclib"
+					: entry.source === "lyrically"
+						? "lyrically"
+						: "genius";
+			const titleQuery = String(
+				entry.artist ? `${entry.artist} - ${entry.song}` : entry.song || "",
+			).trim();
+
+			setImportLyricsPrefill({
+				source,
+				track: {
+					id: entry.sourceId ? String(entry.sourceId) : undefined,
+					name: entry.song,
+					artist: entry.artist,
+					album: entry.album,
+					cover: entry.coverArt,
+				},
+				query: titleQuery,
+			});
+
+			// Open target provider dialog
+			if (source === "lrclib") {
+				setLrclibImportDialog(true);
+			} else if (source === "lyrically") {
+				setLyricallyImportDialog(true);
+			} else {
+				setGeniusImportDialog(true);
+			}
+
+			// Close checklist so user sees the import review page immediately
 			setOpen(false);
-		} catch (err) {
-			console.error("Failed to load cloud TTML from checklist:", err);
-			toast.error((err as Error)?.message || "Failed to load cloud TTML.");
-		} finally {
-			setLoadingCloudDocId(null);
-		}
-	};
+		},
+		[
+			setImportLyricsPrefill,
+			setLrclibImportDialog,
+			setLyricallyImportDialog,
+			setGeniusImportDialog,
+			setOpen,
+		],
+	);
 
-	const handleImportLyricsForEntry = (entry: TTMLChecklistEntry) => {
-		const source =
-			entry.source === "lrclib"
-				? "lrclib"
-				: entry.source === "lyrically"
-					? "lyrically"
-					: "genius";
-		const titleQuery = String(
-			entry.artist ? `${entry.artist} - ${entry.song}` : entry.song || "",
-		).trim();
+	const handleImportAppleTtmlForEntry = useCallback(
+		(entry: TTMLChecklistEntry) => {
+			const rawCandidate =
+				(entry.source === "spotify" ? String(entry.sourceId) : undefined) ||
+				(isSpotifyUrl(String(entry.sourceId || "")) ? String(entry.sourceId) : undefined) ||
+				(isSpotifyUrl(String(entry.song || "")) ? String(entry.song) : undefined) ||
+				String(entry.sourceId || "") ||
+				"";
+			const spotifyId = extractSpotifyTrackId(rawCandidate);
 
-		setImportLyricsPrefill({
-			source,
-			track: {
-				id: entry.sourceId ? String(entry.sourceId) : undefined,
-				name: entry.song,
-				artist: entry.artist,
-				album: entry.album,
-				cover: entry.coverArt,
-			},
-			query: titleQuery,
-		});
+			setImportLyricsPrefill({
+				source: "apple-ttml",
+				track: {
+					id: spotifyId,
+					name: entry.song,
+					artist: entry.artist,
+					album: entry.album,
+					cover: entry.coverArt,
+				},
+				query: spotifyId,
+			});
 
-		// Open target provider dialog
-		if (source === "lrclib") {
-			setLrclibImportDialog(true);
-		} else if (source === "lyrically") {
-			setLyricallyImportDialog(true);
-		} else {
-			setGeniusImportDialog(true);
-		}
-
-		// Close checklist so user sees the import review page immediately
-		setOpen(false);
-	};
-
-	const handleImportAppleTtmlForEntry = (entry: TTMLChecklistEntry) => {
-		const rawCandidate =
-			(entry.source === "spotify" ? entry.sourceId : undefined) ||
-			(isSpotifyUrl(entry.sourceId || "") ? entry.sourceId : undefined) ||
-			(isSpotifyUrl(entry.song || "") ? entry.song : undefined) ||
-			entry.sourceId ||
-			"";
-		const spotifyId = extractSpotifyTrackId(rawCandidate);
-
-		setImportLyricsPrefill({
-			source: "apple-ttml",
-			track: {
-				id: spotifyId,
-				name: entry.song,
-				artist: entry.artist,
-				album: entry.album,
-				cover: entry.coverArt,
-			},
-			query: spotifyId,
-		});
-
-		setAppleTtmlImportDialog(true);
-		setOpen(false);
-	};
+			setAppleTtmlImportDialog(true);
+			setOpen(false);
+		},
+		[setImportLyricsPrefill, setAppleTtmlImportDialog, setOpen],
+	);
 
 	const [isSyncingCloud, setIsSyncingCloud] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
@@ -1628,7 +1684,7 @@ export const TTMLChecklistDialog = () => {
 							<Button
 								size="2"
 								variant={showAddForm ? "soft" : "solid"}
-								color={showAddForm ? "gray" : "accent"}
+								color={showAddForm ? "gray" : undefined}
 								onClick={() => setShowAddForm((prev) => !prev)}
 								style={{
 									height: "32px",
@@ -1732,7 +1788,7 @@ export const TTMLChecklistDialog = () => {
 								</Flex>
 								<Progress
 									value={progressPercent}
-									color={progressPercent === 100 ? "green" : "accent"}
+									color={progressPercent === 100 ? "green" : undefined}
 									size="2"
 									style={{ borderRadius: "6px" }}
 								/>
@@ -1966,73 +2022,70 @@ export const TTMLChecklistDialog = () => {
 						</Flex>
 
 						{/* Items List */}
-						<ScrollArea
-							type="auto"
-							scrollbars="vertical"
-							style={{ flex: 1, minHeight: 0 }}
+						<Box
+							ref={listScrollRef}
+							style={{
+								flex: 1,
+								minHeight: 0,
+								overflowY: "auto",
+								overflowX: "hidden",
+								paddingRight: "6px",
+							}}
 						>
-							<Flex direction="column" gap="2" pr="2">
-								{filteredEntries.length === 0 ? (
-									<Card
-										variant="surface"
-										style={{
-											padding: "36px 20px",
-											textAlign: "center",
-											borderRadius: "12px",
-											border: "1px dashed var(--gray-a5)",
-											backgroundColor: "var(--gray-a2)",
-										}}
-									>
-										<Flex direction="column" align="center" gap="2">
-											<MusicNote2Filled
-												style={{
-													width: 32,
-													height: 32,
-													color: "var(--gray-7)",
-												}}
-											/>
-											<Text size="2" color="gray">
-												{searchQuery || filterTab !== "all"
-													? t(
-															"ttmlChecklist.noMatch",
-															"No checklist items match your search or filter.",
-														)
-													: t(
-															"ttmlChecklist.empty",
-															"No items yet. Add a song or import from the current project!",
-														)}
-											</Text>
-										</Flex>
-									</Card>
-								) : (
-									filteredEntries.map((entry) => (
+							{filteredEntries.length === 0 ? (
+								<Card
+									variant="surface"
+									style={{
+										padding: "36px 20px",
+										textAlign: "center",
+										borderRadius: "12px",
+										border: "1px dashed var(--gray-a5)",
+										backgroundColor: "var(--gray-a2)",
+									}}
+								>
+									<Flex direction="column" align="center" gap="2">
+										<MusicNote2Filled
+											style={{
+												width: 32,
+												height: 32,
+												color: "var(--gray-7)",
+											}}
+										/>
+										<Text size="2" color="gray">
+											{searchQuery || filterTab !== "all"
+												? t(
+														"ttmlChecklist.noMatch",
+														"No checklist items match your search or filter.",
+													)
+												: t(
+														"ttmlChecklist.empty",
+														"No items yet. Add a song or import from the current project!",
+													)}
+										</Text>
+									</Flex>
+								</Card>
+							) : (
+								<ViewportList
+									viewportRef={listScrollRef}
+									items={filteredEntries}
+									overscan={8}
+								>
+									{(entry) => (
 										<ChecklistEntryCard
 											key={entry.id}
 											entry={entry}
-											onComplete={(completed) =>
-												save(
-													setChecklistEntryCompleted(
-														entries,
-														entry.id,
-														completed,
-													),
-												)
-											}
-											onDelete={() =>
-												save(deleteChecklistEntry(entries, entry.id))
-											}
-											onEdit={(input) =>
-												save(updateChecklistEntry(entries, entry.id, input))
-											}
+											onComplete={handleComplete}
+											onDelete={handleDelete}
+											onEdit={handleEdit}
 											onImportLyrics={handleImportLyricsForEntry}
 											onImportAppleTtml={handleImportAppleTtmlForEntry}
 											onLoadCloud={handleLoadCloudTTML}
 											isLoadingCloud={loadingCloudDocId === entry.cloudDocId}
 										/>
-									))
-								)}
-							</Flex>
-						</ScrollArea>
+									)}
+								</ViewportList>
+							)}
+						</Box>
 					</Flex>
 				)}
 			</Dialog.Content>

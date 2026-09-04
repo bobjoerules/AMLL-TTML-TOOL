@@ -328,6 +328,28 @@ fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn fetch_url(url: String) -> Result<String, String> {
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .timeout(std::time::Duration::from_secs(20))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let resp = client.get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Network request failed: {e}"))?;
+
+    let status = resp.status();
+    if !status.is_success() {
+        return Err(format!("Server returned HTTP {}", status.as_u16()));
+    }
+
+    let body = resp.text().await.map_err(|e| e.to_string())?;
+    Ok(body)
+}
+
+#[tauri::command]
 async fn fetch_apple_ttml(url: String) -> Result<String, String> {
     let client = reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -551,6 +573,7 @@ pub fn run() {
             clear_discord_activity,
             create_new_window,
             fetch_apple_ttml,
+            fetch_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
