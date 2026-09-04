@@ -77,6 +77,9 @@ const ToolMenuItems = () => {
 			<DropdownMenu.Item onSelect={menu.onOpenTTMLChecklist}>
 				{t("topBar.menu.ttmlChecklist", "TTML Checklist...")}
 			</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={menu.onOpenSpotMatch}>
+				{t("topBar.menu.spotMatch", "SpotMatch (Alternate Spotify IDs)...")}
+			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenLatencyTest}>
 				{t("settingsDialog.common.latencyTest", "Latency Test...")}
 			</DropdownMenu.Item>

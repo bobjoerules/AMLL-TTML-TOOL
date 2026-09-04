@@ -483,6 +483,7 @@ pub fn run() {
                 let time_shift_item = MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
                 let time_stretch_item = MenuItem::with_id(app, "menu-time-stretch", "Time Stretch...", true, None::<&str>)?;
                 let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, Some("CmdOrCtrl+Shift+C"))?;
+                let spotmatch_item = MenuItem::with_id(app, "menu-spotmatch", "SpotMatch (Alternate Spotify IDs)...", true, None::<&str>)?;
                 let latency_item = MenuItem::with_id(app, "menu-latency-test", "Latency Test...", true, None::<&str>)?;
 
                 tools_menu.append(&preview_panel_item)?;
@@ -494,6 +495,7 @@ pub fn run() {
                 tools_menu.append(&time_stretch_item)?;
                 tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&checklist_item)?;
+                tools_menu.append(&spotmatch_item)?;
                 tools_menu.append(&latency_item)?;
 
                 // 5. Help menu

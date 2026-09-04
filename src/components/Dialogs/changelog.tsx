@@ -56,6 +56,28 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.3.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 4, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>SpotMatch (Alternate Spotify IDs):</b> Introduced a built-in companion tool adapted from SpotMatch to search and match alternate Spotify recording IDs across singles, albums, deluxe editions, and remasters with zero authentication or API keys. Includes audio duration difference analysis, custom tolerance thresholds, and 1-click comma-separated export formatted for the Spicy Lyrics bot.
+								</Text>
+								<Text size="2">
+									• <b>Genius Link Resolver:</b> Added native resolution for Genius album and song URLs. Pasting a Genius album link into the Album Importer now extracts the entire tracklist and cover artwork directly without needing an API key; pasting a song link into lyric search dialogs instantly resolves and prioritizes the exact track.
+								</Text>
+								<Text size="2">
+									• <b>Apple Music TTML Import:</b> Integrated 1-click word-synced and line-synced TTML retrieval directly from Apple Music using Spotify track links or song searches, complete with artwork and duration matching.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Batch Album Importer:</b> Easily search albums on Genius or paste Spotify/Genius album links to import entire tracklists into the TTML Checklist with automatic track numbering and artwork thumbnails.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.2.4
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
