@@ -441,6 +441,8 @@ export const ImportAppleTtmlDialog = () => {
 									<img
 										src={selectedSong.artwork}
 										alt={selectedSong.name}
+										crossOrigin="anonymous"
+										referrerPolicy="no-referrer"
 										style={{
 											width: 80,
 											height: 80,
@@ -592,6 +594,8 @@ export const ImportAppleTtmlDialog = () => {
 												<img
 													src={item.artwork}
 													alt={item.name}
+													crossOrigin="anonymous"
+													referrerPolicy="no-referrer"
 													style={{
 														width: 48,
 														height: 48,

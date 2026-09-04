@@ -260,18 +260,43 @@ fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
         &window_id,
         tauri::WebviewUrl::App("index.html".into()),
     )
-    .title("")
     .inner_size(800.0, 600.0)
     .min_inner_size(640.0, 480.0)
     .resizable(true)
     .devtools(true)
+    .disable_drag_drop_handler()
     .visible(false);
 
     #[cfg(target_os = "macos")]
     {
         builder = builder
+            .title("")
             .hidden_title(true)
             .title_bar_style(tauri::TitleBarStyle::Overlay);
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        builder = builder
+            .title("AMLL TTML Tools")
+            .decorations(false)
+            .transparent(true)
+            .center()
+            .effects(
+                tauri::window::EffectsBuilder::new()
+                    .effects([
+                        tauri::window::Effect::Tabbed,
+                        tauri::window::Effect::Mica,
+                    ])
+                    .build(),
+            );
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        builder = builder
+            .title("")
+            .decorations(false);
     }
 
     let webview_window = builder.build().map_err(|e| e.to_string())?;
