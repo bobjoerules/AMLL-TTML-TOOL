@@ -1397,6 +1397,10 @@
 		"noTracksSelected": "未选择歌曲。",
 		"copiedToast": "已复制 {count, plural, one {# 个} other {# 个}}用于 Spicy Lyrics 的 Spotify ID！",
 		"copiedSingleToast": "已复制 Spotify 歌曲 ID！",
-		"copyFailed": "复制到剪贴板失败。"
+		"copyFailed": "复制到剪贴板失败。",
+		"saveAsTxt": "另存为 .txt",
+		"savedToast": "已将 Spotify ID 保存到文件！",
+		"saveFailed": "保存文件失败。",
+		"textFileDescription": "文本文件"
 	}
 }

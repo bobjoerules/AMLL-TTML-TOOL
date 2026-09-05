@@ -103,6 +103,7 @@ async function fetchAppleJson<T>(endpoint: string): Promise<T> {
 		// Attempt CORS proxy in web mode if direct fetch failed
 		const encoded = encodeURIComponent(url);
 		const corsProxies = [
+			`https://proxy.bobjoerules.com/?url=${encoded}`,
 			`https://corsproxy.io/?url=${encoded}`,
 			`https://api.allorigins.win/raw?url=${encoded}`,
 		];

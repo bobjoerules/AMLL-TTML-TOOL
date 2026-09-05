@@ -56,6 +56,22 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v1.3.1
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 5, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>SpotMatch .txt Export:</b> Added a dedicated "Save as .txt" button to SpotMatch, allowing users to export selected alternate Spotify IDs directly to a text file with clean, sanitized suggested filenames.
+								</Text>
+								<Text size="2">
+									• <b>Web CORS Resolution:</b> Enabled seamless SpotMatch and Apple Music TTML search on the web version via the dedicated Cloudflare proxy (proxy.bobjoerules.com).
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.3.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

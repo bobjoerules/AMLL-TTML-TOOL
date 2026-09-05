@@ -1432,6 +1432,10 @@
 		"noTracksSelected": "No tracks selected.",
 		"copiedToast": "Copied {count, plural, one {# Spotify ID} other {# Spotify IDs}} for Spicy Lyrics!",
 		"copiedSingleToast": "Copied Spotify track ID!",
-		"copyFailed": "Failed to write to clipboard."
+		"copyFailed": "Failed to write to clipboard.",
+		"saveAsTxt": "Save as .txt",
+		"savedToast": "Saved Spotify IDs to file!",
+		"saveFailed": "Failed to save file.",
+		"textFileDescription": "Text Files"
 	}
 }

@@ -6,7 +6,8 @@
 
 import { checkIsTauri } from "$/modules/spotify/client";
 
-export const TRACK_ID_RE = /(?:spotify:track:|open\.spotify\.com\/track\/)?([A-Za-z0-9]{22})/;
+export const TRACK_ID_RE =
+	/(?:spotify:track:|open\.spotify\.com\/track\/)?([A-Za-z0-9]{22})/;
 
 export interface SpotMatchSourceTrack {
 	id: string;
@@ -68,13 +69,15 @@ export function extractSpotifyTrackId(value: string): string {
  */
 export function normalize(value: string): string {
 	if (!value) return "";
-	return value
-		.normalize("NFKD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.toLowerCase()
-		.replace(/&/g, " and ")
-		.match(/[a-z0-9]+/g)
-		?.join(" ") || "";
+	return (
+		value
+			.normalize("NFKD")
+			.replace(/[\u0300-\u036f]/g, "")
+			.toLowerCase()
+			.replace(/&/g, " and ")
+			.match(/[a-z0-9]+/g)
+			?.join(" ") || ""
+	);
 }
 
 /**
@@ -93,7 +96,9 @@ export function similarity(left: string, right: string): number {
 }
 
 function countMatchingChars(s1: string, s2: string): number {
-	const stack: Array<[number, number, number, number]> = [[0, s1.length, 0, s2.length]];
+	const stack: Array<[number, number, number, number]> = [
+		[0, s1.length, 0, s2.length],
+	];
 	let matchingChars = 0;
 
 	while (stack.length > 0) {
@@ -156,7 +161,7 @@ export function scoreCandidate(
 	const durationScore = Math.max(0.0, 1.0 - deltaMs / 15_000);
 
 	const compositeScore = Math.round(
-		100 * (titleScore * 0.55 + artistScore * 0.30 + durationScore * 0.15),
+		100 * (titleScore * 0.55 + artistScore * 0.3 + durationScore * 0.15),
 	);
 
 	return {
@@ -177,8 +182,24 @@ export function scoreCandidate(
 /**
  * Format a list of selected matches into the Spicy Lyrics bot format: "id1,id2,id3"
  */
-export function formatSpicyLyricsIds(matches: Array<Pick<SpotMatchCandidate, "trackId">>): string {
+export function formatSpicyLyricsIds(
+	matches: Array<Pick<SpotMatchCandidate, "trackId">>,
+): string {
 	return matches.map((m) => m.trackId).join(",");
+}
+
+/**
+ * Generates a sanitized suggested filename for saving SpotMatch IDs to a text file.
+ */
+export function getSpotMatchTxtFileName(
+	source?: Partial<SpotMatchSourceTrack> | null,
+): string {
+	const artist = source?.artists?.join(", ") || source?.primaryArtist || "";
+	const title = source?.title || "";
+	const baseName =
+		artist && title ? `${artist} - ${title}` : title || artist || "spotify-ids";
+	const sanitized = baseName.replace(/[/\\?%*:|"<>]/g, "-").trim();
+	return `${sanitized || "spotify-ids"}.txt`;
 }
 
 /**
@@ -192,10 +213,16 @@ export function formatDuration(ms: number | undefined | null): string {
 	return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
+export const SPOTMATCH_WEB_PROXY = "https://proxy.bobjoerules.com/?url=";
+
 /**
- * Native cross-platform HTTP fetcher using Tauri's fetch_url when available
+ * Native cross-platform HTTP fetcher using Tauri's fetch_url when available,
+ * or Cloudflare Worker CORS proxy when running on the web
  */
-async function fetchSafeText(url: string, headers: Record<string, string> = {}): Promise<string | null> {
+async function fetchSafeText(
+	url: string,
+	headers: Record<string, string> = {},
+): Promise<string | null> {
 	if (checkIsTauri()) {
 		try {
 			const { invoke } = await import("@tauri-apps/api/core");
@@ -208,13 +235,26 @@ async function fetchSafeText(url: string, headers: Record<string, string> = {}):
 			// fallback
 		}
 	}
+
+	// Browser / Web mode: route through proxy.bobjoerules.com to bypass CORS
+	try {
+		const proxyUrl = `${SPOTMATCH_WEB_PROXY}${encodeURIComponent(url)}`;
+		const res = await fetch(proxyUrl, { headers });
+		if (res.ok) {
+			return await res.text();
+		}
+	} catch (proxyErr) {
+		console.warn(`SpotMatch proxy fetch failed for ${url}:`, proxyErr);
+	}
+
+	// Direct fetch fallback
 	try {
 		const res = await fetch(url, { headers });
 		if (res.ok) {
 			return await res.text();
 		}
 	} catch (e) {
-		console.warn(`SpotMatch fetch failed for ${url}:`, e);
+		console.warn(`SpotMatch direct fetch failed for ${url}:`, e);
 	}
 	return null;
 }
@@ -232,16 +272,21 @@ async function getSpotifyAnonymousToken(): Promise<string | null> {
 
 	try {
 		// Fetch anonymous session from Spotify Embed page
-		const embedHtml = await fetchSafeText("https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC");
+		const embedHtml = await fetchSafeText(
+			"https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC",
+		);
 		if (embedHtml) {
-			const match = embedHtml.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+			const match = embedHtml.match(
+				/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/,
+			);
 			if (match && match[1]) {
 				const nextData = JSON.parse(match[1]);
 				const session = nextData?.props?.pageProps?.state?.settings?.session;
 				if (session?.accessToken) {
 					cachedSession = {
 						token: session.accessToken,
-						expiresAtMs: session.accessTokenExpirationTimestampMs || now + 3600_000,
+						expiresAtMs:
+							session.accessTokenExpirationTimestampMs || now + 3600_000,
 					};
 					return session.accessToken;
 				}
@@ -256,18 +301,26 @@ async function getSpotifyAnonymousToken(): Promise<string | null> {
 /**
  * Resolve source track details from Spotify Embed or RMM
  */
-export async function resolveSourceTrack(trackId: string): Promise<SpotMatchSourceTrack> {
+export async function resolveSourceTrack(
+	trackId: string,
+): Promise<SpotMatchSourceTrack> {
 	// 1. Try Spotify Embed HTML
 	try {
-		const embedHtml = await fetchSafeText(`https://open.spotify.com/embed/track/${trackId}`);
+		const embedHtml = await fetchSafeText(
+			`https://open.spotify.com/embed/track/${trackId}`,
+		);
 		if (embedHtml) {
-			const match = embedHtml.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+			const match = embedHtml.match(
+				/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/,
+			);
 			if (match && match[1]) {
 				const nextData = JSON.parse(match[1]);
 				const entity = nextData?.props?.pageProps?.state?.data?.entity;
 				if (entity) {
 					const title = entity.title || entity.name || "";
-					const artists = entity.artists?.map((a: { name: string }) => a.name) || [entity.subtitle || "Unknown Artist"];
+					const artists = entity.artists?.map(
+						(a: { name: string }) => a.name,
+					) || [entity.subtitle || "Unknown Artist"];
 					const cover =
 						entity.visualIdentity?.image?.[2]?.url ||
 						entity.visualIdentity?.image?.[0]?.url ||
@@ -296,11 +349,15 @@ export async function resolveSourceTrack(trackId: string): Promise<SpotMatchSour
 
 	// 2. Try RMM Revival Lyrics / Metadata endpoint
 	try {
-		const rmmJson = await fetchSafeText(`https://lyrics.rmmreviv.al/lyrics?id=${encodeURIComponent(trackId)}`);
+		const rmmJson = await fetchSafeText(
+			`https://lyrics.rmmreviv.al/lyrics?id=${encodeURIComponent(trackId)}`,
+		);
 		if (rmmJson) {
 			const data = JSON.parse(rmmJson);
 			if (data && data.name && data.artist) {
-				const artists = Array.isArray(data.artistList) ? data.artistList : [data.artist];
+				const artists = Array.isArray(data.artistList)
+					? data.artistList
+					: [data.artist];
 				return {
 					id: trackId,
 					title: data.name,
@@ -326,7 +383,16 @@ async function searchSpotifyPathfinder(
 	searchTerm: string,
 	token: string,
 	limit: number = 20,
-): Promise<Array<{ id: string; title: string; artists: string; album: string; cover?: string; durationMs: number }>> {
+): Promise<
+	Array<{
+		id: string;
+		title: string;
+		artists: string;
+		album: string;
+		cover?: string;
+		durationMs: number;
+	}>
+> {
 	try {
 		const variables = {
 			searchTerm,
@@ -345,12 +411,15 @@ async function searchSpotifyPathfinder(
 			extensions: JSON.stringify({
 				persistedQuery: {
 					version: 1,
-					sha256Hash: "eff59fa0a3d026b88b56fddbcf4bdfa16a186b8175a5c1a358c072e053c2e5b0",
+					sha256Hash:
+						"eff59fa0a3d026b88b56fddbcf4bdfa16a186b8175a5c1a358c072e053c2e5b0",
 				},
 			}),
 		};
 		const url = `https://api-partner.spotify.com/pathfinder/v1/query?${new URLSearchParams(q).toString()}`;
-		const jsonText = await fetchSafeText(url, { authorization: `Bearer ${token}` });
+		const jsonText = await fetchSafeText(url, {
+			authorization: `Bearer ${token}`,
+		});
 		if (jsonText) {
 			const res = JSON.parse(jsonText);
 			const items = res?.data?.searchV2?.tracksV2?.items || [];
@@ -360,7 +429,11 @@ async function searchSpotifyPathfinder(
 					if (!data || !data.uri) return null;
 					const trackId = data.uri.replace("spotify:track:", "");
 					const title = data.name || "";
-					const artists = data.artists?.items?.map((a: any) => a.profile?.name).filter(Boolean).join(", ") || "";
+					const artists =
+						data.artists?.items
+							?.map((a: any) => a.profile?.name)
+							.filter(Boolean)
+							.join(", ") || "";
 					const album = data.albumOfTrack?.name || "";
 					const cover = data.albumOfTrack?.coverArt?.sources?.[0]?.url;
 					const durationMs = data.duration?.totalMilliseconds || 0;
@@ -379,7 +452,16 @@ async function searchSpotifyPathfinder(
  */
 async function searchRmm(
 	query: string,
-): Promise<Array<{ id: string; title: string; artists: string; album: string; cover?: string; durationMs: number }>> {
+): Promise<
+	Array<{
+		id: string;
+		title: string;
+		artists: string;
+		album: string;
+		cover?: string;
+		durationMs: number;
+	}>
+> {
 	try {
 		const url = `https://lyrics.rmmreviv.al/search?q=${encodeURIComponent(query)}`;
 		const jsonText = await fetchSafeText(url);
@@ -420,7 +502,10 @@ export async function findSpotMatches(
 	const opts: SpotMatchOptions = { ...DEFAULT_OPTIONS, ...options };
 
 	onProgress?.("Reading source track...", 0, 100);
-	const source = typeof sourceInput === "string" ? await resolveSourceTrack(extractSpotifyTrackId(sourceInput)) : sourceInput;
+	const source =
+		typeof sourceInput === "string"
+			? await resolveSourceTrack(extractSpotifyTrackId(sourceInput))
+			: sourceInput;
 
 	onProgress?.("Generating candidate queries...", 10, 100);
 
@@ -446,7 +531,9 @@ export async function findSpotMatches(
 	}
 
 	// Deduplicate queries
-	const queries = Array.from(new Set(baseQueries.map((q) => q.trim()).filter((q) => q.length > 0)));
+	const queries = Array.from(
+		new Set(baseQueries.map((q) => q.trim()).filter((q) => q.length > 0)),
+	);
 
 	onProgress?.("Connecting to Spotify catalog...", 20, 100);
 	const token = await getSpotifyAnonymousToken();
@@ -459,11 +546,21 @@ export async function findSpotMatches(
 	for (const query of queries) {
 		completed++;
 		const progressPercent = 20 + Math.round((completed / totalQueries) * 60);
-		onProgress?.(`Searching catalog (${completed}/${totalQueries}): "${query}"...`, progressPercent, 100);
+		onProgress?.(
+			`Searching catalog (${completed}/${totalQueries}): "${query}"...`,
+			progressPercent,
+			100,
+		);
 
 		// Concurrently search both Spotify Pathfinder (if token available) and RMM database
 		const [spotifyHits, rmmHits] = await Promise.all([
-			token ? searchSpotifyPathfinder(query, token, opts.preset === "Quick" ? 10 : 25) : Promise.resolve([]),
+			token
+				? searchSpotifyPathfinder(
+						query,
+						token,
+						opts.preset === "Quick" ? 10 : 25,
+					)
+				: Promise.resolve([]),
 			searchRmm(query),
 		]);
 
@@ -497,7 +594,8 @@ export async function findSpotMatches(
 		// Primary sort: descending score
 		if (b.score !== a.score) return b.score - a.score;
 		// Secondary sort: ascending duration difference
-		if (a.durationDeltaMs !== b.durationDeltaMs) return a.durationDeltaMs - b.durationDeltaMs;
+		if (a.durationDeltaMs !== b.durationDeltaMs)
+			return a.durationDeltaMs - b.durationDeltaMs;
 		// Tie-breaker: track ID
 		return a.trackId.localeCompare(b.trackId);
 	});
