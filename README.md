@@ -10,8 +10,6 @@ A fork of the word-by-word lyrics editor designed specifically for the [Spicy Ly
   <img src="./images/preview%20tab.png" alt="AMLL TTML Tool - Apple Music Live Preview" width="100%">
 </p>
 
-[![Crowdin](https://badges.crowdin.net/very-cool-ttml-tool/localized.svg)](https://crowdin.com/project/very-cool-ttml-tool)
-
 </div>
 
 ## Showcase & Screenshots
@@ -60,7 +58,7 @@ A fork of the word-by-word lyrics editor designed specifically for the [Spicy Ly
 > [!WARNING]
 > This tool is not recommended for mobile phones or small screens, as the operation can be very cumbersome.
 
-You can use the online version of this tool by visiting [https://tool.community.spicylyrics.org/](https://tool.community.spicylyrics.org/).
+You can use the online version of this tool by visiting [https://ttmleditor.bobjoerules.com/](https://ttmleditor.bobjoerules.com/).
 
 You can also use the Tauri desktop version built via GitHub Actions; see the [Latest Release](https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest) for details.
 
