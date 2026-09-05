@@ -3,6 +3,7 @@ import {
 	extractSpotifyTrackId,
 	formatDuration,
 	formatSpicyLyricsIds,
+	getSpotMatchTxtFileName,
 	normalize,
 	scoreCandidate,
 	similarity,
@@ -137,6 +138,58 @@ describe("SpotMatch Engine", () => {
 			expect(formatDuration(65000)).toBe("1:05");
 			expect(formatDuration(0)).toBe("0:00");
 			expect(formatDuration(null)).toBe("0:00");
+		});
+	});
+
+	describe("getSpotMatchTxtFileName", () => {
+		it("formats artist and title into a .txt filename", () => {
+			const source = {
+				id: "track1",
+				title: "Bohemian Rhapsody",
+				artists: ["Queen"],
+				primaryArtist: "Queen",
+				durationMs: 354000,
+			};
+			expect(getSpotMatchTxtFileName(source)).toBe(
+				"Queen - Bohemian Rhapsody.txt",
+			);
+		});
+
+		it("formats multiple artists", () => {
+			const source = {
+				id: "track2",
+				title: "Stay",
+				artists: ["The Kid LAROI", "Justin Bieber"],
+				primaryArtist: "The Kid LAROI",
+				durationMs: 141000,
+			};
+			expect(getSpotMatchTxtFileName(source)).toBe(
+				"The Kid LAROI, Justin Bieber - Stay.txt",
+			);
+		});
+
+		it("sanitizes invalid filesystem characters", () => {
+			const source = {
+				id: "track3",
+				title: "What's My Age Again? / Rock Show: Live",
+				artists: ["AC/DC"],
+				primaryArtist: "AC/DC",
+				durationMs: 200000,
+			};
+			expect(getSpotMatchTxtFileName(source)).toBe(
+				"AC-DC - What's My Age Again- - Rock Show- Live.txt",
+			);
+		});
+
+		it("handles missing artist or title gracefully", () => {
+			expect(getSpotMatchTxtFileName({ title: "Solo Track" })).toBe(
+				"Solo Track.txt",
+			);
+			expect(getSpotMatchTxtFileName({ primaryArtist: "Solo Artist" })).toBe(
+				"Solo Artist.txt",
+			);
+			expect(getSpotMatchTxtFileName(null)).toBe("spotify-ids.txt");
+			expect(getSpotMatchTxtFileName(undefined)).toBe("spotify-ids.txt");
 		});
 	});
 });

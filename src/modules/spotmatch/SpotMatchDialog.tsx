@@ -6,6 +6,7 @@ import {
 	Dismiss16Regular,
 	MusicNote2Filled,
 	Open16Regular,
+	Save16Regular,
 	Search16Regular,
 	Timer16Regular,
 } from "@fluentui/react-icons";
@@ -33,11 +34,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { checkIsTauri } from "$/modules/spotify/client";
+import { saveFile } from "$/utils/fileSystem";
 import {
 	extractSpotifyTrackId,
 	findSpotMatches,
 	formatDuration,
 	formatSpicyLyricsIds,
+	getSpotMatchTxtFileName,
+	type SpotMatchPreset,
 } from "./engine";
 import {
 	spotMatchCandidatesAtom,
@@ -144,23 +148,20 @@ export function SpotMatchDialog() {
 					);
 				} else {
 					toast.success(
-						t(
-							"spotmatch.matchesFound",
-							{
-								count: result.matches.length,
-								defaultValue: `Found ${result.matches.length} alternate recordings!`,
-							},
-						),
+						t("spotmatch.matchesFound", {
+							count: result.matches.length,
+							defaultValue: `Found ${result.matches.length} alternate recordings!`,
+						}),
 					);
 				}
 			} catch (err: any) {
 				console.error("SpotMatch execution error:", err);
 				toast.error(
 					err.message ||
-					t(
-						"spotmatch.searchError",
-						"Failed to search for alternate Spotify IDs.",
-					),
+						t(
+							"spotmatch.searchError",
+							"Failed to search for alternate Spotify IDs.",
+						),
 				);
 			} finally {
 				setIsSearching(false);
@@ -223,9 +224,38 @@ export function SpotMatchDialog() {
 				}),
 			);
 		} catch {
+			toast.error(t("spotmatch.copyFailed", "Failed to write to clipboard."));
+		}
+	};
+
+	const handleSaveTxt = async () => {
+		if (selectedCandidates.length === 0) {
 			toast.error(
-				t("spotmatch.copyFailed", "Failed to write to clipboard."),
+				t("spotmatch.noTracksSelected", "No tracks selected to copy."),
 			);
+			return;
+		}
+
+		const formatted = formatSpicyLyricsIds(selectedCandidates);
+		const suggestedName = getSpotMatchTxtFileName(sourceTrack);
+
+		try {
+			const saved = await saveFile(formatted, {
+				suggestedName,
+				types: [
+					{
+						description: t("spotmatch.textFileDescription", "Text Files"),
+						accept: { "text/plain": [".txt"] },
+					},
+				],
+			});
+
+			if (saved) {
+				toast.success(t("spotmatch.savedToast", "Saved Spotify IDs to file!"));
+			}
+		} catch (e) {
+			console.error("Failed to save SpotMatch IDs as .txt:", e);
+			toast.error(t("spotmatch.saveFailed", "Failed to save file."));
 		}
 	};
 
@@ -296,7 +326,9 @@ export function SpotMatchDialog() {
 						</TextField.Slot>
 					</TextField.Root>
 
-					<Tooltip content={t("spotmatch.pasteTooltip", "Paste from clipboard")}>
+					<Tooltip
+						content={t("spotmatch.pasteTooltip", "Paste from clipboard")}
+					>
 						<IconButton
 							variant="soft"
 							color="gray"
@@ -483,10 +515,14 @@ export function SpotMatchDialog() {
 
 							<Flex align="center" gap="3">
 								<Text size="1" color="gray">
-									<Timer16Regular style={{ verticalAlign: "middle", marginRight: 4 }} />
+									<Timer16Regular
+										style={{ verticalAlign: "middle", marginRight: 4 }}
+									/>
 									{formatDuration(sourceTrack.durationMs)}
 								</Text>
-								<Tooltip content={t("spotmatch.openSpotify", "Open on Spotify")}>
+								<Tooltip
+									content={t("spotmatch.openSpotify", "Open on Spotify")}
+								>
 									<IconButton
 										size="1"
 										variant="ghost"
@@ -543,14 +579,19 @@ export function SpotMatchDialog() {
 								style={{ height: "180px" }}
 								gap="2"
 							>
-								<Circle16Regular style={{ opacity: 0.3, width: 28, height: 28 }} />
+								<Circle16Regular
+									style={{ opacity: 0.3, width: 28, height: 28 }}
+								/>
 								<Text size="2" color="gray">
 									{isSearching
-										? t("spotmatch.searchingStatus", "Scanning Spotify catalog...")
+										? t(
+												"spotmatch.searchingStatus",
+												"Scanning Spotify catalog...",
+											)
 										: t(
-											"spotmatch.emptyState",
-											"Enter a Spotify track URL or ID above and click Find Matches.",
-										)}
+												"spotmatch.emptyState",
+												"Enter a Spotify track URL or ID above and click Find Matches.",
+											)}
 								</Text>
 							</Flex>
 						) : (
@@ -564,13 +605,17 @@ export function SpotMatchDialog() {
 												? undefined
 												: "amber";
 
-									const deltaSecs = (candidate.durationDeltaMs / 1000).toFixed(1);
+									const deltaSecs = (candidate.durationDeltaMs / 1000).toFixed(
+										1,
+									);
 
 									return (
 										<Card
 											key={candidate.trackId}
 											variant="surface"
-											onClick={() => toggleCandidateSelection(candidate.trackId)}
+											onClick={() =>
+												toggleCandidateSelection(candidate.trackId)
+											}
 											style={{
 												padding: "10px 12px",
 												cursor: "pointer",
@@ -585,7 +630,11 @@ export function SpotMatchDialog() {
 											}}
 										>
 											<Flex align="center" justify="between" gap="3">
-												<Flex align="center" gap="3" style={{ minWidth: 0, flex: 1 }}>
+												<Flex
+													align="center"
+													gap="3"
+													style={{ minWidth: 0, flex: 1 }}
+												>
 													<Checkbox
 														checked={isSelected}
 														onCheckedChange={() =>
@@ -658,7 +707,11 @@ export function SpotMatchDialog() {
 
 												<Flex align="center" gap="2" style={{ flexShrink: 0 }}>
 													<Box style={{ textAlign: "right" }}>
-														<Text size="1" weight="medium" style={{ display: "block" }}>
+														<Text
+															size="1"
+															weight="medium"
+															style={{ display: "block" }}
+														>
 															{formatDuration(candidate.durationMs)}
 														</Text>
 														<Text size="1" color="gray">
@@ -666,7 +719,12 @@ export function SpotMatchDialog() {
 														</Text>
 													</Box>
 
-													<Tooltip content={t("spotmatch.copyTrackId", "Copy Spotify Track ID")}>
+													<Tooltip
+														content={t(
+															"spotmatch.copyTrackId",
+															"Copy Spotify Track ID",
+														)}
+													>
 														<IconButton
 															size="1"
 															variant="ghost"
@@ -674,10 +732,22 @@ export function SpotMatchDialog() {
 															onClick={async (e) => {
 																e.stopPropagation();
 																try {
-																	await navigator.clipboard.writeText(candidate.trackId);
-																	toast.success(t("spotmatch.copiedSingleToast", "Copied Spotify track ID!"));
+																	await navigator.clipboard.writeText(
+																		candidate.trackId,
+																	);
+																	toast.success(
+																		t(
+																			"spotmatch.copiedSingleToast",
+																			"Copied Spotify track ID!",
+																		),
+																	);
 																} catch {
-																	toast.error(t("spotmatch.copyFailed", "Failed to write to clipboard."));
+																	toast.error(
+																		t(
+																			"spotmatch.copyFailed",
+																			"Failed to write to clipboard.",
+																		),
+																	);
 																}
 															}}
 														>
@@ -685,7 +755,12 @@ export function SpotMatchDialog() {
 														</IconButton>
 													</Tooltip>
 
-													<Tooltip content={t("spotmatch.openSpotify", "Open on Spotify")}>
+													<Tooltip
+														content={t(
+															"spotmatch.openSpotify",
+															"Open on Spotify",
+														)}
+													>
 														<IconButton
 															size="1"
 															variant="ghost"
@@ -728,11 +803,28 @@ export function SpotMatchDialog() {
 
 					<Flex gap="2">
 						<Button
+							variant="soft"
+							color="gray"
+							disabled={selectedCandidates.length === 0}
+							onClick={handleSaveTxt}
+							style={{
+								cursor:
+									selectedCandidates.length === 0 ? "not-allowed" : "pointer",
+							}}
+						>
+							<Save16Regular />
+							{t("spotmatch.saveAsTxt", "Save as .txt")}
+						</Button>
+
+						<Button
 							variant="solid"
 							color={copiedNotice ? "green" : undefined}
 							disabled={selectedCandidates.length === 0}
 							onClick={handleCopySpicyLyricsIds}
-							style={{ cursor: "pointer" }}
+							style={{
+								cursor:
+									selectedCandidates.length === 0 ? "not-allowed" : "pointer",
+							}}
 						>
 							{copiedNotice ? <Checkmark16Regular /> : <Copy16Regular />}
 							{copiedNotice
