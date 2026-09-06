@@ -468,7 +468,6 @@ export const SettingsAccountTab = memo(() => {
 					<Flex gap="2">
 						<Button
 							variant="soft"
-							color="indigo"
 							size="2"
 							onClick={handleOpenEditProfile}
 						>
@@ -690,14 +689,12 @@ export const SettingsAccountTab = memo(() => {
 					<Flex gap="3" mt="1">
 						<Button
 							variant="solid"
-							color="indigo"
 							onClick={() => handleOpenManager("open")}
 						>
 							📂 Open Cloud Library
 						</Button>
 						<Button
 							variant="soft"
-							color="indigo"
 							onClick={() => handleOpenManager("save")}
 						>
 							💾 Save Current Lyric to Cloud

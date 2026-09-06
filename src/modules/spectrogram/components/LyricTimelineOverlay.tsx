@@ -28,7 +28,6 @@ import {
 } from "$/modules/spectrogram/states/index.ts";
 import {
 	selectedLinesAtom,
-	showUnselectedLinesAtom,
 	toolModeAtom,
 	ToolMode,
 } from "$/states/main.ts";
@@ -53,7 +52,6 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 		const scrollLeft = useAtomValue(spectrogramScrollLeftAtom);
 		const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
 
-		const showUnselectedLines = useAtomValue(showUnselectedLinesAtom);
 		const spectrogramOnlyShowSyncLine = useAtomValue(
 			spectrogramOnlyShowSyncLineAtom,
 		);
@@ -266,9 +264,8 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 		}
 
 		if (
-			!showUnselectedLines ||
-			(spectrogramOnlyShowSyncLine &&
-				(toolMode === ToolMode.Sync || selectedLines.size > 0))
+			spectrogramOnlyShowSyncLine &&
+			(toolMode === ToolMode.Sync || selectedLines.size > 0)
 		) {
 			linesToRender = linesToRender.filter((line) =>
 				selectedLines.has(line.id),

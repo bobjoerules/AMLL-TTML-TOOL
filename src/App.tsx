@@ -352,7 +352,7 @@ function App() {
 	const vSidebarActive = useAtomValue(advSidebarActiveAtom);
 	const vMenuHover = useAtomValue(advMenuHoverBgAtom);
 	const vEditorBg = useAtomValue(advEditorBgAtom);
-	const vActiveLine = useAtomValue(advActiveLineBgAtom);
+	const [vActiveLine, setVActiveLine] = useAtom(advActiveLineBgAtom);
 	const vLineHover = useAtomValue(advLineHoverBgAtom);
 	const vChipRadius = useAtomValue(advChipBorderRadiusAtom);
 	const vChipGap = useAtomValue(advChipGapAtom);
@@ -368,10 +368,19 @@ function App() {
 	const vGlobalRadius = useAtomValue(advGlobalBorderRadiusAtom);
 	const vGlobalBorderWidth = useAtomValue(advGlobalBorderWidthAtom);
 	const vShadow = useAtomValue(advShadowIntensityAtom);
-	const vSelection = useAtomValue(advSelectionColorAtom);
+	const [vSelection, setVSelection] = useAtom(advSelectionColorAtom);
 	const vBackdropBlur = useAtomValue(advBackdropBlurAtom);
 	const appLayoutOrder = useAtomValue(appLayoutOrderAtom);
 	const vRibbonPosition = useAtomValue(vRibbonPositionAtom);
+
+	useEffect(() => {
+		if (vActiveLine === "rgba(56, 189, 248, 0.2)") {
+			setVActiveLine("");
+		}
+		if (vSelection === "rgba(56, 189, 248, 0.3)") {
+			setVSelection("");
+		}
+	}, [vActiveLine, vSelection, setVActiveLine, setVSelection]);
 
 	const boykisserMode = useAtomValue(boykisserModeAtom);
 	const [boykisserUnlocked, setBoykisserUnlocked] = useAtom(

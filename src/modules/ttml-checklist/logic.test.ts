@@ -6,6 +6,7 @@ import {
 	linkUploadedTTMLToChecklist,
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
+	toggleChecklistEntryFavorite,
 	updateChecklistEntry,
 } from "./logic";
 
@@ -195,5 +196,24 @@ describe("TTML checklist", () => {
 		expect(result[0].id).toBe("existing-1");
 		expect(result[0].completed).toBe(true);
 		expect(result[0].notes).toContain("Original");
+	});
+
+	it("toggles and preserves favorite status", () => {
+		const initial = [
+			{
+				id: "fav-1",
+				song: "Favorite Song",
+				artist: "Artist",
+				notes: "",
+				completed: false,
+				createdAt: 100,
+			},
+		];
+
+		const favorited = toggleChecklistEntryFavorite(initial, "fav-1");
+		expect(favorited[0].favorite).toBe(true);
+
+		const unfavorited = toggleChecklistEntryFavorite(favorited, "fav-1");
+		expect(unfavorited[0].favorite).toBeUndefined();
 	});
 });

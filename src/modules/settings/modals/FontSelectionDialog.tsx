@@ -536,11 +536,11 @@ export const FontSelectionDialog = () => {
 					{customFontName && (
 						<Card
 							variant="surface"
-							style={{ backgroundColor: "var(--indigo-3)" }}
+							style={{ backgroundColor: "var(--accent-3)" }}
 						>
 							<Flex align="center" justify="between">
 								<Flex direction="column">
-									<Text size="1" color="indigo" weight="bold">
+									<Text size="1" style={{ color: "var(--accent-11)" }} weight="bold">
 										{t(
 											"settings.appearance.customFontActive",
 											"LOCAL CUSTOM FONT",
@@ -556,7 +556,6 @@ export const FontSelectionDialog = () => {
 								<Flex gap="2">
 									<Button
 										variant="solid"
-										color="indigo"
 										size="1"
 										onClick={() =>
 											handleSelectFont(`"${customFontName}", sans-serif`, false)

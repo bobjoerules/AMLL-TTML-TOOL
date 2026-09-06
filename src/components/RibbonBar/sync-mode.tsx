@@ -368,7 +368,6 @@ export const LineTimingTools = () => {
 				<IconButton
 					size="2"
 					variant="soft"
-					color="indigo"
 					onClick={handleSnapToPlayhead}
 					aria-label={t(
 						"ribbonBar.timingTools.snapPlayhead",
@@ -671,7 +670,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Button
 						size="1"
 						variant={syncLevelMode === "word" ? "solid" : "soft"}
-						color={syncLevelMode === "word" ? "indigo" : "gray"}
+						color={syncLevelMode === "word" ? undefined : "gray"}
 						onClick={() => setSyncLevelMode("word")}
 						style={{
 							justifyContent: "flex-start",
@@ -687,7 +686,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Button
 						size="1"
 						variant={syncLevelMode === "line" ? "solid" : "soft"}
-						color={syncLevelMode === "line" ? "indigo" : "gray"}
+						color={syncLevelMode === "line" ? undefined : "gray"}
 						onClick={() => setSyncLevelMode("line")}
 						style={{
 							justifyContent: "flex-start",
