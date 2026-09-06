@@ -5,8 +5,6 @@ import type { CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import {
 	changelogDialogAtom,
-	settingsDialogAtom,
-	settingsTabAtom,
 	whatsNewDialogAtom,
 } from "$/states/dialogs.ts";
 import { useTopMenuActions } from "../useTopMenuActions";
@@ -26,17 +24,11 @@ const HelpMenuItems = () => {
 	const { t } = useTranslation();
 	const menu = useTopMenuActions();
 	const setChangelogOpen = useSetAtom(changelogDialogAtom);
-	const setSettingsOpen = useSetAtom(settingsDialogAtom);
-	const setSettingsTab = useSetAtom(settingsTabAtom);
 	const setWhatsNewOpen = useSetAtom(whatsNewDialogAtom);
 	const setGuideWelcomeOpen = useSetAtom(guideWelcomeOpenAtom);
 	const setGuidePanelOpen = useSetAtom(guidePanelOpenAtom);
 	const setGuideStep = useSetAtom(guideStepAtom);
 	const setGuideExported = useSetAtom(guideExportedAtom);
-	const openAbout = () => {
-		setSettingsTab("about");
-		setSettingsOpen(true);
-	};
 
 	return (
 		<>
@@ -52,7 +44,7 @@ const HelpMenuItems = () => {
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenGitHub}>GitHub</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenWiki}>
-				{t("topBar.menu.helpDoc", "Documentation & Wiki")}
+				{t("topBar.menu.helpDoc", "SpicyLyrics Guides")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => setWhatsNewOpen(true)}>
@@ -60,10 +52,6 @@ const HelpMenuItems = () => {
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => setChangelogOpen(true)}>
 				Changelog & Updates
-			</DropdownMenu.Item>
-			<DropdownMenu.Separator />
-			<DropdownMenu.Item onSelect={openAbout}>
-				{t("common.about", "About")}
 			</DropdownMenu.Item>
 		</>
 	);

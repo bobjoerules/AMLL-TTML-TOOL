@@ -480,6 +480,7 @@ pub fn run() {
                 segment_menu.append(&learned_splits_item)?;
 
                 let sync_timestamps_item = MenuItem::with_id(app, "menu-sync-line-timestamps", "Sync Line Timestamps", true, None::<&str>)?;
+                let auto_duet_item = MenuItem::with_id(app, "menu-auto-duet-singer", "Auto Duet Based on Singer", true, None::<&str>)?;
                 let time_shift_item = MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
                 let time_stretch_item = MenuItem::with_id(app, "menu-time-stretch", "Time Stretch...", true, None::<&str>)?;
                 let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, Some("CmdOrCtrl+Shift+C"))?;
@@ -490,6 +491,7 @@ pub fn run() {
                 tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&segment_menu)?;
                 tools_menu.append(&sync_timestamps_item)?;
+                tools_menu.append(&auto_duet_item)?;
                 tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&time_shift_item)?;
                 tools_menu.append(&time_stretch_item)?;
@@ -502,7 +504,7 @@ pub fn run() {
                 let help_menu = Submenu::new(app, "Help", true)?;
                 let start_guide_item = MenuItem::with_id(app, "menu-start-guide", "Start Guide", true, None::<&str>)?;
                 let github_item = MenuItem::with_id(app, "menu-github", "GitHub", true, None::<&str>)?;
-                let wiki_item = MenuItem::with_id(app, "menu-wiki", "Documentation & Wiki", true, None::<&str>)?;
+                let wiki_item = MenuItem::with_id(app, "menu-wiki", "SpicyLyrics Guides", true, None::<&str>)?;
                 let whats_new_item = MenuItem::with_id(app, "menu-whats-new", "What's New", true, None::<&str>)?;
                 let changelog_item = MenuItem::with_id(app, "menu-changelog", "Changelog & Updates", true, None::<&str>)?;
                 let about_item = MenuItem::with_id(app, "menu-about", "About AMLL TTML Tool", true, None::<&str>)?;

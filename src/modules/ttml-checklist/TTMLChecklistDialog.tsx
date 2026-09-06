@@ -50,6 +50,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { ViewportList } from "react-viewport-list";
 import { useFileOpener } from "$/hooks/useFileOpener";
+import { getProgressBadgeColor } from "$/components/TopMenu/HeaderFileInfo";
 import { extractSpotifyTrackId } from "$/modules/apple-ttml/api/client";
 import { audioCoverArtAtom } from "$/modules/audio/states";
 import { loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
@@ -1159,6 +1160,7 @@ export const TTMLChecklistDialog = () => {
 	const pendingCount = totalCount - completedCount;
 	const progressPercent =
 		totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+	const progressColor = getProgressBadgeColor(progressPercent);
 
 	const filteredEntries = useMemo(() => {
 		let result = [...entries];
@@ -1832,10 +1834,22 @@ export const TTMLChecklistDialog = () => {
 										</Text>
 										<Badge
 											size="1"
-											color={progressPercent === 100 ? "green" : "indigo"}
+											color={progressColor}
 											variant="solid"
-											style={{ borderRadius: "10px", padding: "1px 8px" }}
+											style={{
+												borderRadius: "10px",
+												padding: "1px 8px",
+												fontWeight: 600,
+												display: "inline-flex",
+												alignItems: "center",
+												gap: "3px",
+											}}
 										>
+											{progressPercent === 100 && (
+												<CheckmarkCircle16Filled
+													style={{ width: 12, height: 12 }}
+												/>
+											)}
 											{progressPercent}%
 										</Badge>
 									</Flex>
@@ -1871,7 +1885,7 @@ export const TTMLChecklistDialog = () => {
 								</Flex>
 								<Progress
 									value={progressPercent}
-									color={progressPercent === 100 ? "green" : undefined}
+									color={progressColor}
 									size="2"
 									style={{ borderRadius: "6px" }}
 								/>

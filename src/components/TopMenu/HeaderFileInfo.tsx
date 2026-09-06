@@ -20,6 +20,15 @@ import {
 } from "$/states/main";
 import { useSyncProgress } from "$/hooks/useSyncProgress";
 
+export const getProgressBadgeColor = (
+	percent: number,
+): "red" | "orange" | "yellow" | "green" => {
+	if (percent >= 75) return "green";
+	if (percent >= 50) return "yellow";
+	if (percent >= 25) return "orange";
+	return "red";
+};
+
 export const HeaderFileInfo = () => {
 	const { t } = useTranslation();
 	const syncProgress = useSyncProgress();
@@ -204,13 +213,7 @@ export const HeaderFileInfo = () => {
 					<Badge
 						size="1"
 						variant="surface"
-						color={
-							syncProgress.linePercent === 100
-								? "green"
-								: syncProgress.linePercent > 0
-									? "indigo"
-									: "gray"
-						}
+						color={getProgressBadgeColor(syncProgress.linePercent)}
 						style={{
 							cursor: "default",
 							fontWeight: 600,

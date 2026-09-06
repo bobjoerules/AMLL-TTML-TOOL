@@ -3,10 +3,25 @@
 	--color-panel-solid: var(--gray-2) !important;
 }
 
+.radixTheme:is(:global(.light), :global(.light-theme)) {
+	--color-panel-translucent: rgba(255, 255, 255, 0.82) !important;
+	--color-panel-solid: #ffffff !important;
+}
+
+.radixTheme:is(:global(.dark), :global(.dark-theme)) {
+	--color-panel-translucent: var(--gray-a5) !important;
+	--color-panel-solid: var(--gray-2) !important;
+}
+
 .glassPanel {
 	background-color: var(--gray-a5) !important;
 	backdrop-filter: blur(var(--glass-blur, 16px)) saturate(160%) !important;
 	-webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(160%) !important;
+}
+
+:global(.radix-themes.light) .glassPanel,
+:global(.radix-themes.light-theme) .glassPanel {
+	background-color: rgba(255, 255, 255, 0.82) !important;
 }
 
 .appContent {

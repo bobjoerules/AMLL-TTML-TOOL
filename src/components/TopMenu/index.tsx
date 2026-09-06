@@ -205,6 +205,7 @@ export const TopMenu: FC = () => {
 				"menu-advanced-segment": () => menuRef.current.onOpenAdvancedSegmentation(),
 				"menu-learned-splits": () => menuRef.current.onOpenLearnedSplits(),
 				"menu-sync-line-timestamps": () => menuRef.current.onSyncLineTimestamps(),
+				"menu-auto-duet-singer": () => menuRef.current.onAutoDuetBySinger(),
 				"menu-toggle-preview-panel": () => store.set(showPreviewPanelAtom, (prev) => !prev),
 				"menu-time-shift": () => menuRef.current.onOpenTimeShift(),
 				"menu-time-stretch": () => menuRef.current.onOpenTimeStretch(),
@@ -276,12 +277,13 @@ export const TopMenu: FC = () => {
 
 	return (
 		<Flex
-			p="2"
+			px="2"
 			pr="0"
 			align="center"
 			gap="2"
 			style={{
 				whiteSpace: "nowrap",
+				height: "100%",
 			}}
 		>
 			{showHomeButton ? (

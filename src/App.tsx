@@ -39,7 +39,7 @@ import {
 import { lazy } from "$/utils/lazy.ts";
 import { ErrorBoundary } from "react-error-boundary";
 import { useTranslation } from "react-i18next";
-import { ToastContainer, toast } from "react-toastify";
+import { Slide, ToastContainer, toast } from "react-toastify";
 import saveFile from "save-file";
 import semverGt from "semver/functions/gt";
 import { backgroundGradients } from "$/modules/settings/states/gradients";
@@ -273,6 +273,41 @@ const RainEffect: FC<{ isRaining: boolean }> = memo(({ isRaining }) => {
 	);
 });
 
+function getLuminance(colorStr: string): number | null {
+	if (!colorStr || colorStr === "transparent") return null;
+	const s = colorStr.trim().toLowerCase();
+	let r = 0,
+		g = 0,
+		b = 0;
+	if (s.startsWith("#")) {
+		let hex = s.slice(1);
+		if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+		if (hex.length >= 6) {
+			r = parseInt(hex.slice(0, 2), 16) / 255;
+			g = parseInt(hex.slice(2, 4), 16) / 255;
+			b = parseInt(hex.slice(4, 6), 16) / 255;
+		} else {
+			return null;
+		}
+	} else if (s.startsWith("rgb")) {
+		const match = s.match(/\(([^)]+)\)/);
+		if (!match) return null;
+		const parts = match[1].split(/[\s,]+/).map(Number);
+		if (parts.length >= 3) {
+			r = parts[0] / 255;
+			g = parts[1] / 255;
+			b = parts[2] / 255;
+		} else {
+			return null;
+		}
+	} else {
+		return null;
+	}
+	const toLinear = (c: number) =>
+		c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+	return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
 function App() {
 	const isDarkTheme = useAtomValue(isDarkThemeAtom);
 	const legacyDarkTheme = useAtomValue(legacyDarkThemeAtom);
@@ -452,25 +487,97 @@ function App() {
 			`;
 		}
 
+		const primaryLum = advPrimaryText ? getLuminance(advPrimaryText) : null;
+		const secondaryLum = advSecondaryText
+			? getLuminance(advSecondaryText)
+			: null;
+		const editorBgLum = vEditorBg ? getLuminance(vEditorBg) : null;
+		const titlebarBgLum = vTitlebarBg ? getLuminance(vTitlebarBg) : null;
+		const sidebarBgLum = vSidebarBg ? getLuminance(vSidebarBg) : null;
+		const dialogBgLum = vDialogBg ? getLuminance(vDialogBg) : null;
+
+		// Mode-safe overrides:
+		// In light mode, text must be dark (lum < 0.55) and surfaces shouldn't be pitch dark (lum > 0.4 unless transparent)
+		// In dark mode, text must be light (lum > 0.35) and surfaces shouldn't be bright white (lum < 0.65 unless transparent)
+		const shouldApplyPrimaryText =
+			!!advPrimaryText &&
+			(isDarkTheme
+				? primaryLum === null || primaryLum > 0.35
+				: primaryLum === null || primaryLum < 0.55);
+
+		const shouldApplySecondaryText =
+			!!advSecondaryText &&
+			(isDarkTheme
+				? secondaryLum === null || secondaryLum > 0.35
+				: secondaryLum === null || secondaryLum < 0.55);
+
+		const shouldApplyEditorBg =
+			!!vEditorBg &&
+			(vEditorBg === "transparent" ||
+				(isDarkTheme
+					? editorBgLum === null || editorBgLum < 0.65
+					: editorBgLum === null || editorBgLum > 0.4));
+
+		const shouldApplyTitlebarBg =
+			!!vTitlebarBg &&
+			(vTitlebarBg === "transparent" ||
+				(isDarkTheme
+					? titlebarBgLum === null || titlebarBgLum < 0.65
+					: titlebarBgLum === null || titlebarBgLum > 0.4));
+
+		const shouldApplySidebarBg =
+			!!vSidebarBg &&
+			(vSidebarBg === "transparent" ||
+				(isDarkTheme
+					? sidebarBgLum === null || sidebarBgLum < 0.65
+					: sidebarBgLum === null || sidebarBgLum > 0.4));
+
+		const shouldApplyDialogBg =
+			!!vDialogBg &&
+			(isDarkTheme
+				? dialogBgLum === null || dialogBgLum < 0.65
+				: dialogBgLum === null || dialogBgLum > 0.4);
+
+		const rootBg = shouldApplyEditorBg
+			? vEditorBg
+			: isDarkTheme
+				? "#0b0b0d"
+				: "#fafafa";
+
 		return `
 		${customFontFace}
 		:root {
 			--default-font-family: ${appFont} !important;
+			${vEditorBg === "transparent" ? `--color-background: transparent !important; background-color: transparent !important;` : `--color-background: ${rootBg} !important; background-color: ${rootBg} !important;`}
+		}
+		body {
+			${vEditorBg === "transparent" ? `background-color: transparent !important;` : `background-color: ${rootBg} !important;`}
+		}
+		${
+			vEditorBg === "transparent"
+				? `
+		html, body, #root, .radix-themes {
+			background-color: transparent !important;
+			background: transparent !important;
+		}
+		`
+				: ""
 		}
 		.radix-themes {
 			--default-font-family: ${appFont} !important;
 			--glass-blur: ${glassmorphismBlur}px !important;
 			--backdrop-blur: ${glassmorphismBlur}px !important;
-			${advPrimaryText ? `--gray-12: ${advPrimaryText} !important;` : ""}
-			${advSecondaryText ? `--gray-11: ${advSecondaryText} !important;` : ""}
+			${shouldApplyPrimaryText ? `--gray-12: ${advPrimaryText} !important;` : ""}
+			${shouldApplySecondaryText ? `--gray-11: ${advSecondaryText} !important;` : ""}
 			${advWaveformColor ? `--adv-waveform-color: ${advWaveformColor} !important;` : ""}
 			${advWaveformProgress ? `--adv-waveform-progress: ${advWaveformProgress} !important;` : ""}
 			
-			${vTitlebarBg ? `--titlebar-bg: ${vTitlebarBg} !important;` : ""}
-			${vSidebarBg ? `--sidebar-bg: ${vSidebarBg} !important;` : ""}
+			${shouldApplyTitlebarBg ? `--titlebar-bg: ${vTitlebarBg} !important;` : ""}
+			${vTitlebarBg === "transparent" ? `--titlebar-backdrop-filter: none !important;` : ""}
+			${shouldApplySidebarBg ? `--sidebar-bg: ${vSidebarBg} !important;` : ""}
 			${vSidebarActive ? `--sidebar-active: ${vSidebarActive} !important;` : ""}
 			${vMenuHover ? `--menu-hover: ${vMenuHover} !important;` : ""}
-			${vEditorBg ? `--editor-bg: ${vEditorBg} !important;` : ""}
+			${shouldApplyEditorBg ? `--editor-bg: ${vEditorBg} !important;` : ""}
 			${vActiveLine ? `--active-line-bg: ${vActiveLine} !important;` : ""}
 			${vLineHover ? `--line-hover-bg: ${vLineHover} !important;` : ""}
 			${vSelection ? `--selection-color: ${vSelection} !important;` : ""}
@@ -487,7 +594,7 @@ function App() {
 			${vAudioBarText ? `--audio-bar-text: ${vAudioBarText} !important;` : ""}
 			
 			${vScrollbar ? `--scrollbar-thumb-color: ${vScrollbar} !important;` : ""}
-			${vDialogBg ? `--dialog-bg: ${vDialogBg} !important;` : ""}
+			${shouldApplyDialogBg ? `--dialog-bg: ${vDialogBg} !important;` : ""}
 			${vDialogBorder ? `--dialog-border: ${vDialogBorder} !important;` : ""}
 			
 			--global-radius: ${vGlobalRadius}px !important;
@@ -498,14 +605,14 @@ function App() {
 			--radius-factor: ${vGlobalRadius / 12} !important;
 
 			/* Comprehensive Overrides */
-			${vTitlebarBg ? `--color-panel-translucent: ${vTitlebarBg} !important;` : ""}
-			${vEditorBg ? `--color-background: ${vEditorBg} !important;` : ""}
+			${shouldApplyTitlebarBg && (isDarkTheme || titlebarBgLum === null || titlebarBgLum > 0.4) ? `--color-panel-translucent: ${vTitlebarBg} !important;` : ""}
+			${shouldApplyEditorBg ? `--color-background: ${vEditorBg} !important;` : ""}
 			${vSelection ? `--accent-a5: ${vSelection} !important;` : ""}
-			${vDialogBg ? `--rt-color-panel-solid: ${vDialogBg} !important;` : ""}
+			${shouldApplyDialogBg ? `--color-panel-solid: ${vDialogBg} !important;` : ""}
 			
 			/* Shadow Scaling */
 			--shadow-intensity: ${vShadow};
-			--rt-shadow-color: rgba(0, 0, 0, calc(0.1 * var(--shadow-intensity)));
+			--rt-shadow-color: ${isDarkTheme ? `rgba(0, 0, 0, calc(0.1 * var(--shadow-intensity)))` : `rgba(0, 0, 0, calc(0.06 * var(--shadow-intensity)))`};
 			--shadow-1: 0 1px 2px var(--rt-shadow-color);
 			--shadow-2: 0 3px 6px var(--rt-shadow-color);
 			--shadow-3: 0 10px 20px var(--rt-shadow-color);
@@ -514,7 +621,7 @@ function App() {
 			--shadow-6: 0 25px 50px var(--rt-shadow-color);
 
 			/* Sidebar & Global Navigation */
-			${vSidebarBg ? `--sidebar-bg: ${vSidebarBg} !important;` : ""}
+			${shouldApplySidebarBg ? `--sidebar-bg: ${vSidebarBg} !important;` : ""}
 			${vSidebarActive ? `--sidebar-active: ${vSidebarActive} !important;` : ""}
 			${vMenuHover ? `--rt-menu-item-hover-bg: ${vMenuHover} !important;` : ""}
 			${vMenuHover ? `--menu-hover: ${vMenuHover} !important;` : ""}
@@ -526,6 +633,7 @@ function App() {
 		}
 		`;
 	}, [
+		isDarkTheme,
 		customThemeStyles,
 		appFont,
 		glassmorphismBlur,
@@ -907,7 +1015,12 @@ function App() {
 					<Suspense fallback={null}>
 						<Dialogs />
 					</Suspense>
-					<ToastContainer theme={effectiveTheme} />
+					<ToastContainer
+						theme={effectiveTheme}
+						hideProgressBar={true}
+						transition={Slide}
+						autoClose={4000}
+					/>
 					{boykisserMode &&
 						isUnlocked &&
 						!window.location.href.includes("spicylyrics.org") && (

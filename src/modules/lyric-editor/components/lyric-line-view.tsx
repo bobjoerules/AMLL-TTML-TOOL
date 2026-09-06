@@ -80,6 +80,7 @@ import {
 import { getSynchronizableUnits } from "../utils/lyric-states.ts";
 import { getWordConnections } from "../utils/word-connections.ts";
 import {
+	cleanSectionHeader,
 	duplicateLinesWithSections,
 	repairSectionIntegrity,
 } from "../utils/section-system.ts";
@@ -93,7 +94,7 @@ import {
 	lineDragAtom,
 	timingCopyPlacementAtom,
 } from "./lyric-line-view-states.ts";
-import LyricWordView from "./lyric-word-view.tsx";
+import LyricWordView, { splitTrailingSpace } from "./lyric-word-view.tsx";
 import { RomanWordView } from "./roman-word-view.tsx";
 import {
 	CategorizeSelectionContextMenuItem,
@@ -344,7 +345,12 @@ const InsertLineButton = ({
 						state.lyricLines.splice(lineIndex, 0, ...newLines);
 						repairSectionIntegrity(state);
 					} else {
-						state.lyricLines.splice(lineIndex, 0, newLyricLine());
+						const cur = state.lyricLines[lineIndex];
+						const newLine = newLyricLine();
+						if (cur?.sectionId) newLine.sectionId = cur.sectionId;
+						if (cur?.geniusHeader) newLine.geniusHeader = cur.geniusHeader;
+						state.lyricLines.splice(lineIndex, 0, newLine);
+						repairSectionIntegrity(state);
 					}
 				});
 				if (!evt.shiftKey) {
@@ -411,25 +417,68 @@ export const LyricLineView: FC<{
 		? (activeSection?.label ?? line.geniusHeader)
 		: undefined;
 
+	const cleanHeader = useMemo(
+		() => cleanSectionHeader(activeGeniusHeader),
+		[activeGeniusHeader],
+	);
+
+	const collapsedSections = useAtomValue(collapsedSectionIdsAtom);
+	const isSectionCollapsed = Boolean(
+		line.sectionId && collapsedSections.has(line.sectionId),
+	);
+
+	const sectionLineCount = useMemo(() => {
+		if (!line.sectionId) return 0;
+		const lyricLines = store.get(lyricLinesAtom).lyricLines;
+		return lyricLines.filter((l) => l.sectionId === line.sectionId).length || 1;
+	}, [store, line.sectionId, collapsedSections]);
+
 	const customHeaderColor = useAtomValue(advGeniusHeaderColorAtom);
 
 	const headerType = useMemo(() => {
 		if (activeSection) return activeSection.category;
-		if (!activeGeniusHeader) return "accent";
-		const match = activeGeniusHeader.match(
-			/^\[(Chorus|Verse|Bridge|Intro|Outro|Pre-Chorus|Hook|Strofa|Refren|Skit|Interlude|Instrumental|Pre-Refren|Partea|Slofa|Section|Part|S\d+|V\d+|C\d+|Strophe|Refrain|Pont|Couplet|Refrain|Break).*?\]$/i,
+		if (!cleanHeader) return "accent";
+		const match = cleanHeader.match(
+			/^(Chorus|Verse|Bridge|Intro|Outro|Pre-Chorus|Hook|Strofa|Refren|Skit|Interlude|Instrumental|Pre-Refren|Partea|Slofa|Section|Part|S\d+|V\d+|C\d+|Strophe|Refrain|Pont|Couplet|Refrain|Break)/i,
 		);
 		return match ? match[1].toLowerCase() : "accent";
-	}, [activeGeniusHeader, activeSection]);
+	}, [cleanHeader, activeSection]);
 
-	const isSectionStart = useMemo(() => {
-		if (!activeGeniusHeader) return false;
-		if (lineIndex === 0) return true;
-		const prevLine = store.get(lyricLinesAtom).lyricLines[lineIndex - 1];
-		return line.sectionId
-			? prevLine?.sectionId !== line.sectionId
-			: prevLine?.geniusHeader !== activeGeniusHeader;
-	}, [activeGeniusHeader, line.sectionId, lineIndex, store]);
+	const sectionBoundsAtom = useMemo(
+		() =>
+			atom((get) => {
+				const { lyricLines, sections } = get(lyricLinesAtom);
+				const cur = lyricLines[lineIndex];
+				if (!cur) return { isStart: false, isEnd: false };
+
+				const sec = sections?.find((s) => s.id === cur.sectionId);
+				const header = sec?.label ?? cur.geniusHeader;
+				if (!header) return { isStart: false, isEnd: false };
+
+				const prev = lineIndex > 0 ? lyricLines[lineIndex - 1] : undefined;
+				const isStart =
+					lineIndex === 0 ||
+					(cur.sectionId
+						? prev?.sectionId !== cur.sectionId
+						: prev?.geniusHeader !== header);
+
+				const next =
+					lineIndex < lyricLines.length - 1
+						? lyricLines[lineIndex + 1]
+						: undefined;
+				const isEnd =
+					lineIndex === lyricLines.length - 1 ||
+					(cur.sectionId
+						? next?.sectionId !== cur.sectionId
+						: next?.geniusHeader !== header);
+
+				return { isStart, isEnd };
+			}),
+		[lineIndex],
+	);
+	const { isStart: isSectionStart, isEnd: rawSectionEnd } =
+		useAtomValue(sectionBoundsAtom);
+	const isSectionEnd = rawSectionEnd || isSectionCollapsed;
 
 	const categoryColor = useMemo(() => {
 		if (!headerType) return "accent";
@@ -513,24 +562,17 @@ export const LyricLineView: FC<{
 
 	const startTimeRef = useRef<HTMLDivElement>(null);
 	const endTimeRef = useRef<HTMLButtonElement>(null);
-	const [enableInsertLocal, setEnableInsertLocal] = useState(false);
 	const [globalEnableInsert, setGlobalEnableInsert] = useAtom(
 		globalEnableInsertAtom,
 	);
 	const [timingCopyPlacement, setTimingCopyPlacement] = useAtom(
 		timingCopyPlacementAtom,
 	);
-	const enableInsert = enableInsertLocal || globalEnableInsert;
+	const enableInsert = globalEnableInsert;
 
 	const disableInsert = useCallback(() => {
-		setEnableInsertLocal(false);
 		if (globalEnableInsert) setGlobalEnableInsert(false);
 	}, [globalEnableInsert, setGlobalEnableInsert]);
-
-	const toggleInsert = useCallback(() => {
-		if (enableInsert) disableInsert();
-		else setEnableInsertLocal(true);
-	}, [enableInsert, disableInsert]);
 
 	const [endTimeLinked, setEndTimeLinked] = useState(() =>
 		Boolean(line.endTimeLink),
@@ -783,13 +825,19 @@ export const LyricLineView: FC<{
 					<Flex
 						mx="1"
 						my={
-							line.isBG && toolMode === ToolMode.Sync && compactBGInSync
+							activeGeniusHeader
 								? "0"
-								: "1"
+								: line.isBG && toolMode === ToolMode.Sync && compactBGInSync
+									? "0"
+									: "1"
 						}
 						direction="row"
 						className={classNames(
 							styles.lyricLine,
+							activeGeniusHeader && styles.inSection,
+							isSectionStart && styles.sectionStart,
+							isSectionEnd && styles.sectionEnd,
+							isSectionCollapsed && styles.sectionCollapsed,
 							line.isBG &&
 								toolMode === ToolMode.Sync &&
 								compactBGInSync &&
@@ -807,7 +855,46 @@ export const LyricLineView: FC<{
 						}
 						data-lyric-line-id={line.id}
 						style={{
-							...(isSectionStart ? { marginTop: "16px" } : {}),
+							...(isSectionStart
+								? { marginTop: "18px" }
+								: activeGeniusHeader
+									? { marginTop: "0px" }
+									: {}),
+							...(isSectionEnd
+								? { marginBottom: "14px" }
+								: activeGeniusHeader
+									? { marginBottom: "0px" }
+									: {}),
+							...(isSectionCollapsed
+								? {
+										minHeight: "auto",
+										paddingTop: "6px",
+										paddingBottom: "6px",
+									}
+								: {}),
+							...(activeGeniusHeader
+								? {
+										backgroundColor: "var(--color-panel)",
+										borderTopLeftRadius: (isSectionStart || isSectionCollapsed)
+											? "var(--global-radius, var(--radius-4))"
+											: 0,
+										borderTopRightRadius: (isSectionStart || isSectionCollapsed)
+											? "var(--global-radius, var(--radius-4))"
+											: 0,
+										borderBottomLeftRadius: isSectionEnd
+											? "var(--global-radius, var(--radius-4))"
+											: 0,
+										borderBottomRightRadius: isSectionEnd
+											? "var(--global-radius, var(--radius-4))"
+											: 0,
+										borderLeft: `4px solid ${customHeaderColor || `var(--${categoryColor}-9)`}`,
+										...(!isSectionEnd && !lineSelected
+											? {
+													borderBottom: "1px solid var(--gray-a3)",
+												}
+											: {}),
+									}
+								: {}),
 						}}
 						onPointerDown={(evt) => {
 							if (
@@ -917,23 +1004,27 @@ export const LyricLineView: FC<{
 								direction="column"
 								align="center"
 								justify="center"
-								ml="3"
-								style={{ minWidth: "40px" }}
+								ml={isSectionCollapsed ? "1" : "3"}
+								style={{ minWidth: isSectionCollapsed ? "0px" : "40px" }}
 							>
-								<Text
-									className={classNames(
-										styles.lineNumber,
-										line.ignoreSync && styles.ignored,
-									)}
-									align="center"
-									color="gray"
-								>
-									{displayNumber > 0 && displayNumber}
-								</Text>
-								{line.isBG && (
-									<VideoBackgroundEffectFilled color="var(--accent-9)" />
+								{!isSectionCollapsed && (
+									<>
+										<Text
+											className={classNames(
+												styles.lineNumber,
+												line.ignoreSync && styles.ignored,
+											)}
+											align="center"
+											color="gray"
+										>
+											{displayNumber > 0 && displayNumber}
+										</Text>
+										{line.isBG && (
+											<VideoBackgroundEffectFilled color="var(--accent-9)" />
+										)}
+										{line.isDuet && <TextAlignRightFilled color="#44AA33" />}
+									</>
 								)}
-								{line.isDuet && <TextAlignRightFilled color="#44AA33" />}
 							</Flex>
 							<div
 								className={classNames(
@@ -943,7 +1034,11 @@ export const LyricLineView: FC<{
 								)}
 							>
 								{isSectionStart && (
-									<Flex gap="2" mb="1" align="center">
+									<Flex
+										gap="2"
+										mb={isSectionCollapsed ? "0" : "1"}
+										align="center"
+									>
 										<Text
 											size="1"
 											weight="bold"
@@ -956,12 +1051,19 @@ export const LyricLineView: FC<{
 												color: customHeaderColor || undefined,
 											}}
 										>
-											{activeGeniusHeader}
+											{cleanHeader}
 										</Text>
 										{sectionActionsEnabled && activeSection && (
 											<SectionActions section={activeSection} />
 										)}
-										{toolMode === ToolMode.Sync && (
+										{isSectionCollapsed && (
+											<Badge size="1" color="gray" variant="soft">
+												{t("sectionActions.linesCount", "{{count}} lines", {
+													count: sectionLineCount,
+												})}
+											</Badge>
+										)}
+										{!isSectionCollapsed && toolMode === ToolMode.Sync && (
 											<Button
 												size="1"
 												variant="ghost"
@@ -983,7 +1085,7 @@ export const LyricLineView: FC<{
 												)}
 											</Button>
 										)}
-										{toolMode === ToolMode.Sync && (
+										{!isSectionCollapsed && toolMode === ToolMode.Sync && (
 											<Button
 												size="1"
 												variant="ghost"
@@ -1032,25 +1134,18 @@ export const LyricLineView: FC<{
 										)}
 									</Flex>
 								)}
-								<div
-									className={classNames(
-										styles.lyricWordsContainer,
+								{!isSectionCollapsed && (
+									<>
+										<div
+											className={classNames(
+												styles.lyricWordsContainer,
 										toolMode === ToolMode.Edit && styles.edit,
 										toolMode === ToolMode.Sync && styles.sync,
 										!showTimestamps && styles.hideTimestamps,
 									)}
 									ref={wordsContainerRef}
 									style={{
-										backgroundColor: activeGeniusHeader
-											? customHeaderColor
-												? `${customHeaderColor}15` // 15 is roughly 8% opacity
-												: `var(--${categoryColor}-2)`
-											: undefined,
-										borderLeft: activeGeniusHeader
-											? `2px solid ${customHeaderColor || `var(--${categoryColor}-9)`}`
-											: undefined,
 										borderRadius: isSectionStart ? "var(--radius-2)" : "0",
-										padding: activeGeniusHeader ? "4px 8px" : undefined,
 									}}
 								>
 									{words.map((wordAtom, wi) => {
@@ -1153,11 +1248,13 @@ export const LyricLineView: FC<{
 													const { word, enableRuby } = parseRubyShortcut(
 														evt.currentTarget.value,
 													);
+													const { baseWord, spaceWord } =
+														splitTrailingSpace(word);
 													editLyricLines((state) => {
 														const newWord = newLyricWord();
 														state.lyricLines[lineIndex].words.push({
 															...newWord,
-															word,
+															word: baseWord,
 															ruby: enableRuby
 																? [
 																		{
@@ -1168,6 +1265,13 @@ export const LyricLineView: FC<{
 																	]
 																: undefined,
 														});
+														if (spaceWord) {
+															const spaceNewWord = newLyricWord();
+															state.lyricLines[lineIndex].words.push({
+																...spaceNewWord,
+																word: spaceWord,
+															});
+														}
 													});
 													evt.currentTarget.value = "";
 												}
@@ -1193,25 +1297,13 @@ export const LyricLineView: FC<{
 										)}
 									</>
 								)}
+									</>
+								)}
 							</div>
-							{toolMode === ToolMode.Edit && (
-								<Flex p="3">
-									<IconButton
-										data-lyric-line-interactive=""
-										size="1"
-										variant={enableInsert ? "solid" : "soft"}
-										onClick={(evt) => {
-											evt.preventDefault();
-											evt.stopPropagation();
-											toggleInsert();
-										}}
-									>
-										<AddFilled />
-									</IconButton>
-								</Flex>
-							)}
-							{toolMode === ToolMode.Sync && showTimestamps && (
-								<Flex pr="3" gap="1" direction="column" align="stretch">
+							{!isSectionCollapsed &&
+								toolMode === ToolMode.Sync &&
+								showTimestamps && (
+									<Flex pr="3" gap="1" direction="column" align="stretch">
 									<div className={styles.startTime} ref={startTimeRef}>
 										{msToTimestamp(line.startTime)}
 									</div>
@@ -1280,7 +1372,7 @@ export const LyricLineView: FC<{
 					)}
 				</ContextMenu.Content>
 			</ContextMenu.Root>
-			{(enableInsertLocal || (globalEnableInsert && isLastLine)) && (
+			{globalEnableInsert && isLastLine && (
 				<Button
 					mx="1"
 					my="1"
@@ -1300,7 +1392,12 @@ export const LyricLineView: FC<{
 								state.lyricLines.splice(lineIndex + 1, 0, ...newLines);
 								repairSectionIntegrity(state);
 							} else {
-								state.lyricLines.splice(lineIndex + 1, 0, newLyricLine());
+								const cur = state.lyricLines[lineIndex];
+								const newLine = newLyricLine();
+								if (cur?.sectionId) newLine.sectionId = cur.sectionId;
+								if (cur?.geniusHeader) newLine.geniusHeader = cur.geniusHeader;
+								state.lyricLines.splice(lineIndex + 1, 0, newLine);
+								repairSectionIntegrity(state);
 							}
 						});
 						// setInsertMode(InsertMode.None);

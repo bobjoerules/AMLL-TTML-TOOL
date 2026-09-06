@@ -14,8 +14,6 @@ import {
 	DeleteRegular,
 	PaddingLeftRegular,
 	PaddingRightRegular,
-	SplitVerticalRegular,
-	TaskListLtrRegular,
 } from "@fluentui/react-icons";
 import { ContextMenu, IconButton, TextField } from "@radix-ui/themes";
 import classNames from "classnames";
@@ -97,6 +95,15 @@ const parseRubyShortcut = (value: string) => {
 		word: value,
 		enableRuby: false,
 	};
+};
+
+export const splitTrailingSpace = (value: string) => {
+	if (value.endsWith(" ") && value.trim().length > 0) {
+		const trimmed = value.trimEnd();
+		const spaces = value.slice(trimmed.length);
+		return { baseWord: trimmed, spaceWord: spaces };
+	}
+	return { baseWord: value, spaceWord: undefined };
 };
 
 const getDisplayWordText = (
@@ -401,17 +408,40 @@ function WordEditField<F extends keyof LyricWord, V extends LyricWord[F]>({
 					fieldName === "word"
 						? parseRubyShortcut(rawValue)
 						: { word: rawValue, enableRuby: false };
+				const { baseWord, spaceWord } =
+					fieldName === "word"
+						? splitTrailingSpace(inputWord)
+						: { baseWord: inputWord, spaceWord: undefined };
 				const value =
 					fieldName === "word"
-						? (inputWord as unknown as V)
-						: parser(inputWord as string);
+						? (baseWord as unknown as V)
+						: parser(baseWord as string);
 				editLyricLines((state) => {
 					for (const line of state.lyricLines) {
-						for (const word of line.words) {
+						for (let wi = 0; wi < line.words.length; wi++) {
+							const word = line.words[wi];
 							if (thisWord.id === word.id) {
 								word[fieldName] = value;
 								if (fieldName === "word" && enableRuby && !word.ruby) {
 									word.ruby = [];
+								}
+								if (spaceWord) {
+									const nextWord = line.words[wi + 1];
+									if (
+										nextWord &&
+										nextWord.word.trim().length === 0 &&
+										nextWord.word.length > 0
+									) {
+										nextWord.word += spaceWord;
+									} else {
+										const newWord: LyricWord = {
+											...newLyricWord(),
+											word: spaceWord,
+											startTime: word.endTime,
+											endTime: word.endTime,
+										};
+										line.words.splice(wi + 1, 0, newWord);
+									}
 								}
 								break;
 							}
@@ -609,38 +639,6 @@ const LyricWordViewEditAdvance = ({
 							<PaddingRightRegular />
 						</TextField.Slot>
 					</WordEditField>
-					<div className={styles.advanceBar}>
-						<WordEditField
-							size="1"
-							type="number"
-							min={0}
-							wordAtom={wordAtom}
-							fieldName="emptyBeat"
-							formatter={String}
-							parser={Number.parseInt}
-							style={{
-								minWidth: "0",
-							}}
-						>
-							<TextField.Slot>
-								<SplitVerticalRegular />
-							</TextField.Slot>
-						</WordEditField>
-						<IconButton
-							variant="soft"
-							size="1"
-							onClick={() => {
-								editLyricLines((state) => {
-									for (const line of state.lyricLines)
-										for (const word of line.words)
-											if (word.word === currentWord.word)
-												word.emptyBeat = currentWord.emptyBeat;
-								});
-							}}
-						>
-							<TaskListLtrRegular />
-						</IconButton>
-					</div>
 				</LyricWordViewEditSpan>
 			</ContextMenu.Trigger>
 			<ContextMenu.Content
@@ -734,13 +732,33 @@ const LyricWorldViewEdit = ({
 			const { word: parsedWord, enableRuby } = parseRubyShortcut(
 				evt.currentTarget.value,
 			);
-			if (parsedWord !== word.word || enableRuby) {
+			const { baseWord, spaceWord } = splitTrailingSpace(parsedWord);
+			if (baseWord !== word.word || enableRuby || spaceWord) {
 				editLyricLines((state) => {
-					const targetWord = state.lyricLines[lineIndex]?.words[wordIndex];
+					const targetLine = state.lyricLines[lineIndex];
+					const targetWord = targetLine?.words[wordIndex];
 					if (!targetWord) return;
-					targetWord.word = parsedWord;
+					targetWord.word = baseWord;
 					if (enableRuby && !targetWord.ruby) {
 						targetWord.ruby = [];
+					}
+					if (spaceWord) {
+						const nextWord = targetLine.words[wordIndex + 1];
+						if (
+							nextWord &&
+							nextWord.word.trim().length === 0 &&
+							nextWord.word.length > 0
+						) {
+							nextWord.word += spaceWord;
+						} else {
+							const newWord: LyricWord = {
+								...newLyricWord(),
+								word: spaceWord,
+								startTime: targetWord.endTime,
+								endTime: targetWord.endTime,
+							};
+							targetLine.words.splice(wordIndex + 1, 0, newWord);
+						}
 					}
 				});
 			}
@@ -758,7 +776,43 @@ const LyricWorldViewEdit = ({
 					onChange={(evt) => setEditingValue(evt.currentTarget.value)}
 					onBlur={onEnter}
 					onKeyDown={(evt) => {
-						if (evt.key === "Enter") onEnter(evt);
+						if (evt.key === "Enter") {
+							onEnter(evt);
+						} else if (
+							evt.key === " " &&
+							editingValue.trim().length > 0 &&
+							evt.currentTarget.selectionStart === editingValue.length
+						) {
+							evt.preventDefault();
+							setEditing(false);
+							const { word: parsedWord, enableRuby } = parseRubyShortcut(editingValue);
+							const { baseWord } = splitTrailingSpace(parsedWord);
+							editLyricLines((state) => {
+								const targetLine = state.lyricLines[lineIndex];
+								const targetWord = targetLine?.words[wordIndex];
+								if (!targetWord) return;
+								targetWord.word = baseWord;
+								if (enableRuby && !targetWord.ruby) {
+									targetWord.ruby = [];
+								}
+								const nextWord = targetLine.words[wordIndex + 1];
+								if (
+									nextWord &&
+									nextWord.word.trim().length === 0 &&
+									nextWord.word.length > 0
+								) {
+									nextWord.word += " ";
+								} else {
+									const newWord: LyricWord = {
+										...newLyricWord(),
+										word: " ",
+										startTime: targetWord.endTime,
+										endTime: targetWord.endTime,
+									};
+									targetLine.words.splice(wordIndex + 1, 0, newWord);
+								}
+							});
+						}
 					}}
 				/>
 				{showRubyEditor && <RubyEditor wordAtom={wordAtom} />}

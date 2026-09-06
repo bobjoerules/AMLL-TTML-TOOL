@@ -9,7 +9,7 @@
  * https://github.com/bobjoerules/AMLL-TTML-TOOL/blob/main/LICENSE
  */
 
-import { Card, Inset } from "@radix-ui/themes";
+import { Box } from "@radix-ui/themes";
 import { AnimatePresence } from "framer-motion";
 import { useAtomValue } from "jotai";
 import { forwardRef, memo } from "react";
@@ -36,7 +36,7 @@ export const RibbonBar = memo(
 			const toolMode = useAtomValue(toolModeAtom);
 
 			return (
-				<Card
+				<Box
 					data-guide-target="ribbon"
 					style={{
 						minHeight: isSidebar ? "100%" : "fit-content",
@@ -46,51 +46,49 @@ export const RibbonBar = memo(
 						flexShrink: "0",
 						borderRadius: 0,
 						borderLeft:
-							position === "right" ? "1px solid var(--gray-5)" : "none",
+							position === "right" ? "1px solid var(--gray-a4)" : "none",
 						borderRight:
-							position === "left" ? "1px solid var(--gray-5)" : "none",
+							position === "left" ? "1px solid var(--gray-a4)" : "none",
 						borderTop:
-							position === "bottom" ? "1px solid var(--gray-5)" : "none",
+							position === "bottom" ? "1px solid var(--gray-a4)" : "none",
 						borderBottom:
-							position === "top" ? "1px solid var(--gray-5)" : "none",
+							position === "top" ? "1px solid var(--gray-a4)" : "none",
 						backgroundColor:
 							"var(--titlebar-bg, var(--color-panel-translucent))",
 						backdropFilter:
-							"blur(var(--custom-backdrop-blur, 16px)) saturate(160%)",
+							"var(--titlebar-backdrop-filter, blur(var(--custom-backdrop-blur, 16px)) saturate(160%))",
 						zIndex: 10,
 					}}
 					ref={ref}
 				>
-					<Inset style={{ minWidth: 0 }}>
-						<div
-							style={{
-								width: "100%",
-								minWidth: 0,
-								overflowY: isSidebar ? "auto" : "visible",
-								overflowX: isSidebar ? "hidden" : "auto",
-								paddingBottom: isSidebar ? 0 : "4px",
-							}}
-						>
-							<AnimatePresence mode="wait">
-								{toolMode === ToolMode.Edit && (
-									<SuspensePlaceHolder key="edit">
-										<EditModeRibbonBar isSidebar={isSidebar} />
-									</SuspensePlaceHolder>
-								)}
-								{toolMode === ToolMode.Sync && (
-									<SuspensePlaceHolder key="sync">
-										<SyncModeRibbonBar isSidebar={isSidebar} />
-									</SuspensePlaceHolder>
-								)}
-								{toolMode === ToolMode.Preview && (
-									<SuspensePlaceHolder key="preview">
-										<PreviewModeRibbonBar isSidebar={isSidebar} />
-									</SuspensePlaceHolder>
-								)}
-							</AnimatePresence>
-						</div>
-					</Inset>
-				</Card>
+					<div
+						style={{
+							width: "100%",
+							minWidth: 0,
+							overflowY: isSidebar ? "auto" : "visible",
+							overflowX: isSidebar ? "hidden" : "auto",
+							paddingBottom: isSidebar ? 0 : "4px",
+						}}
+					>
+						<AnimatePresence mode="wait">
+							{toolMode === ToolMode.Edit && (
+								<SuspensePlaceHolder key="edit">
+									<EditModeRibbonBar isSidebar={isSidebar} />
+								</SuspensePlaceHolder>
+							)}
+							{toolMode === ToolMode.Sync && (
+								<SuspensePlaceHolder key="sync">
+									<SyncModeRibbonBar isSidebar={isSidebar} />
+								</SuspensePlaceHolder>
+							)}
+							{toolMode === ToolMode.Preview && (
+								<SuspensePlaceHolder key="preview">
+									<PreviewModeRibbonBar isSidebar={isSidebar} />
+								</SuspensePlaceHolder>
+							)}
+						</AnimatePresence>
+					</div>
+				</Box>
 			);
 		},
 	),

@@ -400,8 +400,8 @@ describe("Discord presence", () => {
 				1_000,
 			),
 		).toMatchObject({
-			details: "Previewing Test Song",
-			state: "Test Artist • Line 2 of 2 • Paused",
+			details: "Test Song",
+			state: "Test Artist",
 			startTimestamp: 875,
 		});
 	});

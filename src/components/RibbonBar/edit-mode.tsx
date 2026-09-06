@@ -51,7 +51,6 @@ import {
 	Sparkle16Regular,
 	Play16Regular,
 	Stop16Regular,
-	Heart16Regular,
 	TextT16Regular,
 	LocalLanguage16Regular,
 	Warning16Regular,
@@ -81,8 +80,19 @@ import {
 	selectedWordsAtom,
 	showEndTimeAsDurationAtom,
 } from "$/states/main.ts";
-import { grammarCheckDialogAtom } from "$/modules/lyric-editor/modals/GrammarCheckDialog.tsx";
-import { type LyricLine, type LyricWord, newLyricLine } from "$/types/ttml";
+import {
+	type LyricLine,
+	type LyricWord,
+	type LyricSection,
+	type LyricSectionCategory,
+	newLyricLine,
+	LYRIC_SECTION_CATEGORIES,
+} from "$/types/ttml";
+import {
+	createSectionsFromSelectedLines,
+	repairSectionIntegrity,
+	sectionCategoryLabel,
+} from "$/modules/lyric-editor/utils/section-system";
 import { msToTimestamp, parseTimespan } from "$/utils/timestamp.ts";
 import { buildLineRomanization, getPhoneticSyllables } from "$/utils/phonetic";
 import { RibbonFrame, RibbonSection } from "./common";
@@ -1092,13 +1102,206 @@ const PhoneticSection = () => {
 	);
 };
 
+const RibbonSectionControls: FC<{ isSidebar?: boolean }> = ({ isSidebar }) => {
+	const { t } = useTranslation();
+	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
+	const selectedLines = useAtomValue(selectedLinesAtom);
+	const lyrics = useAtomValue(lyricLinesAtom);
+
+	const selectedLineSections = useMemo(() => {
+		const sectionMap = new Map((lyrics.sections ?? []).map((s) => [s.id, s]));
+		const sections: LyricSection[] = [];
+		const seen = new Set<string>();
+		for (const line of lyrics.lyricLines) {
+			if (selectedLines.has(line.id) && line.sectionId) {
+				if (!seen.has(line.sectionId) && sectionMap.has(line.sectionId)) {
+					seen.add(line.sectionId);
+					sections.push(sectionMap.get(line.sectionId)!);
+				}
+			}
+		}
+		return sections;
+	}, [lyrics.lyricLines, lyrics.sections, selectedLines]);
+
+	const currentCategory = useMemo(() => {
+		if (selectedLineSections.length === 0) return "none";
+		const first = selectedLineSections[0].category;
+		for (let i = 1; i < selectedLineSections.length; i++) {
+			if (selectedLineSections[i].category !== first) return "multiple";
+		}
+		return first;
+	}, [selectedLineSections]);
+
+	const currentVocalist = useMemo(() => {
+		if (selectedLineSections.length === 0) return "";
+		const first = selectedLineSections[0].vocalist ?? "";
+		for (let i = 1; i < selectedLineSections.length; i++) {
+			if ((selectedLineSections[i].vocalist ?? "") !== first) return "";
+		}
+		return first;
+	}, [selectedLineSections]);
+
+	const [vocalistInput, setVocalistInput] = useState(currentVocalist);
+
+	useEffect(() => {
+		setVocalistInput(currentVocalist);
+	}, [currentVocalist]);
+
+	const handleCategoryChange = (newCategory: string) => {
+		if (newCategory === "none" || newCategory === "multiple") return;
+		const cat = newCategory as LyricSectionCategory;
+		editLyricLines((draft) => {
+			const targetSectionIds = new Set<string>();
+			let hasLinesWithoutSection = false;
+			for (const line of draft.lyricLines) {
+				if (selectedLines.has(line.id)) {
+					if (line.sectionId) {
+						targetSectionIds.add(line.sectionId);
+					} else {
+						hasLinesWithoutSection = true;
+					}
+				}
+			}
+
+			if (targetSectionIds.size === 0 || hasLinesWithoutSection) {
+				createSectionsFromSelectedLines(draft, selectedLines, cat);
+			}
+
+			if (targetSectionIds.size > 0 && draft.sections) {
+				for (const section of draft.sections) {
+					if (targetSectionIds.has(section.id)) {
+						section.category = cat;
+						const catLabel = sectionCategoryLabel(cat);
+						const numStr = section.ordinal ? ` ${section.ordinal}` : "";
+						const vocStr = section.vocalist ? `: ${section.vocalist}` : "";
+						section.label = `${catLabel}${numStr}${vocStr}`;
+						for (const line of draft.lyricLines) {
+							if (line.sectionId === section.id) {
+								line.geniusHeader = section.label;
+							}
+						}
+					}
+				}
+			}
+		});
+	};
+
+	const handleVocalistCommit = (singer: string) => {
+		const trimmed = singer.trim();
+		editLyricLines((draft) => {
+			const targetSectionIds = new Set<string>();
+			let hasLinesWithoutSection = false;
+			for (const line of draft.lyricLines) {
+				if (selectedLines.has(line.id)) {
+					if (line.sectionId) {
+						targetSectionIds.add(line.sectionId);
+					} else {
+						hasLinesWithoutSection = true;
+					}
+				}
+			}
+
+			if (targetSectionIds.size === 0 || hasLinesWithoutSection) {
+				const created = createSectionsFromSelectedLines(
+					draft,
+					selectedLines,
+					currentCategory !== "none" && currentCategory !== "multiple"
+						? (currentCategory as LyricSectionCategory)
+						: "verse",
+				);
+				for (const s of created) {
+					s.vocalist = trimmed || undefined;
+					const catLabel = sectionCategoryLabel(s.category);
+					const numStr = s.ordinal ? ` ${s.ordinal}` : "";
+					const vocStr = s.vocalist ? `: ${s.vocalist}` : "";
+					s.label = `[${catLabel}${numStr}${vocStr}]`;
+				}
+			}
+
+			if (targetSectionIds.size > 0 && draft.sections) {
+				for (const section of draft.sections) {
+					if (targetSectionIds.has(section.id)) {
+						section.vocalist = trimmed || undefined;
+						const catLabel = sectionCategoryLabel(section.category);
+						const numStr = section.ordinal ? ` ${section.ordinal}` : "";
+						const vocStr = section.vocalist ? `: ${section.vocalist}` : "";
+						section.label = `[${catLabel}${numStr}${vocStr}]`;
+						for (const line of draft.lyricLines) {
+							if (line.sectionId === section.id) {
+								line.geniusHeader = section.label;
+							}
+						}
+					}
+				}
+			}
+		});
+	};
+
+	return (
+		<RibbonSection
+			isSidebar={isSidebar}
+			label={
+				<Flex gap="1" align="center">
+					<People16Regular />
+					{t("ribbonBar.editMode.sectionProperties", "Section")}
+				</Flex>
+			}
+		>
+			<Grid columns="1" gap="1" gapY="1" flexGrow="1" align="center">
+				<Select.Root
+					size="1"
+					value={currentCategory}
+					onValueChange={handleCategoryChange}
+				>
+					<Select.Trigger
+						placeholder={t("sectionActions.type", "Section Type")}
+					/>
+					<Select.Content>
+						{currentCategory === "none" && (
+							<Select.Item value="none" disabled>
+								{t("sectionActions.noSection", "(No Section)")}
+							</Select.Item>
+						)}
+						{currentCategory === "multiple" && (
+							<Select.Item value="multiple" disabled>
+								{t("sectionActions.multiple", "(Multiple)")}
+							</Select.Item>
+						)}
+						{LYRIC_SECTION_CATEGORIES.map((category) => (
+							<Select.Item key={category} value={category}>
+								{sectionCategoryLabel(category)}
+							</Select.Item>
+						))}
+					</Select.Content>
+				</Select.Root>
+				<TextField.Root
+					size="1"
+					placeholder={t("sectionActions.vocalistPlaceholder", "Singer / Vocalist")}
+					value={vocalistInput}
+					onChange={(e) => setVocalistInput(e.target.value)}
+					onBlur={(e) => handleVocalistCommit(e.target.value)}
+					onKeyDown={(e) => {
+						if (e.key === "Enter") {
+							handleVocalistCommit(e.currentTarget.value);
+						}
+					}}
+				>
+					<TextField.Slot>
+						<People16Regular />
+					</TextField.Slot>
+				</TextField.Root>
+			</Grid>
+		</RibbonSection>
+	);
+};
+
 export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	HTMLDivElement,
 	{ isSidebar?: boolean }
 >(({ isSidebar }, ref) => {
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
 	const { t } = useTranslation();
-	const selectedLines = useAtomValue(selectedLinesAtom);
+	const [selectedLines, setSelectedLines] = useAtom(selectedLinesAtom);
 	const selectedWords = useAtomValue(selectedWordsAtom);
 	const [showAdvanced, setShowAdvanced] = useAtom(advancedRibbonControlsAtom);
 
@@ -1130,7 +1333,30 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						variant="soft"
 						onClick={() =>
 							editLyricLines((draft) => {
-								draft.lyricLines.push(newLyricLine());
+								let targetIndex = -1;
+								if (selectedLines.size > 0) {
+									for (let i = draft.lyricLines.length - 1; i >= 0; i--) {
+										if (selectedLines.has(draft.lyricLines[i].id)) {
+											targetIndex = i;
+											break;
+										}
+									}
+								}
+								const newLine = newLyricLine();
+								if (targetIndex >= 0) {
+									const prevLine = draft.lyricLines[targetIndex];
+									if (prevLine.sectionId) {
+										newLine.sectionId = prevLine.sectionId;
+									}
+									if (prevLine.geniusHeader) {
+										newLine.geniusHeader = prevLine.geniusHeader;
+									}
+									draft.lyricLines.splice(targetIndex + 1, 0, newLine);
+									repairSectionIntegrity(draft);
+								} else {
+									draft.lyricLines.push(newLine);
+								}
+								setSelectedLines(new Set([newLine.id]));
 							})
 						}
 					>
@@ -1212,6 +1438,9 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					</Grid>
 				</RibbonSection>
 			)}
+			{selectedLines.size > 0 && (
+				<RibbonSectionControls isSidebar={isSidebar} />
+			)}
 			{showAdvanced && (selectedLines.size > 0 || selectedWords.size > 0) && (
 				<PhoneticSection isSidebar={isSidebar} />
 			)}
@@ -1255,21 +1484,6 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							isWordField
 							parser={parseTimespan}
 							formatter={msToTimestamp}
-						/>
-						<EditField
-							label={
-								<Flex gap="1" align="center">
-									<Heart16Regular />
-									{t("ribbonBar.editMode.emptyBeatCount", "空拍数量")}
-								</Flex>
-							}
-							fieldName="emptyBeat"
-							isWordField
-							parser={(v) => {
-								const parsed = Number.parseInt(v, 10);
-								return Number.isNaN(parsed) ? 0 : parsed;
-							}}
-							formatter={String}
 						/>
 					</Grid>
 				</RibbonSection>

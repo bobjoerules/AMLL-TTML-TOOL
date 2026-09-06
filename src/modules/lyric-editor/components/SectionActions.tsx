@@ -25,6 +25,7 @@ import {
 	type LyricSectionCategory,
 } from "$/types/ttml";
 import {
+	cleanSectionHeader,
 	createSectionsFromSelectedLines,
 	getOrderedSections,
 	getSectionBoundsById,
@@ -147,12 +148,17 @@ export function SectionActions({ section }: { section: LyricSection }) {
 				size="1"
 				variant="ghost"
 				color="gray"
+				data-lyric-line-interactive
+				onPointerDown={(e) => {
+					e.stopPropagation();
+				}}
 				onClick={toggleCollapsed}
 				title={
 					collapsed.has(section.id)
 						? t("sectionActions.expand", "Expand section")
 						: t("sectionActions.collapse", "Collapse section")
 				}
+				style={{ cursor: "pointer" }}
 			>
 				{collapsed.has(section.id) ? "▸" : "▾"}
 			</IconButton>
@@ -305,7 +311,7 @@ export function SectionManagerDialog() {
 										);
 									}}
 								>
-									{section.label} ({bounds ? bounds.end - bounds.start : 0})
+									{cleanSectionHeader(section.label)} ({bounds ? bounds.end - bounds.start : 0})
 								</Button>
 								<Button
 									size="1"

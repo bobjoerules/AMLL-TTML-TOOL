@@ -10,8 +10,11 @@
  */
 
 import {
+	ArrowDownload24Regular,
+	BookOpen24Regular,
 	Cloud24Regular,
 	DocumentBulletList24Regular,
+	FolderOpen24Regular,
 	MyLocation24Regular,
 } from "@fluentui/react-icons";
 import { Box, Button, Card, Flex, Text } from "@radix-ui/themes";
@@ -473,16 +476,24 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 			if (!viewEl) return;
 			const viewContainerEl = viewEl.parentElement;
 			if (!viewContainerEl) return;
-			const visibleIndex = visibleItems.findIndex(
+			let visibleIndex = visibleItems.findIndex(
 				(item) => item.sourceIndex === index,
 			);
+			if (visibleIndex === -1) {
+				const targetLine = lyricLines[index];
+				if (targetLine?.sectionId) {
+					visibleIndex = visibleItems.findIndex(
+						(item) => item.line?.sectionId === targetLine.sectionId,
+					);
+				}
+			}
 			if (visibleIndex === -1) return;
 			viewRef.current?.scrollToIndex({
 				index: visibleIndex,
 				offset: viewContainerEl.clientHeight / -2 + 50,
 			});
 		},
-		[visibleItems],
+		[visibleItems, lyricLines],
 	);
 
 	const geniusCategorizationEnabled = useAtomValue(
@@ -542,27 +553,26 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 				height="100%"
 				ref={ref}
 			>
-				<Card
-					size="3"
+				<Box
 					style={{
-						maxWidth: "480px",
+						maxWidth: "520px",
 						textAlign: "center",
-						backdropFilter: "blur(12px)",
-						backgroundColor: "var(--gray-a3)",
+						padding: "24px 16px",
 					}}
 				>
 					<Flex direction="column" gap="3" align="center">
-						<Text size="5" weight="bold">
+						<Text size="6" weight="bold">
 							{t("app.empty.title", "没有歌词行")}
 						</Text>
-						<Text color="gray" align="center">
+						<Text color="gray" size="2" align="center" style={{ maxWidth: "440px", lineHeight: "1.5" }}>
 							{t(
 								"app.empty.description",
 								"Add new lyric lines in the top panel or open/import existing lyrics from the menu or cloud",
 							)}
 						</Text>
-						<Flex gap="2" wrap="wrap" justify="center" mt="2">
+						<Flex gap="2" wrap="wrap" justify="center" mt="3">
 							<Button
+								variant="soft"
 								onClick={() => {
 									setGuideWelcome(false);
 									setGuideExported(false);
@@ -570,14 +580,15 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 									setGuidePanel(true);
 								}}
 							>
+								<BookOpen24Regular style={{ width: 16, height: 16 }} />
 								{t("beginnerGuide.empty.start", "Start Guide")}
 							</Button>
 							<Button variant="soft" onClick={() => setImportChooser(true)}>
+								<ArrowDownload24Regular style={{ width: 16, height: 16 }} />
 								{t("beginnerGuide.empty.import", "Import Lyrics")}
 							</Button>
 							<Button
 								variant="soft"
-								color="purple"
 								onClick={() => setTtmlChecklist(true)}
 							>
 								<DocumentBulletList24Regular
@@ -585,12 +596,12 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 								/>
 								{t("ttmlChecklist.title", "TTML Checklist")}
 							</Button>
-							<Button variant="outline" onClick={openExistingTtml}>
+							<Button variant="soft" onClick={openExistingTtml}>
+								<FolderOpen24Regular style={{ width: 16, height: 16 }} />
 								{t("beginnerGuide.empty.open", "Open TTML")}
 							</Button>
 							<Button
-								variant="outline"
-								color="indigo"
+								variant="soft"
 								onClick={openCloudLyrics}
 							>
 								<Cloud24Regular style={{ width: 16, height: 16 }} />
@@ -598,7 +609,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 							</Button>
 						</Flex>
 					</Flex>
-				</Card>
+				</Box>
 			</Flex>
 		);
 	return (
@@ -659,7 +670,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 				>
 					{(item) => (
 						<LyricLineView
-							key={`${item.lineAtom}`}
+							key={item.line?.id ?? item.sourceIndex}
 							lineAtom={item.lineAtom}
 							lineIndex={item.sourceIndex}
 						/>

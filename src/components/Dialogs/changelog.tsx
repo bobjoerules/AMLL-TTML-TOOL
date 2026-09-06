@@ -56,6 +56,31 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.0.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 5, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Section Management & Ribbon Controls:</b> Added dedicated Section category selection and Vocalist / Singer input in the RibbonBar, bracketless clean header display, collapsible section blocks with toggle arrows, and section-inheriting line insertion.
+								</Text>
+								<Text size="2">
+									• <b>Auto Duet & Smart Spacing:</b> Automatically assigns secondary vocalist parts for duets and cleanly separates trailing spaces into dedicated space words for Apple Music-accurate syllable formatting.
+								</Text>
+								<Text size="2">
+									• <b>Clear Theme Uniformity:</b> Unified all application bars (TitleBar, RibbonBar, Editor, and AudioBar) with consistent clear transparency, customizable frosted glass styling, and polished macOS and Windows controls.
+								</Text>
+								<Text size="2">
+									• <b>Dynamic Completion Percentage Colors:</b> File status completion percentage dynamically transitions smoothly through red, orange, yellow, and green based on completion progress.
+								</Text>
+								<Text size="2">
+									• <b>Discord Rich Presence & Stability:</b> Improved project time tracking accuracy, customizable rich presence settings, and overall performance optimizations.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v1.3.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

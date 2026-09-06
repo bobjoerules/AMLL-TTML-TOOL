@@ -31,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useCurrentLocation } from "$/modules/lyric-editor/utils/lyric-states.ts";
 import { useSyncProgress } from "$/hooks/useSyncProgress";
+import { getProgressBadgeColor } from "$/components/TopMenu/HeaderFileInfo";
 import {
 	displayRomanizationInSyncAtom,
 	enableManualTimestampEditAtom,
@@ -456,7 +457,7 @@ export const RibbonSyncProgressWidget = () => {
 						stroke={
 							syncProgress.linePercent === 100
 								? "var(--green-9)"
-								: "var(--accent-9)"
+								: `var(--${getProgressBadgeColor(syncProgress.linePercent)}-9)`
 						}
 						strokeWidth="3"
 						fill="none"
@@ -480,7 +481,7 @@ export const RibbonSyncProgressWidget = () => {
 						color:
 							syncProgress.linePercent === 100
 								? "var(--green-11)"
-								: "var(--accent-11)",
+								: `var(--${getProgressBadgeColor(syncProgress.linePercent)}-11)`,
 					}}
 				>
 					{syncProgress.linePercent}%

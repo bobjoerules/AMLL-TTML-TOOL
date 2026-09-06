@@ -22,14 +22,17 @@
 	&.edit.compactSpace {
 		align-self: center;
 		box-sizing: border-box;
-		width: 100%;
-		min-width: calc(0.75em * var(--space-count, 1));
+		background-color: transparent !important;
+		box-shadow: none !important;
+		border: none !important;
+		min-width: calc(0.35em * var(--space-count, 1));
+		width: calc(0.35em * var(--space-count, 1));
+		padding: 0;
 		height: 1.85em;
-		padding: var(--chip-padding-v, 0.25em) 0;
-		opacity: 0.55;
+		opacity: 1;
 
 		.wordMainContainer {
-			min-width: 0.6em;
+			min-width: 0;
 		}
 
 		.wordMainText {
@@ -37,6 +40,17 @@
 			align-items: center;
 			justify-content: center;
 			min-height: 1.2em;
+		}
+
+		&:hover {
+			background-color: var(--gray-a3) !important;
+			border-radius: var(--radius-2);
+		}
+
+		&.selected {
+			background-color: var(--accent-a4) !important;
+			box-shadow: 0 0 0 1px var(--accent-a8) !important;
+			border-radius: var(--radius-2);
 		}
 	}
 
@@ -299,6 +313,7 @@
 	border-radius: var(--global-radius, var(--radius-4));
 	border-width: var(--global-border-width, 1px);
 	box-shadow: var(--base-card-surface-box-shadow);
+	background-color: var(--color-panel);
 	user-select: none;
 	display: flex;
 
@@ -313,6 +328,25 @@
 
 	&.dropBottom {
 		border-bottom: solid 3px var(--accent-a11);
+	}
+
+	&.inSection {
+		background-color: var(--color-panel);
+
+		&:not(.sectionEnd):not(.sectionCollapsed) {
+			border-bottom-left-radius: 0 !important;
+			border-bottom-right-radius: 0 !important;
+		}
+
+		&:not(.sectionStart):not(.sectionCollapsed) {
+			border-top-left-radius: 0 !important;
+			border-top-right-radius: 0 !important;
+		}
+
+		&.sectionCollapsed {
+			border-radius: var(--radius-3) !important;
+			margin-bottom: 14px !important;
+		}
 	}
 
 	&.ignoreSync {
@@ -492,10 +526,39 @@
 .lyricWord.selected:not(.error),
 .lyricLine.selected:not(.error) {
 	box-shadow: 0 0 0 var(--global-border-width, 2px) var(--accent-a11);
+	outline: 2px solid var(--accent-a11);
+	outline-offset: -1px;
+	position: relative;
+	z-index: 2;
 	background-color: var(--active-line-bg, var(--accent-a3));
 
 	&:hover {
 		box-shadow: 0 0 0 2px var(--accent-a11);
+		outline: 2px solid var(--accent-a11);
+		background-color: var(--accent-a4);
+	}
+}
+
+.lyricLine.inSection:not(.selected):not(.error):hover {
+	box-shadow:
+		inset 0 var(--global-border-width, 2px) 0 0 var(--accent-a5),
+		inset 0 calc(var(--global-border-width, 2px) * -1) 0 0 var(--accent-a5),
+		inset calc(var(--global-border-width, 2px) * -1) 0 0 0 var(--accent-a5) !important;
+}
+
+.lyricLine.inSection.selected:not(.error) {
+	outline: none !important;
+	box-shadow:
+		inset 0 var(--global-border-width, 2px) 0 0 var(--accent-a11),
+		inset 0 calc(var(--global-border-width, 2px) * -1) 0 0 var(--accent-a11),
+		inset calc(var(--global-border-width, 2px) * -1) 0 0 0 var(--accent-a11) !important;
+
+	&:hover {
+		outline: none !important;
+		box-shadow:
+			inset 0 2px 0 0 var(--accent-a11),
+			inset 0 -2px 0 0 var(--accent-a11),
+			inset -2px 0 0 0 var(--accent-a11) !important;
 		background-color: var(--accent-a4);
 	}
 }

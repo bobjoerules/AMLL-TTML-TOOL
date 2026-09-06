@@ -11,7 +11,7 @@ import {
 	Theme,
 } from "@radix-ui/themes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ToastContainer } from "react-toastify";
+import { Slide, ToastContainer } from "react-toastify";
 import {
 	type BackupCounts,
 	buildBackup,
@@ -96,7 +96,12 @@ function MigrationShell({ children }: { children: React.ReactNode }) {
 			<Flex align="center" justify="center" minHeight="100vh" p="4">
 				<Card style={{ width: "min(680px, 100%)" }}>{children}</Card>
 			</Flex>
-			<ToastContainer theme="dark" />
+			<ToastContainer
+				theme="dark"
+				hideProgressBar={true}
+				transition={Slide}
+				autoClose={4000}
+			/>
 		</Theme>
 	);
 }

@@ -83,6 +83,7 @@ import {
 	advShadowIntensityAtom,
 	advSelectionColorAtom,
 	advBackdropBlurAtom,
+	activePresetIdAtom,
 	appearancePresetsAtom,
 	type AppearancePreset,
 	appLayoutOrderAtom,
@@ -94,7 +95,12 @@ import {
 } from "$/modules/settings/states/index.ts";
 import { instantHighlightFadeAtom } from "$/modules/settings/states/preview.ts";
 import { fontSelectionDialogAtom } from "$/states/dialogs.ts";
-import { isDarkThemeAtom, darkModeAtom, DarkMode } from "$/states/main.ts";
+import {
+	isDarkThemeAtom,
+	darkModeAtom,
+	autoDarkModeAtom,
+	DarkMode,
+} from "$/states/main.ts";
 import { generateGradient, generateRadixScale } from "$/utils/colorScale";
 import {
 	SettingsCustomBackgroundCard,
@@ -103,8 +109,8 @@ import {
 
 const BUILTIN_PRESETS: AppearancePreset[] = [
 	{
-		id: "builtin-apple-dark",
-		name: "Apple Dark",
+		id: "builtin-apple",
+		name: "Apple",
 		settings: {
 			accentColor: "red",
 			useCustomAccent: false,
@@ -120,11 +126,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			advPrimaryText: "#ffffff",
 			advSecondaryText: "rgba(255, 255, 255, 0.6)",
 		},
-	},
-	{
-		id: "builtin-apple-light",
-		name: "Apple Light",
-		settings: {
+		lightSettings: {
 			accentColor: "red",
 			useCustomAccent: false,
 			backgroundMode: "gradient",
@@ -136,8 +138,50 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vSidebarBg: "#ffffff",
 			vEditorBg: "#fafafa",
 			darkMode: DarkMode.Light,
-			advPrimaryText: "#000000",
+			advPrimaryText: "#1d1d1f",
 			advSecondaryText: "rgba(0, 0, 0, 0.6)",
+		},
+	},
+	{
+		id: "builtin-clear",
+		name: "Clear",
+		settings: {
+			accentColor: "sky",
+			useCustomAccent: false,
+			backgroundMode: "none",
+			selectedGradient: "none",
+			useCustomGradient: false,
+			legacyDarkTheme: true,
+			glassBlur: 20,
+			vTitlebarBg: "transparent",
+			vSidebarBg: "transparent",
+			vEditorBg: "transparent",
+			vAudioBarBg: "transparent",
+			darkMode: DarkMode.Dark,
+			advPrimaryText: "#ffffff",
+			advSecondaryText: "rgba(255, 255, 255, 0.7)",
+			vActiveLine: "rgba(56, 189, 248, 0.2)",
+			vLineHover: "rgba(255, 255, 255, 0.06)",
+			vSelection: "rgba(56, 189, 248, 0.3)",
+		},
+		lightSettings: {
+			accentColor: "sky",
+			useCustomAccent: false,
+			backgroundMode: "none",
+			selectedGradient: "none",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 20,
+			vTitlebarBg: "transparent",
+			vSidebarBg: "transparent",
+			vEditorBg: "transparent",
+			vAudioBarBg: "transparent",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#1d1d1f",
+			advSecondaryText: "rgba(0, 0, 0, 0.6)",
+			vActiveLine: "rgba(56, 189, 248, 0.2)",
+			vLineHover: "rgba(0, 0, 0, 0.05)",
+			vSelection: "rgba(56, 189, 248, 0.3)",
 		},
 	},
 	{
@@ -158,6 +202,21 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			advPrimaryText: "#ffe4e6",
 			advSecondaryText: "#fda4af",
 		},
+		lightSettings: {
+			accentColor: "ruby",
+			useCustomAccent: false,
+			backgroundMode: "gradient",
+			selectedGradient: "sunset",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 20,
+			vTitlebarBg: "rgba(255, 240, 243, 0.85)",
+			vSidebarBg: "#fff0f3",
+			vEditorBg: "#fffbfb",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#2c0914",
+			advSecondaryText: "#8a1c3e",
+		},
 	},
 	{
 		id: "builtin-nord",
@@ -176,6 +235,21 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#eceff4",
 			advSecondaryText: "#d8dee9",
+		},
+		lightSettings: {
+			accentColor: "cyan",
+			useCustomAccent: false,
+			backgroundMode: "gradient",
+			selectedGradient: "frost",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 16,
+			vTitlebarBg: "rgba(229, 233, 240, 0.85)",
+			vSidebarBg: "#e5e9f0",
+			vEditorBg: "#f8fafc",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#2e3440",
+			advSecondaryText: "#4c566a",
 		},
 	},
 	{
@@ -196,6 +270,21 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			advPrimaryText: "#f3e8ff",
 			advSecondaryText: "#d8b4fe",
 		},
+		lightSettings: {
+			accentColor: "purple",
+			useCustomAccent: false,
+			backgroundMode: "gradient",
+			selectedGradient: "mystic",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 18,
+			vTitlebarBg: "rgba(245, 240, 255, 0.85)",
+			vSidebarBg: "#f0e8ff",
+			vEditorBg: "#faf7ff",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#260e45",
+			advSecondaryText: "#63339c",
+		},
 	},
 	{
 		id: "builtin-aurora",
@@ -214,6 +303,21 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#f0fdf4",
 			advSecondaryText: "#86efac",
+		},
+		lightSettings: {
+			accentColor: "jade",
+			useCustomAccent: false,
+			backgroundMode: "gradient",
+			selectedGradient: "aurora",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 16,
+			vTitlebarBg: "rgba(234, 248, 243, 0.85)",
+			vSidebarBg: "#def3ea",
+			vEditorBg: "#f4fbf8",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#0a3325",
+			advSecondaryText: "#15694c",
 		},
 	},
 	{
@@ -234,6 +338,21 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			advPrimaryText: "#fdf2f8",
 			advSecondaryText: "#f472b6",
 		},
+		lightSettings: {
+			accentColor: "pink",
+			useCustomAccent: false,
+			backgroundMode: "gradient",
+			selectedGradient: "fire",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 20,
+			vTitlebarBg: "rgba(253, 240, 250, 0.85)",
+			vSidebarBg: "#fbe4f6",
+			vEditorBg: "#fef8fd",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#3b0933",
+			advSecondaryText: "#8f1577",
+		},
 	},
 	{
 		id: "builtin-obsidian",
@@ -252,6 +371,21 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#fef3c7",
 			advSecondaryText: "#fcd34d",
+		},
+		lightSettings: {
+			accentColor: "amber",
+			useCustomAccent: false,
+			backgroundMode: "none",
+			selectedGradient: "midnight",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 20,
+			vTitlebarBg: "rgba(252, 248, 238, 0.85)",
+			vSidebarBg: "#f7eed8",
+			vEditorBg: "#fdfcf8",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#3b2c05",
+			advSecondaryText: "#7a5c0b",
 		},
 	},
 	{
@@ -272,10 +406,33 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			advPrimaryText: "#cdd6f4",
 			advSecondaryText: "#bac2de",
 		},
+		lightSettings: {
+			accentColor: "violet",
+			useCustomAccent: false,
+			backgroundMode: "gradient",
+			selectedGradient: "mystic",
+			useCustomGradient: false,
+			legacyDarkTheme: false,
+			glassBlur: 16,
+			vTitlebarBg: "rgba(230, 233, 239, 0.85)",
+			vSidebarBg: "#eff1f5",
+			vEditorBg: "#f4f5f8",
+			darkMode: DarkMode.Light,
+			advPrimaryText: "#4c4f69",
+			advSecondaryText: "#6c6f85",
+		},
 	},
 ];
 
 const SURFACE_TINTS = [
+	{
+		id: "clear",
+		name: "Clear",
+		titlebar: "transparent",
+		sidebar: "transparent",
+		editor: "transparent",
+		dot: "transparent",
+	},
 	{
 		id: "pure-black",
 		name: "Pure Dark",
@@ -458,6 +615,8 @@ export const SettingsAppearanceTab = () => {
 	const [glassBlur, setGlassBlur] = useAtom(glassmorphismBlurAtom);
 
 	const [lastLoaded, setLastLoaded] = useState<string | null>(null);
+	const [activePresetId, setActivePresetId] = useAtom(activePresetIdAtom);
+	const autoDarkMode = useAtomValue(autoDarkModeAtom);
 
 	const handleSavePreset = () => {
 		if (!newPresetName.trim()) return;
@@ -519,12 +678,7 @@ export const SettingsAppearanceTab = () => {
 		setNewPresetName("");
 	};
 
-	const handleLoadPreset = (p: AppearancePreset) => {
-		const s = p.settings;
-
-		// Set a small loading indicator state
-		setLastLoaded(p.name);
-
+	const applyPresetSettings = (s: Record<string, any>) => {
 		// Basic & General
 		if (s.accentColor !== undefined) setAccentColor(s.accentColor);
 		if (s.useCustomAccent !== undefined)
@@ -592,11 +746,40 @@ export const SettingsAppearanceTab = () => {
 			setVGlobalBorderWidth(Number(s.vGlobalBorderWidth));
 		if (s.vShadow !== undefined) setVShadow(Number(s.vShadow));
 		if (s.vBackdrop !== undefined) setVBackdrop(Number(s.vBackdrop));
-		if (s.layoutOrder !== undefined) setLayoutOrder(s.layoutOrder);
+		if (s.layoutOrder !== undefined && Array.isArray(s.layoutOrder))
+			setLayoutOrder(s.layoutOrder);
 		if (s.vRibbonPos !== undefined) setVRibbonPos(s.vRibbonPos);
+	};
 
-		// Small timeout to clear the flash of "active" state if desired,
-		// but keeping it visible helps user know it worked.
+	const handleLoadPreset = (p: AppearancePreset, overrideMode?: DarkMode) => {
+		setActivePresetId(p.id);
+		setLastLoaded(p.name);
+
+		const effectiveMode = overrideMode ?? darkMode;
+		const willBeDark =
+			effectiveMode === DarkMode.Dark ||
+			(effectiveMode === DarkMode.Auto && autoDarkMode);
+
+		const s = !willBeDark && p.lightSettings ? p.lightSettings : p.settings;
+		applyPresetSettings(s);
+	};
+
+	const handleThemeModeChange = (newMode: DarkMode) => {
+		setDarkMode(newMode);
+		const willBeDark =
+			newMode === DarkMode.Dark ||
+			(newMode === DarkMode.Auto && autoDarkMode);
+
+		const activePreset = BUILTIN_PRESETS.find(
+			(p) => p.id === activePresetId || p.name === lastLoaded,
+		);
+		if (activePreset) {
+			const s =
+				!willBeDark && activePreset.lightSettings
+					? activePreset.lightSettings
+					: activePreset.settings;
+			applyPresetSettings(s);
+		}
 	};
 	const setIsFontSelectionOpen = useSetAtom(fontSelectionDialogAtom);
 
@@ -644,8 +827,18 @@ export const SettingsAppearanceTab = () => {
 						</Text>
 						<Grid columns="3" gap="2">
 							{BUILTIN_PRESETS.map((p) => {
-								const isActive = lastLoaded === p.name;
-								const s = p.settings;
+								const isActive =
+									activePresetId === p.id ||
+									lastLoaded === p.name ||
+									(p.id === "builtin-apple" &&
+										(activePresetId === "builtin-apple-dark" ||
+											activePresetId === "builtin-apple-light" ||
+											lastLoaded === "Apple Dark" ||
+											lastLoaded === "Apple Light"));
+								const s =
+									!isDarkTheme && p.lightSettings
+										? p.lightSettings
+										: p.settings;
 								return (
 									<Card
 										key={p.id}
@@ -676,19 +869,9 @@ export const SettingsAppearanceTab = () => {
 												>
 													{p.name}
 												</Text>
-												{isActive ? (
+												{isActive && (
 													<Badge size="1" color="green" variant="solid">
 														Active
-													</Badge>
-												) : (
-													<Badge
-														size="1"
-														variant="soft"
-														color={
-															s.darkMode === DarkMode.Light ? "orange" : "gray"
-														}
-													>
-														{s.darkMode === DarkMode.Light ? "Light" : "Dark"}
 													</Badge>
 												)}
 											</Flex>
@@ -700,6 +883,12 @@ export const SettingsAppearanceTab = () => {
 														height: "14px",
 														borderRadius: "50%",
 														backgroundColor: s.vTitlebarBg || "#1f1f1f",
+														backgroundImage:
+															s.vTitlebarBg === "transparent"
+																? "linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%), linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%)"
+																: undefined,
+														backgroundSize: "6px 6px",
+														backgroundPosition: "0 0, 3px 3px",
 														border: "1px solid rgba(255,255,255,0.2)",
 													}}
 													title="Titlebar"
@@ -710,6 +899,12 @@ export const SettingsAppearanceTab = () => {
 														height: "14px",
 														borderRadius: "50%",
 														backgroundColor: s.vEditorBg || "#121212",
+														backgroundImage:
+															s.vEditorBg === "transparent"
+																? "linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%), linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%)"
+																: undefined,
+														backgroundSize: "6px 6px",
+														backgroundPosition: "0 0, 3px 3px",
 														border: "1px solid rgba(255,255,255,0.2)",
 													}}
 													title="Editor"
@@ -886,7 +1081,9 @@ export const SettingsAppearanceTab = () => {
 												</Flex>
 												<SegmentedControl.Root
 													value={darkMode}
-													onValueChange={(v) => setDarkMode(v as DarkMode)}
+													onValueChange={(v) =>
+														handleThemeModeChange(v as DarkMode)
+													}
 												>
 													<SegmentedControl.Item value={DarkMode.Auto}>
 														{t("settings.appearance.theme.auto", "Auto")}
@@ -963,6 +1160,12 @@ export const SettingsAppearanceTab = () => {
 																		height: "16px",
 																		borderRadius: "4px",
 																		backgroundColor: tint.dot,
+																		backgroundImage:
+																			tint.dot === "transparent"
+																				? "linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%), linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%)"
+																				: undefined,
+																		backgroundSize: "8px 8px",
+																		backgroundPosition: "0 0, 4px 4px",
 																		border: "1px solid rgba(255,255,255,0.2)",
 																		flexShrink: 0,
 																	}}
