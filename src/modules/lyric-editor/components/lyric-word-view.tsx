@@ -772,7 +772,7 @@ const LyricWorldViewEdit = ({
 			wordIndex={wordIndex}
 			className={className}
 			line={line}
-			data-lyric-space-placeholder=""
+			data-lyric-space-placeholder={isSpaceWord ? "" : undefined}
 			style={
 				useCompactSpace
 					? ({ "--space-count": word.word.length } as React.CSSProperties)
@@ -1122,6 +1122,9 @@ const LyricSyncWordView: FC<{
 			ref={wordContainerRef}
 			className={className}
 			style={{ position: "relative", zIndex: 1 }}
+			data-lyric-word-id={word.id}
+			data-lyric-word-index={wordIndex}
+			data-lyric-word-interactive=""
 			onPointerDown={(evt) => {
 				evt.stopPropagation();
 				evt.preventDefault();

@@ -55,6 +55,25 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.1.1
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 6, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Word Context Menu Restoration:</b> Fixed right-click targeting in the lyric editor so words in both Edit and Sync modes properly display word actions ("Split word…", "Replace word…", and "Combine words") rather than falling back to space or line menus.
+								</Text>
+								<Text size="2">
+									• <b>Word Menu Runtime Stability:</b> Corrected missing hook imports in the word context menu component, resolving runtime ReferenceErrors when inspecting words.
+								</Text>
+								<Text size="2">
+									• <b>Website Release Notice:</b> Synchronized the project homepage release status banner to reflect the latest release version.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.1.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
