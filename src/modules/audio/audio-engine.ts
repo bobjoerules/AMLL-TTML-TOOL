@@ -233,41 +233,46 @@ class AudioEngine extends EventTarget {
 		}
 
 		if (this._ctx) {
+			const oldCtx = this._ctx;
+			this._ctx = null;
 			try {
-				if (this._ctx.state !== "closed") {
-					await this._ctx.close();
+				if (oldCtx.state !== "closed") {
+					void oldCtx.close().catch((e) => {
+						console.warn("[AudioEngine] Error closing old AudioContext:", e);
+					});
 				}
 			} catch (e) {
 				console.warn("[AudioEngine] Error closing old AudioContext:", e);
 			}
-			this._ctx = null;
 		}
 		this.resetAudioGraph();
 		const newCtx = this.ctx;
 		try {
-			await newCtx.resume();
+			void newCtx.resume().catch((e) => {
+				console.warn("[AudioEngine] Error resuming new AudioContext:", e);
+			});
 		} catch (e) {
 			console.warn("[AudioEngine] Error resuming new AudioContext:", e);
 		}
 
 		this._lastAudioActivityTime = Date.now();
 
-		// If musicBuffer is missing but raw data exists, decode it
-		if (
-			!this.musicBuffer &&
-			this._rawAudioData &&
-			this._rawAudioData.byteLength > 0
-		) {
-			try {
-				this.musicBuffer = await newCtx.decodeAudioData(
-					this._rawAudioData.slice(0),
-				);
-				globalStore.set(audioBufferAtom, this.musicBuffer);
-			} catch (e) {
-				console.warn(
-					"[AudioEngine] Error re-decoding audio for new context:",
-					e,
-				);
+		// If raw data exists, and either musicBuffer is missing OR sample rate doesn't match new context
+		if (this._rawAudioData && this._rawAudioData.byteLength > 0) {
+			const needsDecode =
+				!this.musicBuffer || this.musicBuffer.sampleRate !== newCtx.sampleRate;
+			if (needsDecode) {
+				try {
+					this.musicBuffer = await newCtx.decodeAudioData(
+						this._rawAudioData.slice(0),
+					);
+					globalStore.set(audioBufferAtom, this.musicBuffer);
+				} catch (e) {
+					console.warn(
+						"[AudioEngine] Error re-decoding audio for new context:",
+						e,
+					);
+				}
 			}
 		}
 
@@ -304,10 +309,14 @@ class AudioEngine extends EventTarget {
 
 	/** Handle browser autoplay policy, macOS sleep, device changes and interruption */
 	public async resumeContext() {
-		this._lastAudioActivityTime = Date.now();
+		const now = Date.now();
+		const idleTooLong =
+			!this._isPlaying && now - this._lastAudioActivityTime > 30_000;
+		this._lastAudioActivityTime = now;
 
 		if (
 			this._needsFreshContext ||
+			idleTooLong ||
 			!this._ctx ||
 			this._ctx.state === "closed" ||
 			this._ctx.state === "interrupted"
@@ -780,6 +789,7 @@ class AudioEngine extends EventTarget {
 			if (this.musicBuffer) {
 				this.pauseMusic();
 				this.musicBuffer = null;
+				this._rawAudioData = null;
 				globalStore.set(audioBufferAtom, null);
 				globalStore.set(loadedAudioAtom, new Blob([]));
 				globalStore.set(loadedAudioFileNameAtom, null);

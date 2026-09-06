@@ -411,13 +411,13 @@ export const AudioSlider = memo(() => {
 	}, [lyricLines.marks, currentDuration, sliderWidthPx]);
 
 	return (
-		<Card
+		<Box
 			style={{
 				alignSelf: "center",
 				width: "100%",
 				height: "2.5em",
 				padding: "0",
-				backgroundColor: "var(--audio-bar-bg, var(--rt-color-panel-solid))",
+				backgroundColor: "transparent",
 			}}
 		>
 			<section
@@ -455,6 +455,6 @@ export const AudioSlider = memo(() => {
 					isDraggingRef={isDraggingRef}
 				/>
 			</section>
-		</Card>
+		</Box>
 	);
 });

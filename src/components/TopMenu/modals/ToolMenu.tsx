@@ -66,6 +66,9 @@ const ToolMenuItems = () => {
 			<DropdownMenu.Item onSelect={menu.onSyncLineTimestamps}>
 				{t("topBar.menu.syncLineTimestamps", "Sync Line Timestamps")}
 			</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={menu.onAutoDuetBySinger}>
+				{t("topBar.menu.autoDuetBySinger", "Auto Duet Based on Singer")}
+			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={menu.onOpenTimeShift}>
 				{t("topBar.menu.timeShift", "Time Shift...")}

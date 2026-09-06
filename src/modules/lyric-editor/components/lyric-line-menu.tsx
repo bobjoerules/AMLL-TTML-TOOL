@@ -12,6 +12,7 @@ import {
 } from "./lyric-line-view-states";
 import { mergeLyricLines } from "../utils/merge-lines";
 import { MergeLineDialog } from "../modals/MergeLineDialog";
+import { repairSectionIntegrity } from "../utils/section-system";
 
 const selectedLinesSizeAtom = atom((get) => get(selectedLinesAtom).size);
 const totalLinesAtom = selectAtom(
@@ -163,7 +164,12 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 			<ContextMenu.Item
 				onSelect={() => {
 					editLyricLines((state) => {
-						state.lyricLines.splice(lineIndex, 0, newLyricLine());
+						const cur = state.lyricLines[lineIndex];
+						const newLine = newLyricLine();
+						if (cur?.sectionId) newLine.sectionId = cur.sectionId;
+						if (cur?.geniusHeader) newLine.geniusHeader = cur.geniusHeader;
+						state.lyricLines.splice(lineIndex, 0, newLine);
+						repairSectionIntegrity(state);
 					});
 				}}
 			>
@@ -172,7 +178,12 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 			<ContextMenu.Item
 				onSelect={() => {
 					editLyricLines((state) => {
-						state.lyricLines.splice(lineIndex + 1, 0, newLyricLine());
+						const cur = state.lyricLines[lineIndex];
+						const newLine = newLyricLine();
+						if (cur?.sectionId) newLine.sectionId = cur.sectionId;
+						if (cur?.geniusHeader) newLine.geniusHeader = cur.geniusHeader;
+						state.lyricLines.splice(lineIndex + 1, 0, newLine);
+						repairSectionIntegrity(state);
 					});
 				}}
 			>

@@ -38,6 +38,18 @@ describe("ProjectTimeTracker", () => {
 		expect(tracker.getElapsedSeconds()).toBe(0);
 	});
 
+	it("accumulates time through periodic touch calls", () => {
+		const storage = new MemoryStorage();
+		let now = 1_000;
+		const tracker = new ProjectTimeTracker(storage, () => now);
+		tracker.touch("proj");
+		now = 3_000;
+		tracker.touch("proj");
+		now = 6_000;
+		tracker.touch("proj");
+		expect(tracker.getElapsedSeconds("proj")).toBe(5);
+	});
+
 	it("ignores malformed and invalid stored values", () => {
 		const storage = new MemoryStorage();
 		storage.setItem(PROJECT_TIME_STORAGE_KEY, "not json");

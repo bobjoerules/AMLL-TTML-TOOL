@@ -84,14 +84,14 @@ export const TitleBar: FC = () => {
 				<SegmentedControl.Root
 					value={toolMode}
 					onValueChange={(v) => setToolMode(v as ToolMode)}
-					size="1"
+					size="2"
 				>
 					<SegmentedControl.Item
 						value={ToolMode.Edit}
 						title={t("topBar.modeBtns.edit", "编辑")}
 					>
-						<Flex align="center" gap="1">
-							<Edit24Regular style={{ width: "16px", height: "16px" }} />
+						<Flex align="center" gap="1" px="1">
+							<Edit24Regular style={{ width: "17px", height: "17px" }} />
 							<span className={styles.tabLabel}>
 								{t("topBar.modeBtns.edit", "编辑")}
 							</span>
@@ -101,8 +101,8 @@ export const TitleBar: FC = () => {
 						value={ToolMode.Sync}
 						title={t("topBar.modeBtns.sync", "打轴")}
 					>
-						<Flex align="center" gap="1">
-							<Timer24Regular style={{ width: "16px", height: "16px" }} />
+						<Flex align="center" gap="1" px="1">
+							<Timer24Regular style={{ width: "17px", height: "17px" }} />
 							<span className={styles.tabLabel}>
 								{t("topBar.modeBtns.sync", "打轴")}
 							</span>
@@ -112,8 +112,8 @@ export const TitleBar: FC = () => {
 						value={ToolMode.Preview}
 						title={t("topBar.modeBtns.preview", "预览")}
 					>
-						<Flex align="center" gap="1">
-							<Play24Regular style={{ width: "16px", height: "16px" }} />
+						<Flex align="center" gap="1" px="1">
+							<Play24Regular style={{ width: "17px", height: "17px" }} />
 							<span className={styles.tabLabel}>
 								{t("topBar.modeBtns.preview", "预览")}
 							</span>
@@ -132,7 +132,7 @@ export const TitleBar: FC = () => {
 							}
 						>
 							<Button
-								size="1"
+								size="2"
 								variant={showPreviewPanel ? "solid" : "soft"}
 								color={showPreviewPanel ? "indigo" : "gray"}
 								onClick={() => setShowPreviewPanel((prev) => !prev)}
@@ -151,11 +151,11 @@ export const TitleBar: FC = () => {
 							>
 								{showPreviewPanel ? (
 									<PanelRight24Filled
-										style={{ width: "14px", height: "14px" }}
+										style={{ width: "16px", height: "16px" }}
 									/>
 								) : (
 									<PanelRight24Regular
-										style={{ width: "14px", height: "14px" }}
+										style={{ width: "16px", height: "16px" }}
 									/>
 								)}
 								<span className={styles.previewPanelLabel}>
@@ -185,15 +185,6 @@ export const TitleBar: FC = () => {
 							title={t("topBar.boykisser", "boykisser")}
 						/>
 					)}
-
-					<IconButton
-						variant="ghost"
-						color="gray"
-						onClick={() => setExperimentalDialogOpen(true)}
-						title={t("ribbonBar.experimentalFeatures", "Experimental Features")}
-					>
-						<Beaker24Regular />
-					</IconButton>
 				</Flex>
 			}
 			onSpacerClicked={() => {

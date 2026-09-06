@@ -17,6 +17,7 @@ import {
 	PlayFilled,
 } from "@fluentui/react-icons";
 import {
+	Box,
 	Button,
 	Card,
 	Flex,
@@ -197,20 +198,24 @@ export const AudioControls: FC = memo(() => {
 	}, [preservesPitch]);
 
 	return (
-		<Card
+		<Box
 			data-guide-target="audio"
 			m="0"
 			style={{
-				backgroundColor: "var(--audio-bar-bg, var(--rt-color-panel-solid))",
+				backgroundColor: "var(--audio-bar-bg, var(--color-panel-solid))",
+				backdropFilter:
+					"blur(var(--custom-backdrop-blur, 16px)) saturate(160%)",
+				WebkitBackdropFilter:
+					"blur(var(--custom-backdrop-blur, 16px)) saturate(160%)",
+				borderTop: "1px solid var(--gray-a4)",
 				height: "100%",
 				minHeight: 0,
 				borderRadius: 0,
 			}}
 		>
-			<Inset>
-				<AudioPlaybackKeyBinding />
-				<AuditionKeyBinding />
-				<Flex direction="column">
+			<AudioPlaybackKeyBinding />
+			<AuditionKeyBinding />
+			<Flex direction="column">
 					<div style={{ display: spectrogramVisible ? "flex" : "none" }}>
 						<AudioSpectrogram />
 					</div>
@@ -328,8 +333,7 @@ export const AudioControls: FC = memo(() => {
 						</Tooltip>
 					</Flex>
 				</Flex>
-			</Inset>
-		</Card>
+		</Box>
 	);
 });
 

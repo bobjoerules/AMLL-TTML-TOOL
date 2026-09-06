@@ -48,6 +48,17 @@ export class ProjectTimeTracker {
 		this.startedAt = now;
 	}
 
+	touch(projectId?: string) {
+		if (projectId && projectId !== this.projectId) {
+			this.switchProject(projectId);
+			return;
+		}
+		if (this.projectId && !this.paused) {
+			const now = this.now();
+			this.recordCurrent(now);
+		}
+	}
+
 	getElapsedSeconds(projectId = this.projectId) {
 		if (!projectId || projectId !== this.projectId) return 0;
 		return (

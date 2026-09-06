@@ -416,9 +416,9 @@ export const useTopMenuActions = () => {
 
 	const onOpenWiki = useCallback(async () => {
 		if (import.meta.env.TAURI_ENV_PLATFORM) {
-			await open("https://github.com/bobjoerules/AMLL-TTML-TOOL/wiki");
+			await open("https://guide.spicylyrics.org/");
 		} else {
-			window.open("https://github.com/bobjoerules/AMLL-TTML-TOOL/wiki");
+			window.open("https://guide.spicylyrics.org/");
 		}
 	}, []);
 
@@ -622,6 +622,82 @@ export const useTopMenuActions = () => {
 		});
 	}, [editLyricLines, setConfirmDialog, t]);
 
+	const onAutoDuetBySinger = useCallback(() => {
+		const action = () => {
+			runHistoryAction(() => {
+				editLyricLines((draft) => {
+					const sectionMap = new Map(
+						(draft.sections ?? []).map((s) => [s.id, s]),
+					);
+
+					const singers: string[] = [];
+					const lineSingers: (string | undefined)[] = [];
+
+					for (const line of draft.lyricLines) {
+						let singer: string | undefined;
+						if (line.sectionId && sectionMap.has(line.sectionId)) {
+							singer = sectionMap.get(line.sectionId)!.vocalist?.trim();
+						}
+						if (!singer && line.agent) {
+							singer = line.agent.trim();
+						}
+						lineSingers.push(singer);
+						if (
+							singer &&
+							!singers.some((s) => s.toLowerCase() === singer.toLowerCase())
+						) {
+							singers.push(singer);
+						}
+					}
+
+					if (singers.length < 2) {
+						toast.info(
+							t(
+								"topBar.menu.autoDuetNotEnoughSingers",
+								"At least two distinct singers/vocalists are required to auto-duet.",
+							),
+						);
+						return;
+					}
+
+					const primarySinger = singers[0].toLowerCase();
+					let modifiedCount = 0;
+
+					for (let i = 0; i < draft.lyricLines.length; i++) {
+						const singer = lineSingers[i];
+						if (!singer) continue;
+						const isSecondary = singer.toLowerCase() !== primarySinger;
+						if (draft.lyricLines[i].isDuet !== isSecondary) {
+							draft.lyricLines[i].isDuet = isSecondary;
+							modifiedCount++;
+						}
+					}
+
+					toast.success(
+						t(
+							"topBar.menu.autoDuetSuccess",
+							"Auto duet applied to {{count}} lines based on {{singers}} singers.",
+							{
+								count: modifiedCount,
+								singers: singers.length,
+							},
+						),
+					);
+				});
+			});
+		};
+
+		setConfirmDialog({
+			open: true,
+			title: t("confirmDialog.autoDuet.title", "Auto Duet Based on Singer"),
+			description: t(
+				"confirmDialog.autoDuet.description",
+				"This will automatically assign lines sung by secondary/guest vocalists as Duet (isDuet = true) and the main vocalist as primary (isDuet = false). Continue?",
+			),
+			onConfirm: action,
+		});
+	}, [editLyricLines, runHistoryAction, setConfirmDialog, t]);
+
 	const onOpenAdvancedSegmentation = useCallback(() => {
 		setAdvancedSegmentationDialog(true);
 	}, [setAdvancedSegmentationDialog]);
@@ -687,6 +763,7 @@ export const useTopMenuActions = () => {
 		onOpenAdvancedSegmentation,
 		onOpenLearnedSplits,
 		onSyncLineTimestamps,
+		onAutoDuetBySinger,
 		onOpenLatencyTest,
 		onOpenTTMLChecklist,
 		onOpenSpotMatch,

@@ -171,8 +171,8 @@ describe("first-class sections", () => {
 		const sections = createSectionsFromSelectedLines(lyrics, selected, "verse");
 
 		expect(sections.map((section) => section.label)).toEqual([
-			"[Verse 1]",
-			"[Verse 2]",
+			"Verse 1",
+			"Verse 2",
 		]);
 		expect(lyrics.lyricLines.map((item) => item.sectionId)).toEqual([
 			sections[0].id,

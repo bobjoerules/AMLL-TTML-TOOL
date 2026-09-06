@@ -41,6 +41,7 @@ import {
 	smartLastWordAtom,
 	syncJudgeModeAtom,
 	compactBGInSyncAtom,
+	geniusCategorizationEnabledAtom,
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 	allowConsecutiveBackgroundLinesAtom,
@@ -96,6 +97,9 @@ export const SettingsCommonTab = ({
 	);
 	const [allowConsecutiveBackgroundLines, setAllowConsecutiveBackgroundLines] =
 		useAtom(allowConsecutiveBackgroundLinesAtom);
+	const [geniusCategorizationEnabled, setGeniusCategorizationEnabled] = useAtom(
+		geniusCategorizationEnabledAtom,
+	);
 
 	const { t, i18n } = useTranslation();
 	const currentLanguage = i18n.resolvedLanguage || i18n.language;
@@ -629,6 +633,39 @@ export const SettingsCommonTab = ({
 								</Flex>
 							</Box>
 						</Flex>
+					</Card>
+
+					<Heading size="4">
+						{t("settings.group.songSections", "Song Sections")}
+					</Heading>
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
+								<ContentView24Regular />
+								<Box flexGrow="1">
+									<Flex gap="2" align="center" justify="between">
+										<Flex direction="column" gap="1">
+											<Text>
+												{t(
+													"settings.common.geniusCategorization",
+													"Genius Header Categorization",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"settings.common.geniusCategorizationDesc",
+													"Detect, categorize, navigate, and edit song section headers.",
+												)}
+											</Text>
+										</Flex>
+										<Switch
+											checked={geniusCategorizationEnabled}
+											onCheckedChange={setGeniusCategorizationEnabled}
+										/>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
 					</Card>
 				</Flex>
 			)}

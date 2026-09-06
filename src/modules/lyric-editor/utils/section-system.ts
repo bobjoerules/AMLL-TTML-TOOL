@@ -95,9 +95,14 @@ export interface NormalizedSectionHeader {
 	normalizedKey: string;
 }
 
+export function cleanSectionHeader(header?: string): string {
+	if (!header) return "";
+	return header.replace(/^\[+|\]+$/g, "").trim();
+}
+
 export function getSectionHeader(value: string): string | undefined {
 	const trimmed = value.trim();
-	return /^\[[^[\]\r\n]+\]$/.test(trimmed) ? trimmed : undefined;
+	return /^\[?[^[\]\r\n]+\]?$/.test(trimmed) ? trimmed : undefined;
 }
 
 export function normalizeSectionHeader(
@@ -105,8 +110,7 @@ export function normalizeSectionHeader(
 ): NormalizedSectionHeader | undefined {
 	const label = getSectionHeader(value);
 	if (!label) return undefined;
-	const inner = label
-		.slice(1, -1)
+	const inner = cleanSectionHeader(label)
 		.normalize("NFKC")
 		.replace(/[–—]/g, "-")
 		.replace(/\s+/g, " ")
@@ -705,7 +709,7 @@ export function removeSectionMetadata(lyrics: TTMLLyric, sectionId: string) {
 	);
 }
 
-const sectionCategoryLabel = (category: LyricSectionCategory) =>
+export const sectionCategoryLabel = (category: LyricSectionCategory) =>
 	category
 		.split("-")
 		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -752,7 +756,7 @@ export function createSectionsFromSelectedLines(
 		ordinal++;
 		const section: LyricSection = {
 			id: uid(),
-			label: `[${sectionCategoryLabel(category)} ${ordinal}]`,
+			label: `${sectionCategoryLabel(category)} ${ordinal}`,
 			category,
 			ordinal,
 			confidence: 1,

@@ -10,11 +10,15 @@
 .tabLabel {
 	display: inline;
 	white-space: nowrap;
+	font-size: 13px;
+	font-weight: 500;
 }
 
 .previewPanelLabel {
 	display: inline;
 	white-space: nowrap;
+	font-size: 13px;
+	font-weight: 500;
 }
 
 @media screen and (max-width: 850px) {

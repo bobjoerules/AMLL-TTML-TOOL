@@ -11,9 +11,8 @@ export const DISCORD_EDIT_URL = "https://i.imgur.com/vXBNVsw.png";
 export const DISCORD_SYNC_URL = "https://i.imgur.com/cRaE75x.png";
 export const DISCORD_PREVIEW_URL = "https://i.imgur.com/x7xDsb5.png";
 export const REPOSITORY_URL = "https://github.com/bobjoerules/AMLL-TTML-TOOL";
-export const DEFAULT_DISCORD_DETAILS_TEMPLATE = "{{mode}} {{title}}";
-export const DEFAULT_DISCORD_STATE_TEMPLATE =
-	"[[{{artist}} • ]]{{lineProgress}} • {{playbackStatus}}";
+export const DEFAULT_DISCORD_DETAILS_TEMPLATE = "{{title}}";
+export const DEFAULT_DISCORD_STATE_TEMPLATE = "[[{{artist}}]]";
 
 export const DISCORD_TEMPLATE_VARIABLES = [
 	"title",
@@ -88,7 +87,7 @@ export interface DiscordActivityPayload {
 }
 
 export const DEFAULT_DISCORD_BOTTOM_LINE_TEMPLATE =
-	"[[{{title}} - {{artist}}]][[{{album}}]]";
+	"{{syncPercentage}} Synced ({{timedLines}}/{{totalLines}} lines)";
 
 export interface DiscordActivityOptions {
 	detailsTemplate: string;

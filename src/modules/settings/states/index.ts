@@ -57,21 +57,27 @@ export const autosaveEnabledAtom = atomWithStorage("autosaveEnabled", true);
 export const autosaveIntervalAtom = atomWithStorage("autosaveInterval", 10);
 export const autosaveLimitAtom = atomWithStorage("autosaveLimit", 10);
 
+import {
+	DEFAULT_DISCORD_BOTTOM_LINE_TEMPLATE,
+	DEFAULT_DISCORD_DETAILS_TEMPLATE,
+	DEFAULT_DISCORD_STATE_TEMPLATE,
+} from "$/modules/discord-presence/presence";
+
 export const discordRichPresenceEnabledAtom = atomWithStorage(
 	"discordRichPresenceEnabled",
 	false,
 );
 export const discordDetailsTemplateAtom = atomWithStorage(
 	"discordDetailsTemplate",
-	"{{mode}} {{title}}",
+	DEFAULT_DISCORD_DETAILS_TEMPLATE,
 );
 export const discordStateTemplateAtom = atomWithStorage(
 	"discordStateTemplate",
-	"[[{{artist}} • ]] {{syncPercentage}} Synced • {{totalLines}} lines",
+	DEFAULT_DISCORD_STATE_TEMPLATE,
 );
 export const discordBottomLineTemplateAtom = atomWithStorage(
 	"discordBottomLineTemplate",
-	"[[{{title}} - {{artist}}]][[{{album}}]]",
+	DEFAULT_DISCORD_BOTTOM_LINE_TEMPLATE,
 );
 export const discordPlaybackTimelineAtom = atomWithStorage(
 	"discordPlaybackTimeline",
@@ -116,7 +122,7 @@ export const discordLargeImageModeAtom = atomWithStorage<DiscordImageMode>(
 );
 export const discordSmallImageModeAtom = atomWithStorage<DiscordImageMode>(
 	"discordSmallImageMode",
-	"state",
+	"tab",
 );
 export const discordIdleLargeImageModeAtom =
 	atomWithStorage<DiscordIdleImageMode>("discordIdleLargeImageMode", "icon");
@@ -455,7 +461,13 @@ export interface AppearancePreset {
 	id: string;
 	name: string;
 	settings: Record<string, any>;
+	lightSettings?: Record<string, any>;
 }
+
+export const activePresetIdAtom = atomWithStorage<string>(
+	"activePresetId",
+	"",
+);
 
 export const appearancePresetsAtom = atomWithStorage<AppearancePreset[]>(
 	"appearancePresets",
@@ -464,7 +476,7 @@ export const appearancePresetsAtom = atomWithStorage<AppearancePreset[]>(
 
 export const geniusCategorizationEnabledAtom = atomWithStorage<boolean>(
 	"geniusCategorizationEnabled",
-	false,
+	true,
 );
 
 export const experimentalFeaturesDialogOpenAtom = atom(false);
