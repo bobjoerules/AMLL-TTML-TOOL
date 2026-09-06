@@ -134,7 +134,7 @@ export const TitleBar: FC = () => {
 							<Button
 								size="2"
 								variant={showPreviewPanel ? "solid" : "soft"}
-								color={showPreviewPanel ? "indigo" : "gray"}
+								color={showPreviewPanel ? undefined : "gray"}
 								onClick={() => setShowPreviewPanel((prev) => !prev)}
 								style={{ cursor: "pointer", fontWeight: 500 }}
 								title={

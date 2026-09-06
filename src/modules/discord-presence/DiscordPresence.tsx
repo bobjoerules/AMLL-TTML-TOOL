@@ -7,26 +7,26 @@ import {
 	audioPlayingAtom,
 	playbackRateAtom,
 } from "$/modules/audio/states";
+import { currentUserAtom } from "$/modules/cloud/states";
 import {
+	discordActivityTypeAtom,
+	discordBottomLineTemplateAtom,
 	discordDetailsTemplateAtom,
+	discordIdleBottomTextAtom,
+	discordIdleLargeImageModeAtom,
+	discordIdleSmallImageModeAtom,
 	discordIdleTimeoutMinutesAtom,
+	discordLargeImageModeAtom,
 	discordPlaybackTimelineAtom,
+	discordPrivacyPresetAtom,
 	discordProjectElapsedAtom,
 	discordRepositoryButtonAtom,
 	discordRichPresenceEnabledAtom,
-	discordStateTemplateAtom,
-	discordBottomLineTemplateAtom,
-	discordStatusBadgeAtom,
-	discordPrivacyPresetAtom,
-	discordLargeImageModeAtom,
-	discordSmallImageModeAtom,
-	discordIdleLargeImageModeAtom,
-	discordIdleSmallImageModeAtom,
-	discordIdleBottomTextAtom,
 	discordShowProgressTimerAtom,
-	discordActivityTypeAtom,
+	discordSmallImageModeAtom,
+	discordStateTemplateAtom,
+	discordStatusBadgeAtom,
 } from "$/modules/settings/states";
-import { currentUserAtom } from "$/modules/cloud/states";
 import { ttmlChecklistAtom } from "$/modules/ttml-checklist/states";
 import {
 	lyricLinesAtom,
@@ -42,16 +42,20 @@ import {
 	createDiscordTemplateContext,
 	createInactiveDiscordActivity,
 	createPresenceSnapshot,
+	DEFAULT_DISCORD_BOTTOM_LINE_TEMPLATE,
 	DEFAULT_DISCORD_DETAILS_TEMPLATE,
 	DEFAULT_DISCORD_STATE_TEMPLATE,
-	DEFAULT_DISCORD_BOTTOM_LINE_TEMPLATE,
 	formatNativeDiscordActivity,
 	PRESENCE_META_NAME,
 	validateDiscordTemplate,
 } from "./presence";
 import { ProjectTimeTracker } from "./project-time";
 
-const isTauri = Boolean(import.meta.env.TAURI_ENV_PLATFORM);
+const checkIsTauri = () =>
+	typeof window !== "undefined" &&
+	(Boolean((window as any).__TAURI__) ||
+		Boolean((window as any).__TAURI_INTERNALS__) ||
+		Boolean(import.meta.env.TAURI_ENV_PLATFORM));
 
 export function DiscordPresence() {
 	const user = useAtomValue(currentUserAtom);
@@ -92,7 +96,7 @@ export function DiscordPresence() {
 	const checklistCompleted = checklist?.filter((e) => e.completed).length ?? 0;
 
 	useEffect(() => {
-		if (!isTauri) return;
+		if (!checkIsTauri()) return;
 		const timeoutMinutes = Math.min(60, Math.max(1, idleTimeoutMinutes));
 		const timer = new InactivityTimer(
 			timeoutMinutes * 60_000,
@@ -121,7 +125,7 @@ export function DiscordPresence() {
 	}, [idleTimeoutMinutes, inactive, tracker]);
 
 	useEffect(() => {
-		if (!isTauri || !enabled) return;
+		if (!checkIsTauri() || !enabled) return;
 		const interval = window.setInterval(() => {
 			if (!inactive) {
 				tracker.touch(projectId);
@@ -164,7 +168,7 @@ export function DiscordPresence() {
 		}
 		meta.content = JSON.stringify(snapshot);
 
-		if (isTauri && enabled) {
+		if (checkIsTauri() && enabled) {
 			const safeDetailsTemplate = validateDiscordTemplate(detailsTemplate)
 				? DEFAULT_DISCORD_DETAILS_TEMPLATE
 				: detailsTemplate;
@@ -248,24 +252,32 @@ export function DiscordPresence() {
 
 	useEffect(() => {
 		publish();
-		if (!playing) return;
-		const timer = window.setInterval(publish, 1000);
+		if (!enabled) return;
+		// Update every second while playing for smooth playback timeline.
+		// When idle or paused, keep a 5-second heartbeat so any launch connection retry
+		// connects automatically without requiring a manual toggle off and on.
+		const intervalMs = playing ? 1000 : 5000;
+		const timer = window.setInterval(publish, intervalMs);
 		return () => window.clearInterval(timer);
-	}, [playing, publish]);
+	}, [enabled, playing, publish]);
 
 	useEffect(() => {
-		if (!isTauri || enabled) return;
+		if (!checkIsTauri() || enabled) return;
 		invoke("clear_discord_activity").catch((error) =>
 			log("Unable to clear Discord presence", error),
 		);
 	}, [enabled]);
 
-	useEffect(
-		() => () => {
-			if (isTauri) void invoke("clear_discord_activity");
-		},
-		[],
-	);
+	useEffect(() => {
+		if (!checkIsTauri()) return;
+		const handleBeforeUnload = () => {
+			void invoke("clear_discord_activity");
+		};
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	}, []);
 
 	return null;
 }

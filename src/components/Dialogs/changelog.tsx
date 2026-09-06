@@ -34,7 +34,6 @@ export function ChangelogDialog() {
 						<Button
 							variant="soft"
 							size="1"
-							color="indigo"
 							onClick={openGitHub}
 							style={{ cursor: "pointer" }}
 						>
@@ -54,6 +53,31 @@ export function ChangelogDialog() {
 					style={{ height: "calc(100% - 60px)" }}
 				>
 					<Flex direction="column" gap="5" pr="4">
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
+								v2.1.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 6, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>TTML Checklist Favorites:</b> Star favorite songs in the TTML Checklist with a dedicated 1-click favorite button and new Favorites tab filter for quick access to priority tracks.
+								</Text>
+								<Text size="2">
+									• <b>Spectrogram Playback Speed Controls:</b> Added interactive playback speed presets (0.5x, 0.75x, 1x, 2x) directly in the spectrogram sidebar for fine-tuned audio scrubbing and syllable timing alignment.
+								</Text>
+								<Text size="2">
+									• <b>High-Performance Lyric Editor Architecture:</b> Consolidated line and word context menus into a unified single listener and centralized word settings context, drastically reducing DOM overhead and memory footprint during long editing sessions.
+								</Text>
+								<Text size="2">
+									• <b>Accent Theme & Color Palette Harmonization:</b> Cleaned up hardcoded element highlights across toolbars, dialogs, and controls to fully inherit the user's custom accent colors and theme settings.
+								</Text>
+								<Text size="2">
+									• <b>Discord Rich Presence Auto-Reconnect:</b> Implemented a 5-second background reconnection heartbeat and improved Tauri environment detection so Discord RPC status activates seamlessly without manual toggling.
+								</Text>
+							</Flex>
+						</Box>
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
 								v2.0.0

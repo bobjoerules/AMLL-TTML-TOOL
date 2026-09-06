@@ -102,13 +102,17 @@ export function cleanSectionHeader(header?: string): string {
 
 export function getSectionHeader(value: string): string | undefined {
 	const trimmed = value.trim();
-	return /^\[?[^[\]\r\n]+\]?$/.test(trimmed) ? trimmed : undefined;
+	return /^\[[^[\]\r\n]+\]$/.test(trimmed) ? trimmed : undefined;
 }
 
 export function normalizeSectionHeader(
 	value: string,
 ): NormalizedSectionHeader | undefined {
-	const label = getSectionHeader(value);
+	const trimmed = value.trim();
+	if (!trimmed) return undefined;
+	const label =
+		getSectionHeader(trimmed) ??
+		(trimmed.includes("\n") || trimmed.includes("\r") ? undefined : trimmed);
 	if (!label) return undefined;
 	const inner = cleanSectionHeader(label)
 		.normalize("NFKC")

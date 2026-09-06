@@ -18,7 +18,6 @@ import {
 import {
 	Box,
 	Button,
-	ContextMenu,
 	Flex,
 	IconButton,
 	Text,
@@ -74,20 +73,17 @@ import {
 	shiftSectionToTime,
 } from "../utils/genius-sections.ts";
 import {
-	applyLineTimingSnapshots,
 	type ApplyLineTimingsResult,
+	applyLineTimingSnapshots,
 } from "../utils/line-timing.ts";
 import { getSynchronizableUnits } from "../utils/lyric-states.ts";
-import { getWordConnections } from "../utils/word-connections.ts";
 import {
 	cleanSectionHeader,
 	duplicateLinesWithSections,
 	repairSectionIntegrity,
 } from "../utils/section-system.ts";
-import { shouldAutoCenterSelection } from "./selection-scroll";
+import { getWordConnections } from "../utils/word-connections.ts";
 import styles from "./index.module.css";
-import { LineTimingMenuItems } from "./line-timing-menu.tsx";
-import { LyricLineMenu } from "./lyric-line-menu.tsx";
 import {
 	globalEnableInsertAtom,
 	lastLineDragEndAtom,
@@ -96,13 +92,8 @@ import {
 } from "./lyric-line-view-states.ts";
 import LyricWordView, { splitTrailingSpace } from "./lyric-word-view.tsx";
 import { RomanWordView } from "./roman-word-view.tsx";
-import {
-	CategorizeSelectionContextMenuItem,
-	SectionActions,
-	SectionContextMenuItems,
-	SectionContextMenuSub,
-	UnassignedSectionContextMenuItems,
-} from "./SectionActions.tsx";
+import { SectionActions } from "./SectionActions.tsx";
+import { shouldAutoCenterSelection } from "./selection-scroll";
 
 const parseRubyShortcut = (value: string) => {
 	if (value.endsWith("|")) {
@@ -410,8 +401,6 @@ export const LyricLineView: FC<{
 	);
 	const activeSection = useAtomValue(sectionAtom);
 	const sectionActionsEnabled = geniusCategorizationEnabled && !!activeSection;
-	const manualCategorizationEnabled =
-		geniusCategorizationEnabled && !activeSection;
 
 	const activeGeniusHeader = geniusCategorizationEnabled
 		? (activeSection?.label ?? line.geniusHeader)
@@ -800,345 +789,313 @@ export const LyricLineView: FC<{
 					disableInsert={disableInsert}
 				/>
 			)}
-			<ContextMenu.Root
-				onOpenChange={(opened) => {
-					if (opened) {
-						if (!store.get(selectedLinesAtom).has(line.id)) {
-							store.set(selectedLinesAtom, new Set([line.id]));
+			<Flex
+				mx="1"
+				my={
+					activeGeniusHeader
+						? "0"
+						: line.isBG && toolMode === ToolMode.Sync && compactBGInSync
+							? "0"
+							: "1"
+				}
+				direction="row"
+				className={classNames(
+					styles.lyricLine,
+					activeGeniusHeader && styles.inSection,
+					isSectionStart && styles.sectionStart,
+					isSectionEnd && styles.sectionEnd,
+					isSectionCollapsed && styles.sectionCollapsed,
+					line.isBG &&
+						toolMode === ToolMode.Sync &&
+						compactBGInSync &&
+						styles.bg,
+					lineSelected && styles.selected,
+					toolMode === ToolMode.Sync && styles.sync,
+					toolMode === ToolMode.Edit && styles.edit,
+					line.ignoreSync && styles.ignoreSync,
+					hasError && toolMode === ToolMode.Edit && styles.error,
+				)}
+				align="center"
+				gapX="4"
+				data-lyric-line-draggable={toolMode === ToolMode.Edit ? "" : undefined}
+				data-lyric-line-id={line.id}
+				data-lyric-line-index={lineIndex}
+				style={{
+					...(isSectionStart
+						? { marginTop: "18px" }
+						: activeGeniusHeader
+							? { marginTop: "0px" }
+							: {}),
+					...(isSectionEnd
+						? { marginBottom: "14px" }
+						: activeGeniusHeader
+							? { marginBottom: "0px" }
+							: {}),
+					...(isSectionCollapsed
+						? {
+								minHeight: "auto",
+								paddingTop: "6px",
+								paddingBottom: "6px",
+							}
+						: {}),
+					...(activeGeniusHeader
+						? {
+								borderTopLeftRadius:
+									isSectionStart || isSectionCollapsed
+										? "var(--global-radius, var(--radius-4))"
+										: 0,
+								borderTopRightRadius:
+									isSectionStart || isSectionCollapsed
+										? "var(--global-radius, var(--radius-4))"
+										: 0,
+								borderBottomLeftRadius: isSectionEnd
+									? "var(--global-radius, var(--radius-4))"
+									: 0,
+								borderBottomRightRadius: isSectionEnd
+									? "var(--global-radius, var(--radius-4))"
+									: 0,
+								borderLeft: `4px solid ${customHeaderColor || `var(--${categoryColor}-9)`}`,
+								...(!isSectionEnd && !lineSelected
+									? {
+											borderBottom: "1px solid var(--gray-a3)",
+										}
+									: {}),
+							}
+						: {}),
+				}}
+				onPointerDown={(evt) => {
+					if (
+						(evt.target as HTMLElement | null)?.closest(
+							"[data-lyric-word-interactive], [data-lyric-line-interactive]",
+						)
+					)
+						return;
+					blockDragRef.current =
+						(evt.target as HTMLElement | null)?.tagName === "INPUT";
+					if (
+						toolMode !== ToolMode.Edit ||
+						blockDragRef.current ||
+						evt.button !== 0
+					)
+						return;
+					evt.currentTarget.setPointerCapture(evt.pointerId);
+					store.set(lineDragAtom, {
+						id: line.id,
+						pointerId: evt.pointerId,
+						startX: evt.clientX,
+						startY: evt.clientY,
+						isDragging: false,
+					});
+				}}
+				onPointerUp={() => {
+					blockDragRef.current = false;
+				}}
+				onClick={(evt) => {
+					if (
+						(evt.target as HTMLElement | null)?.closest(
+							"[data-lyric-word-interactive], [data-lyric-line-interactive]",
+						)
+					)
+						return;
+					evt.stopPropagation();
+					evt.preventDefault();
+
+					const now = Date.now();
+					if (now - store.get(lastLineDragEndAtom) < 250) return;
+					if (evt.ctrlKey) {
+						setSelectedLines((v) => {
+							if (v.has(line.id)) {
+								v.delete(line.id);
+							} else {
+								v.add(line.id);
+							}
+						});
+					} else if (evt.shiftKey) {
+						setSelectedLines((v) => {
+							if (v.size > 0) {
+								let minBoundry = Number.NaN;
+								let maxBoundry = Number.NaN;
+								const lyricLines = store.get(lyricLinesAtom).lyricLines;
+								lyricLines.forEach((line, i) => {
+									if (v.has(line.id)) {
+										if (Number.isNaN(minBoundry)) minBoundry = i;
+										if (Number.isNaN(maxBoundry)) maxBoundry = i;
+
+										minBoundry = Math.min(minBoundry, i, lineIndex);
+										maxBoundry = Math.max(maxBoundry, i, lineIndex);
+									}
+								});
+								for (let i = minBoundry; i <= maxBoundry; i++) {
+									v.add(lyricLines[i].id);
+								}
+							} else {
+								v.add(line.id);
+							}
+						});
+					} else {
+						if (
+							line.sectionId &&
+							store.get(collapsedSectionIdsAtom).has(line.sectionId)
+						) {
+							setSelectedLines((state) => {
+								state.clear();
+								for (const candidate of store.get(lyricLinesAtom).lyricLines) {
+									if (candidate.sectionId === line.sectionId)
+										state.add(candidate.id);
+								}
+							});
+							return;
 						}
+						setSelectedLines((state) => {
+							if (!state.has(line.id) || state.size !== 1) {
+								state.clear();
+								state.add(line.id);
+							}
+						});
+						setSelectedWords((state) => {
+							state.clear();
+							if (toolMode === ToolMode.Sync && syncLevelMode === "line") {
+								const units = getSynchronizableUnits(line);
+								for (const unit of units) {
+									state.add(unit.id);
+								}
+							}
+						});
 					}
 				}}
+				asChild
 			>
-				<ContextMenu.Trigger
-					disabled={toolMode === ToolMode.Preview}
-					onContextMenu={(evt) => {
-						if (
-							(evt.target as HTMLElement | null)?.closest(
-								"[data-lyric-word-interactive], [data-lyric-line-interactive]",
-							)
-						) {
-							evt.preventDefault();
-							evt.stopPropagation();
-						}
-					}}
-				>
+				<div>
 					<Flex
-						mx="1"
-						my={
-							activeGeniusHeader
-								? "0"
-								: line.isBG && toolMode === ToolMode.Sync && compactBGInSync
-									? "0"
-									: "1"
-						}
-						direction="row"
-						className={classNames(
-							styles.lyricLine,
-							activeGeniusHeader && styles.inSection,
-							isSectionStart && styles.sectionStart,
-							isSectionEnd && styles.sectionEnd,
-							isSectionCollapsed && styles.sectionCollapsed,
-							line.isBG &&
-								toolMode === ToolMode.Sync &&
-								compactBGInSync &&
-								styles.bg,
-							lineSelected && styles.selected,
-							toolMode === ToolMode.Sync && styles.sync,
-							toolMode === ToolMode.Edit && styles.edit,
-							line.ignoreSync && styles.ignoreSync,
-							hasError && toolMode === ToolMode.Edit && styles.error,
-						)}
+						direction="column"
 						align="center"
-						gapX="4"
-						data-lyric-line-draggable={
-							toolMode === ToolMode.Edit ? "" : undefined
-						}
-						data-lyric-line-id={line.id}
-						style={{
-							...(isSectionStart
-								? { marginTop: "18px" }
-								: activeGeniusHeader
-									? { marginTop: "0px" }
-									: {}),
-							...(isSectionEnd
-								? { marginBottom: "14px" }
-								: activeGeniusHeader
-									? { marginBottom: "0px" }
-									: {}),
-							...(isSectionCollapsed
-								? {
-										minHeight: "auto",
-										paddingTop: "6px",
-										paddingBottom: "6px",
-									}
-								: {}),
-							...(activeGeniusHeader
-								? {
-										backgroundColor: "var(--color-panel)",
-										borderTopLeftRadius: (isSectionStart || isSectionCollapsed)
-											? "var(--global-radius, var(--radius-4))"
-											: 0,
-										borderTopRightRadius: (isSectionStart || isSectionCollapsed)
-											? "var(--global-radius, var(--radius-4))"
-											: 0,
-										borderBottomLeftRadius: isSectionEnd
-											? "var(--global-radius, var(--radius-4))"
-											: 0,
-										borderBottomRightRadius: isSectionEnd
-											? "var(--global-radius, var(--radius-4))"
-											: 0,
-										borderLeft: `4px solid ${customHeaderColor || `var(--${categoryColor}-9)`}`,
-										...(!isSectionEnd && !lineSelected
-											? {
-													borderBottom: "1px solid var(--gray-a3)",
-												}
-											: {}),
-									}
-								: {}),
-						}}
-						onPointerDown={(evt) => {
-							if (
-								(evt.target as HTMLElement | null)?.closest(
-									"[data-lyric-word-interactive], [data-lyric-line-interactive]",
-								)
-							)
-								return;
-							blockDragRef.current =
-								(evt.target as HTMLElement | null)?.tagName === "INPUT";
-							if (
-								toolMode !== ToolMode.Edit ||
-								blockDragRef.current ||
-								evt.button !== 0
-							)
-								return;
-							evt.currentTarget.setPointerCapture(evt.pointerId);
-							store.set(lineDragAtom, {
-								id: line.id,
-								pointerId: evt.pointerId,
-								startX: evt.clientX,
-								startY: evt.clientY,
-								isDragging: false,
-							});
-						}}
-						onPointerUp={() => {
-							blockDragRef.current = false;
-						}}
-						onClick={(evt) => {
-							if (
-								(evt.target as HTMLElement | null)?.closest(
-									"[data-lyric-word-interactive], [data-lyric-line-interactive]",
-								)
-							)
-								return;
-							evt.stopPropagation();
-							evt.preventDefault();
-
-							const now = Date.now();
-							if (now - store.get(lastLineDragEndAtom) < 250) return;
-							if (evt.ctrlKey) {
-								setSelectedLines((v) => {
-									if (v.has(line.id)) {
-										v.delete(line.id);
-									} else {
-										v.add(line.id);
-									}
-								});
-							} else if (evt.shiftKey) {
-								setSelectedLines((v) => {
-									if (v.size > 0) {
-										let minBoundry = Number.NaN;
-										let maxBoundry = Number.NaN;
-										const lyricLines = store.get(lyricLinesAtom).lyricLines;
-										lyricLines.forEach((line, i) => {
-											if (v.has(line.id)) {
-												if (Number.isNaN(minBoundry)) minBoundry = i;
-												if (Number.isNaN(maxBoundry)) maxBoundry = i;
-
-												minBoundry = Math.min(minBoundry, i, lineIndex);
-												maxBoundry = Math.max(maxBoundry, i, lineIndex);
-											}
-										});
-										for (let i = minBoundry; i <= maxBoundry; i++) {
-											v.add(lyricLines[i].id);
-										}
-									} else {
-										v.add(line.id);
-									}
-								});
-							} else {
-								if (
-									line.sectionId &&
-									store.get(collapsedSectionIdsAtom).has(line.sectionId)
-								) {
-									setSelectedLines((state) => {
-										state.clear();
-										for (const candidate of store.get(lyricLinesAtom)
-											.lyricLines) {
-											if (candidate.sectionId === line.sectionId)
-												state.add(candidate.id);
-										}
-									});
-									return;
-								}
-								setSelectedLines((state) => {
-									if (!state.has(line.id) || state.size !== 1) {
-										state.clear();
-										state.add(line.id);
-									}
-								});
-								setSelectedWords((state) => {
-									state.clear();
-									if (toolMode === ToolMode.Sync && syncLevelMode === "line") {
-										const units = getSynchronizableUnits(line);
-										for (const unit of units) {
-											state.add(unit.id);
-										}
-									}
-								});
-							}
-						}}
-						asChild
+						justify="center"
+						ml={isSectionCollapsed ? "1" : "3"}
+						style={{ minWidth: isSectionCollapsed ? "0px" : "40px" }}
 					>
-						<div>
-							<Flex
-								direction="column"
-								align="center"
-								justify="center"
-								ml={isSectionCollapsed ? "1" : "3"}
-								style={{ minWidth: isSectionCollapsed ? "0px" : "40px" }}
-							>
-								{!isSectionCollapsed && (
-									<>
-										<Text
-											className={classNames(
-												styles.lineNumber,
-												line.ignoreSync && styles.ignored,
-											)}
-											align="center"
-											color="gray"
-										>
-											{displayNumber > 0 && displayNumber}
-										</Text>
-										{line.isBG && (
-											<VideoBackgroundEffectFilled color="var(--accent-9)" />
+						{!isSectionCollapsed && (
+							<>
+								<Text
+									className={classNames(
+										styles.lineNumber,
+										line.ignoreSync && styles.ignored,
+									)}
+									align="center"
+									color="gray"
+								>
+									{displayNumber > 0 && displayNumber}
+								</Text>
+								{line.isBG && (
+									<VideoBackgroundEffectFilled color="var(--accent-9)" />
+								)}
+								{line.isDuet && <TextAlignRightFilled color="#44AA33" />}
+							</>
+						)}
+					</Flex>
+					<div
+						className={classNames(
+							styles.lyricLineContainer,
+							toolMode === ToolMode.Edit && styles.edit,
+							toolMode === ToolMode.Sync && styles.sync,
+						)}
+					>
+						{isSectionStart && (
+							<Flex gap="2" mb={isSectionCollapsed ? "0" : "1"} align="center">
+								<Text
+									size="1"
+									weight="bold"
+									color={customHeaderColor ? undefined : (categoryColor as any)}
+									style={{
+										opacity: 0.8,
+										textTransform: "uppercase",
+										color: customHeaderColor || undefined,
+									}}
+								>
+									{cleanHeader}
+								</Text>
+								{sectionActionsEnabled && activeSection && (
+									<SectionActions section={activeSection} />
+								)}
+								{isSectionCollapsed && (
+									<Badge size="1" color="gray" variant="soft">
+										{t("sectionActions.linesCount", "{{count}} lines", {
+											count: sectionLineCount,
+										})}
+									</Badge>
+								)}
+								{!isSectionCollapsed && toolMode === ToolMode.Sync && (
+									<Button
+										size="1"
+										variant="ghost"
+										onClick={(e) => {
+											e.stopPropagation();
+											const currentTime = store.get(currentTimeAtom);
+											editLyricLines((state) => {
+												shiftSectionToTime(
+													state.lyricLines,
+													lineIndex,
+													currentTime,
+												);
+											});
+										}}
+									>
+										{t(
+											"experimentalFeatures.geniusCategorization.snapToPlayhead",
+											"Snap to Playhead",
 										)}
-										{line.isDuet && <TextAlignRightFilled color="#44AA33" />}
-									</>
+									</Button>
+								)}
+								{!isSectionCollapsed && toolMode === ToolMode.Sync && (
+									<Button
+										size="1"
+										variant="ghost"
+										onClick={(e) => {
+											e.stopPropagation();
+											const lyricLines = store.get(lyricLinesAtom).lyricLines;
+											const previousSection = findPreviousMatchingSection(
+												lyricLines,
+												lineIndex,
+												store.get(lyricLinesAtom).sections,
+											);
+
+											if (previousSection) {
+												let copyResult: ReturnType<typeof copySectionTimings>;
+												editLyricLines((state) => {
+													copyResult = copySectionTimings(
+														state.lyricLines,
+														lineIndex,
+														previousSection,
+													);
+												});
+												toast.success(t("common.success", "Success"));
+												if (copyResult && !copyResult.lengthsMatch) {
+													toast.info(
+														"Section lengths differ; copied matching lines only.",
+													);
+												}
+											} else {
+												toast.info(
+													t(
+														"experimentalFeatures.geniusCategorization.noPreviousFound",
+														"No previous identical header found with timing.",
+													),
+												);
+											}
+										}}
+									>
+										{t(
+											"experimentalFeatures.geniusCategorization.copyPrevious",
+											"Copy Previous Timing",
+										)}
+									</Button>
 								)}
 							</Flex>
-							<div
-								className={classNames(
-									styles.lyricLineContainer,
-									toolMode === ToolMode.Edit && styles.edit,
-									toolMode === ToolMode.Sync && styles.sync,
-								)}
-							>
-								{isSectionStart && (
-									<Flex
-										gap="2"
-										mb={isSectionCollapsed ? "0" : "1"}
-										align="center"
-									>
-										<Text
-											size="1"
-											weight="bold"
-											color={
-												customHeaderColor ? undefined : (categoryColor as any)
-											}
-											style={{
-												opacity: 0.8,
-												textTransform: "uppercase",
-												color: customHeaderColor || undefined,
-											}}
-										>
-											{cleanHeader}
-										</Text>
-										{sectionActionsEnabled && activeSection && (
-											<SectionActions section={activeSection} />
-										)}
-										{isSectionCollapsed && (
-											<Badge size="1" color="gray" variant="soft">
-												{t("sectionActions.linesCount", "{{count}} lines", {
-													count: sectionLineCount,
-												})}
-											</Badge>
-										)}
-										{!isSectionCollapsed && toolMode === ToolMode.Sync && (
-											<Button
-												size="1"
-												variant="ghost"
-												onClick={(e) => {
-													e.stopPropagation();
-													const currentTime = store.get(currentTimeAtom);
-													editLyricLines((state) => {
-														shiftSectionToTime(
-															state.lyricLines,
-															lineIndex,
-															currentTime,
-														);
-													});
-												}}
-											>
-												{t(
-													"experimentalFeatures.geniusCategorization.snapToPlayhead",
-													"Snap to Playhead",
-												)}
-											</Button>
-										)}
-										{!isSectionCollapsed && toolMode === ToolMode.Sync && (
-											<Button
-												size="1"
-												variant="ghost"
-												onClick={(e) => {
-													e.stopPropagation();
-													const lyricLines =
-														store.get(lyricLinesAtom).lyricLines;
-													const previousSection = findPreviousMatchingSection(
-														lyricLines,
-														lineIndex,
-														store.get(lyricLinesAtom).sections,
-													);
-
-													if (previousSection) {
-														let copyResult: ReturnType<
-															typeof copySectionTimings
-														>;
-														editLyricLines((state) => {
-															copyResult = copySectionTimings(
-																state.lyricLines,
-																lineIndex,
-																previousSection,
-															);
-														});
-														toast.success(t("common.success", "Success"));
-														if (copyResult && !copyResult.lengthsMatch) {
-															toast.info(
-																"Section lengths differ; copied matching lines only.",
-															);
-														}
-													} else {
-														toast.info(
-															t(
-																"experimentalFeatures.geniusCategorization.noPreviousFound",
-																"No previous identical header found with timing.",
-															),
-														);
-													}
-												}}
-											>
-												{t(
-													"experimentalFeatures.geniusCategorization.copyPrevious",
-													"Copy Previous Timing",
-												)}
-											</Button>
-										)}
-									</Flex>
-								)}
-								{!isSectionCollapsed && (
-									<>
-										<div
-											className={classNames(
-												styles.lyricWordsContainer,
+						)}
+						{!isSectionCollapsed && (
+							<>
+								<div
+									className={classNames(
+										styles.lyricWordsContainer,
 										toolMode === ToolMode.Edit && styles.edit,
 										toolMode === ToolMode.Sync && styles.sync,
 										!showTimestamps && styles.hideTimestamps,
@@ -1297,81 +1254,41 @@ export const LyricLineView: FC<{
 										)}
 									</>
 								)}
-									</>
-								)}
-							</div>
-							{!isSectionCollapsed &&
-								toolMode === ToolMode.Sync &&
-								showTimestamps && (
-									<Flex pr="3" gap="1" direction="column" align="stretch">
-									<div className={styles.startTime} ref={startTimeRef}>
-										{msToTimestamp(line.startTime)}
-									</div>
-									<button
-										type="button"
-										className={classNames(styles.endTime, styles.endTimeButton)}
-										ref={endTimeRef}
-										onClick={onToggleEndTimeLink}
+							</>
+						)}
+					</div>
+					{!isSectionCollapsed &&
+						toolMode === ToolMode.Sync &&
+						showTimestamps && (
+							<Flex pr="3" gap="1" direction="column" align="stretch">
+								<div className={styles.startTime} ref={startTimeRef}>
+									{msToTimestamp(line.startTime)}
+								</div>
+								<button
+									type="button"
+									className={classNames(styles.endTime, styles.endTimeButton)}
+									ref={endTimeRef}
+									onClick={onToggleEndTimeLink}
+								>
+									<span
+										style={{
+											display: "inline-flex",
+											alignItems: "center",
+										}}
 									>
-										<span
-											style={{
-												display: "inline-flex",
-												alignItems: "center",
-											}}
-										>
-											{endTimeLinked ? (
-												<LinkMultiple20Regular />
-											) : showEndTimeAsDuration ? (
-												`+${line.endTime - line.startTime}ms`
-											) : (
-												msToTimestamp(line.endTime)
-											)}
-										</span>
-									</button>
-								</Flex>
-							)}
-						</div>
-					</Flex>
-				</ContextMenu.Trigger>
-				<ContextMenu.Content>
-					<LineTimingMenuItems />
-					{(toolMode === ToolMode.Edit ||
-						sectionActionsEnabled ||
-						manualCategorizationEnabled) && <ContextMenu.Separator />}
-					{manualCategorizationEnabled &&
-						(toolMode === ToolMode.Edit || toolMode === ToolMode.Sync) && (
-							<CategorizeSelectionContextMenuItem />
+										{endTimeLinked ? (
+											<LinkMultiple20Regular />
+										) : showEndTimeAsDuration ? (
+											`+${line.endTime - line.startTime}ms`
+										) : (
+											msToTimestamp(line.endTime)
+										)}
+									</span>
+								</button>
+							</Flex>
 						)}
-					{manualCategorizationEnabled && toolMode === ToolMode.Edit && (
-						<ContextMenu.Separator />
-					)}
-					{sectionActionsEnabled &&
-						activeSection &&
-						toolMode === ToolMode.Sync && (
-							<SectionContextMenuItems
-								section={activeSection}
-								lineIndex={lineIndex}
-							/>
-						)}
-					{sectionActionsEnabled &&
-						activeSection &&
-						toolMode === ToolMode.Edit && (
-							<SectionContextMenuSub
-								section={activeSection}
-								lineIndex={lineIndex}
-							/>
-						)}
-					{manualCategorizationEnabled && toolMode === ToolMode.Edit && (
-						<UnassignedSectionContextMenuItems lineIndex={lineIndex} />
-					)}
-					{sectionActionsEnabled &&
-						activeSection &&
-						toolMode === ToolMode.Edit && <ContextMenu.Separator />}
-					{toolMode === ToolMode.Edit && (
-						<LyricLineMenu lineIndex={lineIndex} />
-					)}
-				</ContextMenu.Content>
-			</ContextMenu.Root>
+				</div>
+			</Flex>
 			{globalEnableInsert && isLastLine && (
 				<Button
 					mx="1"

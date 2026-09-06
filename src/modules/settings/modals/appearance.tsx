@@ -160,9 +160,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#ffffff",
 			advSecondaryText: "rgba(255, 255, 255, 0.7)",
-			vActiveLine: "rgba(56, 189, 248, 0.2)",
 			vLineHover: "rgba(255, 255, 255, 0.06)",
-			vSelection: "rgba(56, 189, 248, 0.3)",
 		},
 		lightSettings: {
 			accentColor: "sky",
@@ -179,9 +177,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#1d1d1f",
 			advSecondaryText: "rgba(0, 0, 0, 0.6)",
-			vActiveLine: "rgba(56, 189, 248, 0.2)",
 			vLineHover: "rgba(0, 0, 0, 0.05)",
-			vSelection: "rgba(56, 189, 248, 0.3)",
 		},
 	},
 	{
@@ -722,9 +718,9 @@ export const SettingsAppearanceTab = () => {
 		if (s.vSidebarActive !== undefined) setVSidebarActive(s.vSidebarActive);
 		if (s.vMenuHover !== undefined) setVMenuHover(s.vMenuHover);
 		if (s.vEditorBg !== undefined) setVEditorBg(s.vEditorBg);
-		if (s.vActiveLine !== undefined) setVActiveLine(s.vActiveLine);
-		if (s.vLineHover !== undefined) setVLineHover(s.vLineHover);
-		if (s.vSelection !== undefined) setVSelection(s.vSelection);
+		setVActiveLine(s.vActiveLine ?? "");
+		setVLineHover(s.vLineHover ?? "");
+		setVSelection(s.vSelection ?? "");
 		if (s.vChipRadius !== undefined) setVChipRadius(Number(s.vChipRadius));
 		if (s.vChipGap !== undefined) setVChipGap(Number(s.vChipGap));
 		if (s.vChipPaddingV !== undefined)

@@ -167,7 +167,7 @@ export const PluginManagerDialog: FC = () => {
 	return (
 		<Dialog.Root>
 			<Dialog.Trigger>
-				<Button variant="soft" color="indigo" size="2">
+				<Button variant="soft" size="2">
 					<StoreIcon /> {t("pluginManager.trigger", "Plugins")}
 				</Button>
 			</Dialog.Trigger>
@@ -210,7 +210,7 @@ export const PluginManagerDialog: FC = () => {
 					onValueChange={setActiveTab}
 					style={{ flex: 1, display: "flex", flexDirection: "column" }}
 				>
-					<Tabs.List color="indigo" mb="6" style={{ gap: "40px" }}>
+					<Tabs.List mb="6" style={{ gap: "40px" }}>
 						<Tabs.Trigger value="installed">
 							{t("pluginManager.installed", "Installed")}
 						</Tabs.Trigger>
@@ -273,7 +273,7 @@ export const PluginManagerDialog: FC = () => {
 													>
 														{plugin.name}
 													</Text>
-													<Badge color="indigo" variant="soft">
+													<Badge variant="soft">
 														v{plugin.version}
 													</Badge>
 												</Flex>
@@ -307,7 +307,7 @@ export const PluginManagerDialog: FC = () => {
 															</Box>
 															{plugin.techniques && (
 																<Box>
-																	<Text size="2" weight="bold" color="indigo">
+																	<Text size="2" weight="bold">
 																		{t(
 																			"pluginManager.techniques",
 																			"Techniques",
@@ -324,7 +324,7 @@ export const PluginManagerDialog: FC = () => {
 															)}
 															{plugin.usage && (
 																<Box>
-																	<Text size="2" weight="bold" color="indigo">
+																	<Text size="2" weight="bold">
 																		{t("pluginManager.usage", "Usage")}
 																	</Text>
 																	<Text
@@ -465,7 +465,6 @@ export const PluginManagerDialog: FC = () => {
 														<Button
 															size="2"
 															variant="soft"
-															color="indigo"
 															onClick={() => handleInstall(entry)}
 															disabled={installingId === entry.id}
 														>

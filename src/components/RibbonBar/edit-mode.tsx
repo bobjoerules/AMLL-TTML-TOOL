@@ -606,7 +606,7 @@ function ToggleButtonField<
 	icon,
 	isWordField,
 	fieldName,
-	activeColor = "indigo",
+	activeColor,
 }: {
 	label: React.ReactNode;
 	icon?: React.ReactNode;

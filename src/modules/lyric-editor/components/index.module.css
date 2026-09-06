@@ -63,7 +63,6 @@
 		border-right: solid 1px var(--gray-a5);
 
 		transition:
-			box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
 			background-color 0.2s ease;
 
 		&.hasInstantFade {
@@ -316,11 +315,11 @@
 	background-color: var(--color-panel);
 	user-select: none;
 	display: flex;
+	contain: layout style;
 
 	transition:
 		opacity 0.1s ease-in-out,
-		background-color 0.1s ease,
-		box-shadow 0.1s ease;
+		background-color 0.1s ease;
 
 	&.dropTop {
 		border-top: solid 3px var(--accent-a11);
@@ -331,7 +330,7 @@
 	}
 
 	&.inSection {
-		background-color: var(--color-panel);
+		background-color: color-mix(in srgb, var(--editor-bg, #0b0b0d) 84%, #fff 16%) !important;
 
 		&:not(.sectionEnd):not(.sectionCollapsed) {
 			border-bottom-left-radius: 0 !important;
@@ -540,14 +539,24 @@
 }
 
 .lyricLine.inSection:not(.selected):not(.error):hover {
+	background-color: color-mix(in srgb, var(--editor-bg, #0b0b0d) 76%, #fff 24%) !important;
 	box-shadow:
 		inset 0 var(--global-border-width, 2px) 0 0 var(--accent-a5),
 		inset 0 calc(var(--global-border-width, 2px) * -1) 0 0 var(--accent-a5),
 		inset calc(var(--global-border-width, 2px) * -1) 0 0 0 var(--accent-a5) !important;
 }
 
+:is(.light, .light-theme, [data-theme="light"]) .lyricLine.inSection {
+	background-color: color-mix(in srgb, var(--color-background, #fff) 93%, #000 7%) !important;
+}
+
+:is(.light, .light-theme, [data-theme="light"]) .lyricLine.inSection:not(.selected):not(.error):hover {
+	background-color: color-mix(in srgb, var(--color-background, #fff) 88%, #000 12%) !important;
+}
+
 .lyricLine.inSection.selected:not(.error) {
 	outline: none !important;
+	background-color: var(--active-line-bg, var(--accent-a3)) !important;
 	box-shadow:
 		inset 0 var(--global-border-width, 2px) 0 0 var(--accent-a11),
 		inset 0 calc(var(--global-border-width, 2px) * -1) 0 0 var(--accent-a11),
@@ -559,7 +568,7 @@
 			inset 0 2px 0 0 var(--accent-a11),
 			inset 0 -2px 0 0 var(--accent-a11),
 			inset -2px 0 0 0 var(--accent-a11) !important;
-		background-color: var(--accent-a4);
+		background-color: var(--accent-a4) !important;
 	}
 }
 

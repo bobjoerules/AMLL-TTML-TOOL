@@ -33,6 +33,8 @@ describe("Genius sections", () => {
 		expect(getGeniusHeader("[Post-Chorus]")).toBe("[Post-Chorus]");
 		expect(getGeniusHeader("[ ]")).toBe("[ ]");
 		expect(getGeniusHeader("[Chorus] lyric")).toBeUndefined();
+		expect(getGeniusHeader("My head is killing me tonight")).toBeUndefined();
+		expect(getGeniusHeader("I didn't get to sleep last night")).toBeUndefined();
 	});
 
 	it("uses exact labels and contiguous lines as section boundaries", () => {

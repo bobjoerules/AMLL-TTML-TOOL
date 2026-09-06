@@ -131,7 +131,7 @@ export function SectionImportReviewDialog({
 							<Text size="2" weight="bold">
 								{t("sectionImportReview.structure", "Structure")}
 							</Text>
-							<Badge color="indigo">
+							<Badge variant="soft">
 								{t("sectionImportReview.sectionCount", {
 									count: sections.length,
 								})}

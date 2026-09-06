@@ -1,8 +1,6 @@
 import {
 	CenterHorizontal24Regular,
 	ClockRegular,
-	EyeFilled,
-	EyeOffFilled,
 	MusicNote2Filled,
 	SettingsFilled,
 	Target24Regular,
@@ -38,6 +36,7 @@ import {
 	audioBufferAtom,
 	auditionTimeAtom,
 	currentTimeAtom,
+	playbackRateAtom,
 } from "$/modules/audio/states/index.ts";
 import { cmdDuplicatePaste } from "$/modules/keyboard/commands.ts";
 import { useCommand } from "$/modules/keyboard/hooks.ts";
@@ -74,7 +73,6 @@ import {
 	editingTimeFieldAtom,
 	lyricLinesAtom,
 	selectedLinesAtom,
-	showUnselectedLinesAtom,
 } from "$/states/main.ts";
 import { newLyricLine, newLyricWord } from "$/types/ttml.ts";
 import { openFileWithDialog } from "$/utils/fileDialog.ts";
@@ -106,6 +104,8 @@ const getNoteFromFreq = (freq: number) => {
 	return `${noteName}${octave}`;
 };
 
+const SPEED_PRESETS = [0.5, 0.75, 1, 2] as const;
+
 export const AudioSpectrogram: FC = memo(() => {
 	const audioBuffer = useAtomValue(audioBufferAtom);
 	const setCurrentTime = useSetAtom(currentTimeAtom);
@@ -116,9 +116,7 @@ export const AudioSpectrogram: FC = memo(() => {
 	const [gain, setGain] = useAtom(spectrogramGainAtom);
 	const [dataHeight, setDataHeight] = useAtom(spectrogramHeightAtom);
 	const [fftSize, setFftSize] = useAtom(spectrogramFftSizeAtom);
-	const [showUnselectedLines, setShowUnselectedLines] = useAtom(
-		showUnselectedLinesAtom,
-	);
+	const [playbackRate, setPlaybackRate] = useAtom(playbackRateAtom);
 	const [onlyShowSyncLine, setOnlyShowSyncLine] = useAtom(
 		spectrogramOnlyShowSyncLineAtom,
 	);
@@ -786,17 +784,25 @@ export const AudioSpectrogram: FC = memo(() => {
 				</div>
 
 				<div className={`${styles.sidebar} ${styles.rightSidebar}`}>
-					<Tooltip
-						content={t("spectrogram.showUnselectedLines", "显示未选中行")}
-						side="left"
-					>
-						<IconButton
-							variant={showUnselectedLines ? "solid" : "outline"}
-							onClick={() => setShowUnselectedLines((prev) => !prev)}
-						>
-							{showUnselectedLines ? <EyeFilled /> : <EyeOffFilled />}
-						</IconButton>
-					</Tooltip>
+					<div className={styles.speedPresetGroup}>
+						{SPEED_PRESETS.map((preset) => (
+							<Tooltip
+								key={preset}
+								content={`${preset}x ${t("spectrogram.speed", "Speed")}`}
+								side="left"
+							>
+								<Button
+									size="1"
+									variant={playbackRate === preset ? "solid" : "soft"}
+									color={playbackRate === preset ? undefined : "gray"}
+									className={styles.speedPresetButton}
+									onClick={() => setPlaybackRate(preset)}
+								>
+									{preset === 0.75 ? ".75x" : `${preset}x`}
+								</Button>
+							</Tooltip>
+						))}
+					</div>
 
 					<Tooltip
 						content={t(
@@ -859,34 +865,6 @@ export const AudioSpectrogram: FC = memo(() => {
 								<Text size="2" weight="bold">
 									{t("spectrogram.settings", "频谱图设置")}
 								</Text>
-
-								<Flex align="center" justify="between" gap="2">
-									<Text size="1" color="gray">
-										{t(
-											"spectrogram.onlyShowSyncLine",
-											"Only show line being time synced",
-										)}
-									</Text>
-									<Switch
-										size="1"
-										checked={onlyShowSyncLine}
-										onCheckedChange={setOnlyShowSyncLine}
-									/>
-								</Flex>
-
-								<Flex align="center" justify="between" gap="2">
-									<Text size="1" color="gray">
-										{t(
-											"spectrogram.followPlayhead",
-											"Follow playhead (Keep in center)",
-										)}
-									</Text>
-									<Switch
-										size="1"
-										checked={followPlayhead}
-										onCheckedChange={setFollowPlayhead}
-									/>
-								</Flex>
 
 								<Flex direction="column" gap="2">
 									<Text size="1" color="gray">

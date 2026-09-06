@@ -527,7 +527,7 @@ export const ImportAlbumModal: React.FC<ImportAlbumModalProps> = ({
 											{albumSummary.artist}
 										</Text>
 										<Flex gap="2" align="center" mt="1">
-											<Badge color="indigo" size="1">
+											<Badge size="1">
 												{t("ttmlChecklist.trackCount", "{count} tracks", {
 													count: tracks.length,
 												})}

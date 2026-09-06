@@ -17,6 +17,8 @@ import {
 	List16Regular,
 	MusicNote2Filled,
 	Search16Regular,
+	Star16Filled,
+	Star16Regular,
 	Timer16Regular,
 } from "@fluentui/react-icons";
 import {
@@ -87,6 +89,7 @@ import {
 	deleteChecklistEntry,
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
+	toggleChecklistEntryFavorite,
 	type TTMLChecklistEntry,
 	type TTMLChecklistEntryInput,
 	updateChecklistEntry,
@@ -357,7 +360,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								type="button"
 								size="1"
 								variant={showProviderSearch ? "solid" : "soft"}
-								color="indigo"
+								color={showProviderSearch ? undefined : "gray"}
 								onClick={() => setShowProviderSearch((prev) => !prev)}
 							>
 								<Globe16Regular />
@@ -434,7 +437,6 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 									type="button"
 									size="1"
 									variant="solid"
-									color="indigo"
 									onClick={() => void handleSearchProvider()}
 									disabled={isSearchingProvider || !providerQuery.trim()}
 								>
@@ -539,7 +541,6 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 												<Badge
 													size="1"
 													variant="soft"
-													color="indigo"
 													style={{ flexShrink: 0, whiteSpace: "nowrap" }}
 												>
 													Select
@@ -737,6 +738,7 @@ const ChecklistEntryCard = memo(
 		onImportAppleTtml,
 		onLoadCloud,
 		isLoadingCloud,
+		onToggleFavorite,
 	}: {
 		entry: TTMLChecklistEntry;
 		onComplete: (id: string, completed: boolean) => void;
@@ -746,6 +748,7 @@ const ChecklistEntryCard = memo(
 		onImportAppleTtml?: (entry: TTMLChecklistEntry) => void;
 		onLoadCloud?: (docId: string) => void;
 		isLoadingCloud?: boolean;
+		onToggleFavorite?: (id: string) => void;
 	}) => {
 		const { t } = useTranslation();
 		const [editing, setEditing] = useState(false);
@@ -974,7 +977,6 @@ const ChecklistEntryCard = memo(
 								<IconButton
 									size="2"
 									variant="surface"
-									color="sky"
 									disabled={isLoadingCloud}
 									onClick={() => onLoadCloud?.(entry.cloudDocId!)}
 									aria-label={t("ttmlChecklist.loadCloudTTML", "Download TTML")}
@@ -1003,7 +1005,6 @@ const ChecklistEntryCard = memo(
 							<IconButton
 								size="2"
 								variant="soft"
-								color="indigo"
 								onClick={() => onImportLyrics(entry)}
 								aria-label={t("ttmlChecklist.importLyrics", "Import Lyrics")}
 								style={{
@@ -1046,6 +1047,38 @@ const ChecklistEntryCard = memo(
 									</IconButton>
 								</Tooltip>
 							)}
+
+						{/* Favorite Button */}
+						<Tooltip
+							content={
+								entry.favorite
+									? t("ttmlChecklist.unfavorite", "Remove from favorites")
+									: t("ttmlChecklist.favorite", "Add to favorites")
+							}
+						>
+							<IconButton
+								size="2"
+								variant={entry.favorite ? "solid" : "soft"}
+								color={entry.favorite ? "amber" : "gray"}
+								onClick={() => onToggleFavorite?.(entry.id)}
+								aria-label={
+									entry.favorite
+										? t("ttmlChecklist.unfavorite", "Remove from favorites")
+										: t("ttmlChecklist.favorite", "Add to favorites")
+								}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								{entry.favorite ? (
+									<Star16Filled style={{ color: "#f59e0b" }} />
+								) : (
+									<Star16Regular />
+								)}
+							</IconButton>
+						</Tooltip>
 
 						{/* Done / Reopen Button */}
 						<Tooltip
@@ -1125,9 +1158,9 @@ export const TTMLChecklistDialog = () => {
 	const [open, setOpen] = useAtom(ttmlChecklistDialogAtom);
 	const [storedEntries, setStoredEntries] = useAtom(ttmlChecklistAtom);
 	const [showAddForm, setShowAddForm] = useState(false);
-	const [filterTab, setFilterTab] = useState<"all" | "pending" | "completed">(
-		"all",
-	);
+	const [filterTab, setFilterTab] = useState<
+		"all" | "pending" | "completed" | "favorites"
+	>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 	const deferredSearchQuery = useDeferredValue(searchQuery);
 	const [sortBy, setSortBy] = useState<
@@ -1157,6 +1190,7 @@ export const TTMLChecklistDialog = () => {
 
 	const totalCount = entries.length;
 	const completedCount = entries.filter((e) => e.completed).length;
+	const favoritesCount = entries.filter((e) => e.favorite).length;
 	const pendingCount = totalCount - completedCount;
 	const progressPercent =
 		totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -1168,6 +1202,8 @@ export const TTMLChecklistDialog = () => {
 			result = result.filter((e) => !e.completed);
 		} else if (filterTab === "completed") {
 			result = result.filter((e) => e.completed);
+		} else if (filterTab === "favorites") {
+			result = result.filter((e) => Boolean(e.favorite));
 		}
 
 		const q = deferredSearchQuery.toLowerCase().trim();
@@ -1214,6 +1250,13 @@ export const TTMLChecklistDialog = () => {
 			setStoredEntries((prev) =>
 				setChecklistEntryCompleted(prev, id, completed),
 			);
+		},
+		[setStoredEntries],
+	);
+
+	const handleToggleFavorite = useCallback(
+		(id: string) => {
+			setStoredEntries((prev) => toggleChecklistEntryFavorite(prev, id));
 		},
 		[setStoredEntries],
 	);
@@ -2115,6 +2158,53 @@ export const TTMLChecklistDialog = () => {
 										)}
 									</button>
 								</Tooltip>
+								<Tooltip
+									content={`${t("ttmlChecklist.favorites", "Favorites")} (${favoritesCount})`}
+								>
+									<button
+										type="button"
+										onClick={() => setFilterTab("favorites")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "favorites"
+													? "var(--color-surface)"
+													: "transparent",
+											color:
+												filterTab === "favorites"
+													? "var(--amber-11)"
+													: "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "favorites"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<Star16Filled style={{ width: 16, height: 16 }} />
+										{filterTab === "favorites" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--amber-9)",
+													boxShadow: "0 0 6px var(--amber-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
 							</Flex>
 						</Flex>
 
@@ -2178,6 +2268,7 @@ export const TTMLChecklistDialog = () => {
 											onImportAppleTtml={handleImportAppleTtmlForEntry}
 											onLoadCloud={handleLoadCloudTTML}
 											isLoadingCloud={loadingCloudDocId === entry.cloudDocId}
+											onToggleFavorite={handleToggleFavorite}
 										/>
 									)}
 								</ViewportList>

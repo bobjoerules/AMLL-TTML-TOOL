@@ -17,7 +17,7 @@ import {
 	FolderOpen24Regular,
 	MyLocation24Regular,
 } from "@fluentui/react-icons";
-import { Box, Button, Card, Flex, Text } from "@radix-ui/themes";
+import { Box, Button, Card, ContextMenu, Flex, Text } from "@radix-ui/themes";
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { splitAtom } from "jotai/utils";
 import { useSetImmerAtom } from "jotai-immer";
@@ -30,8 +30,12 @@ import {
 	useImperativeHandle,
 	useMemo,
 	useRef,
+	useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { ViewportList, type ViewportListRef } from "react-viewport-list";
+import { useFileOpener } from "$/hooks/useFileOpener";
+import { currentTimeAtom } from "$/modules/audio/states";
 import {
 	cloudFileManagerInitialTabAtom,
 	cloudFileManagerOpenAtom,
@@ -44,22 +48,20 @@ import {
 	guideWelcomeOpenAtom,
 } from "$/modules/onboarding/states";
 import {
-	importLyricsChooserDialogAtom,
-	openAccountSettingsAtom,
-	ttmlChecklistDialogAtom,
-} from "$/states/dialogs";
-import { useFileOpener } from "$/hooks/useFileOpener";
-import { ViewportList, type ViewportListRef } from "react-viewport-list";
-import { currentTimeAtom } from "$/modules/audio/states";
-import {
 	geniusCategorizationEnabledAtom,
 	geniusHeaderDetectionDialogOpenAtom,
 	geniusHeaderDetectionDialogShownAtom,
 } from "$/modules/settings/states/index.ts";
 import {
+	importLyricsChooserDialogAtom,
+	openAccountSettingsAtom,
+	ttmlChecklistDialogAtom,
+} from "$/states/dialogs";
+import {
 	collapsedSectionIdsAtom,
 	lyricLinesAtom,
 	selectedLinesAtom,
+	selectedWordsAtom,
 	ToolMode,
 	toolModeAtom,
 } from "$/states/main.ts";
@@ -72,6 +74,10 @@ import {
 	normalizeWheelDelta,
 } from "./drag-scroll";
 import styles from "./index.module.css";
+import {
+	type ContextMenuTarget,
+	LyricEditorContextMenuContent,
+} from "./lyric-editor-context-menu";
 import { LyricLineView } from "./lyric-line-view";
 import {
 	draggingIdAtom,
@@ -79,6 +85,7 @@ import {
 	lineDragAtom,
 	timingCopyPlacementAtom,
 } from "./lyric-line-view-states";
+import { LyricWordSettingsProvider } from "./lyric-word-settings-context";
 import {
 	CategorizeSelectionDialog,
 	SectionManagerDialog,
@@ -541,6 +548,63 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 
 	useImperativeHandle(ref, () => viewElRef.current as HTMLDivElement, []);
 
+	const [contextMenuTarget, setContextMenuTarget] =
+		useState<ContextMenuTarget | null>(null);
+
+	const handleContextMenu = useCallback(
+		(evt: React.MouseEvent) => {
+			const target = evt.target as HTMLElement | null;
+			if (!target) return;
+
+			if (target.closest("input, textarea")) {
+				evt.stopPropagation();
+				return;
+			}
+
+			const lineEl = target.closest<HTMLElement>("[data-lyric-line-id]");
+			if (!lineEl) {
+				setContextMenuTarget(null);
+				return;
+			}
+
+			const lineId = lineEl.dataset.lyricLineId!;
+			const lineIndex = Number(lineEl.dataset.lyricLineIndex);
+
+			const spaceEl = target.closest<HTMLElement>(
+				"[data-lyric-space-placeholder]",
+			);
+			const wordEl = target.closest<HTMLElement>("[data-lyric-word-id]");
+
+			if (spaceEl) {
+				const wordIndex = Number(spaceEl.dataset.lyricWordIndex);
+				setContextMenuTarget({ type: "space", lineIndex, wordIndex, lineId });
+			} else if (wordEl) {
+				const wordId = wordEl.dataset.lyricWordId!;
+				const wordIndex = Number(wordEl.dataset.lyricWordIndex);
+				setContextMenuTarget({
+					type: "word",
+					lineIndex,
+					wordIndex,
+					wordId,
+					lineId,
+				});
+
+				const selectedWords = store.get(selectedWordsAtom);
+				if (!selectedWords.has(wordId)) {
+					store.set(selectedWordsAtom, new Set([wordId]));
+					store.set(selectedLinesAtom, new Set([lineId]));
+				}
+			} else {
+				setContextMenuTarget({ type: "line", lineIndex, lineId });
+				const selectedLines = store.get(selectedLinesAtom);
+				if (!selectedLines.has(lineId)) {
+					store.set(selectedLinesAtom, new Set([lineId]));
+				}
+			}
+		},
+		[store],
+	);
+
 	if (editLyric.length === 0)
 		return (
 			<Flex
@@ -564,7 +628,12 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 						<Text size="6" weight="bold">
 							{t("app.empty.title", "没有歌词行")}
 						</Text>
-						<Text color="gray" size="2" align="center" style={{ maxWidth: "440px", lineHeight: "1.5" }}>
+						<Text
+							color="gray"
+							size="2"
+							align="center"
+							style={{ maxWidth: "440px", lineHeight: "1.5" }}
+						>
 							{t(
 								"app.empty.description",
 								"Add new lyric lines in the top panel or open/import existing lyrics from the menu or cloud",
@@ -587,10 +656,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 								<ArrowDownload24Regular style={{ width: 16, height: 16 }} />
 								{t("beginnerGuide.empty.import", "Import Lyrics")}
 							</Button>
-							<Button
-								variant="soft"
-								onClick={() => setTtmlChecklist(true)}
-							>
+							<Button variant="soft" onClick={() => setTtmlChecklist(true)}>
 								<DocumentBulletList24Regular
 									style={{ width: 16, height: 16 }}
 								/>
@@ -600,10 +666,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 								<FolderOpen24Regular style={{ width: 16, height: 16 }} />
 								{t("beginnerGuide.empty.open", "Open TTML")}
 							</Button>
-							<Button
-								variant="soft"
-								onClick={openCloudLyrics}
-							>
+							<Button variant="soft" onClick={openCloudLyrics}>
 								<Cloud24Regular style={{ width: 16, height: 16 }} />
 								{t("beginnerGuide.empty.cloud", "Open from Cloud")}
 							</Button>
@@ -651,32 +714,53 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 					</Button>
 				</Flex>
 			)}
-			<Box
-				flexGrow="1"
-				style={{
-					padding: toolMode === ToolMode.Sync ? "4px 0 20vh 0" : "4px 0",
-					height: "100%",
-					maxHeight: "100%",
-					overflowY: "auto",
-					backgroundColor: "var(--editor-bg, transparent)",
-				}}
-				ref={viewElRef}
-			>
-				<ViewportList
-					overscan={10}
-					items={visibleItems}
-					ref={viewRef}
-					viewportRef={viewElRef}
-				>
-					{(item) => (
-						<LyricLineView
-							key={item.line?.id ?? item.sourceIndex}
-							lineAtom={item.lineAtom}
-							lineIndex={item.sourceIndex}
-						/>
+			<LyricWordSettingsProvider>
+				<ContextMenu.Root>
+					<ContextMenu.Trigger
+						disabled={toolMode === ToolMode.Preview}
+						onContextMenu={handleContextMenu}
+						style={{
+							display: "flex",
+							flexGrow: 1,
+							flexDirection: "column",
+							height: "100%",
+							minHeight: 0,
+						}}
+					>
+						<Box
+							flexGrow="1"
+							style={{
+								padding: toolMode === ToolMode.Sync ? "4px 0 20vh 0" : "4px 0",
+								height: "100%",
+								maxHeight: "100%",
+								overflowY: "auto",
+								backgroundColor: "var(--editor-bg, transparent)",
+							}}
+							ref={viewElRef}
+						>
+							<ViewportList
+								overscan={4}
+								items={visibleItems}
+								ref={viewRef}
+								viewportRef={viewElRef}
+							>
+								{(item) => (
+									<LyricLineView
+										key={item.line?.id ?? item.sourceIndex}
+										lineAtom={item.lineAtom}
+										lineIndex={item.sourceIndex}
+									/>
+								)}
+							</ViewportList>
+						</Box>
+					</ContextMenu.Trigger>
+					{contextMenuTarget ? (
+						<LyricEditorContextMenuContent target={contextMenuTarget} />
+					) : (
+						<ContextMenu.Content style={{ display: "none" }} />
 					)}
-				</ViewportList>
-			</Box>
+				</ContextMenu.Root>
+			</LyricWordSettingsProvider>
 			<Button
 				className={styles.locateButton}
 				variant="soft"

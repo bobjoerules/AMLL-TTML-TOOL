@@ -10,31 +10,27 @@ describe("Spectrogram line filtering", () => {
 
 	function filterLinesToRender({
 		linesToRender,
-		showUnselectedLines,
 		spectrogramOnlyShowSyncLine,
 		toolMode,
 		selectedLines,
 	}: {
 		linesToRender: typeof lines;
-		showUnselectedLines: boolean;
 		spectrogramOnlyShowSyncLine: boolean;
 		toolMode: ToolMode;
 		selectedLines: Set<string>;
 	}) {
 		if (
-			!showUnselectedLines ||
-			(spectrogramOnlyShowSyncLine &&
-				(toolMode === ToolMode.Sync || selectedLines.size > 0))
+			spectrogramOnlyShowSyncLine &&
+			(toolMode === ToolMode.Sync || selectedLines.size > 0)
 		) {
 			return linesToRender.filter((line) => selectedLines.has(line.id));
 		}
 		return linesToRender;
 	}
 
-	it("shows all lines by default when showUnselectedLines is true and onlyShowSyncLine is false", () => {
+	it("shows all lines by default when onlyShowSyncLine is false", () => {
 		const result = filterLinesToRender({
 			linesToRender: lines,
-			showUnselectedLines: true,
 			spectrogramOnlyShowSyncLine: false,
 			toolMode: ToolMode.Sync,
 			selectedLines: new Set(["line-2"]),
@@ -46,7 +42,6 @@ describe("Spectrogram line filtering", () => {
 	it("only shows the line being time synced when spectrogramOnlyShowSyncLine is enabled in Sync mode", () => {
 		const result = filterLinesToRender({
 			linesToRender: lines,
-			showUnselectedLines: true,
 			spectrogramOnlyShowSyncLine: true,
 			toolMode: ToolMode.Sync,
 			selectedLines: new Set(["line-2"]),
@@ -59,7 +54,6 @@ describe("Spectrogram line filtering", () => {
 	it("only shows the active selected line when spectrogramOnlyShowSyncLine is enabled with a selected line", () => {
 		const result = filterLinesToRender({
 			linesToRender: lines,
-			showUnselectedLines: true,
 			spectrogramOnlyShowSyncLine: true,
 			toolMode: ToolMode.Edit,
 			selectedLines: new Set(["line-3"]),
@@ -69,17 +63,15 @@ describe("Spectrogram line filtering", () => {
 		expect(result[0].id).toBe("line-3");
 	});
 
-	it("filters unselected lines when showUnselectedLines is false", () => {
+	it("shows all lines when spectrogramOnlyShowSyncLine is false in Edit mode", () => {
 		const result = filterLinesToRender({
 			linesToRender: lines,
-			showUnselectedLines: false,
 			spectrogramOnlyShowSyncLine: false,
 			toolMode: ToolMode.Edit,
 			selectedLines: new Set(["line-1"]),
 		});
 
-		expect(result).toHaveLength(1);
-		expect(result[0].id).toBe("line-1");
+		expect(result).toHaveLength(3);
 	});
 });
 

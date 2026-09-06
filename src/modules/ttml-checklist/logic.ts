@@ -14,6 +14,7 @@ export interface TTMLChecklistEntry {
 	cloudAudioUrl?: string;
 	notes: string;
 	completed: boolean;
+	favorite?: boolean;
 	createdAt: number;
 }
 
@@ -28,6 +29,7 @@ export type TTMLChecklistEntryInput = {
 	cloudDocId?: string;
 	cloudAudioUrl?: string;
 	notes?: string;
+	favorite?: boolean;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -131,6 +133,7 @@ export function mergeChecklistEntries(
 				? `${primary.notes}\n${secondary.notes}`
 				: primary.notes || secondary.notes,
 		completed: primary.completed || secondary.completed,
+		...(primary.favorite || secondary.favorite ? { favorite: true } : {}),
 		createdAt: Math.max(primary.createdAt, secondary.createdAt),
 	};
 }
@@ -258,6 +261,7 @@ export function normalizeChecklistEntries(
 						: undefined,
 				notes: typeof item.notes === "string" ? item.notes.trim() : "",
 				completed: item.completed === true,
+				...(item.favorite === true ? { favorite: true } : {}),
 				createdAt:
 					typeof item.createdAt === "number" && Number.isFinite(item.createdAt)
 						? item.createdAt
@@ -293,8 +297,22 @@ export function createChecklistEntry(
 		cloudAudioUrl: input.cloudAudioUrl?.trim() || undefined,
 		notes: input.notes?.trim() ?? "",
 		completed: false,
+		...(input.favorite ? { favorite: true } : {}),
 		createdAt,
 	};
+}
+
+export function toggleChecklistEntryFavorite(
+	entries: TTMLChecklistEntry[],
+	id: string,
+): TTMLChecklistEntry[] {
+	return normalizeChecklistEntries(
+		entries.map((entry) =>
+			entry.id === id
+				? { ...entry, favorite: !entry.favorite ? true : undefined }
+				: entry,
+		),
+	);
 }
 
 export function addChecklistEntry(

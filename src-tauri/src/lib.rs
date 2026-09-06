@@ -68,7 +68,7 @@ fn set_discord_activity(
             }
             Err(error) => {
                 log::debug!("Discord RPC is unavailable: {error}");
-                connection.retry_after = Some(Instant::now() + Duration::from_secs(15));
+                connection.retry_after = Some(Instant::now() + Duration::from_secs(5));
                 return Ok(());
             }
         }
@@ -142,7 +142,7 @@ fn set_discord_activity(
         .map_err(|e| e.to_string());
     if result.is_err() {
         connection.client = None;
-        connection.retry_after = Some(Instant::now() + Duration::from_secs(15));
+        connection.retry_after = Some(Instant::now() + Duration::from_secs(5));
     }
     result
 }

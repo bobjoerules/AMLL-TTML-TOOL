@@ -43,7 +43,7 @@ export const LyricWordMenu = ({
 	lineIndex,
 }: {
 	wordIndex: number;
-	wordAtom: Atom<LyricWord>;
+	wordAtom?: Atom<LyricWord>;
 	lineIndex: number;
 }) => {
 	const { t } = useTranslation();
@@ -59,10 +59,20 @@ export const LyricWordMenu = ({
 	);
 	const setCombineWordsDialog = useSetAtom(combineWordsDialogAtom);
 	const setEditingWordState = useSetAtom(editingWordStateAtom);
-	const word = useAtomValue(wordAtom);
+	const resolvedWordAtom = useMemo(
+		() =>
+			wordAtom ??
+			atom(
+				(get) => get(lyricLinesAtom).lyricLines[lineIndex]?.words[wordIndex],
+			),
+		[wordAtom, lineIndex, wordIndex],
+	);
+	const word = useAtomValue(resolvedWordAtom);
 	const combineApplyToAll = useAtomValue(combineWordsApplyToAllAtom);
 	const combineIgnoreCase = useAtomValue(combineWordsIgnoreCaseAtom);
 	const combineShiftClickRef = useRef(false);
+
+	if (!word) return null;
 
 	return (
 		<>
