@@ -72,7 +72,6 @@ export interface LyricWordBase {
 	startTime: number;
 	endTime: number;
 	word: string;
-	emptyBeat?: number;
 }
 
 export interface LyricWord extends AMLLLyricWord {
@@ -82,7 +81,6 @@ export interface LyricWord extends AMLLLyricWord {
 	endTime: number;
 	word: string;
 	obscene: boolean;
-	emptyBeat: number;
 	romanWarning?: boolean;
 	grammarWarning?: boolean;
 	ruby?: LyricWordBase[];
@@ -95,7 +93,6 @@ export const newLyricWord = (): LyricWord => ({
 	endTime: 0,
 	word: "",
 	obscene: false,
-	emptyBeat: 0,
 	romanWord: "",
 });
 

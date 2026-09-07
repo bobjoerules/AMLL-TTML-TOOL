@@ -44,7 +44,6 @@ describe("scaleTTMLTimings", () => {
 							startTime: 1_101,
 							endTime: 1_901,
 							obscene: false,
-							emptyBeat: 3,
 							romanWord: "",
 							ruby: [{ word: "he", startTime: 1_101, endTime: 1_401 }],
 						},
@@ -68,7 +67,6 @@ describe("scaleTTMLTimings", () => {
 			originalNextStartTime: 1_101,
 		});
 		expect(lyrics.marks?.[0]).toEqual({ timeMs: 251, label: "Verse" });
-		expect(lyrics.lyricLines[0].words[0].emptyBeat).toBe(3);
 		expect(lyrics.metadata).toEqual([{ key: "ttml:language", value: ["en"] }]);
 	});
 

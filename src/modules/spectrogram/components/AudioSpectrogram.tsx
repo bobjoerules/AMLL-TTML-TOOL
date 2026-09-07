@@ -104,7 +104,7 @@ const getNoteFromFreq = (freq: number) => {
 	return `${noteName}${octave}`;
 };
 
-const SPEED_PRESETS = [0.5, 0.75, 1, 2] as const;
+const SPEED_PRESETS = [0.5, 0.75, 0.8, 1, 2] as const;
 
 export const AudioSpectrogram: FC = memo(() => {
 	const audioBuffer = useAtomValue(audioBufferAtom);

@@ -279,7 +279,13 @@ const ActiveLineGroup = memo(
 );
 
 export const AMLLWrapper = memo(
-	({ variant }: { variant?: "standard" | "toxi" }) => {
+	({
+		variant,
+		isPanel = false,
+	}: {
+		variant?: "standard" | "toxi";
+		isPanel?: boolean;
+	}) => {
 		const isToxi = variant === "toxi";
 		const vsync = useAtomValue(vsyncAtom);
 		const showFps = useAtomValue(showFpsCounterAtom);
@@ -640,36 +646,38 @@ export const AMLLWrapper = memo(
 				</div>
 
 				{/* Floating Controls */}
-				<div
-					className={classNames(
-						styles.floatingControls,
-						isFullscreen && !controlsVisible && styles.autohideHidden,
-					)}
-				>
-					<button
-						type="button"
-						className={styles.floatingBtn}
-						onClick={() => setShowArtwork((prev) => !prev)}
-						title={showArtwork ? "Hide Album Art" : "Show Album Art"}
-						aria-label="Toggle Album Art"
+				{!isPanel && (
+					<div
+						className={classNames(
+							styles.floatingControls,
+							isFullscreen && !controlsVisible && styles.autohideHidden,
+						)}
 					>
-						<Image20Regular />
-					</button>
-					{!isFullscreen && (
 						<button
 							type="button"
 							className={styles.floatingBtn}
-							onClick={() => setIsFullscreen(true)}
-							title="Fullscreen (F)"
-							aria-label="Enter Fullscreen"
+							onClick={() => setShowArtwork((prev) => !prev)}
+							title={showArtwork ? "Hide Album Art" : "Show Album Art"}
+							aria-label="Toggle Album Art"
 						>
-							<FullScreenMaximize20Regular />
+							<Image20Regular />
 						</button>
-					)}
-				</div>
+						{!isFullscreen && (
+							<button
+								type="button"
+								className={styles.floatingBtn}
+								onClick={() => setIsFullscreen(true)}
+								title="Fullscreen (F)"
+								aria-label="Enter Fullscreen"
+							>
+								<FullScreenMaximize20Regular />
+							</button>
+						)}
+					</div>
+				)}
 
 				<div className={styles.contentOverlay}>
-					{showArtwork ? (
+					{!isPanel && showArtwork ? (
 						<div className={styles.twoColumnContainer}>
 							{/* Left Column: Artwork + Scrubber + Details */}
 							<div className={styles.artworkColumn}>
@@ -741,10 +749,12 @@ export const AMLLWrapper = memo(
 						</div>
 					) : (
 						<>
-							<div className={styles.header}>
-								<h3>{projectIdentity.name || "Untitled"}</h3>
-								<span>{projectIdentity.artist || "Unknown Artist"}</span>
-							</div>
+							{!isPanel && (
+								<div className={styles.header}>
+									<h3>{projectIdentity.name || "Untitled"}</h3>
+									<span>{projectIdentity.artist || "Unknown Artist"}</span>
+								</div>
+							)}
 							{lyricsContent}
 						</>
 					)}

@@ -30,7 +30,7 @@ const WordPill = memo(
 		const wordDur = word.endTime - word.startTime;
 		const isWhitespace = !word.word || word.word.trim() === "";
 
-		if (isWhitespace && wordDur === 0 && word.emptyBeat === 0) {
+		if (isWhitespace && wordDur === 0) {
 			return <div style={{ width: "4px" }} />;
 		}
 
@@ -45,9 +45,7 @@ const WordPill = memo(
 				)}
 			>
 				<Text className={styles.wordText}>
-					{isWhitespace
-						? word.word || <span className={styles.emptyBeat}>∅</span>
-						: word.word}
+					{word.word || (isWhitespace ? "\u00A0" : "")}
 				</Text>
 				{(!isWhitespace || wordDur > 0) && (
 					<Text className={classNames(styles.wordTime, styles.monospaced)}>
@@ -71,11 +69,6 @@ const WordPill = memo(
 						<Text size="1">
 							{t("timingOverview.duration", "Duration")}: {wordDur}ms
 						</Text>
-						{word.emptyBeat > 0 && (
-							<Text size="1" color="orange">
-								{t("timingOverview.emptyBeat", "Empty Beat")}: {word.emptyBeat}
-							</Text>
-						)}
 						{word.romanWord && (
 							<Text size="1">
 								{t("timingOverview.romanization", "Roman")}: {word.romanWord}

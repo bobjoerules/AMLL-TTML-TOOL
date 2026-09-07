@@ -192,7 +192,6 @@ export interface CopiedTimingsData {
 	wordTimings?: {
 		relativeStart: number;
 		duration: number;
-		emptyBeat?: number;
 	}[];
 }
 

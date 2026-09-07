@@ -736,7 +736,6 @@ export const ImportLyricsDialog = ({
 							word,
 							startTime: 0,
 							endTime: 0,
-							emptyBeat: 0,
 							obscene: false,
 							romanWord: "",
 						}));
@@ -822,7 +821,6 @@ export const ImportLyricsDialog = ({
 						word,
 						startTime: 0,
 						endTime: 0,
-						emptyBeat: 0,
 						obscene: false,
 						romanWord: "",
 					}));

@@ -13,13 +13,20 @@ const AMLLWrapper = lazy(() => import("$/components/AMLLWrapper"));
 const TimingOverview = lazy(() => import("$/components/TimingOverview"));
 const SpicyLyrics = lazy(() => import("$/components/SpicyLyrics"));
 
-export const PreviewModeSwitcher = () => {
+export interface PreviewModeSwitcherProps {
+	isPanel?: boolean;
+}
+
+export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
+	isPanel = false,
+}) => {
 	const previewModeType = useAtomValue(previewModeTypeAtom);
 	const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
 	const [controlsVisible, setControlsVisible] = useState(true);
 	const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 	const handleMouseMove = useCallback(() => {
+		if (isPanel) return;
 		setControlsVisible(true);
 		if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
 		if (isFullscreen) {
@@ -27,9 +34,10 @@ export const PreviewModeSwitcher = () => {
 				setControlsVisible(false);
 			}, 3000);
 		}
-	}, [isFullscreen]);
+	}, [isFullscreen, isPanel]);
 
 	useEffect(() => {
+		if (isPanel) return;
 		if (!isFullscreen) {
 			setControlsVisible(true);
 			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -41,14 +49,14 @@ export const PreviewModeSwitcher = () => {
 		return () => {
 			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
 		};
-	}, [isFullscreen]);
+	}, [isFullscreen, isPanel]);
 
 	return (
 		<div
 			style={{ position: "relative", width: "100%", height: "100%" }}
 			onMouseMove={handleMouseMove}
 		>
-			{isFullscreen && (
+			{!isPanel && isFullscreen && (
 				<button
 					type="button"
 					style={{
@@ -85,12 +93,14 @@ export const PreviewModeSwitcher = () => {
 			<Suspense fallback={<SuspensePlaceHolder />}>
 				{(previewModeType === PreviewModeType.Standard ||
 					previewModeType === PreviewModeType.AMLL) && (
-					<AMLLWrapper variant="standard" />
+					<AMLLWrapper variant="standard" isPanel={isPanel} />
 				)}
 				{previewModeType === PreviewModeType.Toxi && (
-					<AMLLWrapper variant="toxi" />
+					<AMLLWrapper variant="toxi" isPanel={isPanel} />
 				)}
-				{previewModeType === PreviewModeType.Spicy && <SpicyLyrics />}
+				{previewModeType === PreviewModeType.Spicy && (
+					<SpicyLyrics isPanel={isPanel} />
+				)}
 				{previewModeType === PreviewModeType.Timing && <TimingOverview />}
 			</Suspense>
 		</div>

@@ -157,10 +157,6 @@
 	color: var(--gray-10);
 }
 
-.emptyBeat {
-	color: var(--orange-9);
-	font-weight: bold;
-}
 
 .stats {
 	display: flex;

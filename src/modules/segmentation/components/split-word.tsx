@@ -280,7 +280,7 @@ export const SplitWordDialog = memo(() => {
 						<Callout.Text>
 							{t(
 								"splitWordDialog.tip",
-								"拆分后新单词将会按自身单词字符平均分配原单词的始末时间，如有空拍则会被清除",
+								"拆分后新单词将会按自身单词字符平均分配原单词的始末时间",
 							)}
 						</Callout.Text>
 					</Callout.Root>
