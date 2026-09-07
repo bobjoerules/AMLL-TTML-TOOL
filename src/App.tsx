@@ -23,6 +23,7 @@ import { TouchSyncPanel } from "$/modules/lyric-editor/components/TouchSyncPanel
 import { log, error as logError } from "$/utils/logging.ts";
 import "@radix-ui/themes/styles.css";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { platform, version } from "@tauri-apps/plugin-os";
 import { AnimatePresence, motion } from "framer-motion";
@@ -96,6 +97,10 @@ import {
 	allowConsecutiveBackgroundLinesAtom,
 	lyricTextNormalizationOptionsAtom,
 	legacyDarkThemeAtom,
+	DEFAULT_UI_SCALE,
+	MAX_UI_SCALE,
+	MIN_UI_SCALE,
+	uiScaleAtom,
 } from "$/modules/settings/states/index.ts";
 import styles from "./App.module.css";
 import DarkThemeDetector from "./components/DarkThemeDetector";
@@ -908,6 +913,97 @@ function App() {
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [isPreviewFullscreen, toolMode, setPreviewFullscreen]);
+
+	const [uiScale, setUiScale] = useAtom(uiScaleAtom);
+
+	const normalizedScale = useMemo(() => {
+		return (
+			Math.max(
+				MIN_UI_SCALE,
+				Math.min(MAX_UI_SCALE, uiScale || DEFAULT_UI_SCALE),
+			) / 100
+		);
+	}, [uiScale]);
+
+	useEffect(() => {
+		// Clean up any lingering non-standard CSS zoom property
+		document.documentElement.style.removeProperty("zoom");
+
+		const isTauri =
+			typeof window !== "undefined" &&
+			(!!(window as any).__TAURI__ ||
+				!!(window as any).__TAURI_INTERNALS__ ||
+				!!import.meta.env.TAURI_ENV_PLATFORM);
+
+		if (isTauri) {
+			try {
+				getCurrentWebview()
+					.setZoom(normalizedScale)
+					.catch((err) => {
+						console.warn("Failed to set webview zoom:", err);
+					});
+			} catch (err) {
+				console.warn("Failed to invoke getCurrentWebview().setZoom:", err);
+			}
+		} else {
+			document.documentElement.style.fontSize = `${normalizedScale * 100}%`;
+		}
+
+		document.documentElement.style.setProperty(
+			"--scaling",
+			String(normalizedScale),
+		);
+		document.documentElement.style.setProperty(
+			"--ui-scale",
+			String(normalizedScale),
+		);
+	}, [normalizedScale]);
+
+	useEffect(() => {
+		const handleZoomKeys = (e: KeyboardEvent) => {
+			if (e.metaKey || e.ctrlKey) {
+				if (e.key === "=" || e.key === "+") {
+					e.preventDefault();
+					setUiScale((prev) => {
+						const next = Math.min(
+							MAX_UI_SCALE,
+							(prev || DEFAULT_UI_SCALE) + 5,
+						);
+						toast.info(`UI Scale: ${next}%`, {
+							autoClose: 1000,
+							toastId: "ui-scale-toast",
+						});
+						return next;
+					});
+				} else if (e.key === "-" || e.key === "_") {
+					e.preventDefault();
+					setUiScale((prev) => {
+						const next = Math.max(
+							MIN_UI_SCALE,
+							(prev || DEFAULT_UI_SCALE) - 5,
+						);
+						toast.info(`UI Scale: ${next}%`, {
+							autoClose: 1000,
+							toastId: "ui-scale-toast",
+						});
+						return next;
+					});
+				} else if (e.key === "0") {
+					e.preventDefault();
+					setUiScale(() => {
+						toast.info(`UI Scale: ${DEFAULT_UI_SCALE}%`, {
+							autoClose: 1000,
+							toastId: "ui-scale-toast",
+						});
+						return DEFAULT_UI_SCALE;
+					});
+				}
+			}
+		};
+		window.addEventListener("keydown", handleZoomKeys, { capture: true });
+		return () =>
+			window.removeEventListener("keydown", handleZoomKeys, { capture: true });
+	}, [setUiScale]);
 
 	return (
 		<Theme

@@ -54,7 +54,7 @@
 	border-radius: 6px !important;
 	color: var(--gray-11) !important;
 	font-weight: 500;
-	font-size: 13px;
+	font-size: calc(13px * var(--scaling, 1));
 	transition:
 		background 0.1s ease,
 		color 0.1s ease;
@@ -175,7 +175,7 @@
 }
 
 .page :global(.rt-Heading):not(.pageTitle) {
-	font-size: 13px !important;
+	font-size: calc(13px * var(--scaling, 1)) !important;
 	font-weight: 600 !important;
 	color: var(--gray-11) !important;
 	margin-top: 12px;

@@ -336,6 +336,9 @@
 				"empty": "No saved presets yet."
 			},
 			"theme": "Theme",
+			"uiScale": "Interface Scale",
+			"uiScaleDesc": "Adjust the size of text, icons, and elements across the entire app. Use Cmd/Ctrl +/- to zoom anytime.",
+			"resetScale": "Reset (100%)",
 			"useCustomAccent": "Custom Accent Color",
 			"useCustomAccentDesc": "Set Accent color",
 			"glass": "Glassmorphism",
