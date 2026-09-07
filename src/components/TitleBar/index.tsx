@@ -91,7 +91,12 @@ export const TitleBar: FC = () => {
 						title={t("topBar.modeBtns.edit", "编辑")}
 					>
 						<Flex align="center" gap="1" px="1">
-							<Edit24Regular style={{ width: "17px", height: "17px" }} />
+							<Edit24Regular
+								style={{
+									width: "calc(17px * var(--scaling, 1))",
+									height: "calc(17px * var(--scaling, 1))",
+								}}
+							/>
 							<span className={styles.tabLabel}>
 								{t("topBar.modeBtns.edit", "编辑")}
 							</span>
@@ -102,7 +107,12 @@ export const TitleBar: FC = () => {
 						title={t("topBar.modeBtns.sync", "打轴")}
 					>
 						<Flex align="center" gap="1" px="1">
-							<Timer24Regular style={{ width: "17px", height: "17px" }} />
+							<Timer24Regular
+								style={{
+									width: "calc(17px * var(--scaling, 1))",
+									height: "calc(17px * var(--scaling, 1))",
+								}}
+							/>
 							<span className={styles.tabLabel}>
 								{t("topBar.modeBtns.sync", "打轴")}
 							</span>
@@ -113,7 +123,12 @@ export const TitleBar: FC = () => {
 						title={t("topBar.modeBtns.preview", "预览")}
 					>
 						<Flex align="center" gap="1" px="1">
-							<Play24Regular style={{ width: "17px", height: "17px" }} />
+							<Play24Regular
+								style={{
+									width: "calc(17px * var(--scaling, 1))",
+									height: "calc(17px * var(--scaling, 1))",
+								}}
+							/>
 							<span className={styles.tabLabel}>
 								{t("topBar.modeBtns.preview", "预览")}
 							</span>

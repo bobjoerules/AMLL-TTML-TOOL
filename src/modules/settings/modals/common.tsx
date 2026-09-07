@@ -57,6 +57,7 @@ import {
 	KeyBindingTriggerMode,
 	keyBindingTriggerModeAtom,
 } from "$/utils/keybindings";
+import { UIScaleSetting } from "./UIScaleSetting";
 
 export type CommonSettingsSection = "general" | "editor" | "files" | "audio";
 
@@ -288,6 +289,7 @@ export const SettingsCommonTab = ({
 							</Box>
 						</Flex>
 					</Card>
+					<UIScaleSetting />
 					<Card>
 						<Text as="label">
 							<Flex gap="3" align="center">

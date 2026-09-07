@@ -303,6 +303,9 @@
 				"empty": "No saved presets yet."
 			},
 			"theme": "主题",
+			"uiScale": "界面缩放",
+			"uiScaleDesc": "调整整个应用程序的文字、图标和界面缩放比例。支持使用快捷键 Cmd/Ctrl +/- 随时缩放。",
+			"resetScale": "重置 (100%)",
 			"useCustomAccent": "自定义强调色",
 			"useCustomAccentDesc": "设置主颜色",
 			"glass": "Glassmorphism",

@@ -14,6 +14,7 @@ import {
 	Eye24Regular,
 	Checkmark16Regular,
 	Checkmark24Regular,
+	ZoomIn24Regular,
 } from "@fluentui/react-icons";
 import {
 	Badge,
@@ -106,6 +107,7 @@ import {
 	SettingsCustomBackgroundCard,
 	SettingsCustomBackgroundSettings,
 } from "./customBackground";
+import { UIScaleSetting } from "./UIScaleSetting";
 
 const BUILTIN_PRESETS: AppearancePreset[] = [
 	{
@@ -1538,6 +1540,8 @@ export const SettingsAppearanceTab = () => {
 								</Flex>
 							</Flex>
 						</Card>
+
+						<UIScaleSetting />
 
 						<Heading size="4" mt="4">
 							{t("settings.appearance.glass", "Glassmorphism")}

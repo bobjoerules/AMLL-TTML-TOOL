@@ -10,14 +10,14 @@
 .tabLabel {
 	display: inline;
 	white-space: nowrap;
-	font-size: 13px;
+	font-size: calc(13px * var(--scaling, 1));
 	font-weight: 500;
 }
 
 .previewPanelLabel {
 	display: inline;
 	white-space: nowrap;
-	font-size: 13px;
+	font-size: calc(13px * var(--scaling, 1));
 	font-weight: 500;
 }
 

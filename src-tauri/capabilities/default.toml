@@ -12,6 +12,10 @@ identifier = "os:allow-os-type"
 [[permissions]]
 identifier = "core:window:default"
 [[permissions]]
+identifier = "core:webview:default"
+[[permissions]]
+identifier = "core:webview:allow-set-webview-zoom"
+[[permissions]]
 identifier = "core:window:allow-start-dragging"
 [[permissions]]
 identifier = "core:window:allow-toggle-maximize"
