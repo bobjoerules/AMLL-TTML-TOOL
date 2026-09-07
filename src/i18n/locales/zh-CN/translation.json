@@ -175,6 +175,9 @@
 			"word": "单词",
 			"fadeWidth": "淡化宽度",
 			"instantFade": "即时淡出",
+			"view": "视图",
+			"fullscreen": "全屏",
+			"showArtwork": "封面信息",
 			"render": "Render",
 			"dev": "Dev",
 			"showFps": "Show FPS"
@@ -813,6 +816,7 @@
 	"lyricWordView": {
 		"empty": "空白",
 		"spaceCount": "空格 x{count}",
+		"deleteSpace": "删除空格",
 		"removeWord": "删除重复单词",
 		"editingWordTitle": "编辑单词",
 		"editingWordDesc": "编辑单词或应用建议的快速修复。",

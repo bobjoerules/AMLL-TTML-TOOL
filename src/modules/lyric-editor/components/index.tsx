@@ -616,12 +616,20 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 				direction="column"
 				height="100%"
 				ref={ref}
+				style={{
+					backgroundColor: "var(--editor-bg, transparent)",
+				}}
 			>
 				<Box
 					style={{
 						maxWidth: "520px",
 						textAlign: "center",
-						padding: "24px 16px",
+						padding: "32px 24px",
+						borderRadius: "var(--radius-4, 16px)",
+						backgroundColor: "var(--color-panel-translucent, rgba(0, 0, 0, 0.2))",
+						backdropFilter: "blur(var(--glass-blur, 16px))",
+						WebkitBackdropFilter: "blur(var(--glass-blur, 16px))",
+						border: "1px solid var(--gray-a4)",
 					}}
 				>
 					<Flex direction="column" gap="3" align="center">

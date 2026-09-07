@@ -201,6 +201,9 @@
 			"word": "Word",
 			"fadeWidth": "Fade Width",
 			"instantFade": "Instant Fade Out",
+			"view": "View",
+			"fullscreen": "Fullscreen",
+			"showArtwork": "Album Artwork",
 			"render": "Render",
 			"dev": "Dev",
 			"showFps": "Show FPS"
@@ -859,6 +862,7 @@
 	"lyricWordView": {
 		"empty": "Empty",
 		"spaceCount": "Space x{count}",
+		"deleteSpace": "Delete Space",
 		"removeWord": "Remove Duplicate Word",
 		"editingWordTitle": "Editing Word",
 		"editingWordDesc": "Edit the word or apply suggested quick fixes.",

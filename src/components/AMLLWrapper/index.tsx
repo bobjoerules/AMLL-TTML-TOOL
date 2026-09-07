@@ -3,13 +3,15 @@ import {
 	BackgroundRender,
 	MeshGradientRenderer,
 } from "@applemusic-like-lyrics/react";
-import { atom, useAtomValue, useSetAtom } from "jotai";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import {
 	activeLineIdsAtom,
 	currentTimeAtom,
+	currentDurationAtom,
 	audioPlayingAtom,
+	audioCoverArtAtom,
 } from "$/modules/audio/states/index.ts";
 import {
 	showRomanLinesAtom,
@@ -18,6 +20,8 @@ import {
 	showFpsCounterAtom,
 	lyricWordFadeWidthAtom,
 	instantHighlightFadeAtom,
+	previewFullscreenAtom,
+	previewShowAlbumArtworkAtom,
 } from "$/modules/settings/states/preview";
 import {
 	isDarkThemeAtom,
@@ -30,6 +34,12 @@ import {
 	customAccentColorAtom,
 } from "$/modules/settings/states/index.ts";
 import { customBackgroundImageAtom } from "$/modules/settings/modals/customBackground";
+import {
+	FullScreenMaximize20Regular,
+	FullScreenMinimize20Regular,
+	Image20Regular,
+	MusicNote224Regular,
+} from "@fluentui/react-icons";
 import styles from "./index.module.css";
 
 const displayTimeAtom = atom(0);
@@ -451,7 +461,109 @@ export const AMLLWrapper = memo(
 
 		const isPlaying = useAtomValue(audioPlayingAtom);
 		const instantFade = useAtomValue(instantHighlightFadeAtom);
-		const albumImg = useAtomValue(customBackgroundImageAtom);
+
+		const embeddedCoverArt = useAtomValue(audioCoverArtAtom);
+		const customBackgroundImage = useAtomValue(customBackgroundImageAtom);
+		const coverArtImage = useMemo(
+			() =>
+				lyrics.metadata
+					.find((entry) => entry.key.toLowerCase() === "cover_art")
+					?.value.find((value) => value.trim().length > 0) ?? null,
+			[lyrics.metadata],
+		);
+		const albumImg =
+			embeddedCoverArt || coverArtImage || customBackgroundImage || null;
+
+		const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
+		const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
+		const [controlsVisible, setControlsVisible] = useState(true);
+		const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+		const currentDuration = useAtomValue(currentDurationAtom);
+		const currentTimeVal = useAtomValue(currentTimeAtom);
+
+		const totalDuration = useMemo(() => {
+			if (currentDuration > 0) return currentDuration;
+			if (lyrics.lyricLines.length > 0) {
+				return Math.max(...lyrics.lyricLines.map((l) => l.endTime || 0));
+			}
+			return 0;
+		}, [currentDuration, lyrics.lyricLines]);
+
+		const formatTime = (ms: number) => {
+			const totalSecs = Math.max(0, Math.floor(ms / 1000));
+			const mins = Math.floor(totalSecs / 60);
+			const secs = totalSecs % 60;
+			return `${mins}:${secs.toString().padStart(2, "0")}`;
+		};
+
+		const progressPct =
+			totalDuration > 0
+				? Math.min(100, Math.max(0, (currentTimeVal / totalDuration) * 100))
+				: 0;
+
+		const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
+			const rect = e.currentTarget.getBoundingClientRect();
+			const percent = Math.max(
+				0,
+				Math.min(1, (e.clientX - rect.left) / rect.width),
+			);
+			const newTime = percent * totalDuration;
+			setCurrentTime(newTime);
+			audioEngine.resumeOrSeekMusic(newTime / 1000);
+		};
+
+		const handleTogglePlay = (e: React.MouseEvent) => {
+			e.stopPropagation();
+			if (audioEngine.musicPlaying) {
+				audioEngine.pauseMusic();
+			} else {
+				audioEngine.resumeOrSeekMusic();
+			}
+		};
+
+		const handleMouseMove = useCallback(() => {
+			setControlsVisible(true);
+			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+			if (isFullscreen) {
+				hideTimerRef.current = setTimeout(() => {
+					setControlsVisible(false);
+				}, 3000);
+			}
+		}, [isFullscreen]);
+
+		useEffect(() => {
+			if (!isFullscreen) {
+				setControlsVisible(true);
+				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+			} else {
+				hideTimerRef.current = setTimeout(() => {
+					setControlsVisible(false);
+				}, 3000);
+			}
+			return () => {
+				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+			};
+		}, [isFullscreen]);
+
+		useEffect(() => {
+			const handleKeyDown = (e: KeyboardEvent) => {
+				if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName))
+					return;
+				if (e.key === "Escape" && isFullscreen) {
+					setIsFullscreen(false);
+				} else if (
+					(e.key === "f" || e.key === "F") &&
+					!e.ctrlKey &&
+					!e.metaKey &&
+					!e.altKey
+				) {
+					setIsFullscreen((prev) => !prev);
+				}
+			};
+			window.addEventListener("keydown", handleKeyDown);
+			return () => window.removeEventListener("keydown", handleKeyDown);
+		}, [isFullscreen, setIsFullscreen]);
 
 		const useCustomAccent = useAtomValue(useCustomAccentAtom);
 		const customAccentColor = useAtomValue(customAccentColorAtom);
@@ -467,6 +579,42 @@ export const AMLLWrapper = memo(
 			return undefined; // Let library default for named accent colors if possible
 		}, [useCustomAccent, customAccentColor]);
 
+		const lyricsContent = (
+			<div className={styles.lyricsViewport} ref={scrollContainerRef}>
+				<div className={styles.padding} />
+				{lineGroups.map((group) => {
+					const isActive =
+						activeLineIdsSet.has(group.main.id) ||
+						group.bg.some((b) => activeLineIdsSet.has(b.id));
+
+					if (isActive) {
+						return (
+							<div
+								key={group.main.id}
+								onClick={() => handleLineClick(group.main)}
+								style={{ display: "contents" }}
+							>
+								<ActiveLineGroup
+									group={group}
+									onWordClick={handleWordClick}
+								/>
+							</div>
+						);
+					}
+					return (
+						<div
+							key={group.main.id}
+							onClick={() => handleLineClick(group.main)}
+							style={{ display: "contents" }}
+						>
+							<StaticLineGroup group={group} isPast={false} />
+						</div>
+					);
+				})}
+				<div className={styles.padding} />
+			</div>
+		);
+
 		return (
 			<div
 				className={classNames(
@@ -475,6 +623,7 @@ export const AMLLWrapper = memo(
 					isToxi && styles.isToxi,
 					instantFade && styles.hasInstantFade,
 				)}
+				onMouseMove={handleMouseMove}
 			>
 				{/* Dynamic Mesh Warp Background (Kawarp) */}
 				<div className={styles.bgLayer}>
@@ -489,45 +638,116 @@ export const AMLLWrapper = memo(
 						renderer={MeshGradientRenderer}
 					/>
 				</div>
+
+				{/* Floating Controls */}
+				<div
+					className={classNames(
+						styles.floatingControls,
+						isFullscreen && !controlsVisible && styles.autohideHidden,
+					)}
+				>
+					<button
+						type="button"
+						className={styles.floatingBtn}
+						onClick={() => setShowArtwork((prev) => !prev)}
+						title={showArtwork ? "Hide Album Art" : "Show Album Art"}
+						aria-label="Toggle Album Art"
+					>
+						<Image20Regular />
+					</button>
+					{!isFullscreen && (
+						<button
+							type="button"
+							className={styles.floatingBtn}
+							onClick={() => setIsFullscreen(true)}
+							title="Fullscreen (F)"
+							aria-label="Enter Fullscreen"
+						>
+							<FullScreenMaximize20Regular />
+						</button>
+					)}
+				</div>
+
 				<div className={styles.contentOverlay}>
-					<div className={styles.header}>
-						<h3>{projectIdentity.name || "Untitled"}</h3>
-						<span>{projectIdentity.artist || "Unknown Artist"}</span>
-					</div>
-
-					<div className={styles.lyricsViewport} ref={scrollContainerRef}>
-						<div className={styles.padding} />
-						{lineGroups.map((group) => {
-							const isActive =
-								activeLineIdsSet.has(group.main.id) ||
-								group.bg.some((b) => activeLineIdsSet.has(b.id));
-
-							if (isActive) {
-								return (
+					{showArtwork ? (
+						<div className={styles.twoColumnContainer}>
+							{/* Left Column: Artwork + Scrubber + Details */}
+							<div className={styles.artworkColumn}>
+								<div className={styles.artworkCard}>
 									<div
-										key={group.main.id}
-										onClick={() => handleLineClick(group.main)}
-										style={{ display: "contents" }}
+										className={styles.artworkImageWrapper}
+										onClick={handleTogglePlay}
+										style={{ cursor: "pointer" }}
+										title={isPlaying ? "Click to Pause" : "Click to Play"}
 									>
-										<ActiveLineGroup
-											group={group}
-											onWordClick={handleWordClick}
-										/>
+										{albumImg ? (
+											<img
+												src={albumImg}
+												alt={projectIdentity.name || "Album Artwork"}
+												className={styles.artworkImage}
+											/>
+										) : (
+											<div className={styles.artworkPlaceholder}>
+												<MusicNote224Regular
+													style={{
+														fontSize: "64px",
+														width: "64px",
+														height: "64px",
+													}}
+												/>
+											</div>
+										)}
 									</div>
-								);
-							}
-							return (
-								<div
-									key={group.main.id}
-									onClick={() => handleLineClick(group.main)}
-									style={{ display: "contents" }}
-								>
-									<StaticLineGroup group={group} isPast={false} />
+
+									{/* Progress Scrubber */}
+									<div className={styles.playbackRow}>
+										<span className={styles.timeLabel}>
+											{formatTime(currentTimeVal)}
+										</span>
+										<div
+											className={styles.scrubberContainer}
+											onClick={handleScrub}
+										>
+											<div className={styles.scrubberTrack}>
+												<div
+													className={styles.scrubberFill}
+													style={{ width: `${progressPct}%` }}
+												/>
+											</div>
+											<div
+												className={styles.scrubberThumb}
+												style={{ left: `${progressPct}%` }}
+											/>
+										</div>
+										<span className={styles.timeLabel}>
+											{formatTime(totalDuration)}
+										</span>
+									</div>
+
+									{/* Track details */}
+									<div className={styles.trackDetails}>
+										<h2 className={styles.songTitle}>
+											{projectIdentity.name || "Untitled"}
+										</h2>
+										<div className={styles.songArtist}>
+											{projectIdentity.artist || "Unknown Artist"}
+										</div>
+									</div>
 								</div>
-							);
-						})}
-						<div className={styles.padding} />
-					</div>
+							</div>
+
+							{/* Right Column: Lyrics Viewport */}
+							<div className={styles.lyricsColumn}>{lyricsContent}</div>
+						</div>
+					) : (
+						<>
+							<div className={styles.header}>
+								<h3>{projectIdentity.name || "Untitled"}</h3>
+								<span>{projectIdentity.artist || "Unknown Artist"}</span>
+							</div>
+							{lyricsContent}
+						</>
+					)}
 				</div>
 				{showFps && (
 					<div

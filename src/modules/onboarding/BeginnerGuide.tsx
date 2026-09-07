@@ -293,6 +293,13 @@ export const BeginnerGuide = () => {
 								: "Open the local testing instructions, verify the file in Spicy Lyrics, then finish the guide.";
 
 	useEffect(() => {
+		// Clean up any stale guide outlines
+		document.querySelectorAll<HTMLElement>("[data-guide-target]").forEach((el) => {
+			if (el.style.outline?.includes("var(--accent-9)") || el.style.outline?.includes("solid")) {
+				el.style.outline = "";
+				el.style.outlineOffset = "";
+			}
+		});
 		if (!panelOpen) return;
 		const selector =
 			currentId === "audio"
@@ -305,15 +312,7 @@ export const BeginnerGuide = () => {
 		if (!selector) return;
 		const target = document.querySelector<HTMLElement>(selector);
 		if (!target) return;
-		const previousOutline = target.style.outline;
-		const previousOffset = target.style.outlineOffset;
-		target.style.outline = "3px solid var(--accent-9)";
-		target.style.outlineOffset = "-3px";
 		target.scrollIntoView({ behavior: "smooth", block: "nearest" });
-		return () => {
-			target.style.outline = previousOutline;
-			target.style.outlineOffset = previousOffset;
-		};
 	}, [currentId, panelOpen]);
 
 	return (

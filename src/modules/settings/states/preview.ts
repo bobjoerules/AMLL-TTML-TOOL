@@ -1,3 +1,4 @@
+import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 
 export enum PreviewModeType {
@@ -41,4 +42,10 @@ export type SpicyBackgroundMode = "animated" | "color" | "static";
 export const spicyBackgroundModeAtom = atomWithStorage<SpicyBackgroundMode>(
 	"spicyBackgroundMode",
 	"animated",
+);
+
+export const previewFullscreenAtom = atom<boolean>(false);
+export const previewShowAlbumArtworkAtom = atomWithStorage<boolean>(
+	"previewShowAlbumArtwork",
+	true,
 );
