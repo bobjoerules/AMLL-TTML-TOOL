@@ -55,6 +55,19 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.1.3
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 6, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Lyric Line View Stability:</b> Fixed missing Badge component import from @radix-ui/themes in lyric-line-view.tsx, resolving ReferenceError: Can't find variable: Badge when rendering collapsed section line counters.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.1.2
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
