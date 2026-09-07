@@ -113,14 +113,6 @@ const duetLyricPrefixAtom = atomWithStorage(
 	"importFromText.duetLyricPrefix",
 	">",
 );
-const enableEmptyBeatAtom = atomWithStorage(
-	"importFromText.enableEmptyBeat",
-	false,
-);
-const emptyBeatSymbolAtom = atomWithStorage(
-	"importFromText.emptyBeatSymbol",
-	"^",
-);
 const isGuideClickedAtom = atomWithStorage(
 	"importFromText.isGuideClicked",
 	false,
@@ -164,8 +156,6 @@ export const ImportFromText = () => {
 	);
 	const [bgLyricPrefix, setBgLyricPrefix] = useAtom(bgLyricPrefixAtom);
 	const [duetLyricPrefix, setDuetLyricPrefix] = useAtom(duetLyricPrefixAtom);
-	const [enableEmptyBeat, setEnableEmptyBeat] = useAtom(enableEmptyBeatAtom);
-	const [emptyBeatSymbol, setEmptyBeatSymbol] = useAtom(emptyBeatSymbolAtom);
 	const [addSpaces, setAddSpaces] = useAtom(importAddSpacesAtom);
 	const [splitHyphens, setSplitHyphens] = useAtom(importSplitHyphensAtom);
 	const [isGuideClicked, setIsGuideClicked] = useAtom(isGuideClickedAtom);
@@ -218,8 +208,6 @@ export const ImportFromText = () => {
 			const enableSpecialPrefix = store.get(enableSpecialPrefixAtom);
 			const bgLyricPrefix = store.get(bgLyricPrefixAtom);
 			const duetLyricPrefix = store.get(duetLyricPrefixAtom);
-			const enableEmptyBeat = store.get(enableEmptyBeatAtom);
-			const emptyBeatSymbol = store.get(emptyBeatSymbolAtom);
 			const addSpaces = store.get(importAddSpacesAtom);
 			const splitHyphens = store.get(importSplitHyphensAtom);
 			const normalizeApostrophesOnImport = store.get(
@@ -392,16 +380,6 @@ export const ImportFromText = () => {
 				}
 			}
 
-			if (enableEmptyBeat && emptyBeatSymbol.length > 0) {
-				for (const line of result) {
-					for (const word of line.words) {
-						while (word.word.endsWith(emptyBeatSymbol)) {
-							word.word = word.word.slice(0, -emptyBeatSymbol.length);
-							word.emptyBeat += 1;
-						}
-					}
-				}
-			}
 
 			const importedLyrics = {
 				lyricLines: result,
@@ -815,24 +793,6 @@ export const ImportFromText = () => {
 												}
 											/>
 
-											<PrefText>
-												{t("textImportDialog.enableEmptyBeat", "启用空拍")}
-											</PrefText>
-											<Switch
-												checked={enableEmptyBeat}
-												onCheckedChange={setEnableEmptyBeat}
-											/>
-
-											<PrefText>
-												{t("textImportDialog.emptyBeatSymbol", "空拍符号")}
-											</PrefText>
-											<TextField.Root
-												disabled={!enableEmptyBeat}
-												value={emptyBeatSymbol}
-												onChange={(evt) =>
-													setEmptyBeatSymbol(evt.currentTarget.value)
-												}
-											/>
 
 											<Separator size="4" style={{ gridColumn: "span 2" }} />
 											<PrefText>

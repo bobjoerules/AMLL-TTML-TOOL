@@ -796,7 +796,8 @@
 		"removeHeader": "Remove header (keep lyrics)",
 		"addToPrevious": "Add unassigned lines to previous section",
 		"addToNext": "Add unassigned lines to next section",
-		"section": "Section"
+		"section": "Section",
+		"linesCount": "{count} regels"
 	},
 	"touchSyncPanel": {
 		"prevWord": "Vorige woord springen",

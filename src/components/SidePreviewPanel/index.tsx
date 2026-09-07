@@ -76,7 +76,7 @@ export const SidePreviewPanel = memo(() => {
 			</div>
 
 			<div className={styles.previewBody}>
-				<PreviewModeSwitcher />
+				<PreviewModeSwitcher isPanel />
 			</div>
 		</div>
 	);

@@ -18,7 +18,6 @@ import {
 	syncJudgeModeAtom,
 } from "$/modules/settings/states";
 import {
-	currentEmptyBeatAtom,
 	smartFirstWordActiveIdAtom,
 	syncLevelModeAtom,
 	syncTimeOffsetAtom,
@@ -177,7 +176,6 @@ export const SyncKeyBinding: FC = () => {
 			if (!nextWord) return false;
 			store.set(selectedWordsAtom, new Set([nextWord.unit.id]));
 			store.set(selectedLinesAtom, new Set([nextWord.line.id]));
-			store.set(currentEmptyBeatAtom, 0);
 			if (play) audioEngine.seekMusic(getUnitStartTime(nextWord.unit) / 1000);
 			return true;
 		},
@@ -470,14 +468,6 @@ export const SyncKeyBinding: FC = () => {
 			}
 			store.set(smartFirstWordActiveIdAtom, null);
 
-			const hasRuby = location.word.ruby?.length;
-			if (!hasRuby) {
-				const emptyBeat = store.get(currentEmptyBeatAtom);
-				if (emptyBeat < location.word.emptyBeat) {
-					store.set(currentEmptyBeatAtom, emptyBeat + 1);
-					return;
-				}
-			}
 
 			// 智能尾字
 			const smartLastWord = store.get(smartLastWordAtom);
@@ -597,8 +587,6 @@ export const SyncKeyBinding: FC = () => {
 					new Set([(targetSelection as { id: string; lineId: string }).lineId]),
 				);
 			}
-
-			store.set(currentEmptyBeatAtom, 0);
 
 			// 开了智能首字后，连轴打到下一行时跳过智能首字
 			if (smartFirstWord) {

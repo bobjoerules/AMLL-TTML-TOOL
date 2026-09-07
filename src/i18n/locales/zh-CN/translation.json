@@ -143,7 +143,6 @@
 			"duetLyric": "双人对唱",
 			"ignoreSync": "忽略同步",
 			"wordTiming": "单词时间",
-			"emptyBeatCount": "空拍计数",
 			"wordProperties": "单词属性",
 			"wordContent": "单词内容",
 			"romanWord": "单词注音",
@@ -183,7 +182,6 @@
 			"showFps": "Show FPS"
 		},
 		"syncMode": {
-			"currentEmptyBeat": "当前空拍",
 			"syncAdjustment": "同步调整",
 			"timeOffset": "时间偏移",
 			"commitOffset": "Commit Offset",
@@ -502,7 +500,6 @@
 		"start": "Start",
 		"end": "End",
 		"duration": "Duration",
-		"emptyBeat": "Empty Beat",
 		"romanization": "Roman",
 		"backgroundVocal": "BG",
 		"title": "Technical Timing Overview",
@@ -846,7 +843,8 @@
 		"removeHeader": "Remove header (keep lyrics)",
 		"addToPrevious": "Add unassigned lines to previous section",
 		"addToNext": "Add unassigned lines to next section",
-		"section": "Section"
+		"section": "Section",
+		"linesCount": "{count} 行"
 	},
 	"touchSyncPanel": {
 		"prevWord": "跳到上个单词",
@@ -983,8 +981,6 @@
 		"enableSpecialPrefix": "启用特殊前缀",
 		"bgLyricPrefix": "背景歌词前缀",
 		"duetLyricPrefix": "合唱歌词前缀",
-		"enableEmptyBeat": "启用空拍",
-		"emptyBeatSymbol": "空拍符号",
 		"guide": {
 			"prepare": {
 				"title": "1. 准备歌词",
@@ -1124,7 +1120,7 @@
 		"spaceCount": "空格 x{count}",
 		"empty": "空白",
 		"title": "分割单词",
-		"tip": "分割后，新单词将平分布原单词的起始/结束时间。空拍将被清除。",
+		"tip": "分割后，新单词将平分布原单词的起始/结束时间。",
 		"syllableSplit": "音节分割",
 		"applyToAll": "将此分割应用到所有相同的单词",
 		"remember": "Remember this split",

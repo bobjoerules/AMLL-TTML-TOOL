@@ -738,7 +738,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 						<Box
 							flexGrow="1"
 							style={{
-								padding: toolMode === ToolMode.Sync ? "4px 0 20vh 0" : "4px 0",
+								padding: "4px 0",
 								height: "100%",
 								maxHeight: "100%",
 								overflowY: "auto",

@@ -35,7 +35,6 @@ export function processSingleLine(line: LyricLine): ProcessedLyricLine {
 					startTime: rubyWord.startTime,
 					endTime: rubyWord.endTime,
 					obscene: word.obscene,
-					emptyBeat: word.emptyBeat,
 					romanWord: "",
 					isRuby: true,
 					parentId: word.id,

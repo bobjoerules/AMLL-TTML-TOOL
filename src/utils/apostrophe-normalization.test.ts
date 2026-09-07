@@ -69,7 +69,6 @@ describe("normalizeImportedLyricApostrophes", () => {
 						word: "It‘s fine",
 						romanWord: "d’Accord",
 						obscene: false,
-						emptyBeat: 0,
 						ruby: [{ startTime: 0, endTime: 1, word: "Ruby’s text" }],
 					},
 				],

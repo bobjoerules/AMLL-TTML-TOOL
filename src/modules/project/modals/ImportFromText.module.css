@@ -14,10 +14,6 @@
 	color: var(--amber-11) !important;
 }
 
-.emptyBeatSymbol {
-	color: var(--accent-11) !important;
-	opacity: 0.5;
-}
 
 @keyframes flash {
 	0% {

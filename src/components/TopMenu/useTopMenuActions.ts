@@ -127,7 +127,6 @@ export const useTopMenuActions = () => {
 				word: text,
 				startTime: baseWord.startTime,
 				endTime: baseWord.endTime,
-				emptyBeat: 0,
 			};
 			const segments = segmentWord(sourceWord, segmentationConfig);
 			if (segments.length === 0) {
@@ -676,7 +675,7 @@ export const useTopMenuActions = () => {
 					toast.success(
 						t(
 							"topBar.menu.autoDuetSuccess",
-							"Auto duet applied to {{count}} lines based on {{singers}} singers.",
+							"Auto duet applied to {count} lines based on {singers} singers.",
 							{
 								count: modifiedCount,
 								singers: singers.length,

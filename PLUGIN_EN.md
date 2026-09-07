@@ -99,4 +99,3 @@ The following host functions can be called within any plugin function definition
 | `word`      | `String`   | Text content of the word.                 |
 | `startTime` | `u64`      | Start time of the word (milliseconds).    |
 | `endTime`   | `u64`      | End time of the word (milliseconds).      |
-| `emptyBeat` | `u64`      | Number of empty beats for the word.       |

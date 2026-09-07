@@ -264,7 +264,8 @@ function useKawarpBackground(
 	}, [container, image, mode]);
 }
 
-export const SpicyLyrics = memo(() => {
+export const SpicyLyrics = memo(
+	({ isPanel = false }: { isPanel?: boolean }) => {
 	const lyrics = useAtomValue(lyricLinesAtom);
 	const projectIdentity = useAtomValue(projectIdentityAtom);
 	const simple = useAtomValue(spicySimpleLyricsModeAtom);
@@ -1147,36 +1148,38 @@ export const SpicyLyrics = memo(() => {
 			{showFps ? <div className={styles.fpsCounter}>FPS: {fps}</div> : null}
 
 			{/* Floating Controls */}
-			<div
-				className={classNames(
-					styles.floatingControls,
-					isFullscreen && !controlsVisible && styles.autohideHidden,
-				)}
-			>
-				<button
-					type="button"
-					className={styles.floatingBtn}
-					onClick={() => setShowArtwork((prev) => !prev)}
-					title={showArtwork ? "Hide Album Art" : "Show Album Art"}
-					aria-label="Toggle Album Art"
+			{!isPanel && (
+				<div
+					className={classNames(
+						styles.floatingControls,
+						isFullscreen && !controlsVisible && styles.autohideHidden,
+					)}
 				>
-					<Image20Regular />
-				</button>
-				{!isFullscreen && (
 					<button
 						type="button"
 						className={styles.floatingBtn}
-						onClick={() => setIsFullscreen(true)}
-						title="Fullscreen (F)"
-						aria-label="Enter Fullscreen"
+						onClick={() => setShowArtwork((prev) => !prev)}
+						title={showArtwork ? "Hide Album Art" : "Show Album Art"}
+						aria-label="Toggle Album Art"
 					>
-						<FullScreenMaximize20Regular />
+						<Image20Regular />
 					</button>
-				)}
-			</div>
+					{!isFullscreen && (
+						<button
+							type="button"
+							className={styles.floatingBtn}
+							onClick={() => setIsFullscreen(true)}
+							title="Fullscreen (F)"
+							aria-label="Enter Fullscreen"
+						>
+							<FullScreenMaximize20Regular />
+						</button>
+					)}
+				</div>
+			)}
 
 			<div className={styles.contentOverlay}>
-				{showArtwork ? (
+				{!isPanel && showArtwork ? (
 					<div className={styles.twoColumnContainer}>
 						{/* Left Column: Artwork + Scrubber + Details */}
 						<div className={styles.artworkColumn}>

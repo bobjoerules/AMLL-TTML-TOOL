@@ -51,7 +51,6 @@ export function hasExportableLineContent(line: LyricLine): boolean {
 			(word) =>
 				word.word.trim().length > 0 ||
 				word.romanWord.trim().length > 0 ||
-				word.emptyBeat > 0 ||
 				(word.ruby?.some((rubyWord) => rubyWord.word.trim().length > 0) ??
 					false),
 		) ||
@@ -121,8 +120,6 @@ export default function exportTTMLText(
 		const container = createEl("span");
 		container.setAttribute("tts:ruby", "container");
 		if (word.obscene) container.setAttribute("amll:obscene", "true");
-		if (word.emptyBeat)
-			container.setAttribute("amll:empty-beat", `${word.emptyBeat}`);
 		const base = createEl("span");
 		base.setAttribute("tts:ruby", "base");
 		base.appendChild(doc.createTextNode(word.word));
@@ -153,8 +150,6 @@ export default function exportTTMLText(
 		span.setAttribute("begin", msToTimestamp(word.startTime));
 		span.setAttribute("end", msToTimestamp(word.endTime));
 		if (word.obscene) span.setAttribute("amll:obscene", "true");
-		if (word.emptyBeat)
-			span.setAttribute("amll:empty-beat", `${word.emptyBeat}`);
 		span.appendChild(doc.createTextNode(word.word));
 		return span;
 	}

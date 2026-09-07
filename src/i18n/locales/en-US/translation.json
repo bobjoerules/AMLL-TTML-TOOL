@@ -169,7 +169,6 @@
 			"duetLyric": "Duet Vocal",
 			"ignoreSync": "Ignore Sync",
 			"wordTiming": "Word Timing",
-			"emptyBeatCount": "Empty Beat Count",
 			"wordProperties": "Word Properties",
 			"wordContent": "Word Content",
 			"romanWord": "Word Romanization",
@@ -209,7 +208,6 @@
 			"showFps": "Show FPS"
 		},
 		"syncMode": {
-			"currentEmptyBeat": "Empty Beat",
 			"syncAdjustment": "Timing Adjustment",
 			"timeOffset": "Time Offset",
 			"commitOffset": "Commit Offset",
@@ -539,7 +537,6 @@
 		"start": "Start",
 		"end": "End",
 		"duration": "Duration",
-		"emptyBeat": "Empty Beat",
 		"romanization": "Roman",
 		"backgroundVocal": "BG",
 		"title": "Technical Timing Overview",
@@ -892,7 +889,8 @@
 		"removeHeader": "Remove header (keep lyrics)",
 		"addToPrevious": "Add unassigned lines to previous section",
 		"addToNext": "Add unassigned lines to next section",
-		"section": "Section"
+		"section": "Section",
+		"linesCount": "{count, plural, one {# line} other {# lines}}"
 	},
 	"touchSyncPanel": {
 		"prevWord": "Jump Previous Word",
@@ -1036,8 +1034,6 @@
 		"enableSpecialPrefix": "Enable Special Prefix",
 		"bgLyricPrefix": "Background Lyric Prefix",
 		"duetLyricPrefix": "Duet Lyric Prefix",
-		"enableEmptyBeat": "Enable Empty Beat",
-		"emptyBeatSymbol": "Empty Beat Symbol",
 		"guide": {
 			"prepare": {
 				"title": "1. Prepare Lyrics",
@@ -1177,7 +1173,7 @@
 		"spaceCount": "Space x{count}",
 		"empty": "Empty",
 		"title": "Split Word",
-		"tip": "After splitting, new words will evenly divide the original word's start/end time. Empty beats will be cleared.",
+		"tip": "After splitting, new words will evenly divide the original word's start/end time.",
 		"syllableSplit": "Syllable Split",
 		"applyToAll": "Apply this splitting to all identical words",
 		"remember": "Remember this split",

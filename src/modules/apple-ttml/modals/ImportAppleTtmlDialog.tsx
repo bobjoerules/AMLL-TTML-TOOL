@@ -223,7 +223,6 @@ export const ImportAppleTtmlDialog = () => {
 						words: line.words.map((w) => ({
 							...w,
 							id: uid(),
-							emptyBeat: 0,
 							obscene: false,
 						})),
 						ignoreSync: false,

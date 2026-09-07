@@ -1019,9 +1019,13 @@ export const LyricLineView: FC<{
 								)}
 								{isSectionCollapsed && (
 									<Badge size="1" color="gray" variant="soft">
-										{t("sectionActions.linesCount", "{{count}} lines", {
-											count: sectionLineCount,
-										})}
+										{t(
+											"sectionActions.linesCount",
+											"{count, plural, one {# line} other {# lines}}",
+											{
+												count: sectionLineCount,
+											},
+										)}
 									</Badge>
 								)}
 								{!isSectionCollapsed && toolMode === ToolMode.Sync && (

@@ -42,7 +42,6 @@ import {
 	showWordRomanizationInputAtom,
 } from "$/modules/settings/states/index.ts";
 import {
-	currentEmptyBeatAtom,
 	enableTimeModeDoubleClickEditAtom,
 	showTouchSyncPanelAtom,
 	syncLevelModeAtom,
@@ -123,7 +122,6 @@ export const LineTimingTools = () => {
 				const wordTimings = (targetLine.words || []).map((w) => ({
 					relativeStart: Math.max(0, w.startTime - targetLine.startTime),
 					duration: Math.max(0, w.endTime - w.startTime),
-					emptyBeat: w.emptyBeat,
 				}));
 				const data: CopiedTimingsData = {
 					startTime: targetLine.startTime,
@@ -253,9 +251,6 @@ export const LineTimingTools = () => {
 							const wt = timingToApply.wordTimings[i];
 							line.words[i].startTime = line.startTime + wt.relativeStart;
 							line.words[i].endTime = line.words[i].startTime + wt.duration;
-							if (wt.emptyBeat !== undefined) {
-								line.words[i].emptyBeat = wt.emptyBeat;
-							}
 						}
 					}
 				}
@@ -382,31 +377,6 @@ export const LineTimingTools = () => {
 	);
 };
 
-const EmptyBeatField = () => {
-	const [currentEmptyBeat, setCurrentEmptyBeat] = useAtom(currentEmptyBeatAtom);
-	const currentWordEmptyBeat = useCurrentLocation()?.word.emptyBeat || 0;
-	const { t } = useTranslation();
-
-	return (
-		<>
-			<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-				{t("ribbonBar.syncMode.currentEmptyBeat", "当前空拍")}
-			</Text>
-			<Slider
-				value={[currentEmptyBeat]}
-				onValueChange={(v) => setCurrentEmptyBeat(v[0])}
-				min={0}
-				max={currentWordEmptyBeat}
-				step={1}
-				disabled={currentWordEmptyBeat === 0}
-			/>
-			<div />
-			<Text wrap="nowrap" align="center" size="1">
-				{currentEmptyBeat} / {currentWordEmptyBeat}
-			</Text>
-		</>
-	);
-};
 
 export const RibbonSyncProgressWidget = () => {
 	const syncProgress = useSyncProgress();
@@ -572,22 +542,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<LineTimingTools />
 				</Flex>
 			</RibbonSection>
-			{showAdvanced && (
-				<RibbonSection
-					isSidebar={isSidebar}
-					label={t("ribbonBar.syncMode.currentEmptyBeat", "当前空拍")}
-				>
-					<Grid
-						columns="max-content 4em"
-						gap="4"
-						gapY="1"
-						flexGrow="1"
-						align="center"
-					>
-						<EmptyBeatField />
-					</Grid>
-				</RibbonSection>
-			)}
+
 			{showAdvanced && (
 				<RibbonSection
 					isSidebar={isSidebar}
@@ -647,7 +602,6 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 								<Text>ms</Text>
 							</TextField.Slot>
 						</TextField.Root>
-						<EmptyBeatField />
 					</Grid>
 				</RibbonSection>
 			)}

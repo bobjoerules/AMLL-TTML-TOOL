@@ -50,7 +50,6 @@ interface SpanNode {
 	end: string | null;
 	role: string | null;
 	lang: string | null;
-	emptyBeat: string | null;
 	ruby: string | null;
 	children: SpanNode[];
 	tail: string;
@@ -66,7 +65,6 @@ export function appendParentBeforeNestedLines(
 		parent.words.some(
 			(word) =>
 				word.word.trim().length > 0 ||
-				word.emptyBeat > 0 ||
 				word.ruby?.some((rubyWord) => rubyWord.word.trim().length > 0),
 		) ||
 		parent.translatedLyric.trim().length > 0 ||
@@ -106,7 +104,6 @@ function parseSpan(spanEl: Element): SpanNode {
 		end: getAttr(spanEl, "end"),
 		role: getAttr(spanEl, "role"),
 		lang: getAttr(spanEl, "lang"),
-		emptyBeat: getAttr(spanEl, "empty-beat"),
 		ruby: getAttr(spanEl, "ruby"),
 		children: [],
 		tail: "",
@@ -212,14 +209,9 @@ function createWordFromSpanElement(wordEl: Element): LyricWord | null {
 			startTime: containerStart ?? rubyStart,
 			endTime: containerEnd ?? rubyEnd,
 			obscene: false,
-			emptyBeat: 0,
 			romanWord: "",
 			ruby: rubyWords.length > 0 ? rubyWords : undefined,
 		};
-		const emptyBeat = getAttr(wordEl, "empty-beat");
-		if (emptyBeat) {
-			word.emptyBeat = Number(emptyBeat);
-		}
 		const obscene = getAttr(wordEl, "obscene");
 		if (obscene === "true") {
 			word.obscene = true;
@@ -236,13 +228,8 @@ function createWordFromSpanElement(wordEl: Element): LyricWord | null {
 		startTime: parseTimespan(begin),
 		endTime: parseTimespan(end),
 		obscene: false,
-		emptyBeat: 0,
 		romanWord: "",
 	};
-	const emptyBeat = getAttr(wordEl, "empty-beat");
-	if (emptyBeat) {
-		word.emptyBeat = Number(emptyBeat);
-	}
 	const obscene = getAttr(wordEl, "obscene");
 	if (obscene === "true") {
 		word.obscene = true;
@@ -535,7 +522,6 @@ export function parseLyric(ttmlText: string): TTMLLyric {
 					startTime: word.trim().length > 0 ? line.startTime : 0,
 					endTime: word.trim().length > 0 ? line.endTime : 0,
 					obscene: false,
-					emptyBeat: 0,
 					romanWord: "",
 				});
 			} else if (wordNode.nodeType === Node.ELEMENT_NODE) {

@@ -42,7 +42,6 @@ export const upcomingWordHighlightColorAtom = atomWithStorage(
 	"var(--green-9)",
 );
 
-export const currentEmptyBeatAtom = atom(0);
 export const smartFirstWordActiveIdAtom = atom<string | null>(null);
 
 export const callbackSyncStartAtom = atom(c(() => {}));

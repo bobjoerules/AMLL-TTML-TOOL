@@ -55,6 +55,28 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 7, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Empty Beat Deprecation & Removal:</b> Completely removed legacy empty beat (amll:empty-beat) controls, sync keybinding interceptors, XML attributes, text import options, and data models to align cleanly with official Apple TTML standards.
+								</Text>
+								<Text size="2">
+									• <b>Spectrogram Playback Speed Preset:</b> Added a quick 0.8x playback speed button to the audio spectrogram toolbar for fine-grained sync adjustments.
+								</Text>
+								<Text size="2">
+									• <b>Timing View Layout Normalization:</b> Fixed excessive bottom padding when scrolling to the end of lyrics in the Timing tab.
+								</Text>
+								<Text size="2">
+									• <b>Preview & Stability Improvements:</b> Refined fullscreen mode controls, theme color consistency, and lyric player lifecycle hooks.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.1.3
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
