@@ -372,3 +372,256 @@
 .isToxi .lineUnsynced .word {
 	color: rgba(255, 120, 120, 0.45) !important;
 }
+
+/* ── Two Column / Artwork Layout ───────────────────────────── */
+.twoColumnContainer {
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	position: relative;
+}
+
+.artworkColumn {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: clamp(20px, 4vw, 56px);
+	width: clamp(280px, 38vw, 480px);
+	flex-shrink: 0;
+	z-index: 5;
+}
+
+.artworkCard {
+	width: 100%;
+	max-width: 380px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.artworkImageWrapper {
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	border-radius: 14px;
+	overflow: hidden;
+	position: relative;
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.15);
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.artworkImageWrapper:hover {
+	transform: scale(1.015);
+	box-shadow: 0 24px 56px rgba(0, 0, 0, 0.55), 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.artworkImage {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.artworkPlaceholder {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.35) 100%);
+	color: rgba(255, 255, 255, 0.4);
+}
+
+.playbackRow {
+	width: 100%;
+	margin-top: 18px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	user-select: none;
+}
+
+.timeLabel {
+	font-size: 0.82rem;
+	font-weight: 500;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	color: rgba(255, 255, 255, 0.7);
+	min-width: 36px;
+	text-align: center;
+}
+
+.scrubberContainer {
+	flex: 1;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	position: relative;
+}
+
+.scrubberTrack {
+	width: 100%;
+	height: 4px;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.25);
+	position: relative;
+	overflow: hidden;
+	transition: height 0.15s ease;
+}
+
+.scrubberContainer:hover .scrubberTrack {
+	height: 6px;
+}
+
+.scrubberFill {
+	height: 100%;
+	border-radius: 9999px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), #ff2a85);
+	transition: width 0.05s linear;
+}
+
+.scrubberThumb {
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #ffffff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	transition: opacity 0.15s ease;
+	pointer-events: none;
+}
+
+.scrubberContainer:hover .scrubberThumb {
+	opacity: 1;
+}
+
+.trackDetails {
+	margin-top: 14px;
+	width: 100%;
+	text-align: left;
+}
+
+.songTitle {
+	font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+	font-weight: 800;
+	line-height: 1.25;
+	color: rgba(255, 255, 255, 0.98);
+	margin: 0 0 6px 0;
+	letter-spacing: -0.02em;
+	word-break: break-word;
+	text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.songArtist {
+	font-size: clamp(0.92rem, 1.4vw, 1.12rem);
+	font-weight: 500;
+	color: rgba(255, 255, 255, 0.65);
+	margin: 0;
+	letter-spacing: -0.01em;
+	word-break: break-word;
+	text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+
+.lyricsColumn {
+	flex: 1;
+	height: 100%;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	position: relative;
+}
+
+/* ── Floating Controls ─────────────────────────────────────── */
+.floatingControls {
+	position: absolute;
+	top: 16px;
+	right: 20px;
+	z-index: 150;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.floatingBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	color: rgba(255, 255, 255, 0.85);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.floatingBtn:hover {
+	background: rgba(255, 255, 255, 0.22);
+	color: #ffffff;
+	transform: scale(1.08);
+}
+
+.fullscreenExitFloating {
+	position: absolute;
+	top: 20px;
+	right: 24px;
+	z-index: 200;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 16px;
+	border-radius: 9999px;
+	background: rgba(0, 0, 0, 0.45);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	color: rgba(255, 255, 255, 0.95);
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.4s ease, transform 0.2s ease;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.fullscreenExitFloating:hover {
+	background: rgba(255, 255, 255, 0.22);
+	color: #ffffff;
+	transform: scale(1.04);
+}
+
+.autohideHidden {
+	opacity: 0 !important;
+	pointer-events: none !important;
+	transform: translateY(-8px) !important;
+}
+
+.autohideVisible {
+	opacity: 1 !important;
+	pointer-events: auto !important;
+	transform: translateY(0) !important;
+}
+
+@media (max-width: 680px) {
+	.twoColumnContainer {
+		flex-direction: column;
+	}
+	.artworkColumn {
+		width: 100%;
+		padding: 16px 24px 8px;
+		align-items: center;
+	}
+	.artworkCard {
+		max-width: 220px;
+	}
+}

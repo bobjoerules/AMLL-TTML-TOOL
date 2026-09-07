@@ -3,32 +3,45 @@
  * Original project: https://github.com/Spikerko/Spicy-Lyrics
  */
 import classNames from "classnames";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
 	type CSSProperties,
 	memo,
 	type RefObject,
+	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
 } from "react";
 import { audioEngine } from "$/modules/audio/audio-engine";
-import { audioCoverArtAtom, currentTimeAtom } from "$/modules/audio/states";
+import {
+	audioCoverArtAtom,
+	audioPlayingAtom,
+	currentDurationAtom,
+	currentTimeAtom,
+} from "$/modules/audio/states";
 import { customBackgroundImageAtom } from "$/modules/settings/modals/customBackground";
 import {
 	customAccentColorAtom,
 	useCustomAccentAtom,
 } from "$/modules/settings/states";
 import {
-	showRomanLinesAtom,
+	previewFullscreenAtom,
+	previewShowAlbumArtworkAtom,
 	showFpsCounterAtom,
+	showRomanLinesAtom,
 	showTranslationLinesAtom,
 	spicyBackgroundModeAtom,
 	spicyForceLineSyncedAtom,
 	spicySimpleLyricsModeAtom,
 } from "$/modules/settings/states/preview";
-import { lyricLinesAtom } from "$/states/main";
+import { lyricLinesAtom, projectIdentityAtom } from "$/states/main";
+import {
+	FullScreenMaximize20Regular,
+	Image20Regular,
+	MusicNote224Regular,
+} from "@fluentui/react-icons";
 import styles from "./index.module.css";
 import { CubicSpline, progressAt, Spring, stateAt } from "./math";
 import {
@@ -253,6 +266,7 @@ function useKawarpBackground(
 
 export const SpicyLyrics = memo(() => {
 	const lyrics = useAtomValue(lyricLinesAtom);
+	const projectIdentity = useAtomValue(projectIdentityAtom);
 	const simple = useAtomValue(spicySimpleLyricsModeAtom);
 	const forceLineSynced = useAtomValue(spicyForceLineSyncedAtom);
 	const romanized = useAtomValue(showRomanLinesAtom);
@@ -263,7 +277,102 @@ export const SpicyLyrics = memo(() => {
 	const customBackgroundImage = useAtomValue(customBackgroundImageAtom);
 	const useAccent = useAtomValue(useCustomAccentAtom);
 	const accent = useAtomValue(customAccentColorAtom);
-	const setCurrentTime = useSetAtom(currentTimeAtom);
+	const [currentTimeVal, setCurrentTime] = useAtom(currentTimeAtom);
+	const currentDuration = useAtomValue(currentDurationAtom);
+	const isPlaying = useAtomValue(audioPlayingAtom);
+
+	const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
+	const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
+	const [controlsVisible, setControlsVisible] = useState(true);
+	const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+	const totalDuration = useMemo(() => {
+		if (currentDuration > 0) return currentDuration;
+		if (lyrics.lyricLines.length > 0) {
+			return Math.max(...lyrics.lyricLines.map((l) => l.endTime || 0));
+		}
+		return 0;
+	}, [currentDuration, lyrics.lyricLines]);
+
+	const formatTime = (ms: number) => {
+		const totalSecs = Math.max(0, Math.floor(ms / 1000));
+		const mins = Math.floor(totalSecs / 60);
+		const secs = totalSecs % 60;
+		return `${mins}:${secs.toString().padStart(2, "0")}`;
+	};
+
+	const progressPct =
+		totalDuration > 0
+			? Math.min(100, Math.max(0, (currentTimeVal / totalDuration) * 100))
+			: 0;
+
+	const seek = (time: number) => {
+		setCurrentTime(time);
+		audioEngine.resumeOrSeekMusic(time / 1000);
+	};
+
+	const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
+		const rect = e.currentTarget.getBoundingClientRect();
+		const percent = Math.max(
+			0,
+			Math.min(1, (e.clientX - rect.left) / rect.width),
+		);
+		const newTime = percent * totalDuration;
+		seek(newTime);
+	};
+
+	const handleTogglePlay = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (audioEngine.musicPlaying) {
+			audioEngine.pauseMusic();
+		} else {
+			audioEngine.resumeOrSeekMusic();
+		}
+	};
+
+	const handleMouseMove = useCallback(() => {
+		setControlsVisible(true);
+		if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+		if (isFullscreen) {
+			hideTimerRef.current = setTimeout(() => {
+				setControlsVisible(false);
+			}, 3000);
+		}
+	}, [isFullscreen]);
+
+	useEffect(() => {
+		if (!isFullscreen) {
+			setControlsVisible(true);
+			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+		} else {
+			hideTimerRef.current = setTimeout(() => {
+				setControlsVisible(false);
+			}, 3000);
+		}
+		return () => {
+			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+		};
+	}, [isFullscreen]);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName))
+				return;
+			if (e.key === "Escape" && isFullscreen) {
+				setIsFullscreen(false);
+			} else if (
+				(e.key === "f" || e.key === "F") &&
+				!e.ctrlKey &&
+				!e.metaKey &&
+				!e.altKey
+			) {
+				setIsFullscreen((prev) => !prev);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isFullscreen, setIsFullscreen]);
+
 	const lines = useMemo(
 		() =>
 			buildSpicyLines(lyrics.lyricLines, simple, romanized, forceLineSynced),
@@ -858,10 +967,6 @@ export const SpicyLyrics = memo(() => {
 		return () => cancelAnimationFrame(raf);
 	}, [lines, simple]);
 
-	const seek = (time: number) => {
-		setCurrentTime(time);
-		audioEngine.resumeOrSeekMusic(time / 1000);
-	};
 	const renderToken = (
 		line: SpicyLine,
 		word: SpicyToken,
@@ -912,16 +1017,112 @@ export const SpicyLyrics = memo(() => {
 			</span>
 		);
 	};
+	const lyricsContent = (
+		<div
+			ref={viewportRef}
+			className={classNames(
+				styles.viewport,
+				hasDuetLines && styles.hasDuetLines,
+			)}
+		>
+			{lines.map((line) => {
+				const isLineTimed =
+					line.isDotLine ||
+					line.startTime > 0 ||
+					line.endTime > 0 ||
+					Boolean(
+						line.words &&
+							line.words.some(
+								(w) =>
+									w.endTime > w.startTime &&
+									(w.startTime > 0 || w.endTime > 0),
+							),
+					);
+				return (
+					<div
+						key={line.id}
+						ref={(node) => {
+							if (node) lineNodes.current.set(line.id, node);
+							else lineNodes.current.delete(line.id);
+						}}
+						className={classNames(
+							styles.line,
+							line.isDotLine && styles.dotLine,
+							line.isLineSynced && styles.lineSynced,
+							line.isRtl && styles.rtl,
+							line.isBackground && styles.backgroundLine,
+							line.isDuet && styles.duet,
+							!isLineTimed && styles.lineUnsynced,
+						)}
+						dir={line.isRtl ? "rtl" : undefined}
+						onClick={() => seek(line.startTime)}
+					>
+						{line.isDotLine ? (
+							<div className={styles.dotGroup}>
+								{line.words.map((word, wi) => {
+									const key = keyFor(line, word, wi);
+									return (
+										<span
+											key={key}
+											ref={(node) => {
+												if (node) wordNodes.current.set(key, node);
+												else wordNodes.current.delete(key);
+											}}
+											className={styles.dot}
+										>
+											{word.text}
+										</span>
+									);
+								})}
+							</div>
+						) : line.isLineSynced ? (
+							line.text
+						) : (
+							groupSpicyTokens(line.words).map((group) => {
+								const first = group.items[0];
+								if (group.items.length === 1)
+									return renderToken(
+										line,
+										first.token,
+										first.wordIndex,
+										group.hasTrailingSpace,
+									);
+								return (
+									<span
+										key={`group:${keyFor(line, first.token, first.wordIndex)}`}
+										className={classNames(
+											styles.wordGroup,
+											group.hasTrailingSpace && styles.wordBoundary,
+										)}
+									>
+										{group.items.map(({ token, wordIndex }) =>
+											renderToken(line, token, wordIndex, false),
+										)}
+									</span>
+								);
+							})
+						)}
+						{showTranslation && !line.isDotLine && line.translation ? (
+							<span className={styles.translation}>{line.translation}</span>
+						) : null}
+					</div>
+				);
+			})}
+		</div>
+	);
+
 	return (
 		<div
 			className={classNames(styles.root, simple && styles.simple)}
 			style={
 				{
-					"--spicy-accent": useAccent ? accent : "#5c6cff",
+					"--spicy-accent":
+						useAccent && accent ? accent : "var(--accent-9, #e5484d)",
 					"--spicy-cover-base": coverPalette?.base,
 					"--spicy-cover-highlight": coverPalette?.highlight,
 				} as CSSProperties
 			}
+			onMouseMove={handleMouseMove}
 		>
 			<div
 				ref={backgroundRef}
@@ -944,96 +1145,110 @@ export const SpicyLyrics = memo(() => {
 			) : null}
 			<div className={styles.overlay} />
 			{showFps ? <div className={styles.fpsCounter}>FPS: {fps}</div> : null}
+
+			{/* Floating Controls */}
 			<div
-				ref={viewportRef}
 				className={classNames(
-					styles.viewport,
-					hasDuetLines && styles.hasDuetLines,
+					styles.floatingControls,
+					isFullscreen && !controlsVisible && styles.autohideHidden,
 				)}
 			>
-				{lines.map((line) => {
-					const isLineTimed =
-						line.isDotLine ||
-						line.startTime > 0 ||
-						line.endTime > 0 ||
-						Boolean(
-							line.words &&
-								line.words.some(
-									(w) =>
-										w.endTime > w.startTime &&
-										(w.startTime > 0 || w.endTime > 0),
-								),
-						);
-					return (
-						<div
-							key={line.id}
-							ref={(node) => {
-								if (node) lineNodes.current.set(line.id, node);
-								else lineNodes.current.delete(line.id);
-							}}
-							className={classNames(
-								styles.line,
-								line.isDotLine && styles.dotLine,
-								line.isLineSynced && styles.lineSynced,
-								line.isRtl && styles.rtl,
-								line.isBackground && styles.backgroundLine,
-								line.isDuet && styles.duet,
-								!isLineTimed && styles.lineUnsynced,
-							)}
-							dir={line.isRtl ? "rtl" : undefined}
-							onClick={() => seek(line.startTime)}
-						>
-							{line.isDotLine ? (
-								<div className={styles.dotGroup}>
-									{line.words.map((word, wi) => {
-										const key = keyFor(line, word, wi);
-										return (
-											<span
-												key={key}
-												ref={(node) => {
-													if (node) wordNodes.current.set(key, node);
-													else wordNodes.current.delete(key);
+				<button
+					type="button"
+					className={styles.floatingBtn}
+					onClick={() => setShowArtwork((prev) => !prev)}
+					title={showArtwork ? "Hide Album Art" : "Show Album Art"}
+					aria-label="Toggle Album Art"
+				>
+					<Image20Regular />
+				</button>
+				{!isFullscreen && (
+					<button
+						type="button"
+						className={styles.floatingBtn}
+						onClick={() => setIsFullscreen(true)}
+						title="Fullscreen (F)"
+						aria-label="Enter Fullscreen"
+					>
+						<FullScreenMaximize20Regular />
+					</button>
+				)}
+			</div>
+
+			<div className={styles.contentOverlay}>
+				{showArtwork ? (
+					<div className={styles.twoColumnContainer}>
+						{/* Left Column: Artwork + Scrubber + Details */}
+						<div className={styles.artworkColumn}>
+							<div className={styles.artworkCard}>
+								<div
+									className={styles.artworkImageWrapper}
+									onClick={handleTogglePlay}
+									style={{ cursor: "pointer" }}
+									title={isPlaying ? "Click to Pause" : "Click to Play"}
+								>
+									{backgroundImage ? (
+										<img
+											src={backgroundImage}
+											alt={projectIdentity.name || "Album Artwork"}
+											className={styles.artworkImage}
+										/>
+									) : (
+										<div className={styles.artworkPlaceholder}>
+											<MusicNote224Regular
+												style={{
+													fontSize: "64px",
+													width: "64px",
+													height: "64px",
 												}}
-												className={styles.dot}
-											>
-												{word.text}
-											</span>
-										);
-									})}
+											/>
+										</div>
+									)}
 								</div>
-							) : line.isLineSynced ? (
-								line.text
-							) : (
-								groupSpicyTokens(line.words).map((group) => {
-									const first = group.items[0];
-									if (group.items.length === 1)
-										return renderToken(
-											line,
-											first.token,
-											first.wordIndex,
-											group.hasTrailingSpace,
-										);
-									return (
-										<span
-											key={`group:${keyFor(line, first.token, first.wordIndex)}`}
-											className={classNames(
-												styles.wordGroup,
-												group.hasTrailingSpace && styles.wordBoundary,
-											)}
-										>
-											{group.items.map(({ token, wordIndex }) =>
-												renderToken(line, token, wordIndex, false),
-											)}
-										</span>
-									);
-								})
-							)}
-							{showTranslation && !line.isDotLine && line.translation ? (
-								<span className={styles.translation}>{line.translation}</span>
-							) : null}
+
+								{/* Progress Scrubber */}
+								<div className={styles.playbackRow}>
+									<span className={styles.timeLabel}>
+										{formatTime(currentTimeVal)}
+									</span>
+									<div
+										className={styles.scrubberContainer}
+										onClick={handleScrub}
+									>
+										<div className={styles.scrubberTrack}>
+											<div
+												className={styles.scrubberFill}
+												style={{ width: `${progressPct}%` }}
+											/>
+										</div>
+										<div
+											className={styles.scrubberThumb}
+											style={{ left: `${progressPct}%` }}
+										/>
+									</div>
+									<span className={styles.timeLabel}>
+										{formatTime(totalDuration)}
+									</span>
+								</div>
+
+								{/* Track details */}
+								<div className={styles.trackDetails}>
+									<h2 className={styles.songTitle}>
+										{projectIdentity.name || "Untitled"}
+									</h2>
+									<div className={styles.songArtist}>
+										{projectIdentity.artist || "Unknown Artist"}
+									</div>
+								</div>
+							</div>
 						</div>
-					);
-				})}
+
+						{/* Right Column: Lyrics Viewport */}
+						<div className={styles.lyricsColumn}>{lyricsContent}</div>
+					</div>
+				) : (
+					lyricsContent
+				)}
 			</div>
 		</div>
 	);

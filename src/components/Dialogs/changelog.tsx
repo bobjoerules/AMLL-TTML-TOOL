@@ -55,6 +55,31 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.1.2
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 6, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>SpicyLyrics Album Artwork & Media Controls:</b> Integrated Apple Music style album artwork, track title, singer/artist metadata, and an interactive seekable scrubber directly into SpicyLyrics mode, toggleable via floating canvas button or preview options.
+								</Text>
+								<Text size="2">
+									• <b>Preview Fullscreen Mode:</b> Added dedicated fullscreen preview mode (keyboard shortcut F to toggle, Esc to exit) with floating controls and an autohiding exit button.
+								</Text>
+								<Text size="2">
+									• <b>SpicyLyrics Theme Background Matching:</b> Updated SpicyLyrics container and animated backdrop to seamlessly harmonize with active Radix theme accent colors and dark mode palette.
+								</Text>
+								<Text size="2">
+									• <b>Editor Background & Contrast Integrity:</b> Resolved empty-state transparency issue when custom background gradients are active, ensuring editor background properly styles the editor workspace and empty-state action buttons retain high contrast and visibility.
+								</Text>
+								<Text size="2">
+									• <b>Toolbar Streamlining & Localization:</b> Cleaned up duplicate fullscreen and artwork buttons from the RibbonBar, removed obsolete guide outlines, and completed localized English and Chinese translations for segmentation and spacing options.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.1.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

@@ -10,6 +10,7 @@
  */
 
 import {
+	Button,
 	Checkbox,
 	Flex,
 	Grid,
@@ -94,7 +95,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 				label={
 					<Flex gap="1" align="center">
 						<Play24Regular />
-						{t("ribbonBar.previewMode.mode", "模式")}
+						{t("ribbonBar.previewMode.mode", "Mode")}
 					</Flex>
 				}
 			>
@@ -105,7 +106,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<SegmentedControl.Item value={PreviewModeType.Standard}>
 						<Flex gap="1" align="center">
 							<DocumentText16Regular />
-							{t("ribbonBar.previewMode.standard", "标准")}
+							{t("ribbonBar.previewMode.standard", "Standard")}
 						</Flex>
 					</SegmentedControl.Item>
 					<SegmentedControl.Item value={PreviewModeType.Toxi}>
@@ -123,7 +124,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<SegmentedControl.Item value={PreviewModeType.Timing}>
 						<Flex gap="1" align="center">
 							<Timer16Regular />
-							{t("ribbonBar.previewMode.timing", "时轴")}
+							{t("ribbonBar.previewMode.timing", "Timing")}
 						</Flex>
 					</SegmentedControl.Item>
 				</SegmentedControl.Root>
@@ -190,7 +191,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 				label={
 					<Flex gap="1" align="center">
 						<TextT24Regular />
-						{t("ribbonBar.previewMode.lyrics", "歌词")}
+						{t("ribbonBar.previewMode.lyrics", "Lyrics")}
 					</Flex>
 				}
 			>
@@ -204,7 +205,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 						<Flex gap="1" align="center">
 							<LocalLanguage16Regular />
-							{t("ribbonBar.previewMode.showTranslation", "显示翻译")}
+							{t("ribbonBar.previewMode.showTranslation", "Show Translation")}
 						</Flex>
 					</Text>
 					<Checkbox
@@ -214,7 +215,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 						<Flex gap="1" align="center">
 							<LocalLanguage16Regular />
-							{t("ribbonBar.previewMode.showRoman", "显示音译")}
+							{t("ribbonBar.previewMode.showRoman", "Show Romanization")}
 						</Flex>
 					</Text>
 					<Checkbox
@@ -224,7 +225,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 						<Flex gap="1" align="center">
 							<Warning16Regular />
-							{t("ribbonBar.previewMode.maskObsceneWords", "屏蔽不雅用语")}
+							{t("ribbonBar.previewMode.maskObsceneWords", "Mask Obscene Words")}
 						</Flex>
 					</Text>
 					<Checkbox
@@ -238,7 +239,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 				label={
 					<Flex gap="1" align="center">
 						<TextAlignLeft24Regular />
-						{t("ribbonBar.previewMode.word", "单词")}
+						{t("ribbonBar.previewMode.word", "Word")}
 					</Flex>
 				}
 			>
@@ -252,7 +253,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 						<Flex gap="1" align="center">
 							<FontSpaceTrackingOut16Regular />
-							{t("ribbonBar.previewMode.fadeWidth", "过渡宽度")}
+							{t("ribbonBar.previewMode.fadeWidth", "Fade Width")}
 						</Flex>
 					</Text>
 					<TextField.Root
@@ -273,7 +274,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 						<Flex gap="1" align="center">
 							<Flash16Regular />
-							{t("ribbonBar.previewMode.instantFade", "即时淡出")}
+							{t("ribbonBar.previewMode.instantFade", "Instant Fade Out")}
 						</Flex>
 					</Text>
 					<Checkbox

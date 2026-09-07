@@ -119,6 +119,7 @@ import {
 	customBackgroundOpacityAtom,
 } from "./modules/settings/modals/customBackground";
 import { showTouchSyncPanelAtom } from "./modules/settings/states/sync.ts";
+import { previewFullscreenAtom } from "./modules/settings/states/preview.ts";
 import { settingsDialogAtom, settingsTabAtom } from "./states/dialogs.ts";
 import {
 	isDarkThemeAtom,
@@ -312,6 +313,8 @@ function App() {
 	const isDarkTheme = useAtomValue(isDarkThemeAtom);
 	const legacyDarkTheme = useAtomValue(legacyDarkThemeAtom);
 	const toolMode = useAtomValue(toolModeAtom);
+	const [previewFullscreen, setPreviewFullscreen] = useAtom(previewFullscreenAtom);
+	const isPreviewFullscreen = previewFullscreen && toolMode === ToolMode.Preview;
 	const showTouchSyncPanel = useAtomValue(showTouchSyncPanelAtom);
 	const showPreviewPanel = useAtomValue(showPreviewPanelAtom);
 	// Preview mode already owns the entire editor area. Keep the sync preview
@@ -841,6 +844,71 @@ function App() {
 		};
 	}, [setIsGlobalDragging, openFile]);
 
+	useEffect(() => {
+		if (toolMode !== ToolMode.Preview && previewFullscreen) {
+			setPreviewFullscreen(false);
+		}
+	}, [toolMode, previewFullscreen, setPreviewFullscreen]);
+
+	useEffect(() => {
+		const handleFullscreenChange = () => {
+			if (!document.fullscreenElement && previewFullscreen) {
+				setPreviewFullscreen(false);
+			}
+		};
+		document.addEventListener("fullscreenchange", handleFullscreenChange);
+		return () => {
+			document.removeEventListener("fullscreenchange", handleFullscreenChange);
+		};
+	}, [previewFullscreen, setPreviewFullscreen]);
+
+	useEffect(() => {
+		if (isPreviewFullscreen) {
+			if (
+				!document.fullscreenElement &&
+				document.documentElement.requestFullscreen
+			) {
+				document.documentElement.requestFullscreen().catch(() => {});
+			}
+			if (import.meta.env.TAURI_ENV_PLATFORM) {
+				try {
+					const win = getCurrentWindow();
+					win.setFullscreen(true).catch(() => {});
+				} catch {}
+			}
+		} else {
+			if (document.fullscreenElement && document.exitFullscreen) {
+				document.exitFullscreen().catch(() => {});
+			}
+			if (import.meta.env.TAURI_ENV_PLATFORM) {
+				try {
+					const win = getCurrentWindow();
+					win.setFullscreen(false).catch(() => {});
+				} catch {}
+			}
+		}
+	}, [isPreviewFullscreen]);
+
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName))
+				return;
+			if (e.key === "Escape" && isPreviewFullscreen) {
+				setPreviewFullscreen(false);
+			} else if (
+				(e.key === "f" || e.key === "F") &&
+				toolMode === ToolMode.Preview &&
+				!e.ctrlKey &&
+				!e.metaKey &&
+				!e.altKey
+			) {
+				setPreviewFullscreen((prev) => !prev);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isPreviewFullscreen, toolMode, setPreviewFullscreen]);
+
 	return (
 		<Theme
 			appearance={effectiveTheme}
@@ -888,8 +956,7 @@ function App() {
 						<div
 							className={styles.customBackgroundMask}
 							style={{
-								opacity:
-									backgroundMode === "gradient" ? 0 : customBackgroundMask,
+								opacity: customBackgroundMask,
 							}}
 						/>
 					</div>
@@ -901,7 +968,7 @@ function App() {
 					<UrbanDictionaryKeybinding />
 					<DarkThemeDetector />
 					<Flex direction="column" height="100vh">
-						<TitleBar key="titlebar" />
+						{!isPreviewFullscreen && <TitleBar key="titlebar" />}
 						<Flex direction="row" flexGrow="1" overflow="hidden" minHeight="0">
 							<Flex
 								direction="column"
@@ -914,6 +981,7 @@ function App() {
 									if (id === "titlebar") return null;
 									if (
 										id === "ribbonbar" &&
+										!isPreviewFullscreen &&
 										(vRibbonPosition === "top" || vRibbonPosition === "bottom")
 									) {
 										return (
@@ -922,7 +990,14 @@ function App() {
 									}
 									if (id === "editor") {
 										const editorContent = (
-											<Box flexGrow="1" overflow="hidden" key="editor-content">
+											<Box
+												flexGrow="1"
+												overflow="hidden"
+												key="editor-content"
+												style={{
+													backgroundColor: "var(--editor-bg, transparent)",
+												}}
+											>
 												<Flex height="100%" overflow="hidden">
 													<Box flexGrow="1" minWidth="0" overflow="hidden">
 														<AnimatePresence mode="wait">
@@ -948,7 +1023,7 @@ function App() {
 																	<Box
 																		height="100%"
 																		key="preview-switcher"
-																		p="2"
+																		p="0"
 																		asChild
 																	>
 																		<motion.div
@@ -969,8 +1044,9 @@ function App() {
 										);
 
 										if (
-											vRibbonPosition === "left" ||
-											vRibbonPosition === "right"
+											!isPreviewFullscreen &&
+											(vRibbonPosition === "left" ||
+												vRibbonPosition === "right")
 										) {
 											return (
 												<Flex
@@ -993,7 +1069,13 @@ function App() {
 									}
 									if (id === "audio-controls") {
 										return (
-											<Box flexShrink="0" key="audio-controls">
+											<Box
+												flexShrink="0"
+												key="audio-controls"
+												style={{
+													display: isPreviewFullscreen ? "none" : undefined,
+												}}
+											>
 												<AudioControls />
 											</Box>
 										);

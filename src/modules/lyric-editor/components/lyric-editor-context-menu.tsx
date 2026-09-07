@@ -67,7 +67,7 @@ export function LyricEditorContextMenuContent({
 					}}
 				>
 					<DeleteRegular />
-					{t("lyricWordView.deleteSpace", "删除空格")}
+					{t("lyricWordView.deleteSpace", "Delete Space")}
 				</ContextMenu.Item>
 				<ContextMenu.Separator />
 				<LyricLineMenu lineIndex={target.lineIndex} />
