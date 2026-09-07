@@ -16,6 +16,7 @@ import {
 	VideoBackgroundEffectFilled,
 } from "@fluentui/react-icons";
 import {
+	Badge,
 	Box,
 	Button,
 	Flex,
