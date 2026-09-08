@@ -52,6 +52,7 @@ import {
 	showLineTranslationAtom,
 	showTimestampsAtom,
 	showWordRomanizationInputAtom,
+	wrapLyricLinesAtom,
 } from "$/modules/settings/states/index.ts";
 import {
 	syncLevelModeAtom,
@@ -149,11 +150,12 @@ const LyricLineScroller = ({
 	wordsContainer: HTMLDivElement | null;
 	editingRomanWordIndex: number | null;
 }) => {
+	const wrapLyricLines = useAtomValue(wrapLyricLinesAtom);
 	const toolMode = useAtomValue(toolModeAtom);
 	const scrollToIndexAtom = useMemo(
 		() =>
 			atom((get) => {
-				if (!shouldAutoCenterSelection(toolMode)) return Number.NaN;
+				if (wrapLyricLines || !shouldAutoCenterSelection(toolMode)) return Number.NaN;
 				const line = get(lineAtom);
 				const selectedWords = get(selectedWordsAtom);
 				if (selectedWords.size === 0) return Number.NaN;
@@ -168,11 +170,12 @@ const LyricLineScroller = ({
 				}
 				return scrollToIndex;
 			}),
-		[lineAtom, toolMode],
+		[lineAtom, toolMode, wrapLyricLines],
 	);
 	const scrollToIndex = useAtomValue(scrollToIndexAtom);
 
 	useEffect(() => {
+		if (wrapLyricLines) return;
 		const targetIndex = !Number.isNaN(scrollToIndex)
 			? scrollToIndex
 			: editingRomanWordIndex;
@@ -186,10 +189,10 @@ const LyricLineScroller = ({
 			left: wordEl.offsetLeft - wordsContainer.clientWidth / 2,
 			behavior: "auto",
 		});
-	}, [scrollToIndex, editingRomanWordIndex, wordsContainer]);
+	}, [scrollToIndex, editingRomanWordIndex, wordsContainer, wrapLyricLines]);
 
 	useEffect(() => {
-		if (!wordsContainer) return;
+		if (wrapLyricLines || !wordsContainer) return;
 		const handleFocusIn = (evt: FocusEvent) => {
 			const target = evt.target as HTMLElement | null;
 			if (!target) return;
@@ -204,7 +207,7 @@ const LyricLineScroller = ({
 		return () => {
 			wordsContainer.removeEventListener("focusin", handleFocusIn);
 		};
-	}, [wordsContainer]);
+	}, [wordsContainer, wrapLyricLines]);
 
 	return null;
 };
@@ -221,6 +224,7 @@ const SubLineEdit = memo(
 	}) => {
 		const editLyricLines = useSetImmerAtom(lyricLinesAtom);
 		const line = useAtomValue(lineAtom);
+		const wrapLyricLines = useAtomValue(wrapLyricLinesAtom);
 		const [editing, setEditing] = useState(false);
 		const [inputValue, setInputValue] = useState("");
 		const { t } = useTranslation();
@@ -267,9 +271,11 @@ const SubLineEdit = memo(
 						type === "translatedLyric"
 							? "var(--translation-color, inherit)"
 							: "var(--romanization-color, inherit)",
+					flexWrap: wrapLyricLines ? "wrap" : "nowrap",
+					maxWidth: "100%",
 				}}
 			>
-				<Text size="2" style={{ color: "inherit" }}>
+				<Text size="2" style={{ color: "inherit", flexShrink: 0 }}>
 					{label}
 				</Text>
 				{editing ? (
@@ -278,7 +284,7 @@ const SubLineEdit = memo(
 						size="1"
 						data-lyric-line-interactive=""
 						value={inputValue}
-						style={{ width: inputWidth }}
+						style={{ width: inputWidth, maxWidth: "100%" }}
 						onChange={(evt) => setInputValue(evt.currentTarget.value)}
 						onBlur={onEnter}
 						onKeyDown={(evt) => {
@@ -290,7 +296,19 @@ const SubLineEdit = memo(
 						size="2"
 						variant="ghost"
 						data-lyric-line-interactive=""
-						style={{ color: "inherit" }}
+						className={wrapLyricLines ? styles.subLineWrap : undefined}
+						style={{
+							color: "inherit",
+							...(wrapLyricLines
+								? {
+										whiteSpace: "normal",
+										wordBreak: "break-word",
+										textAlign: "start",
+										height: "auto",
+										minHeight: "28px",
+								  }
+								: {}),
+						}}
 						onClick={(evt) => {
 							evt.stopPropagation();
 							setEditing(true);
@@ -549,6 +567,7 @@ export const LyricLineView: FC<{
 	const editingRomanWordIndex = useAtomValue(editingRomanWordIndexAtom);
 	const compactBGInSync = useAtomValue(compactBGInSyncAtom);
 	const legacySpaceLabels = useAtomValue(legacySpaceLabelsAtom);
+	const wrapLyricLines = useAtomValue(wrapLyricLinesAtom);
 
 	const startTimeRef = useRef<HTMLDivElement>(null);
 	const endTimeRef = useRef<HTMLButtonElement>(null);
@@ -1104,6 +1123,7 @@ export const LyricLineView: FC<{
 										toolMode === ToolMode.Edit && styles.edit,
 										toolMode === ToolMode.Sync && styles.sync,
 										!showTimestamps && styles.hideTimestamps,
+										wrapLyricLines && styles.wrapped,
 									)}
 									ref={wordsContainerRef}
 									style={{

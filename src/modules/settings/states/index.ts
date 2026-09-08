@@ -494,3 +494,8 @@ export const DEFAULT_UI_SCALE = 100;
 export const MIN_UI_SCALE = 50;
 export const MAX_UI_SCALE = 200;
 export const uiScaleAtom = atomWithStorage<number>("uiScale", DEFAULT_UI_SCALE);
+
+export const wrapLyricLinesAtom = atomWithStorage<boolean>(
+	"wrapLyricLines",
+	false,
+);

@@ -51,6 +51,7 @@ import {
 	geniusCategorizationEnabledAtom,
 	geniusHeaderDetectionDialogOpenAtom,
 	geniusHeaderDetectionDialogShownAtom,
+	wrapLyricLinesAtom,
 } from "$/modules/settings/states/index.ts";
 import {
 	importLyricsChooserDialogAtom,
@@ -127,6 +128,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 	const viewElRef = useRef<HTMLDivElement>(null);
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
 	const toolMode = useAtomValue(toolModeAtom);
+	const wrapLyricLines = useAtomValue(wrapLyricLinesAtom);
 	const { t } = useTranslation();
 	const setGuideWelcome = useSetAtom(guideWelcomeOpenAtom);
 	const setGuidePanel = useSetAtom(guidePanelOpenAtom);
@@ -742,6 +744,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 								height: "100%",
 								maxHeight: "100%",
 								overflowY: "auto",
+								overflowX: wrapLyricLines ? "hidden" : "auto",
 								backgroundColor: "var(--editor-bg, transparent)",
 							}}
 							ref={viewElRef}

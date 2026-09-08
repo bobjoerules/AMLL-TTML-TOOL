@@ -55,6 +55,25 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.2
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 7, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Wrap Long Lyric Lines:</b> Added an option to wrap lyric lines to subsequent rows instead of forcing horizontal scrolling when lines exceed the editor width.
+								</Text>
+								<Text size="2">
+									• <b>Sync Mode & RibbonBar Integration:</b> Quick toggle in the Sync Mode Display Options popover and General Settings.
+								</Text>
+								<Text size="2">
+									• <b>Subline & Word Chip Wrapping:</b> Cleanly breaks and wraps word chips with distinct borders, and formats translations and pronunciation sublines.
+								</Text>
+							</Flex>
+						</Box>
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
