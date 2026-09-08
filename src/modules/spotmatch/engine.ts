@@ -181,11 +181,22 @@ export function scoreCandidate(
 
 /**
  * Format a list of selected matches into the Spicy Lyrics bot format: "id1,id2,id3"
+ * Optionally prepends the original/source track ID if provided, deduplicating if needed.
  */
 export function formatSpicyLyricsIds(
 	matches: Array<Pick<SpotMatchCandidate, "trackId">>,
+	sourceTrackId?: string | null,
 ): string {
-	return matches.map((m) => m.trackId).join(",");
+	const ids: string[] = [];
+	if (sourceTrackId) {
+		ids.push(sourceTrackId);
+	}
+	for (const m of matches) {
+		if (m.trackId && m.trackId !== sourceTrackId) {
+			ids.push(m.trackId);
+		}
+	}
+	return ids.join(",");
 }
 
 /**
@@ -450,9 +461,7 @@ async function searchSpotifyPathfinder(
 /**
  * Searches RMM Revival database by query
  */
-async function searchRmm(
-	query: string,
-): Promise<
+async function searchRmm(query: string): Promise<
 	Array<{
 		id: string;
 		title: string;

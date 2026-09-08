@@ -26,11 +26,7 @@ import {
 	spectrogramOnlyShowSyncLineAtom,
 	spectrogramScrollLeftAtom,
 } from "$/modules/spectrogram/states/index.ts";
-import {
-	selectedLinesAtom,
-	toolModeAtom,
-	ToolMode,
-} from "$/states/main.ts";
+import { selectedLinesAtom, toolModeAtom, ToolMode } from "$/states/main.ts";
 import { globalStore } from "$/states/store.ts";
 import { LyricLineSegment } from "./LyricLineSegment";
 import styles from "./LyricTimelineOverlay.module.css";

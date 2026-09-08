@@ -1445,6 +1445,8 @@
 		"saveAsTxt": "Save as .txt",
 		"savedToast": "Saved Spotify IDs to file!",
 		"saveFailed": "Failed to save file.",
-		"textFileDescription": "Text Files"
+		"textFileDescription": "Text Files",
+		"includeOriginalId": "Include original ID",
+		"includeOriginalIdTooltip": "Prepend the searched original track ID to copied or exported IDs"
 	}
 }

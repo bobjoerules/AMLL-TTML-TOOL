@@ -47,6 +47,7 @@ import {
 	spotMatchCandidatesAtom,
 	spotMatchDialogAtom,
 	spotMatchExactTitleAtom,
+	spotMatchIncludeOriginalIdAtom,
 	spotMatchInitialTrackIdAtom,
 	spotMatchMaxDurationSecondsAtom,
 	spotMatchMinScoreAtom,
@@ -68,6 +69,9 @@ export function SpotMatchDialog() {
 		spotMatchMaxDurationSecondsAtom,
 	);
 	const [exactTitle, setExactTitle] = useAtom(spotMatchExactTitleAtom);
+	const [includeOriginalId, setIncludeOriginalId] = useAtom(
+		spotMatchIncludeOriginalIdAtom,
+	);
 
 	const [sourceTrack, setSourceTrack] = useAtom(spotMatchSourceAtom);
 	const [candidates, setCandidates] = useAtom(spotMatchCandidatesAtom);
@@ -204,23 +208,38 @@ export function SpotMatchDialog() {
 		return candidates.filter((c) => selectedIds.has(c.trackId));
 	}, [candidates, selectedIds]);
 
+	const canExport =
+		selectedCandidates.length > 0 ||
+		(includeOriginalId && Boolean(sourceTrack?.id));
+
+	const exportCount =
+		selectedCandidates.length +
+		(includeOriginalId &&
+		sourceTrack?.id &&
+		!selectedCandidates.some((c) => c.trackId === sourceTrack.id)
+			? 1
+			: 0);
+
 	const handleCopySpicyLyricsIds = async () => {
-		if (selectedCandidates.length === 0) {
+		if (!canExport) {
 			toast.error(
 				t("spotmatch.noTracksSelected", "No tracks selected to copy."),
 			);
 			return;
 		}
 
-		const formatted = formatSpicyLyricsIds(selectedCandidates);
+		const formatted = formatSpicyLyricsIds(
+			selectedCandidates,
+			includeOriginalId ? sourceTrack?.id : undefined,
+		);
 		try {
 			await navigator.clipboard.writeText(formatted);
 			setCopiedNotice(true);
 			setTimeout(() => setCopiedNotice(false), 2500);
 			toast.success(
 				t("spotmatch.copiedToast", {
-					count: selectedCandidates.length,
-					defaultValue: `Copied ${selectedCandidates.length} Spotify IDs!`,
+					count: exportCount,
+					defaultValue: `Copied ${exportCount} Spotify IDs!`,
 				}),
 			);
 		} catch {
@@ -229,14 +248,17 @@ export function SpotMatchDialog() {
 	};
 
 	const handleSaveTxt = async () => {
-		if (selectedCandidates.length === 0) {
+		if (!canExport) {
 			toast.error(
 				t("spotmatch.noTracksSelected", "No tracks selected to copy."),
 			);
 			return;
 		}
 
-		const formatted = formatSpicyLyricsIds(selectedCandidates);
+		const formatted = formatSpicyLyricsIds(
+			selectedCandidates,
+			includeOriginalId ? sourceTrack?.id : undefined,
+		);
 		const suggestedName = getSpotMatchTxtFileName(sourceTrack);
 
 		try {
@@ -789,27 +811,54 @@ export function SpotMatchDialog() {
 					align="center"
 					pt="3"
 					mt="2"
+					wrap="wrap"
+					gap="3"
 					style={{
 						borderTop: "1px solid var(--gray-a4)",
 					}}
 				>
-					<Text size="2" color="gray">
-						{t("spotmatch.selectedCount", {
-							selected: selectedCandidates.length,
-							total: candidates.length,
-							defaultValue: `${selectedCandidates.length} of ${candidates.length} selected`,
-						})}
-					</Text>
+					<Flex align="center" gap="4" wrap="wrap">
+						<Text size="2" color="gray">
+							{t("spotmatch.selectedCount", {
+								selected: selectedCandidates.length,
+								total: candidates.length,
+								defaultValue: `${selectedCandidates.length} of ${candidates.length} selected`,
+							})}
+						</Text>
+
+						<Tooltip
+							content={t(
+								"spotmatch.includeOriginalIdTooltip",
+								"Prepend the searched original track ID to copied or exported IDs",
+							)}
+						>
+							<Flex align="center" gap="2">
+								<Switch
+									size="1"
+									id="spotmatch-include-original"
+									checked={includeOriginalId}
+									onCheckedChange={setIncludeOriginalId}
+								/>
+								<Text
+									as="label"
+									size="2"
+									htmlFor="spotmatch-include-original"
+									style={{ cursor: "pointer", userSelect: "none" }}
+								>
+									{t("spotmatch.includeOriginalId", "Include original ID")}
+								</Text>
+							</Flex>
+						</Tooltip>
+					</Flex>
 
 					<Flex gap="2">
 						<Button
 							variant="soft"
 							color="gray"
-							disabled={selectedCandidates.length === 0}
+							disabled={!canExport}
 							onClick={handleSaveTxt}
 							style={{
-								cursor:
-									selectedCandidates.length === 0 ? "not-allowed" : "pointer",
+								cursor: !canExport ? "not-allowed" : "pointer",
 							}}
 						>
 							<Save16Regular />
@@ -819,11 +868,10 @@ export function SpotMatchDialog() {
 						<Button
 							variant="solid"
 							color={copiedNotice ? "green" : undefined}
-							disabled={selectedCandidates.length === 0}
+							disabled={!canExport}
 							onClick={handleCopySpicyLyricsIds}
 							style={{
-								cursor:
-									selectedCandidates.length === 0 ? "not-allowed" : "pointer",
+								cursor: !canExport ? "not-allowed" : "pointer",
 							}}
 						>
 							{copiedNotice ? <Checkmark16Regular /> : <Copy16Regular />}

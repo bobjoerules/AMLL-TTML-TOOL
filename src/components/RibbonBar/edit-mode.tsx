@@ -1276,7 +1276,10 @@ const RibbonSectionControls: FC<{ isSidebar?: boolean }> = ({ isSidebar }) => {
 				</Select.Root>
 				<TextField.Root
 					size="1"
-					placeholder={t("sectionActions.vocalistPlaceholder", "Singer / Vocalist")}
+					placeholder={t(
+						"sectionActions.vocalistPlaceholder",
+						"Singer / Vocalist",
+					)}
 					value={vocalistInput}
 					onChange={(e) => setVocalistInput(e.target.value)}
 					onBlur={(e) => handleVocalistCommit(e.target.value)}

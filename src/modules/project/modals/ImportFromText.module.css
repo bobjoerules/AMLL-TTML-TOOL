@@ -14,7 +14,6 @@
 	color: var(--amber-11) !important;
 }
 
-
 @keyframes flash {
 	0% {
 		opacity: 1;

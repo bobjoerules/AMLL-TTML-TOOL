@@ -13,7 +13,9 @@ describe("SpotifyResolver URL Parsing", () => {
 			isSpotifyUrl("https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"),
 		).toBe(true);
 		expect(
-			isSpotifyUrl("http://open.spotify.com/album/1DFixLWuPkv3KT3TnV35m3?si=123"),
+			isSpotifyUrl(
+				"http://open.spotify.com/album/1DFixLWuPkv3KT3TnV35m3?si=123",
+			),
 		).toBe(true);
 		expect(isSpotifyUrl("spotify:track:4cOdK2wGLETKBW3PvgPWqT")).toBe(true);
 		expect(isSpotifyUrl("spotify:album:1DFixLWuPkv3KT3TnV35m3")).toBe(true);
@@ -23,7 +25,9 @@ describe("SpotifyResolver URL Parsing", () => {
 
 	it("extracts type and ID from track and album URLs", () => {
 		expect(
-			parseSpotifyUrl("https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=abc"),
+			parseSpotifyUrl(
+				"https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=abc",
+			),
 		).toEqual({
 			type: "track",
 			id: "4cOdK2wGLETKBW3PvgPWqT",

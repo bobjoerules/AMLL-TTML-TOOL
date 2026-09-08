@@ -134,15 +134,19 @@ body {
 
 /* Inactive / unselected items: clearly dimmed secondary text */
 .rt-SegmentedControlItem[data-state="off"] .rt-SegmentedControlItemLabel,
-.rt-SegmentedControlItem[data-state="off"] .rt-SegmentedControlItemLabelInactive {
+.rt-SegmentedControlItem[data-state="off"]
+	.rt-SegmentedControlItemLabelInactive {
 	color: var(--gray-11) !important;
 	opacity: 0.75 !important;
 	font-weight: 500 !important;
-	transition: color 0.15s ease, opacity 0.15s ease;
+	transition:
+		color 0.15s ease,
+		opacity 0.15s ease;
 }
 
 .rt-SegmentedControlItem[data-state="off"]:hover .rt-SegmentedControlItemLabel,
-.rt-SegmentedControlItem[data-state="off"]:hover .rt-SegmentedControlItemLabelInactive {
+.rt-SegmentedControlItem[data-state="off"]:hover
+	.rt-SegmentedControlItemLabelInactive {
 	color: var(--gray-12) !important;
 	opacity: 1 !important;
 }
@@ -156,14 +160,20 @@ body {
 }
 
 /* Selected active indicator pill */
-:is(.dark, .dark-theme, [data-theme="dark"]) .rt-SegmentedControlIndicator::before {
+:is(.dark, .dark-theme, [data-theme="dark"])
+	.rt-SegmentedControlIndicator::before {
 	background-color: var(--accent-9) !important;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 12px var(--accent-a6, rgba(255, 255, 255, 0.15)) !important;
+	box-shadow:
+		0 1px 4px rgba(0, 0, 0, 0.5),
+		0 0 12px var(--accent-a6, rgba(255, 255, 255, 0.15)) !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) .rt-SegmentedControlIndicator::before {
+:is(.light, .light-theme, [data-theme="light"])
+	.rt-SegmentedControlIndicator::before {
 	background-color: var(--accent-9) !important;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 8px var(--accent-a5, rgba(0, 0, 0, 0.08)) !important;
+	box-shadow:
+		0 1px 3px rgba(0, 0, 0, 0.18),
+		0 0 8px var(--accent-a5, rgba(0, 0, 0, 0.08)) !important;
 }
 
 .amll-lyric-player {
@@ -250,7 +260,9 @@ body {
 	border-radius: 16px !important;
 	display: flex !important;
 	align-items: center !important;
-	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro",
+		"Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 	-webkit-font-smoothing: antialiased !important;
 	-moz-osx-font-smoothing: grayscale !important;
 	letter-spacing: -0.012em !important;
@@ -258,7 +270,10 @@ body {
 	cursor: default !important;
 	backdrop-filter: blur(28px) saturate(190%) contrast(95%) !important;
 	-webkit-backdrop-filter: blur(28px) saturate(190%) contrast(95%) !important;
-	transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease !important;
+	transition:
+		transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+		box-shadow 0.2s ease,
+		background-color 0.2s ease !important;
 }
 
 /* Dark Appearance (Apple macOS Sonoma/Sequoia dark vibrancy) */
@@ -390,7 +405,10 @@ body {
 	opacity: 0.42 !important;
 	cursor: pointer !important;
 	color: inherit !important;
-	transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease !important;
+	transition:
+		opacity 0.15s ease,
+		background-color 0.15s ease,
+		transform 0.15s ease !important;
 	padding: 0 !important;
 	z-index: 2 !important;
 }
@@ -448,4 +466,3 @@ body {
 	animation-duration: 0.28s !important;
 	animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
-

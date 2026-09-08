@@ -3,10 +3,7 @@ import { useSetAtom } from "jotai";
 import { Toolbar } from "radix-ui";
 import type { CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import {
-	changelogDialogAtom,
-	whatsNewDialogAtom,
-} from "$/states/dialogs.ts";
+import { changelogDialogAtom, whatsNewDialogAtom } from "$/states/dialogs.ts";
 import { useTopMenuActions } from "../useTopMenuActions";
 import {
 	guideExportedAtom,

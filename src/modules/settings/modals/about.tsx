@@ -40,14 +40,8 @@ const openExternal = async (url: string) => {
 
 export const SettingsAboutTab = () => {
 	const { t } = useTranslation();
-	const {
-		status,
-		update,
-		progress,
-		installUpdate,
-		checkUpdate,
-		relaunchApp,
-	} = useAppUpdate();
+	const { status, update, progress, installUpdate, checkUpdate, relaunchApp } =
+		useAppUpdate();
 	const [cacheConfirmationOpen, setCacheConfirmationOpen] = useState(false);
 	const [recoveryAction, setRecoveryAction] = useState<
 		"refresh" | "clear" | null
@@ -228,10 +222,7 @@ export const SettingsAboutTab = () => {
 									onClick={() => setCacheConfirmationOpen(true)}
 									disabled={recoveryAction !== null}
 								>
-									{t(
-										"settings.about.clearWebsiteCache",
-										"Clear Cache",
-									)}
+									{t("settings.about.clearWebsiteCache", "Clear Cache")}
 								</Button>
 							</Flex>
 						</Flex>
@@ -376,7 +367,8 @@ export const SettingsAboutTab = () => {
 									<Heading size="3">SpotMatch</Heading>
 								</Flex>
 								<Text size="2" color="gray">
-									Alternate Spotify recording ID discovery tool and algorithm adapted from{" "}
+									Alternate Spotify recording ID discovery tool and algorithm
+									adapted from{" "}
 									<Link
 										href="https://github.com/TheX24/SpotMatch"
 										target="_blank"

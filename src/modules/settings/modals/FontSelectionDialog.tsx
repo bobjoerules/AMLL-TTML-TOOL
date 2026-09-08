@@ -540,7 +540,11 @@ export const FontSelectionDialog = () => {
 						>
 							<Flex align="center" justify="between">
 								<Flex direction="column">
-									<Text size="1" style={{ color: "var(--accent-11)" }} weight="bold">
+									<Text
+										size="1"
+										style={{ color: "var(--accent-11)" }}
+										weight="bold"
+									>
 										{t(
 											"settings.appearance.customFontActive",
 											"LOCAL CUSTOM FONT",

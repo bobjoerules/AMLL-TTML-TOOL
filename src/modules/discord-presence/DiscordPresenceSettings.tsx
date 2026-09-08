@@ -204,10 +204,10 @@ export function DiscordPresenceSettings() {
 		);
 		const hasCustomFile = Boolean(
 			fileName &&
-			fileName !== "lyric.ttml" &&
-			fileName !== "lyric" &&
-			fileName !== "untitled.ttml" &&
-			fileName !== "untitled",
+				fileName !== "lyric.ttml" &&
+				fileName !== "lyric" &&
+				fileName !== "untitled.ttml" &&
+				fileName !== "untitled",
 		);
 		const hasDuration = durationSeconds > 0;
 		return !hasWords && !hasCustomFile && !hasDuration;
@@ -566,19 +566,19 @@ export function DiscordPresenceSettings() {
 							{/* Line 4: Progress / Timer */}
 							{((!isIdle && showPlaybackTimeline) ||
 								(isIdle && showProgressTimer)) && (
-									<Text
-										size="2"
-										style={{
-											color: "#23a55a",
-											display: "flex",
-											alignItems: "center",
-											gap: "4px",
-											fontSize: "12px",
-										}}
-									>
-										<span>♫</span> {isIdle ? "1:33" : "2:28:13"}
-									</Text>
-								)}
+								<Text
+									size="2"
+									style={{
+										color: "#23a55a",
+										display: "flex",
+										alignItems: "center",
+										gap: "4px",
+										fontSize: "12px",
+									}}
+								>
+									<span>♫</span> {isIdle ? "1:33" : "2:28:13"}
+								</Text>
+							)}
 						</Flex>
 					</Flex>
 
@@ -678,10 +678,7 @@ export function DiscordPresenceSettings() {
 					<Flex direction="column" gap="1">
 						<Flex align="center" justify="between">
 							<Text size="2" weight="bold">
-								{t(
-									"settings.common.discordState",
-									"2. Middle Line",
-								)}
+								{t("settings.common.discordState", "2. Middle Line")}
 							</Text>
 							<Flex gap="1" wrap="wrap">
 								<Button
@@ -699,7 +696,9 @@ export function DiscordPresenceSettings() {
 								<Button
 									size="1"
 									variant="outline"
-									onClick={() => updateTemplate("state", DEFAULT_DISCORD_STATE_TEMPLATE)}
+									onClick={() =>
+										updateTemplate("state", DEFAULT_DISCORD_STATE_TEMPLATE)
+									}
 								>
 									Default (Artist)
 								</Button>
@@ -747,10 +746,7 @@ export function DiscordPresenceSettings() {
 					<Flex direction="column" gap="1">
 						<Flex align="center" justify="between">
 							<Text size="2" weight="bold">
-								{t(
-									"settings.common.discordBottomLine",
-									"3. Bottom Line",
-								)}
+								{t("settings.common.discordBottomLine", "3. Bottom Line")}
 							</Text>
 							<Flex gap="1" wrap="wrap">
 								<Button

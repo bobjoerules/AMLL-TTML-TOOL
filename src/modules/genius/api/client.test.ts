@@ -115,7 +115,10 @@ describe("extractLyricsFromEmbed", () => {
 		});
 
 		try {
-			const res = await GeniusApi.search("Never Gonna Give You Up", "test-token");
+			const res = await GeniusApi.search(
+				"Never Gonna Give You Up",
+				"test-token",
+			);
 			expect(res.response.hits).toHaveLength(1);
 			const hit = res.response.hits[0];
 			expect(hit.result.album).toBeDefined();

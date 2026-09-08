@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { splitTrailingSpace } from "../components/lyric-word-view";
-import { type LyricLine, type TTMLLyric, newLyricLine, newLyricWord } from "$/types/ttml";
+import {
+	type LyricLine,
+	type TTMLLyric,
+	newLyricLine,
+	newLyricWord,
+} from "$/types/ttml";
 
 describe("splitTrailingSpace", () => {
 	it("splits trailing single space into baseWord and spaceWord", () => {
@@ -83,7 +88,10 @@ describe("Auto duet vocalist assignment logic", () => {
 				singer = line.agent.trim();
 			}
 			lineSingers.push(singer);
-			if (singer && !singers.some((s) => s.toLowerCase() === singer.toLowerCase())) {
+			if (
+				singer &&
+				!singers.some((s) => s.toLowerCase() === singer.toLowerCase())
+			) {
 				singers.push(singer);
 			}
 		}
@@ -107,9 +115,11 @@ describe("Section boundaries and line insertion continuity", () => {
 		const cur = lines[lineIndex];
 		if (!cur || !cur.sectionId) return { isStart: false, isEnd: false };
 		const prev = lineIndex > 0 ? lines[lineIndex - 1] : undefined;
-		const next = lineIndex < lines.length - 1 ? lines[lineIndex + 1] : undefined;
+		const next =
+			lineIndex < lines.length - 1 ? lines[lineIndex + 1] : undefined;
 		const isStart = lineIndex === 0 || prev?.sectionId !== cur.sectionId;
-		const isEnd = lineIndex === lines.length - 1 || next?.sectionId !== cur.sectionId;
+		const isEnd =
+			lineIndex === lines.length - 1 || next?.sectionId !== cur.sectionId;
 		return { isStart, isEnd };
 	}
 
@@ -143,7 +153,11 @@ describe("Section boundaries and line insertion continuity", () => {
 	it("dynamically connects when appending a new line to the end of a section", () => {
 		const line1 = { ...newLyricLine(), id: "l1", sectionId: "sec-verse" };
 		const line2 = { ...newLyricLine(), id: "l2", sectionId: "sec-verse" };
-		const nextSectionLine = { ...newLyricLine(), id: "l3", sectionId: "sec-chorus" };
+		const nextSectionLine = {
+			...newLyricLine(),
+			id: "l3",
+			sectionId: "sec-chorus",
+		};
 		const lines = [line1, line2, nextSectionLine];
 
 		// Line 1 was the end of sec-verse
@@ -166,4 +180,3 @@ describe("Section boundaries and line insertion continuity", () => {
 		expect(computeBounds(lines, 3)).toEqual({ isStart: true, isEnd: true });
 	});
 });
-

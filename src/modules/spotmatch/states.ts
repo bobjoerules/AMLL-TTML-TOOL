@@ -25,6 +25,10 @@ export const spotMatchExactTitleAtom = atomWithStorage<boolean>(
 	"spotMatch_exactTitle",
 	false,
 );
+export const spotMatchIncludeOriginalIdAtom = atomWithStorage<boolean>(
+	"spotMatch_includeOriginalId",
+	false,
+);
 
 export const spotMatchSourceAtom = atom<SpotMatchSourceTrack | null>(null);
 export const spotMatchCandidatesAtom = atom<SpotMatchCandidate[]>([]);

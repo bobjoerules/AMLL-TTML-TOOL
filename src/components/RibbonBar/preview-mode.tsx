@@ -225,7 +225,10 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 						<Flex gap="1" align="center">
 							<Warning16Regular />
-							{t("ribbonBar.previewMode.maskObsceneWords", "Mask Obscene Words")}
+							{t(
+								"ribbonBar.previewMode.maskObsceneWords",
+								"Mask Obscene Words",
+							)}
 						</Flex>
 					</Text>
 					<Checkbox

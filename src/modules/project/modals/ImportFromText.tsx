@@ -380,7 +380,6 @@ export const ImportFromText = () => {
 				}
 			}
 
-
 			const importedLyrics = {
 				lyricLines: result,
 				metadata: [],
@@ -792,7 +791,6 @@ export const ImportFromText = () => {
 													setDuetLyricPrefix(evt.currentTarget.value)
 												}
 											/>
-
 
 											<Separator size="4" style={{ gridColumn: "span 2" }} />
 											<PrefText>

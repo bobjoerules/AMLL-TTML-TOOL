@@ -202,11 +202,14 @@ export const TopMenu: FC = () => {
 				"menu-quick-segment": () => menuRef.current.onQuickAutoSegment(),
 				"menu-auto-segment": () => menuRef.current.onAutoSegment(),
 				"menu-ruby-segment": () => menuRef.current.onRubySegment(),
-				"menu-advanced-segment": () => menuRef.current.onOpenAdvancedSegmentation(),
+				"menu-advanced-segment": () =>
+					menuRef.current.onOpenAdvancedSegmentation(),
 				"menu-learned-splits": () => menuRef.current.onOpenLearnedSplits(),
-				"menu-sync-line-timestamps": () => menuRef.current.onSyncLineTimestamps(),
+				"menu-sync-line-timestamps": () =>
+					menuRef.current.onSyncLineTimestamps(),
 				"menu-auto-duet-singer": () => menuRef.current.onAutoDuetBySinger(),
-				"menu-toggle-preview-panel": () => store.set(showPreviewPanelAtom, (prev) => !prev),
+				"menu-toggle-preview-panel": () =>
+					store.set(showPreviewPanelAtom, (prev) => !prev),
 				"menu-time-shift": () => menuRef.current.onOpenTimeShift(),
 				"menu-time-stretch": () => menuRef.current.onOpenTimeStretch(),
 				"menu-metadata": () => menuRef.current.onOpenMetadataEditor(),

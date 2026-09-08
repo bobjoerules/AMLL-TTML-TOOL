@@ -409,13 +409,19 @@
 	overflow: hidden;
 	position: relative;
 	background: rgba(255, 255, 255, 0.06);
-	box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45), 0 0 1px rgba(255, 255, 255, 0.15);
-	transition: transform 0.3s ease, box-shadow 0.3s ease;
+	box-shadow:
+		0 20px 48px rgba(0, 0, 0, 0.45),
+		0 0 1px rgba(255, 255, 255, 0.15);
+	transition:
+		transform 0.3s ease,
+		box-shadow 0.3s ease;
 }
 
 .artworkImageWrapper:hover {
 	transform: scale(1.015);
-	box-shadow: 0 24px 56px rgba(0, 0, 0, 0.55), 0 0 1px rgba(255, 255, 255, 0.25);
+	box-shadow:
+		0 24px 56px rgba(0, 0, 0, 0.55),
+		0 0 1px rgba(255, 255, 255, 0.25);
 }
 
 .artworkImage {
@@ -431,7 +437,11 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.35) 100%);
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.12) 0%,
+		rgba(0, 0, 0, 0.35) 100%
+	);
 	color: rgba(255, 255, 255, 0.4);
 }
 
@@ -547,7 +557,9 @@
 	display: flex;
 	gap: 8px;
 	align-items: center;
-	transition: opacity 0.3s ease, transform 0.3s ease;
+	transition:
+		opacity 0.3s ease,
+		transform 0.3s ease;
 }
 
 .floatingBtn {
@@ -590,7 +602,9 @@
 	font-size: 0.85rem;
 	font-weight: 600;
 	cursor: pointer;
-	transition: opacity 0.4s ease, transform 0.2s ease;
+	transition:
+		opacity 0.4s ease,
+		transform 0.2s ease;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 

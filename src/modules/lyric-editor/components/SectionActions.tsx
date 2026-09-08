@@ -311,7 +311,8 @@ export function SectionManagerDialog() {
 										);
 									}}
 								>
-									{cleanSectionHeader(section.label)} ({bounds ? bounds.end - bounds.start : 0})
+									{cleanSectionHeader(section.label)} (
+									{bounds ? bounds.end - bounds.start : 0})
 								</Button>
 								<Button
 									size="1"
