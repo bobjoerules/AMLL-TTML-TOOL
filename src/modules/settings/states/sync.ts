@@ -47,3 +47,5 @@ export const smartFirstWordActiveIdAtom = atom<string | null>(null);
 export const callbackSyncStartAtom = atom(c(() => {}));
 export const callbackSyncNextAtom = atom(c(() => {}));
 export const callbackSyncEndAtom = atom(c(() => {}));
+
+export { wrapLyricLinesAtom } from "./index";

@@ -12,6 +12,7 @@ import {
 	Timer24Regular,
 	TopSpeed24Regular,
 	VideoBackgroundEffect24Regular,
+	TextWrap24Regular,
 } from "@fluentui/react-icons";
 import {
 	Box,
@@ -45,6 +46,7 @@ import {
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 	allowConsecutiveBackgroundLinesAtom,
+	wrapLyricLinesAtom,
 } from "$/modules/settings/states";
 import {
 	enableUpcomingWordHighlightAtom,
@@ -101,6 +103,7 @@ export const SettingsCommonTab = ({
 	const [geniusCategorizationEnabled, setGeniusCategorizationEnabled] = useAtom(
 		geniusCategorizationEnabledAtom,
 	);
+	const [wrapLyricLines, setWrapLyricLines] = useAtom(wrapLyricLinesAtom);
 
 	const { t, i18n } = useTranslation();
 	const currentLanguage = i18n.resolvedLanguage || i18n.language;
@@ -313,6 +316,35 @@ export const SettingsCommonTab = ({
 										<Switch
 											checked={compactBGInSync}
 											onCheckedChange={setCompactBGInSync}
+										/>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
+					</Card>
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
+								<TextWrap24Regular />
+								<Box flexGrow="1">
+									<Flex gap="2" align="center" justify="between">
+										<Flex direction="column" gap="1">
+											<Text>
+												{t(
+													"settings.common.wrapLyricLines",
+													"Wrap Long Lyric Lines",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"settings.common.wrapLyricLinesDesc",
+													"Wrap lyrics to the next line when they exceed the editor width instead of scrolling horizontally.",
+												)}
+											</Text>
+										</Flex>
+										<Switch
+											checked={wrapLyricLines}
+											onCheckedChange={setWrapLyricLines}
 										/>
 									</Flex>
 								</Box>

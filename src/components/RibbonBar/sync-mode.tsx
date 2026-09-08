@@ -40,6 +40,7 @@ import {
 	highlightErrorsAtom,
 	showTimestampsAtom,
 	showWordRomanizationInputAtom,
+	wrapLyricLinesAtom,
 } from "$/modules/settings/states/index.ts";
 import {
 	enableTimeModeDoubleClickEditAtom,
@@ -92,6 +93,7 @@ import {
 	Copy16Regular,
 	ClipboardPaste16Regular,
 	FastForward16Regular,
+	TextWrap16Regular,
 } from "@fluentui/react-icons";
 
 export const LineTimingTools = () => {
@@ -513,6 +515,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	const [spectrogramOnlyShowSyncLine, setSpectrogramOnlyShowSyncLine] = useAtom(
 		spectrogramOnlyShowSyncLineAtom,
 	);
+	const [wrapLyricLines, setWrapLyricLines] = useAtom(wrapLyricLinesAtom);
 	const { t } = useTranslation();
 	const [showAdvanced, setShowAdvanced] = useAtom(advancedRibbonControlsAtom);
 
@@ -917,6 +920,19 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 											onCheckedChange={(v) =>
 												setSpectrogramOnlyShowSyncLine(!!v)
 											}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<TextWrap16Regular />
+												{t(
+													"ribbonBar.syncMode.wrapLyricLines",
+													"Wrap Long Lines",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={wrapLyricLines}
+											onCheckedChange={(v) => setWrapLyricLines(!!v)}
 										/>
 										{showWordRomanizationInput && (
 											<>

@@ -491,6 +491,28 @@
 		&::-webkit-scrollbar {
 			border-top: solid 1px var(--gray-a5);
 		}
+
+		&.wrapped {
+			flex-wrap: wrap !important;
+			overflow-x: hidden !important;
+			overflow-y: visible !important;
+			gap: var(--space-2) 0;
+			border-left: none;
+			border-right: none;
+			padding: var(--space-1) 0;
+
+			.lyricWord.sync {
+				border: 1px solid var(--gray-a5);
+				border-radius: var(--radius-2);
+				margin: 2px 2px;
+			}
+
+			&.hideTimestamps {
+				.lyricWord.sync {
+					padding: var(--space-2) var(--space-3);
+				}
+			}
+		}
 	}
 
 	&.headerLine {
@@ -510,6 +532,14 @@
 			display: none;
 		}
 	}
+}
+
+.subLineWrap {
+	white-space: normal !important;
+	word-break: break-word !important;
+	text-align: start !important;
+	height: auto !important;
+	min-height: 28px;
 }
 
 .blank {
