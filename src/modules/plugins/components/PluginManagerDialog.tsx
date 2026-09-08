@@ -273,9 +273,7 @@ export const PluginManagerDialog: FC = () => {
 													>
 														{plugin.name}
 													</Text>
-													<Badge variant="soft">
-														v{plugin.version}
-													</Badge>
+													<Badge variant="soft">v{plugin.version}</Badge>
 												</Flex>
 												<Text size="2" style={{ color: "#B0B0B0" }}>
 													by {plugin.author}

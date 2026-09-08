@@ -294,12 +294,17 @@ export const BeginnerGuide = () => {
 
 	useEffect(() => {
 		// Clean up any stale guide outlines
-		document.querySelectorAll<HTMLElement>("[data-guide-target]").forEach((el) => {
-			if (el.style.outline?.includes("var(--accent-9)") || el.style.outline?.includes("solid")) {
-				el.style.outline = "";
-				el.style.outlineOffset = "";
-			}
-		});
+		document
+			.querySelectorAll<HTMLElement>("[data-guide-target]")
+			.forEach((el) => {
+				if (
+					el.style.outline?.includes("var(--accent-9)") ||
+					el.style.outline?.includes("solid")
+				) {
+					el.style.outline = "";
+					el.style.outlineOffset = "";
+				}
+			});
 		if (!panelOpen) return;
 		const selector =
 			currentId === "audio"

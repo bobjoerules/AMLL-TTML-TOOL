@@ -765,8 +765,7 @@ export const SettingsAppearanceTab = () => {
 	const handleThemeModeChange = (newMode: DarkMode) => {
 		setDarkMode(newMode);
 		const willBeDark =
-			newMode === DarkMode.Dark ||
-			(newMode === DarkMode.Auto && autoDarkMode);
+			newMode === DarkMode.Dark || (newMode === DarkMode.Auto && autoDarkMode);
 
 		const activePreset = BUILTIN_PRESETS.find(
 			(p) => p.id === activePresetId || p.name === lastLoaded,

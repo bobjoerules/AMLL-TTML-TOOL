@@ -130,6 +130,32 @@ describe("SpotMatch Engine", () => {
 			expect(formatSpicyLyricsIds([{ trackId: "abc" }])).toBe("abc");
 			expect(formatSpicyLyricsIds([])).toBe("");
 		});
+
+		it("prepends source track ID when provided", () => {
+			const matches = [
+				{ trackId: "4H7WNRErSbONkM06blBoGc" },
+				{ trackId: "5LG9XvX0mtdAVvjS2dpVji" },
+			];
+			expect(formatSpicyLyricsIds(matches, "sourceTrack1234567890")).toBe(
+				"sourceTrack1234567890,4H7WNRErSbONkM06blBoGc,5LG9XvX0mtdAVvjS2dpVji",
+			);
+		});
+
+		it("deduplicates source track ID if present in matches", () => {
+			const matches = [
+				{ trackId: "sourceTrack1234567890" },
+				{ trackId: "5LG9XvX0mtdAVvjS2dpVji" },
+			];
+			expect(formatSpicyLyricsIds(matches, "sourceTrack1234567890")).toBe(
+				"sourceTrack1234567890,5LG9XvX0mtdAVvjS2dpVji",
+			);
+		});
+
+		it("returns only source track ID if matches array is empty", () => {
+			expect(formatSpicyLyricsIds([], "sourceTrack1234567890")).toBe(
+				"sourceTrack1234567890",
+			);
+		});
 	});
 
 	describe("formatDuration", () => {

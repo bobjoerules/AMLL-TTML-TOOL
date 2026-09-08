@@ -155,7 +155,8 @@ const LyricLineScroller = ({
 	const scrollToIndexAtom = useMemo(
 		() =>
 			atom((get) => {
-				if (wrapLyricLines || !shouldAutoCenterSelection(toolMode)) return Number.NaN;
+				if (wrapLyricLines || !shouldAutoCenterSelection(toolMode))
+					return Number.NaN;
 				const line = get(lineAtom);
 				const selectedWords = get(selectedWordsAtom);
 				if (selectedWords.size === 0) return Number.NaN;
@@ -306,7 +307,7 @@ const SubLineEdit = memo(
 										textAlign: "start",
 										height: "auto",
 										minHeight: "28px",
-								  }
+									}
 								: {}),
 						}}
 						onClick={(evt) => {

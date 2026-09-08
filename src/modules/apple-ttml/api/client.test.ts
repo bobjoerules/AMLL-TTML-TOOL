@@ -4,7 +4,9 @@ import { extractSpotifyTrackId } from "./client";
 describe("AppleTtmlApi ID extraction", () => {
 	it("extracts Spotify track ID from various URL and string formats", () => {
 		expect(
-			extractSpotifyTrackId("https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"),
+			extractSpotifyTrackId(
+				"https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT",
+			),
 		).toBe("4cOdK2wGLETKBW3PvgPWqT");
 
 		expect(
@@ -13,9 +15,9 @@ describe("AppleTtmlApi ID extraction", () => {
 			),
 		).toBe("4cOdK2wGLETKBW3PvgPWqT");
 
-		expect(
-			extractSpotifyTrackId("spotify:track:4cOdK2wGLETKBW3PvgPWqT"),
-		).toBe("4cOdK2wGLETKBW3PvgPWqT");
+		expect(extractSpotifyTrackId("spotify:track:4cOdK2wGLETKBW3PvgPWqT")).toBe(
+			"4cOdK2wGLETKBW3PvgPWqT",
+		);
 
 		expect(extractSpotifyTrackId("4cOdK2wGLETKBW3PvgPWqT")).toBe(
 			"4cOdK2wGLETKBW3PvgPWqT",

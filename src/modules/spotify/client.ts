@@ -302,9 +302,7 @@ async function fetchSpotifyEmbedHtml(
 /**
  * Query RMM Revival API which directly maps Spotify track ID to track and artist metadata
  */
-async function fetchRmmRevivalLyrics(
-	trackId: string,
-): Promise<{
+async function fetchRmmRevivalLyrics(trackId: string): Promise<{
 	title?: string;
 	artist?: string;
 	album?: string;

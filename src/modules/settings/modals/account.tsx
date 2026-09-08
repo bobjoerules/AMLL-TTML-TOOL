@@ -466,11 +466,7 @@ export const SettingsAccountTab = memo(() => {
 					</Flex>
 
 					<Flex gap="2">
-						<Button
-							variant="soft"
-							size="2"
-							onClick={handleOpenEditProfile}
-						>
+						<Button variant="soft" size="2" onClick={handleOpenEditProfile}>
 							<Edit24Regular style={{ width: 16, height: 16 }} />
 							{t("cloud.editProfile", "Edit Profile & Avatar")}
 						</Button>
@@ -687,16 +683,10 @@ export const SettingsAccountTab = memo(() => {
 						sync your current lyric document to your account.
 					</Text>
 					<Flex gap="3" mt="1">
-						<Button
-							variant="solid"
-							onClick={() => handleOpenManager("open")}
-						>
+						<Button variant="solid" onClick={() => handleOpenManager("open")}>
 							📂 Open Cloud Library
 						</Button>
-						<Button
-							variant="soft"
-							onClick={() => handleOpenManager("save")}
-						>
+						<Button variant="soft" onClick={() => handleOpenManager("save")}>
 							💾 Save Current Lyric to Cloud
 						</Button>
 					</Flex>

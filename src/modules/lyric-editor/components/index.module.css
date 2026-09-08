@@ -62,8 +62,7 @@
 
 		border-right: solid 1px var(--gray-a5);
 
-		transition:
-			background-color 0.2s ease;
+		transition: background-color 0.2s ease;
 
 		&.hasInstantFade {
 			transition: none !important;
@@ -330,7 +329,11 @@
 	}
 
 	&.inSection {
-		background-color: color-mix(in srgb, var(--editor-bg, #0b0b0d) 84%, #fff 16%) !important;
+		background-color: color-mix(
+			in srgb,
+			var(--editor-bg, #0b0b0d) 84%,
+			#fff 16%
+		) !important;
 
 		&:not(.sectionEnd):not(.sectionCollapsed) {
 			border-bottom-left-radius: 0 !important;
@@ -569,7 +572,11 @@
 }
 
 .lyricLine.inSection:not(.selected):not(.error):hover {
-	background-color: color-mix(in srgb, var(--editor-bg, #0b0b0d) 76%, #fff 24%) !important;
+	background-color: color-mix(
+		in srgb,
+		var(--editor-bg, #0b0b0d) 76%,
+		#fff 24%
+	) !important;
 	box-shadow:
 		inset 0 var(--global-border-width, 2px) 0 0 var(--accent-a5),
 		inset 0 calc(var(--global-border-width, 2px) * -1) 0 0 var(--accent-a5),
@@ -577,11 +584,20 @@
 }
 
 :is(.light, .light-theme, [data-theme="light"]) .lyricLine.inSection {
-	background-color: color-mix(in srgb, var(--color-background, #fff) 93%, #000 7%) !important;
+	background-color: color-mix(
+		in srgb,
+		var(--color-background, #fff) 93%,
+		#000 7%
+	) !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) .lyricLine.inSection:not(.selected):not(.error):hover {
-	background-color: color-mix(in srgb, var(--color-background, #fff) 88%, #000 12%) !important;
+:is(.light, .light-theme, [data-theme="light"])
+	.lyricLine.inSection:not(.selected):not(.error):hover {
+	background-color: color-mix(
+		in srgb,
+		var(--color-background, #fff) 88%,
+		#000 12%
+	) !important;
 }
 
 .lyricLine.inSection.selected:not(.error) {

@@ -3,10 +3,7 @@ import { Badge, Box, Button, Card, Flex, Text } from "@radix-ui/themes";
 import { useAtom } from "jotai";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-	DEFAULT_UI_SCALE,
-	uiScaleAtom,
-} from "$/modules/settings/states";
+import { DEFAULT_UI_SCALE, uiScaleAtom } from "$/modules/settings/states";
 
 const SCALE_PRESETS = [50, 65, 75, 85, 100, 115, 125, 150, 175, 200];
 
@@ -48,8 +45,7 @@ export const UIScaleSetting = memo(() => {
 								disabled={uiScale === DEFAULT_UI_SCALE}
 								onClick={() => setUiScale(DEFAULT_UI_SCALE)}
 								style={{
-									cursor:
-										uiScale === DEFAULT_UI_SCALE ? "default" : "pointer",
+									cursor: uiScale === DEFAULT_UI_SCALE ? "default" : "pointer",
 								}}
 							>
 								<ArrowReset24Regular style={{ width: 14, height: 14 }} />

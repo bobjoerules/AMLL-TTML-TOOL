@@ -55,6 +55,27 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.3
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 8, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>SpotMatch Original ID Toggle:</b> Added a persistent toggle
+									to include the searched original track ID when copying IDs or
+									exporting to a <code>.txt</code> file.
+								</Text>
+								<Text size="2">
+									• <b>Deduplication & Flexible Export:</b> Prepend source track
+									IDs seamlessly while preventing duplicate entries in Spicy
+									Lyrics formatted ID lists.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.2
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
@@ -62,13 +83,18 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Wrap Long Lyric Lines:</b> Added an option to wrap lyric lines to subsequent rows instead of forcing horizontal scrolling when lines exceed the editor width.
+									• <b>Wrap Long Lyric Lines:</b> Added an option to wrap lyric
+									lines to subsequent rows instead of forcing horizontal
+									scrolling when lines exceed the editor width.
 								</Text>
 								<Text size="2">
-									• <b>Sync Mode & RibbonBar Integration:</b> Quick toggle in the Sync Mode Display Options popover and General Settings.
+									• <b>Sync Mode & RibbonBar Integration:</b> Quick toggle in
+									the Sync Mode Display Options popover and General Settings.
 								</Text>
 								<Text size="2">
-									• <b>Subline & Word Chip Wrapping:</b> Cleanly breaks and wraps word chips with distinct borders, and formats translations and pronunciation sublines.
+									• <b>Subline & Word Chip Wrapping:</b> Cleanly breaks and
+									wraps word chips with distinct borders, and formats
+									translations and pronunciation sublines.
 								</Text>
 							</Flex>
 						</Box>
@@ -81,13 +107,20 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Interface Scale Setting:</b> Added comprehensive UI scaling presets (50% to 200%), reset button, and keyboard shortcuts (Cmd/Ctrl +, -, 0) in Appearance and General settings.
+									• <b>Interface Scale Setting:</b> Added comprehensive UI
+									scaling presets (50% to 200%), reset button, and keyboard
+									shortcuts (Cmd/Ctrl +, -, 0) in Appearance and General
+									settings.
 								</Text>
 								<Text size="2">
-									• <b>Native Webview Zoom:</b> Utilizes native webview scaling to ensure the entire application and dialogs zoom cleanly with zero letterboxing or canvas clipping.
+									• <b>Native Webview Zoom:</b> Utilizes native webview scaling
+									to ensure the entire application and dialogs zoom cleanly with
+									zero letterboxing or canvas clipping.
 								</Text>
 								<Text size="2">
-									• <b>Theme Accent Harmonization:</b> Harmonized scale indicators and active preset buttons with the active theme accent color.
+									• <b>Theme Accent Harmonization:</b> Harmonized scale
+									indicators and active preset buttons with the active theme
+									accent color.
 								</Text>
 							</Flex>
 						</Box>
@@ -100,16 +133,25 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Empty Beat Deprecation & Removal:</b> Completely removed legacy empty beat (amll:empty-beat) controls, sync keybinding interceptors, XML attributes, text import options, and data models to align cleanly with official Apple TTML standards.
+									• <b>Empty Beat Deprecation & Removal:</b> Completely removed
+									legacy empty beat (amll:empty-beat) controls, sync keybinding
+									interceptors, XML attributes, text import options, and data
+									models to align cleanly with official Apple TTML standards.
 								</Text>
 								<Text size="2">
-									• <b>Spectrogram Playback Speed Preset:</b> Added a quick 0.8x playback speed button to the audio spectrogram toolbar for fine-grained sync adjustments.
+									• <b>Spectrogram Playback Speed Preset:</b> Added a quick 0.8x
+									playback speed button to the audio spectrogram toolbar for
+									fine-grained sync adjustments.
 								</Text>
 								<Text size="2">
-									• <b>Timing View Layout Normalization:</b> Fixed excessive bottom padding when scrolling to the end of lyrics in the Timing tab.
+									• <b>Timing View Layout Normalization:</b> Fixed excessive
+									bottom padding when scrolling to the end of lyrics in the
+									Timing tab.
 								</Text>
 								<Text size="2">
-									• <b>Preview & Stability Improvements:</b> Refined fullscreen mode controls, theme color consistency, and lyric player lifecycle hooks.
+									• <b>Preview & Stability Improvements:</b> Refined fullscreen
+									mode controls, theme color consistency, and lyric player
+									lifecycle hooks.
 								</Text>
 							</Flex>
 						</Box>
@@ -122,7 +164,10 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Lyric Line View Stability:</b> Fixed missing Badge component import from @radix-ui/themes in lyric-line-view.tsx, resolving ReferenceError: Can't find variable: Badge when rendering collapsed section line counters.
+									• <b>Lyric Line View Stability:</b> Fixed missing Badge
+									component import from @radix-ui/themes in lyric-line-view.tsx,
+									resolving ReferenceError: Can't find variable: Badge when
+									rendering collapsed section line counters.
 								</Text>
 							</Flex>
 						</Box>
@@ -135,19 +180,36 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>SpicyLyrics Album Artwork & Media Controls:</b> Integrated Apple Music style album artwork, track title, singer/artist metadata, and an interactive seekable scrubber directly into SpicyLyrics mode, toggleable via floating canvas button or preview options.
+									• <b>SpicyLyrics Album Artwork & Media Controls:</b>{" "}
+									Integrated Apple Music style album artwork, track title,
+									singer/artist metadata, and an interactive seekable scrubber
+									directly into SpicyLyrics mode, toggleable via floating canvas
+									button or preview options.
 								</Text>
 								<Text size="2">
-									• <b>Preview Fullscreen Mode:</b> Added dedicated fullscreen preview mode (keyboard shortcut F to toggle, Esc to exit) with floating controls and an autohiding exit button.
+									• <b>Preview Fullscreen Mode:</b> Added dedicated fullscreen
+									preview mode (keyboard shortcut F to toggle, Esc to exit) with
+									floating controls and an autohiding exit button.
 								</Text>
 								<Text size="2">
-									• <b>SpicyLyrics Theme Background Matching:</b> Updated SpicyLyrics container and animated backdrop to seamlessly harmonize with active Radix theme accent colors and dark mode palette.
+									• <b>SpicyLyrics Theme Background Matching:</b> Updated
+									SpicyLyrics container and animated backdrop to seamlessly
+									harmonize with active Radix theme accent colors and dark mode
+									palette.
 								</Text>
 								<Text size="2">
-									• <b>Editor Background & Contrast Integrity:</b> Resolved empty-state transparency issue when custom background gradients are active, ensuring editor background properly styles the editor workspace and empty-state action buttons retain high contrast and visibility.
+									• <b>Editor Background & Contrast Integrity:</b> Resolved
+									empty-state transparency issue when custom background
+									gradients are active, ensuring editor background properly
+									styles the editor workspace and empty-state action buttons
+									retain high contrast and visibility.
 								</Text>
 								<Text size="2">
-									• <b>Toolbar Streamlining & Localization:</b> Cleaned up duplicate fullscreen and artwork buttons from the RibbonBar, removed obsolete guide outlines, and completed localized English and Chinese translations for segmentation and spacing options.
+									• <b>Toolbar Streamlining & Localization:</b> Cleaned up
+									duplicate fullscreen and artwork buttons from the RibbonBar,
+									removed obsolete guide outlines, and completed localized
+									English and Chinese translations for segmentation and spacing
+									options.
 								</Text>
 							</Flex>
 						</Box>
@@ -160,13 +222,21 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Word Context Menu Restoration:</b> Fixed right-click targeting in the lyric editor so words in both Edit and Sync modes properly display word actions ("Split word…", "Replace word…", and "Combine words") rather than falling back to space or line menus.
+									• <b>Word Context Menu Restoration:</b> Fixed right-click
+									targeting in the lyric editor so words in both Edit and Sync
+									modes properly display word actions ("Split word…", "Replace
+									word…", and "Combine words") rather than falling back to space
+									or line menus.
 								</Text>
 								<Text size="2">
-									• <b>Word Menu Runtime Stability:</b> Corrected missing hook imports in the word context menu component, resolving runtime ReferenceErrors when inspecting words.
+									• <b>Word Menu Runtime Stability:</b> Corrected missing hook
+									imports in the word context menu component, resolving runtime
+									ReferenceErrors when inspecting words.
 								</Text>
 								<Text size="2">
-									• <b>Website Release Notice:</b> Synchronized the project homepage release status banner to reflect the latest release version.
+									• <b>Website Release Notice:</b> Synchronized the project
+									homepage release status banner to reflect the latest release
+									version.
 								</Text>
 							</Flex>
 						</Box>
@@ -179,19 +249,34 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>TTML Checklist Favorites:</b> Star favorite songs in the TTML Checklist with a dedicated 1-click favorite button and new Favorites tab filter for quick access to priority tracks.
+									• <b>TTML Checklist Favorites:</b> Star favorite songs in the
+									TTML Checklist with a dedicated 1-click favorite button and
+									new Favorites tab filter for quick access to priority tracks.
 								</Text>
 								<Text size="2">
-									• <b>Spectrogram Playback Speed Controls:</b> Added interactive playback speed presets (0.5x, 0.75x, 1x, 2x) directly in the spectrogram sidebar for fine-tuned audio scrubbing and syllable timing alignment.
+									• <b>Spectrogram Playback Speed Controls:</b> Added
+									interactive playback speed presets (0.5x, 0.75x, 1x, 2x)
+									directly in the spectrogram sidebar for fine-tuned audio
+									scrubbing and syllable timing alignment.
 								</Text>
 								<Text size="2">
-									• <b>High-Performance Lyric Editor Architecture:</b> Consolidated line and word context menus into a unified single listener and centralized word settings context, drastically reducing DOM overhead and memory footprint during long editing sessions.
+									• <b>High-Performance Lyric Editor Architecture:</b>{" "}
+									Consolidated line and word context menus into a unified single
+									listener and centralized word settings context, drastically
+									reducing DOM overhead and memory footprint during long editing
+									sessions.
 								</Text>
 								<Text size="2">
-									• <b>Accent Theme & Color Palette Harmonization:</b> Cleaned up hardcoded element highlights across toolbars, dialogs, and controls to fully inherit the user's custom accent colors and theme settings.
+									• <b>Accent Theme & Color Palette Harmonization:</b> Cleaned
+									up hardcoded element highlights across toolbars, dialogs, and
+									controls to fully inherit the user's custom accent colors and
+									theme settings.
 								</Text>
 								<Text size="2">
-									• <b>Discord Rich Presence Auto-Reconnect:</b> Implemented a 5-second background reconnection heartbeat and improved Tauri environment detection so Discord RPC status activates seamlessly without manual toggling.
+									• <b>Discord Rich Presence Auto-Reconnect:</b> Implemented a
+									5-second background reconnection heartbeat and improved Tauri
+									environment detection so Discord RPC status activates
+									seamlessly without manual toggling.
 								</Text>
 							</Flex>
 						</Box>
@@ -204,19 +289,33 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Section Management & Ribbon Controls:</b> Added dedicated Section category selection and Vocalist / Singer input in the RibbonBar, bracketless clean header display, collapsible section blocks with toggle arrows, and section-inheriting line insertion.
+									• <b>Section Management & Ribbon Controls:</b> Added dedicated
+									Section category selection and Vocalist / Singer input in the
+									RibbonBar, bracketless clean header display, collapsible
+									section blocks with toggle arrows, and section-inheriting line
+									insertion.
 								</Text>
 								<Text size="2">
-									• <b>Auto Duet & Smart Spacing:</b> Automatically assigns secondary vocalist parts for duets and cleanly separates trailing spaces into dedicated space words for Apple Music-accurate syllable formatting.
+									• <b>Auto Duet & Smart Spacing:</b> Automatically assigns
+									secondary vocalist parts for duets and cleanly separates
+									trailing spaces into dedicated space words for Apple
+									Music-accurate syllable formatting.
 								</Text>
 								<Text size="2">
-									• <b>Clear Theme Uniformity:</b> Unified all application bars (TitleBar, RibbonBar, Editor, and AudioBar) with consistent clear transparency, customizable frosted glass styling, and polished macOS and Windows controls.
+									• <b>Clear Theme Uniformity:</b> Unified all application bars
+									(TitleBar, RibbonBar, Editor, and AudioBar) with consistent
+									clear transparency, customizable frosted glass styling, and
+									polished macOS and Windows controls.
 								</Text>
 								<Text size="2">
-									• <b>Dynamic Completion Percentage Colors:</b> File status completion percentage dynamically transitions smoothly through red, orange, yellow, and green based on completion progress.
+									• <b>Dynamic Completion Percentage Colors:</b> File status
+									completion percentage dynamically transitions smoothly through
+									red, orange, yellow, and green based on completion progress.
 								</Text>
 								<Text size="2">
-									• <b>Discord Rich Presence & Stability:</b> Improved project time tracking accuracy, customizable rich presence settings, and overall performance optimizations.
+									• <b>Discord Rich Presence & Stability:</b> Improved project
+									time tracking accuracy, customizable rich presence settings,
+									and overall performance optimizations.
 								</Text>
 							</Flex>
 						</Box>
@@ -229,10 +328,15 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>SpotMatch .txt Export:</b> Added a dedicated "Save as .txt" button to SpotMatch, allowing users to export selected alternate Spotify IDs directly to a text file with clean, sanitized suggested filenames.
+									• <b>SpotMatch .txt Export:</b> Added a dedicated "Save as
+									.txt" button to SpotMatch, allowing users to export selected
+									alternate Spotify IDs directly to a text file with clean,
+									sanitized suggested filenames.
 								</Text>
 								<Text size="2">
-									• <b>Web CORS Resolution:</b> Enabled seamless SpotMatch and Apple Music TTML search on the web version via the dedicated Cloudflare proxy (proxy.bobjoerules.com).
+									• <b>Web CORS Resolution:</b> Enabled seamless SpotMatch and
+									Apple Music TTML search on the web version via the dedicated
+									Cloudflare proxy (proxy.bobjoerules.com).
 								</Text>
 							</Flex>
 						</Box>
@@ -245,16 +349,33 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>SpotMatch (Alternate Spotify IDs):</b> Introduced a built-in companion tool adapted from SpotMatch to search and match alternate Spotify recording IDs across singles, albums, deluxe editions, and remasters with zero authentication or API keys. Includes audio duration difference analysis, custom tolerance thresholds, and 1-click comma-separated export formatted for the Spicy Lyrics bot.
+									• <b>SpotMatch (Alternate Spotify IDs):</b> Introduced a
+									built-in companion tool adapted from SpotMatch to search and
+									match alternate Spotify recording IDs across singles, albums,
+									deluxe editions, and remasters with zero authentication or API
+									keys. Includes audio duration difference analysis, custom
+									tolerance thresholds, and 1-click comma-separated export
+									formatted for the Spicy Lyrics bot.
 								</Text>
 								<Text size="2">
-									• <b>Genius Link Resolver:</b> Added native resolution for Genius album and song URLs. Pasting a Genius album link into the Album Importer now extracts the entire tracklist and cover artwork directly without needing an API key; pasting a song link into lyric search dialogs instantly resolves and prioritizes the exact track.
+									• <b>Genius Link Resolver:</b> Added native resolution for
+									Genius album and song URLs. Pasting a Genius album link into
+									the Album Importer now extracts the entire tracklist and cover
+									artwork directly without needing an API key; pasting a song
+									link into lyric search dialogs instantly resolves and
+									prioritizes the exact track.
 								</Text>
 								<Text size="2">
-									• <b>Apple Music TTML Import:</b> Integrated 1-click word-synced and line-synced TTML retrieval directly from Apple Music using Spotify track links or song searches, complete with artwork and duration matching.
+									• <b>Apple Music TTML Import:</b> Integrated 1-click
+									word-synced and line-synced TTML retrieval directly from Apple
+									Music using Spotify track links or song searches, complete
+									with artwork and duration matching.
 								</Text>
 								<Text size="2">
-									• <b>Checklist Batch Album Importer:</b> Easily search albums on Genius or paste Spotify/Genius album links to import entire tracklists into the TTML Checklist with automatic track numbering and artwork thumbnails.
+									• <b>Checklist Batch Album Importer:</b> Easily search albums
+									on Genius or paste Spotify/Genius album links to import entire
+									tracklists into the TTML Checklist with automatic track
+									numbering and artwork thumbnails.
 								</Text>
 							</Flex>
 						</Box>
@@ -267,16 +388,28 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Spotify Link Artist Matching:</b> Resolved an issue where pasting Spotify track links could pick an incorrect artist with a matching song title; track queries now accurately target and verify artist and title together.
+									• <b>Spotify Link Artist Matching:</b> Resolved an issue where
+									pasting Spotify track links could pick an incorrect artist
+									with a matching song title; track queries now accurately
+									target and verify artist and title together.
 								</Text>
 								<Text size="2">
-									• <b>Album Artwork & Metadata Enrichment:</b> Restored high-resolution album covers and metadata across Spotify track links, album imports, and Genius searches using CORS-free native fetching and resilient fallback resolution.
+									• <b>Album Artwork & Metadata Enrichment:</b> Restored
+									high-resolution album covers and metadata across Spotify track
+									links, album imports, and Genius searches using CORS-free
+									native fetching and resilient fallback resolution.
 								</Text>
 								<Text size="2">
-									• <b>Large Checklist Performance & Virtualization:</b> Eliminated UI lag when opening large TTML checklists by implementing virtualized list rendering, $O(N)$ fast deduplication, memoized checklist entry cards, and deferred search filtering.
+									• <b>Large Checklist Performance & Virtualization:</b>{" "}
+									Eliminated UI lag when opening large TTML checklists by
+									implementing virtualized list rendering, $O(N)$ fast
+									deduplication, memoized checklist entry cards, and deferred
+									search filtering.
 								</Text>
 								<Text size="2">
-									• <b>Album Import Artwork & Fallbacks:</b> Fixed missing album cover art when importing full albums and restored full iTunes album tracklist recovery.
+									• <b>Album Import Artwork & Fallbacks:</b> Fixed missing album
+									cover art when importing full albums and restored full iTunes
+									album tracklist recovery.
 								</Text>
 							</Flex>
 						</Box>
@@ -289,16 +422,26 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Windows Updater In-Place Fix:</b> Pinned Windows release bundles to NSIS so updates apply cleanly in-place without installer target mismatches, restored the restart application button, and enabled Tauri process relaunch permissions.
+									• <b>Windows Updater In-Place Fix:</b> Pinned Windows release
+									bundles to NSIS so updates apply cleanly in-place without
+									installer target mismatches, restored the restart application
+									button, and enabled Tauri process relaunch permissions.
 								</Text>
 								<Text size="2">
-									• <b>Checklist Tooltip Auto-Focus Fix:</b> Prevented dialog auto-focus from prematurely showing the Cloud Download tooltip upon opening the TTML Checklist.
+									• <b>Checklist Tooltip Auto-Focus Fix:</b> Prevented dialog
+									auto-focus from prematurely showing the Cloud Download tooltip
+									upon opening the TTML Checklist.
 								</Text>
 								<Text size="2">
-									• <b>Apple Music TTML Import & Artwork:</b> Connected album artwork directly to project metadata and Discord RPC when importing Apple Music TTML tracks.
+									• <b>Apple Music TTML Import & Artwork:</b> Connected album
+									artwork directly to project metadata and Discord RPC when
+									importing Apple Music TTML tracks.
 								</Text>
 								<Text size="2">
-									• <b>Preferences UI & Badge Polish:</b> Refined Synced and Update pill badges, removed duplicate headers and excessive top spacing in the About tab, and cleaned up Crowdin translation links.
+									• <b>Preferences UI & Badge Polish:</b> Refined Synced and
+									Update pill badges, removed duplicate headers and excessive
+									top spacing in the About tab, and cleaned up Crowdin
+									translation links.
 								</Text>
 							</Flex>
 						</Box>
@@ -311,10 +454,16 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Windows Multi-Window Support:</b> Added complete multi-window support for Windows, matching the frameless, translucent, and Mica/Tabbed styling with custom controls and centered window placement.
+									• <b>Windows Multi-Window Support:</b> Added complete
+									multi-window support for Windows, matching the frameless,
+									translucent, and Mica/Tabbed styling with custom controls and
+									centered window placement.
 								</Text>
 								<Text size="2">
-									• <b>Windows Image Loading:</b> Resolved an issue where external album art and images were blocked on Windows by switching COEP to <code>credentialless</code> and updating asset protocol permissions.
+									• <b>Windows Image Loading:</b> Resolved an issue where
+									external album art and images were blocked on Windows by
+									switching COEP to <code>credentialless</code> and updating
+									asset protocol permissions.
 								</Text>
 							</Flex>
 						</Box>
@@ -327,10 +476,14 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Window Header Alignment:</b> Fixed extra space at the top of newly created windows by configuring macOS overlay titlebar styling and insets identical to the primary window.
+									• <b>Window Header Alignment:</b> Fixed extra space at the top
+									of newly created windows by configuring macOS overlay titlebar
+									styling and insets identical to the primary window.
 								</Text>
 								<Text size="2">
-									• <b>Updater Notice:</b> Removed the misleading in-app restart button on update completion to prevent webview reloads without fully restarting the updated desktop binary.
+									• <b>Updater Notice:</b> Removed the misleading in-app restart
+									button on update completion to prevent webview reloads without
+									fully restarting the updated desktop binary.
 								</Text>
 							</Flex>
 						</Box>
@@ -343,16 +496,26 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Apple Music TTML Import:</b> Import pre-existing word-synced and line-synced TTML files directly using Spotify track URLs or IDs, complete with native backend fetching to bypass CORS restrictions.
+									• <b>Apple Music TTML Import:</b> Import pre-existing
+									word-synced and line-synced TTML files directly using Spotify
+									track URLs or IDs, complete with native backend fetching to
+									bypass CORS restrictions.
 								</Text>
 								<Text size="2">
-									• <b>Multi-Window Support:</b> Open and edit multiple songs or projects simultaneously in independent windows via Cmd/Ctrl+Shift+N.
+									• <b>Multi-Window Support:</b> Open and edit multiple songs or
+									projects simultaneously in independent windows via
+									Cmd/Ctrl+Shift+N.
 								</Text>
 								<Text size="2">
-									• <b>TTML Checklist Album Import & Provider Search:</b> Batch import entire albums from Spotify/Genius into the checklist, with quick one-click lyrics downloads and dedicated Apple TTML imports.
+									• <b>TTML Checklist Album Import & Provider Search:</b> Batch
+									import entire albums from Spotify/Genius into the checklist,
+									with quick one-click lyrics downloads and dedicated Apple TTML
+									imports.
 								</Text>
 								<Text size="2">
-									• <b>Fixed Lyrics Search & Checklist Download:</b> Resolved query formatting issues and type errors when downloading song lyrics directly from checklist entries.
+									• <b>Fixed Lyrics Search & Checklist Download:</b> Resolved
+									query formatting issues and type errors when downloading song
+									lyrics directly from checklist entries.
 								</Text>
 							</Flex>
 						</Box>
@@ -365,16 +528,23 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Preview Mode Ribbon Layout:</b> Stacked V-Sync and Show FPS controls vertically into a single unified Render section for a cleaner toolbar.
+									• <b>Preview Mode Ribbon Layout:</b> Stacked V-Sync and Show
+									FPS controls vertically into a single unified Render section
+									for a cleaner toolbar.
 								</Text>
 								<Text size="2">
-									• <b>Sync Mode Ribbon Layout:</b> Combined Assistant Settings and Display Options into a stacked Options section.
+									• <b>Sync Mode Ribbon Layout:</b> Combined Assistant Settings
+									and Display Options into a stacked Options section.
 								</Text>
 								<Text size="2">
-									• <b>Native macOS & Web Menu Alignment:</b> Enhanced Tools and Help menus across desktop and browser with Start Guide, GitHub, What's New, Changelog, About, and Segmentation tools.
+									• <b>Native macOS & Web Menu Alignment:</b> Enhanced Tools and
+									Help menus across desktop and browser with Start Guide,
+									GitHub, What's New, Changelog, About, and Segmentation tools.
 								</Text>
 								<Text size="2">
-									• <b>Community Artwork Uploads:</b> Allowed users to upload album covers directly on the website for tracks with missing artwork.
+									• <b>Community Artwork Uploads:</b> Allowed users to upload
+									album covers directly on the website for tracks with missing
+									artwork.
 								</Text>
 							</Flex>
 						</Box>
@@ -387,16 +557,25 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>TTML Checklist Cloud Sync Protection:</b> Prevented data wipeout race conditions when logging in from new devices and locations; local and cloud lists are now seamlessly merged.
+									• <b>TTML Checklist Cloud Sync Protection:</b> Prevented data
+									wipeout race conditions when logging in from new devices and
+									locations; local and cloud lists are now seamlessly merged.
 								</Text>
 								<Text size="2">
-									• <b>Finished Cloud TTML Auto-Import:</b> Automatically scans your cloud library on login or sync and integrates any finished TTML lyrics directly into your checklist.
+									• <b>Finished Cloud TTML Auto-Import:</b> Automatically scans
+									your cloud library on login or sync and integrates any
+									finished TTML lyrics directly into your checklist.
 								</Text>
 								<Text size="2">
-									• <b>Checklist Provider Search Truncation:</b> Long song and artist names now truncate cleanly with ellipsis in search results, keeping the Select button aligned and visible.
+									• <b>Checklist Provider Search Truncation:</b> Long song and
+									artist names now truncate cleanly with ellipsis in search
+									results, keeping the Select button aligned and visible.
 								</Text>
 								<Text size="2">
-									• <b>Website Theme & Mobile Redesign:</b> Removed blue tint across the companion website in favor of sleek Apple Music dark neutral tones and crimson glows; added a fully responsive mobile navigation drawer.
+									• <b>Website Theme & Mobile Redesign:</b> Removed blue tint
+									across the companion website in favor of sleek Apple Music
+									dark neutral tones and crimson glows; added a fully responsive
+									mobile navigation drawer.
 								</Text>
 							</Flex>
 						</Box>

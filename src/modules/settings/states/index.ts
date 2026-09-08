@@ -464,10 +464,7 @@ export interface AppearancePreset {
 	lightSettings?: Record<string, any>;
 }
 
-export const activePresetIdAtom = atomWithStorage<string>(
-	"activePresetId",
-	"",
-);
+export const activePresetIdAtom = atomWithStorage<string>("activePresetId", "");
 
 export const appearancePresetsAtom = atomWithStorage<AppearancePreset[]>(
 	"appearancePresets",

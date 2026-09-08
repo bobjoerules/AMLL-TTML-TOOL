@@ -216,123 +216,113 @@ export const AudioControls: FC = memo(() => {
 			<AudioPlaybackKeyBinding />
 			<AuditionKeyBinding />
 			<Flex direction="column">
-					<div style={{ display: spectrogramVisible ? "flex" : "none" }}>
-						<AudioSpectrogram />
-					</div>
-					<Flex align="center" px="2" gapX="2">
-						<HoverCard.Root>
-							<HoverCard.Trigger>
-								<IconButton my="2" variant="soft" onClick={onLoadMusic}>
-									<MusicNote2Filled />
-								</IconButton>
-							</HoverCard.Trigger>
-							<HoverCard.Content>
-								<Flex direction="column" align="center">
-									<Grid columns="0fr 7em 2em" gap="2" align="baseline">
-										<Text wrap="nowrap">{t("audioPanel.volume", "音量")}</Text>
-										<Slider
-											min={0}
-											max={1}
-											value={[volume]}
-											step={0.01}
-											onValueChange={(v) => setVolume(v[0])}
-										/>
-										<Text wrap="nowrap" color="gray" size="1">
-											{(volume * 100).toFixed()}%
-										</Text>
-										<Text wrap="nowrap">
-											{t("audioPanel.playbackRate", "播放速度")}
-										</Text>
-										<Slider
-											min={0.1}
-											max={2}
-											value={[playbackRate]}
-											step={0.05}
-											onValueChange={(v) => setPlaybackRate(v[0])}
-										/>
-										<Text wrap="nowrap" color="gray" size="1">
-											{playbackRate.toFixed(2)}x
-										</Text>
-										<Text wrap="nowrap">
-											{t("audioPanel.preservesPitch", "Preserve Pitch")}
-										</Text>
-										<Flex align="center" gap="2">
-											<Switch
-												checked={preservesPitch}
-												onCheckedChange={setPreservesPitch}
-											/>
-										</Flex>
-										<Text wrap="nowrap" color="gray" size="1">
-											{preservesPitch ? "ON" : "OFF"}
-										</Text>
-									</Grid>
-									<Button
-										size="1"
-										variant="soft"
-										color="gray"
-										mt="2"
-										style={{ width: "100%", cursor: "pointer" }}
-										onClick={async () => {
-											await audioEngine.recreateContext();
-											toast.success(
-												t("audioPanel.audioResetSuccess", "Audio engine reset"),
-											);
-										}}
-									>
-										{t("audioPanel.resetAudio", "Reset Audio Engine")}
-									</Button>
-									<Text
-										wrap="nowrap"
-										align="center"
-										mt="2"
-										size="1"
-										color="gray"
-									>
-										{t("audioPanel.clickToLoadMusic", "点击图标按钮以加载音乐")}
+				<div style={{ display: spectrogramVisible ? "flex" : "none" }}>
+					<AudioSpectrogram />
+				</div>
+				<Flex align="center" px="2" gapX="2">
+					<HoverCard.Root>
+						<HoverCard.Trigger>
+							<IconButton my="2" variant="soft" onClick={onLoadMusic}>
+								<MusicNote2Filled />
+							</IconButton>
+						</HoverCard.Trigger>
+						<HoverCard.Content>
+							<Flex direction="column" align="center">
+								<Grid columns="0fr 7em 2em" gap="2" align="baseline">
+									<Text wrap="nowrap">{t("audioPanel.volume", "音量")}</Text>
+									<Slider
+										min={0}
+										max={1}
+										value={[volume]}
+										step={0.01}
+										onValueChange={(v) => setVolume(v[0])}
+									/>
+									<Text wrap="nowrap" color="gray" size="1">
+										{(volume * 100).toFixed()}%
 									</Text>
-								</Flex>
-							</HoverCard.Content>
-						</HoverCard.Root>
-						<Tooltip content={t("audioPanel.playPause", "暂停 / 播放音乐")}>
-							<IconButton
-								my="2"
-								ml="0"
-								variant="soft"
-								disabled={!audioLoaded}
-								onClick={onTogglePlay}
-							>
-								{audioPlaying ? <PauseFilled /> : <PlayFilled />}
-							</IconButton>
-						</Tooltip>
-						<CurrentTimeLabel />
-						<AudioSlider />
-						<Text
-							size="2"
-							style={{
-								minWidth: "5.5em",
-								color: "var(--audio-bar-text, inherit)",
-							}}
+									<Text wrap="nowrap">
+										{t("audioPanel.playbackRate", "播放速度")}
+									</Text>
+									<Slider
+										min={0.1}
+										max={2}
+										value={[playbackRate]}
+										step={0.05}
+										onValueChange={(v) => setPlaybackRate(v[0])}
+									/>
+									<Text wrap="nowrap" color="gray" size="1">
+										{playbackRate.toFixed(2)}x
+									</Text>
+									<Text wrap="nowrap">
+										{t("audioPanel.preservesPitch", "Preserve Pitch")}
+									</Text>
+									<Flex align="center" gap="2">
+										<Switch
+											checked={preservesPitch}
+											onCheckedChange={setPreservesPitch}
+										/>
+									</Flex>
+									<Text wrap="nowrap" color="gray" size="1">
+										{preservesPitch ? "ON" : "OFF"}
+									</Text>
+								</Grid>
+								<Button
+									size="1"
+									variant="soft"
+									color="gray"
+									mt="2"
+									style={{ width: "100%", cursor: "pointer" }}
+									onClick={async () => {
+										await audioEngine.recreateContext();
+										toast.success(
+											t("audioPanel.audioResetSuccess", "Audio engine reset"),
+										);
+									}}
+								>
+									{t("audioPanel.resetAudio", "Reset Audio Engine")}
+								</Button>
+								<Text wrap="nowrap" align="center" mt="2" size="1" color="gray">
+									{t("audioPanel.clickToLoadMusic", "点击图标按钮以加载音乐")}
+								</Text>
+							</Flex>
+						</HoverCard.Content>
+					</HoverCard.Root>
+					<Tooltip content={t("audioPanel.playPause", "暂停 / 播放音乐")}>
+						<IconButton
+							my="2"
+							ml="0"
+							variant="soft"
+							disabled={!audioLoaded}
+							onClick={onTogglePlay}
 						>
-							{msToTimestamp(currentDuration)}
-						</Text>
-						<Tooltip
-							content={t("audioPanel.expandSpectrogram", "展开 / 收起频谱图")}
+							{audioPlaying ? <PauseFilled /> : <PlayFilled />}
+						</IconButton>
+					</Tooltip>
+					<CurrentTimeLabel />
+					<AudioSlider />
+					<Text
+						size="2"
+						style={{
+							minWidth: "5.5em",
+							color: "var(--audio-bar-text, inherit)",
+						}}
+					>
+						{msToTimestamp(currentDuration)}
+					</Text>
+					<Tooltip
+						content={t("audioPanel.expandSpectrogram", "展开 / 收起频谱图")}
+					>
+						<IconButton
+							my="2"
+							ml="0"
+							variant="soft"
+							onClick={() => setSpectrogramVisible(!spectrogramVisible)}
 						>
-							<IconButton
-								my="2"
-								ml="0"
-								variant="soft"
-								onClick={() => setSpectrogramVisible(!spectrogramVisible)}
-							>
-								{spectrogramVisible ? (
-									<ChevronDownFilled />
-								) : (
-									<ChevronUpFilled />
-								)}
-							</IconButton>
-						</Tooltip>
-					</Flex>
+							{spectrogramVisible ? <ChevronDownFilled /> : <ChevronUpFilled />}
+						</IconButton>
+					</Tooltip>
 				</Flex>
+			</Flex>
 		</Box>
 	);
 });

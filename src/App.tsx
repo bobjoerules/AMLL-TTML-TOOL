@@ -287,7 +287,11 @@ function getLuminance(colorStr: string): number | null {
 		b = 0;
 	if (s.startsWith("#")) {
 		let hex = s.slice(1);
-		if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+		if (hex.length === 3)
+			hex = hex
+				.split("")
+				.map((c) => c + c)
+				.join("");
 		if (hex.length >= 6) {
 			r = parseInt(hex.slice(0, 2), 16) / 255;
 			g = parseInt(hex.slice(2, 4), 16) / 255;
@@ -318,8 +322,11 @@ function App() {
 	const isDarkTheme = useAtomValue(isDarkThemeAtom);
 	const legacyDarkTheme = useAtomValue(legacyDarkThemeAtom);
 	const toolMode = useAtomValue(toolModeAtom);
-	const [previewFullscreen, setPreviewFullscreen] = useAtom(previewFullscreenAtom);
-	const isPreviewFullscreen = previewFullscreen && toolMode === ToolMode.Preview;
+	const [previewFullscreen, setPreviewFullscreen] = useAtom(
+		previewFullscreenAtom,
+	);
+	const isPreviewFullscreen =
+		previewFullscreen && toolMode === ToolMode.Preview;
 	const showTouchSyncPanel = useAtomValue(showTouchSyncPanelAtom);
 	const showPreviewPanel = useAtomValue(showPreviewPanelAtom);
 	// Preview mode already owns the entire editor area. Keep the sync preview
@@ -965,10 +972,7 @@ function App() {
 				if (e.key === "=" || e.key === "+") {
 					e.preventDefault();
 					setUiScale((prev) => {
-						const next = Math.min(
-							MAX_UI_SCALE,
-							(prev || DEFAULT_UI_SCALE) + 5,
-						);
+						const next = Math.min(MAX_UI_SCALE, (prev || DEFAULT_UI_SCALE) + 5);
 						toast.info(`UI Scale: ${next}%`, {
 							autoClose: 1000,
 							toastId: "ui-scale-toast",
@@ -978,10 +982,7 @@ function App() {
 				} else if (e.key === "-" || e.key === "_") {
 					e.preventDefault();
 					setUiScale((prev) => {
-						const next = Math.max(
-							MIN_UI_SCALE,
-							(prev || DEFAULT_UI_SCALE) - 5,
-						);
+						const next = Math.max(MIN_UI_SCALE, (prev || DEFAULT_UI_SCALE) - 5);
 						toast.info(`UI Scale: ${next}%`, {
 							autoClose: 1000,
 							toastId: "ui-scale-toast",

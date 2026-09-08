@@ -1410,6 +1410,8 @@
 		"saveAsTxt": "另存为 .txt",
 		"savedToast": "已将 Spotify ID 保存到文件！",
 		"saveFailed": "保存文件失败。",
-		"textFileDescription": "文本文件"
+		"textFileDescription": "文本文件",
+		"includeOriginalId": "包含原曲 ID",
+		"includeOriginalIdTooltip": "在复制或导出的 ID 前添加被搜索的原曲 ID"
 	}
 }

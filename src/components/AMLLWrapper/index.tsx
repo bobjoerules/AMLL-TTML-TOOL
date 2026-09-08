@@ -600,10 +600,7 @@ export const AMLLWrapper = memo(
 								onClick={() => handleLineClick(group.main)}
 								style={{ display: "contents" }}
 							>
-								<ActiveLineGroup
-									group={group}
-									onWordClick={handleWordClick}
-								/>
+								<ActiveLineGroup group={group} onWordClick={handleWordClick} />
 							</div>
 						);
 					}

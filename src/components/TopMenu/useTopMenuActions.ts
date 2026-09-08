@@ -185,10 +185,7 @@ export const useTopMenuActions = () => {
 				console.error("Failed to create new window via Tauri:", e);
 			}
 		} else {
-			window.open(
-				window.location.origin + window.location.pathname,
-				"_blank",
-			);
+			window.open(window.location.origin + window.location.pathname, "_blank");
 		}
 	}, []);
 

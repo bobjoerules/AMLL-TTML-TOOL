@@ -379,7 +379,6 @@ export const LineTimingTools = () => {
 	);
 };
 
-
 export const RibbonSyncProgressWidget = () => {
 	const syncProgress = useSyncProgress();
 	const { t } = useTranslation();
@@ -691,7 +690,10 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 								>
 									<Beaker24Regular style={{ width: "14px", height: "14px" }} />
 									<span>
-										{t("ribbonBar.syncMode.assistSettings", "Assistant Settings")}
+										{t(
+											"ribbonBar.syncMode.assistSettings",
+											"Assistant Settings",
+										)}
 									</span>
 								</Button>
 							</Popover.Trigger>
@@ -701,7 +703,10 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							>
 								<Flex direction="column" gap="3">
 									<Text size="2" weight="bold">
-										{t("ribbonBar.syncMode.assistSettings", "Assistant Settings")}
+										{t(
+											"ribbonBar.syncMode.assistSettings",
+											"Assistant Settings",
+										)}
 									</Text>
 									<Grid
 										columns="auto max-content"
@@ -853,7 +858,10 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 										<Text size="2" style={{ color: "var(--accent-11)" }}>
 											<Flex gap="2" align="center">
 												<Eye16Regular />
-												{t("ribbonBar.syncMode.showTimestamps", "Show Timestamps")}
+												{t(
+													"ribbonBar.syncMode.showTimestamps",
+													"Show Timestamps",
+												)}
 											</Flex>
 										</Text>
 										<Checkbox
@@ -889,7 +897,10 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 										<Text size="2" style={{ color: "var(--accent-11)" }}>
 											<Flex gap="2" align="center">
 												<Flash16Regular />
-												{t("ribbonBar.previewMode.instantFade", "Instant Fade Out")}
+												{t(
+													"ribbonBar.previewMode.instantFade",
+													"Instant Fade Out",
+												)}
 											</Flex>
 										</Text>
 										<Checkbox
@@ -899,7 +910,10 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 										<Text size="2" style={{ color: "var(--accent-11)" }}>
 											<Flex gap="2" align="center">
 												<Warning16Regular />
-												{t("ribbonBar.syncMode.highlightErrors", "Highlight Errors")}
+												{t(
+													"ribbonBar.syncMode.highlightErrors",
+													"Highlight Errors",
+												)}
 											</Flex>
 										</Text>
 										<Checkbox

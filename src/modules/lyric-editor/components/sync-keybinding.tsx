@@ -468,7 +468,6 @@ export const SyncKeyBinding: FC = () => {
 			}
 			store.set(smartFirstWordActiveIdAtom, null);
 
-
 			// 智能尾字
 			const smartLastWord = store.get(smartLastWordAtom);
 			if (smartLastWord && location.isLastWord) {

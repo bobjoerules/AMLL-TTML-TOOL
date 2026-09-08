@@ -72,7 +72,8 @@ async function fetchAppleJson<T>(endpoint: string): Promise<T> {
 	const isTauri =
 		typeof window !== "undefined" &&
 		(!!(window as unknown as { __TAURI__?: unknown }).__TAURI__ ||
-			!!(window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ ||
+			!!(window as unknown as { __TAURI_INTERNALS__?: unknown })
+				.__TAURI_INTERNALS__ ||
 			!!import.meta.env.TAURI_ENV_PLATFORM);
 
 	if (isTauri) {
@@ -85,7 +86,10 @@ async function fetchAppleJson<T>(endpoint: string): Promise<T> {
 			if (msg.includes("Track or lyrics not found")) {
 				throw new Error("Track or lyrics not found for this Spotify ID.");
 			}
-			console.warn("Tauri fetch_apple_ttml failed, falling back to fetch:", tauriErr);
+			console.warn(
+				"Tauri fetch_apple_ttml failed, falling back to fetch:",
+				tauriErr,
+			);
 		}
 	}
 
@@ -96,7 +100,9 @@ async function fetchAppleJson<T>(endpoint: string): Promise<T> {
 			if (res.status === 404) {
 				throw new Error("Track or lyrics not found for this Spotify ID.");
 			}
-			throw new Error(`Failed to fetch lyrics (${res.status} ${res.statusText})`);
+			throw new Error(
+				`Failed to fetch lyrics (${res.status} ${res.statusText})`,
+			);
 		}
 		return (await res.json()) as T;
 	} catch (webErr) {
