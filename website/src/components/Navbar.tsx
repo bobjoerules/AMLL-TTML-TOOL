@@ -7,8 +7,8 @@ import { ProfileModal } from './ProfileModal';
 import { isUserModerator, subscribeToAuth } from '../utils/firebase';
 
 interface NavbarProps {
-  currentTab: 'home' | 'finished' | 'spicy';
-  onSelectTab: (tab: 'home' | 'finished' | 'spicy') => void;
+  currentTab: 'home' | 'finished' | 'tinko';
+  onSelectTab: (tab: 'home' | 'finished' | 'tinko') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
@@ -65,12 +65,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               </li>
               <li>
                 <button
-                  className={`nav-link ${currentTab === 'spicy' ? 'active' : ''}`}
-                  onClick={() => onSelectTab('spicy')}
+                  className={`nav-link ${currentTab === 'tinko' ? 'active' : ''}`}
+                  onClick={() => onSelectTab('tinko')}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <Flame size={15} color="#ff416c" />
-                    Spicy Player
+                    Tinko
                   </span>
                 </button>
               </li>
@@ -172,15 +172,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 Finished TTMLs
               </button>
               <button
-                className={`nav-mobile-link ${currentTab === 'spicy' ? 'active' : ''}`}
+                className={`nav-mobile-link ${currentTab === 'tinko' ? 'active' : ''}`}
                 onClick={() => {
-                  onSelectTab('spicy');
+                  onSelectTab('tinko');
                   setMobileMenuOpen(false);
                 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   <Flame size={16} color="#ff416c" />
-                  Spicy Player
+                  Tinko
                 </span>
               </button>
             </div>

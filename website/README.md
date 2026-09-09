@@ -1,6 +1,6 @@
 # AMLL TTML Tool Companion Website
 
-Official companion web application for **AMLL TTML Tool** and **Spicy Player**.
+Official companion web application for **AMLL TTML Tool** and **Tinko**.
 
 ## ✨ Features
 1. **Home Page**:
@@ -11,9 +11,9 @@ Official companion web application for **AMLL TTML Tool** and **Spicy Player**.
    - Live browser connecting to Firebase Firestore (`amll-ttml`) for public/finished TTML documents.
    - Display song cover art, title, artist, album, duration, line counts, and tag status.
    - 1-click **Download TTML** button for instant `.ttml` file downloads.
-3. **Dedicated Spicy Player Page**:
-   - Dedicated showcase for [Spicy Player](https://github.com/bobjoerules/Spicy-Player).
-   - Interactive fullscreen image lightbox for images in `images/spicy-player/` (`home-page.jpg`, `library-page.jpg`, `now-playing-fullscreen.jpg`, `now-playing-page.jpg`).
+3. **Dedicated Tinko Page**:
+   - Dedicated showcase for [Tinko](https://github.com/bobjoerules/tinko).
+   - Interactive fullscreen image lightbox for images in `images/tinko/` (`home-page.jpg`, `library-page.jpg`, `now-playing-fullscreen.jpg`, `now-playing-page.jpg`).
    - Feature highlights and direct GitHub repository links.
 
 ## 🚀 Running Locally
