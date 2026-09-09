@@ -61,7 +61,7 @@ export const TinkoPage: React.FC = () => {
           <span className="text-gradient-tinko">Tinko</span>
         </h1>
         <p className="section-desc">
-          A breathtaking modern desktop music player designed from the ground up to render syllable-timed TTML lyrics with silky smooth Apple Music animations.
+          A breathtaking modern mobile music player designed from the ground up to render syllable-timed TTML lyrics with silky smooth Apple Music animations.
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 28, flexWrap: 'wrap' }}>
