@@ -12,53 +12,53 @@ import {
 } from 'lucide-react';
 import { GithubIcon } from '../components/GithubIcon';
 
-interface SpicyGalleryItem {
+interface TinkoGalleryItem {
   id: string;
   title: string;
   subtitle: string;
   src: string;
 }
 
-const SPICY_GALLERY: SpicyGalleryItem[] = [
+const TINKO_GALLERY: TinkoGalleryItem[] = [
   {
     id: 'now-playing-fullscreen',
     title: 'Now Playing Fullscreen',
     subtitle: 'Immersive animated lyrics with dynamic background fluid blur matching album artwork colors.',
-    src: '/images/spicy-player/now-playing-fullscreen.jpg',
+    src: '/images/tinko/now-playing-fullscreen.jpg',
   },
   {
     id: 'now-playing-page',
     title: 'Now Playing Screen',
     subtitle: 'High fidelity audio playback controls, volume slider, queue, and synchronized lyric stream.',
-    src: '/images/spicy-player/now-playing-page.jpg',
+    src: '/images/tinko/now-playing-page.jpg',
   },
   {
     id: 'home-page',
     title: 'Home & Discovery',
     subtitle: 'Personalized dashboard, recently played albums, top tracks, and quick lyric loading.',
-    src: '/images/spicy-player/home-page.jpg',
+    src: '/images/tinko/home-page.jpg',
   },
   {
     id: 'library-page',
     title: 'Local Music Library',
     subtitle: 'Organize your music collection by artist, album, genre, and custom TTML lyric folders.',
-    src: '/images/spicy-player/library-page.jpg',
+    src: '/images/tinko/library-page.jpg',
   },
 ];
 
-export const SpicyPlayerPage: React.FC = () => {
+export const TinkoPage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   return (
     <div className="container" style={{ padding: '60px 24px 100px' }}>
       {/* Hero Header */}
       <div className="section-header">
-        <span className="section-tag section-tag-spicy">
+        <span className="section-tag section-tag-tinko">
           <Flame size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
           Dedicated Music Player
         </span>
         <h1 className="section-title">
-          <span className="text-gradient-spicy">Spicy Player</span>
+          <span className="text-gradient-tinko">Tinko</span>
         </h1>
         <p className="section-desc">
           A breathtaking modern desktop music player designed from the ground up to render syllable-timed TTML lyrics with silky smooth Apple Music animations.
@@ -66,10 +66,10 @@ export const SpicyPlayerPage: React.FC = () => {
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 28, flexWrap: 'wrap' }}>
           <a
-            href="https://github.com/bobjoerules/Spicy-Player"
+            href="https://github.com/bobjoerules/tinko"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-spicy"
+            className="btn btn-tinko"
           >
             <GithubIcon size={18} />
             <span>View on GitHub</span>
@@ -85,7 +85,7 @@ export const SpicyPlayerPage: React.FC = () => {
         </h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 24 }}>
-          {SPICY_GALLERY.map((item) => (
+          {TINKO_GALLERY.map((item) => (
             <div
               key={item.id}
               className="glass-panel"
@@ -171,8 +171,8 @@ export const SpicyPlayerPage: React.FC = () => {
       {/* Key Features */}
       <section>
         <div className="section-header">
-          <span className="section-tag section-tag-spicy">Next-Gen Audio Experience</span>
-          <h2 className="section-title">Why You'll Love Spicy Player</h2>
+          <span className="section-tag section-tag-tinko">Next-Gen Audio Experience</span>
+          <h2 className="section-title">Why You'll Love Tinko</h2>
         </div>
 
         <div className="features-grid">

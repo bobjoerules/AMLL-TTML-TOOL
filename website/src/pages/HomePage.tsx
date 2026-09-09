@@ -18,7 +18,7 @@ import {
 import { GithubIcon } from '../components/GithubIcon';
 
 interface HomePageProps {
-  onNavigate: (tab: 'home' | 'finished' | 'spicy') => void;
+  onNavigate: (tab: 'home' | 'finished' | 'tinko') => void;
 }
 
 interface ScreenshotItem {
@@ -139,10 +139,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
           <button
             className="btn btn-secondary"
-            onClick={() => onNavigate('spicy')}
+            onClick={() => onNavigate('tinko')}
           >
             <Flame size={18} color="#ff416c" />
-            <span>Discover Spicy Player</span>
+            <span>Discover Tinko</span>
           </button>
         </div>
 
@@ -284,27 +284,27 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* Spicy Player Callout */}
+      {/* Tinko Callout */}
       <section className="glass-panel" style={{ padding: 48, marginTop: 40, border: '1px solid rgba(255, 65, 108, 0.25)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -50, right: -50, width: 250, height: 250, background: 'radial-gradient(circle, rgba(255, 65, 108, 0.2) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32 }}>
           <div style={{ maxWidth: 640 }}>
-            <span className="section-tag section-tag-spicy">Featured Companion App</span>
+            <span className="section-tag section-tag-tinko">Featured Companion App</span>
             <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', marginBottom: 12 }}>
-              Play Synced TTMLs in <span className="text-gradient-spicy">Spicy Player</span>
+              Play Synced TTMLs in <span className="text-gradient-tinko">Tinko</span>
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: 16, lineHeight: 1.6 }}>
-              Spicy Player is a gorgeous, feature-rich desktop music player built to render syllable-synced TTML lyrics created with AMLL TTML Tool in full glory.
+              Tinko is a gorgeous, feature-rich desktop music player built to render syllable-synced TTML lyrics created with AMLL TTML Tool in full glory.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 14 }}>
-            <button className="btn btn-spicy" onClick={() => onNavigate('spicy')}>
+            <button className="btn btn-tinko" onClick={() => onNavigate('tinko')}>
               <Flame size={18} />
-              <span>Explore Spicy Player</span>
+              <span>Explore Tinko</span>
             </button>
             <a
-              href="https://github.com/bobjoerules/Spicy-Player"
+              href="https://github.com/bobjoerules/Tinko"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary"

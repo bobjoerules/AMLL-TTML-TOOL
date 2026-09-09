@@ -3,7 +3,7 @@ import { Music, Heart, ExternalLink, Flame } from 'lucide-react';
 import { GithubIcon } from './GithubIcon';
 
 interface FooterProps {
-  onSelectTab: (tab: 'home' | 'finished' | 'spicy') => void;
+  onSelectTab: (tab: 'home' | 'finished' | 'tinko') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
@@ -31,8 +31,8 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
           <button className="footer-link" onClick={() => onSelectTab('finished')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             Finished TTMLs
           </button>
-          <button className="footer-link" onClick={() => onSelectTab('spicy')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-            Spicy Player
+          <button className="footer-link" onClick={() => onSelectTab('tinko')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            Tinko
           </button>
           <a
             href="https://ttmleditor.bobjoerules.com"
@@ -55,14 +55,14 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
             Repository
           </a>
           <a
-            href="https://github.com/bobjoerules/Spicy-Player"
+            href="https://github.com/bobjoerules/tinko"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
           >
             <Flame size={14} color="#ff416c" />
-            Spicy Player Repo
+            Tinko Repo
           </a>
         </div>
       </div>

@@ -12,7 +12,7 @@
   --accent-fuchsia: #d946ef;
   --accent-rose: #f43f5e;
   --accent-gradient: linear-gradient(135deg, #fa2d48 0%, #fb7185 45%, #d946ef 100%);
-  --accent-spicy: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+  --accent-tinko: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
   
   --text-primary: #f8fafc;
   --text-secondary: #a1a1aa;
@@ -112,8 +112,8 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.text-gradient-spicy {
-  background: var(--accent-spicy);
+.text-gradient-tinko {
+  background: var(--accent-tinko);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -146,13 +146,13 @@ body {
   box-shadow: 0 6px 28px rgba(250, 45, 72, 0.5);
 }
 
-.btn-spicy {
-  background: var(--accent-spicy);
+.btn-tinko {
+  background: var(--accent-tinko);
   color: white;
   box-shadow: 0 4px 20px rgba(255, 65, 108, 0.35);
 }
 
-.btn-spicy:hover {
+.btn-tinko:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 28px rgba(255, 65, 108, 0.5);
 }
@@ -297,7 +297,7 @@ body {
   margin-bottom: 16px;
 }
 
-.section-tag-spicy {
+.section-tag-tinko {
   background: rgba(255, 75, 43, 0.12);
   color: #ff4b2b;
   border-color: rgba(255, 75, 43, 0.25);
