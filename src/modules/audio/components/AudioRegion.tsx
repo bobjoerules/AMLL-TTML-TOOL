@@ -1,4 +1,6 @@
+import { useAtomValue } from "jotai";
 import { msToTimestamp } from "$/utils/timestamp";
+import { spectrogramVisibleAtom } from "../states";
 import { useAudioRegion } from "../hooks";
 import styles from "./AudioSlider.module.css";
 
@@ -13,6 +15,7 @@ export const AudioRegion = ({
 	containerRef,
 	isDraggingRef,
 }: AudioRegionProps) => {
+	const spectrogramVisible = useAtomValue(spectrogramVisibleAtom);
 	const {
 		handleMouseDown,
 		rectLeftPx,
@@ -25,7 +28,7 @@ export const AudioRegion = ({
 		startTimeMs,
 	} = useAudioRegion(sliderWidthPx, containerRef, isDraggingRef);
 
-	if (!audioLoaded || rectWidthPx <= 0) return null;
+	if (!spectrogramVisible || !audioLoaded || rectWidthPx <= 0) return null;
 
 	return (
 		<div

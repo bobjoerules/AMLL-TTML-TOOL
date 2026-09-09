@@ -1,6 +1,7 @@
 import { useStore } from "jotai";
 import { type FC, useCallback } from "react";
 import { audioEngine } from "$/modules/audio/audio-engine";
+import { currentTimeAtom } from "$/modules/audio/states";
 import {
 	findNextWord,
 	getCurrentLineLocation,
@@ -131,6 +132,10 @@ export const SyncKeyBinding: FC = () => {
 
 	const calcJudgeTime = useCallback(
 		(evt: KeyBindingEvent) => {
+			if (!audioEngine.musicPlaying) {
+				return Math.round(store.get(currentTimeAtom));
+			}
+
 			const syncTimeOffset = store.get(syncTimeOffsetAtom);
 			const processingDelay = performance.now() - evt.triggerTime;
 			const audioTimeNow =
@@ -144,19 +149,17 @@ export const SyncKeyBinding: FC = () => {
 				);
 			}
 			let timeAdjustment = 0;
-			if (audioEngine.musicPlaying) {
-				switch (syncJudgeMode) {
-					case SyncJudgeMode.FirstKeyDownTime:
-						timeAdjustment -= evt.downTimeOffset;
-						break;
-					case SyncJudgeMode.LastKeyUpTime:
-						break;
-					case SyncJudgeMode.MiddleKeyTime:
-						timeAdjustment -= evt.downTimeOffset / 2;
-						break;
-				}
-				timeAdjustment *= audioEngine.musicPlayBackRate;
+			switch (syncJudgeMode) {
+				case SyncJudgeMode.FirstKeyDownTime:
+					timeAdjustment -= evt.downTimeOffset;
+					break;
+				case SyncJudgeMode.LastKeyUpTime:
+					break;
+				case SyncJudgeMode.MiddleKeyTime:
+					timeAdjustment -= evt.downTimeOffset / 2;
+					break;
 			}
+			timeAdjustment *= audioEngine.musicPlayBackRate;
 			return Math.round(
 				Math.max(0, audioTimeNow + timeAdjustment + syncTimeOffset),
 			);
@@ -336,7 +339,10 @@ export const SyncKeyBinding: FC = () => {
 			const _t0 = performance.now();
 			const location = getCurrentLocation(store);
 			if (!location) return;
-			const currentTime = calcJudgeTime(evt) + store.get(syncCommitOffsetAtom);
+			const commitOffset = audioEngine.musicPlaying
+				? store.get(syncCommitOffsetAtom)
+				: 0;
+			const currentTime = calcJudgeTime(evt) + commitOffset;
 			const _t1 = performance.now();
 
 			const syncLevelMode = store.get(syncLevelModeAtom);

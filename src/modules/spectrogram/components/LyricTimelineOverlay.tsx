@@ -171,27 +171,24 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 				setPreviewLine(null);
 			};
 
-			let needsBoundarySnapping = false;
-
 			if (timelineDrag.type === "divider") {
+				const lineId = (timelineDrag as TimelineDragOperation).lineId;
+				const targets: number[] = [globalStore.get(currentTimeAtom)];
 				const { segmentIndex } = timelineDrag;
 				const lineBeingDragged = processedLines.find(
 					(l) => l.id === timelineDrag.lineId,
 				);
-				if (lineBeingDragged) {
-					needsBoundarySnapping =
-						segmentIndex === -1 ||
-						segmentIndex === lineBeingDragged.segments.length - 1;
-				}
-			}
+				const isBoundary =
+					lineBeingDragged &&
+					(segmentIndex === -1 ||
+						segmentIndex === lineBeingDragged.segments.length - 1);
 
-			if (needsBoundarySnapping) {
-				const lineId = (timelineDrag as TimelineDragOperation).lineId;
-				const targets: number[] = [globalStore.get(currentTimeAtom)];
-				const otherLineBoundaries = processedLines
-					.filter((line) => line.id !== lineId)
-					.flatMap((line) => [line.startTime, line.endTime]);
-				targets.push(...otherLineBoundaries);
+				if (isBoundary) {
+					const otherLineBoundaries = processedLines
+						.filter((line) => line.id !== lineId)
+						.flatMap((line) => [line.startTime, line.endTime]);
+					targets.push(...otherLineBoundaries);
+				}
 				snapTargetsMs.current = targets.filter(
 					(time): time is number => time != null,
 				);

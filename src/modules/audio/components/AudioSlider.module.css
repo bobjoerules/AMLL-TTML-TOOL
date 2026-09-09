@@ -4,7 +4,8 @@
 	z-index: 1;
 }
 .waveformContainer ::part(progress) {
-	background-color: var(--accent-a4);
+	/* Use transparent background to avoid flooding track with accent tint */
+	background-color: transparent;
 }
 .waveformContainer ::part(cursor) {
 	box-shadow: 0 0 0 1px var(--accent-a11);
@@ -31,10 +32,10 @@
 .regionBody {
 	width: 100%;
 	height: 100%;
-	background-color: var(--accent-a5);
+	background-color: var(--gray-a4);
 	cursor: grab;
-	border-left: 1px solid var(--accent-a9);
-	border-right: 1px solid var(--accent-a9);
+	border-left: 2px solid var(--accent-9);
+	border-right: 2px solid var(--accent-9);
 	pointer-events: auto;
 }
 

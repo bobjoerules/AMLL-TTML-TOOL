@@ -43,6 +43,7 @@ import {
 	currentTimeAtom,
 	playbackRateAtom,
 	preservesPitchAtom,
+	spectrogramVisibleAtom,
 	volumeAtom,
 } from "$/modules/audio/states";
 import { AuditionKeyBinding } from "$/modules/keyboard/components/AuditionKeyBinding";
@@ -122,7 +123,9 @@ export const AudioControls: FC = memo(() => {
 	const [audioLoaded, setAudioLoaded] = useState(false);
 	const [playbackRate, setPlaybackRate] = useAtom(playbackRateAtom);
 	const [preservesPitch, setPreservesPitch] = useAtom(preservesPitchAtom);
-	const [spectrogramVisible, setSpectrogramVisible] = useState(false);
+	const [spectrogramVisible, setSpectrogramVisible] = useAtom(
+		spectrogramVisibleAtom,
+	);
 	const currentDuration = useAtomValue(currentDurationAtom);
 	const [audioPlaying, setAudioPlaying] = useAtom(audioPlayingAtom);
 	const [volume, setVolume] = useAtom(volumeAtom);

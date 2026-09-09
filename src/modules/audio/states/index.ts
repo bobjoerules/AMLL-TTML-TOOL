@@ -86,3 +86,5 @@ export const EQ_PRESETS: Record<string, number[]> = {
 export const customEqualizerPresetsAtom = atomWithStorage<
 	Record<string, number[]>
 >("customEqualizerPresets", {});
+
+export const spectrogramVisibleAtom = atom(false);

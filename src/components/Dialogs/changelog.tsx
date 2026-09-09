@@ -55,6 +55,38 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.4
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 8, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Sync Key Playhead Alignment:</b> Fixed word timing start,
+									split, and end placements (F, G, and H keys) so they directly
+									match the exact playhead position when paused or scrubbing.
+								</Text>
+								<Text size="2">
+									• <b>Word Divider Snapping:</b> All syllable and word boundary
+									dividers on the spectrogram timeline now magnetically snap to
+									the playhead line.
+								</Text>
+								<Text size="2">
+									• <b>Mini Track View Highlight Fix:</b> Resolved an issue where
+									the bottom audio waveform bar was flooded with an unwanted red
+									highlight; replaced the viewport region with a clean neutral
+									lens that hides automatically when the spectrogram is closed.
+								</Text>
+								<Text size="2">
+									• <b>Spectrogram Playhead Improvements:</b> Centered the scrub
+									handle tip directly over the playhead line and prevented the
+									handle from turning red on hover.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.3
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
