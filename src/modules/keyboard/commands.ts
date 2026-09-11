@@ -1,7 +1,8 @@
 import { t } from "./i18n-helper";
 import { registerCommand } from "./registry";
 
-const IS_MAC = navigator.userAgent.includes("Mac");
+const IS_MAC =
+	typeof navigator !== "undefined" && navigator.userAgent.includes("Mac");
 const CONTROL_KEY = IS_MAC ? "Meta" : "Control";
 const DELETE_KEY = IS_MAC ? "Backspace" : "Delete";
 
@@ -94,6 +95,20 @@ export const cmdAutoSegment = registerCommand(
 	"autoSegment",
 	["KeyE"],
 	t("settingsDialog.keybindings.autoSegment"),
+	"Edit",
+);
+
+export const cmdToggleBackground = registerCommand(
+	"toggleBackground",
+	["KeyB"],
+	t("settingsDialog.keybindings.toggleBackground"),
+	"Edit",
+);
+
+export const cmdToggleDuet = registerCommand(
+	"toggleDuet",
+	["KeyD"],
+	t("settingsDialog.keybindings.toggleDuet"),
 	"Edit",
 );
 

@@ -109,7 +109,11 @@ export const HeaderFileInfo = () => {
 	}, [filename, setConfirmDialog, setFilename, suggestedFile, t]);
 
 	return (
-		<Flex align="center" gap="2" style={{ maxWidth: "100%" }}>
+		<Flex
+			align="center"
+			gap="2"
+			style={{ maxWidth: "100%", minWidth: 0, flexShrink: 1 }}
+		>
 			<Button
 				variant="soft"
 				onClick={() => setHistoryDialogOpen(true)}
@@ -119,6 +123,7 @@ export const HeaderFileInfo = () => {
 					whiteSpace: "nowrap",
 					maxWidth: autoSaveExpanded ? 220 : 36,
 					transition: "max-width 0.3s ease",
+					flexShrink: 0,
 				}}
 			>
 				<Flex align="center" gap="1">
@@ -135,7 +140,7 @@ export const HeaderFileInfo = () => {
 				</Flex>
 			</Button>
 
-			<Box>
+			<Box style={{ minWidth: 0, flexShrink: 1 }}>
 				{isEditing ? (
 					<Flex align="center" gap="1">
 						<TextField.Root
@@ -144,7 +149,7 @@ export const HeaderFileInfo = () => {
 							value={draftName}
 							onChange={(e) => setDraftName(e.target.value)}
 							placeholder="example"
-							style={{ width: "10rem" }}
+							style={{ width: "clamp(10rem, 25vw, 24rem)", minWidth: 0 }}
 							onBlur={() => finishEditing({ commit: true })}
 							onKeyDown={(event) => {
 								if (event.key === "Enter") {
@@ -155,43 +160,57 @@ export const HeaderFileInfo = () => {
 								}
 							}}
 						/>
-						<Text size="2">{suffix}</Text>
+						<Text size="2" style={{ flexShrink: 0 }}>
+							{suffix}
+						</Text>
 					</Flex>
 				) : (
-					<Button
-						variant="ghost"
-						style={{
-							height: "auto",
-							padding: "6px 10px",
-							fontWeight: "normal",
-							color: "var(--accent-11)",
-							maxWidth: "100%",
-						}}
-						onClick={handleNameClick}
-					>
-						<Flex align="center" gap="2" style={{ maxWidth: "100%" }}>
+					<Tooltip content={filename}>
+						<Button
+							variant="ghost"
+							style={{
+								height: "auto",
+								padding: "6px 10px",
+								fontWeight: "normal",
+								color: "var(--accent-11)",
+								maxWidth: "100%",
+								minWidth: 0,
+							}}
+							onClick={handleNameClick}
+						>
 							<Flex
 								align="center"
-								style={{
-									maxWidth: "clamp(4.5rem, 9vw, 9.5rem)",
-									overflow: "hidden",
-									whiteSpace: "nowrap",
-								}}
+								gap="2"
+								style={{ maxWidth: "100%", minWidth: 0 }}
 							>
-								<Text
-									weight="bold"
-									size="2"
+								<Flex
+									align="center"
 									style={{
+										maxWidth: "clamp(6rem, 36vw, 42rem)",
+										minWidth: 0,
 										overflow: "hidden",
-										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
 									}}
 								>
-									{getBaseName(filename)}
-								</Text>
-								<Text size="2">{suffix}</Text>
+									<Text
+										weight="bold"
+										size="2"
+										style={{
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+											minWidth: 0,
+										}}
+									>
+										{getBaseName(filename)}
+									</Text>
+									<Text size="2" style={{ flexShrink: 0 }}>
+										{suffix}
+									</Text>
+								</Flex>
 							</Flex>
-						</Flex>
-					</Button>
+						</Button>
+					</Tooltip>
 				)}
 			</Box>
 

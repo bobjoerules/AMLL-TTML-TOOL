@@ -124,6 +124,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#1f1f1f",
 			vSidebarBg: "#1c1c1e",
 			vEditorBg: "#121212",
+			vAudioBarBg: "#1f1f1f",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#ffffff",
 			advSecondaryText: "rgba(255, 255, 255, 0.6)",
@@ -139,6 +140,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#f5f5f7",
 			vSidebarBg: "#ffffff",
 			vEditorBg: "#fafafa",
+			vAudioBarBg: "#f5f5f7",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#1d1d1f",
 			advSecondaryText: "rgba(0, 0, 0, 0.6)",
@@ -196,6 +198,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#150a14",
 			vSidebarBg: "#200f1e",
 			vEditorBg: "#120812",
+			vAudioBarBg: "#150a14",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#ffe4e6",
 			advSecondaryText: "#fda4af",
@@ -211,6 +214,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "rgba(255, 240, 243, 0.85)",
 			vSidebarBg: "#fff0f3",
 			vEditorBg: "#fffbfb",
+			vAudioBarBg: "rgba(255, 240, 243, 0.85)",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#2c0914",
 			advSecondaryText: "#8a1c3e",
@@ -230,6 +234,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#242933",
 			vSidebarBg: "#2e3440",
 			vEditorBg: "#1f232a",
+			vAudioBarBg: "#242933",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#eceff4",
 			advSecondaryText: "#d8dee9",
@@ -245,6 +250,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "rgba(229, 233, 240, 0.85)",
 			vSidebarBg: "#e5e9f0",
 			vEditorBg: "#f8fafc",
+			vAudioBarBg: "rgba(229, 233, 240, 0.85)",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#2e3440",
 			advSecondaryText: "#4c566a",
@@ -264,6 +270,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#160d24",
 			vSidebarBg: "#211438",
 			vEditorBg: "#120a1e",
+			vAudioBarBg: "#160d24",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#f3e8ff",
 			advSecondaryText: "#d8b4fe",
@@ -279,6 +286,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "rgba(245, 240, 255, 0.85)",
 			vSidebarBg: "#f0e8ff",
 			vEditorBg: "#faf7ff",
+			vAudioBarBg: "rgba(245, 240, 255, 0.85)",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#260e45",
 			advSecondaryText: "#63339c",
@@ -298,6 +306,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#051f18",
 			vSidebarBg: "#0c2e24",
 			vEditorBg: "#061a14",
+			vAudioBarBg: "#051f18",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#f0fdf4",
 			advSecondaryText: "#86efac",
@@ -313,6 +322,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "rgba(234, 248, 243, 0.85)",
 			vSidebarBg: "#def3ea",
 			vEditorBg: "#f4fbf8",
+			vAudioBarBg: "rgba(234, 248, 243, 0.85)",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#0a3325",
 			advSecondaryText: "#15694c",
@@ -332,6 +342,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#18081a",
 			vSidebarBg: "#240b27",
 			vEditorBg: "#110413",
+			vAudioBarBg: "#18081a",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#fdf2f8",
 			advSecondaryText: "#f472b6",
@@ -347,6 +358,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "rgba(253, 240, 250, 0.85)",
 			vSidebarBg: "#fbe4f6",
 			vEditorBg: "#fef8fd",
+			vAudioBarBg: "rgba(253, 240, 250, 0.85)",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#3b0933",
 			advSecondaryText: "#8f1577",
@@ -366,6 +378,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#0a0907",
 			vSidebarBg: "#14120e",
 			vEditorBg: "#060504",
+			vAudioBarBg: "#0a0907",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#fef3c7",
 			advSecondaryText: "#fcd34d",
@@ -381,6 +394,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "rgba(252, 248, 238, 0.85)",
 			vSidebarBg: "#f7eed8",
 			vEditorBg: "#fdfcf8",
+			vAudioBarBg: "rgba(252, 248, 238, 0.85)",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#3b2c05",
 			advSecondaryText: "#7a5c0b",
@@ -400,6 +414,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "#181825",
 			vSidebarBg: "#1e1e2e",
 			vEditorBg: "#11111b",
+			vAudioBarBg: "#181825",
 			darkMode: DarkMode.Dark,
 			advPrimaryText: "#cdd6f4",
 			advSecondaryText: "#bac2de",
@@ -415,6 +430,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			vTitlebarBg: "rgba(230, 233, 239, 0.85)",
 			vSidebarBg: "#eff1f5",
 			vEditorBg: "#f4f5f8",
+			vAudioBarBg: "rgba(230, 233, 239, 0.85)",
 			darkMode: DarkMode.Light,
 			advPrimaryText: "#4c4f69",
 			advSecondaryText: "#6c6f85",
@@ -733,7 +749,7 @@ export const SettingsAppearanceTab = () => {
 		if (s.vTransColor !== undefined) setVTransColor(s.vTransColor);
 		if (s.vGeniusHeaderColor !== undefined)
 			setVGeniusHeaderColor(s.vGeniusHeaderColor);
-		if (s.vAudioBarBg !== undefined) setVAudioBarBg(s.vAudioBarBg);
+		setVAudioBarBg(s.vAudioBarBg ?? s.vTitlebarBg ?? "");
 		if (s.vAudioBarText !== undefined) setVAudioBarText(s.vAudioBarText);
 		if (s.vScrollbar !== undefined) setVScrollbar(s.vScrollbar);
 		if (s.vDialogBg !== undefined) setVDialogBg(s.vDialogBg);
@@ -1148,6 +1164,7 @@ export const SettingsAppearanceTab = () => {
 																setVTitlebarBg(tint.titlebar);
 																setVSidebarBg(tint.sidebar);
 																setVEditorBg(tint.editor);
+																setVAudioBarBg(tint.titlebar);
 															}}
 														>
 															<Flex align="center" gap="2">

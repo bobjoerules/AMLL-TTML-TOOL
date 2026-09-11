@@ -20,7 +20,19 @@ import {
 	currentDurationAtom,
 	currentTimeAtom,
 } from "$/modules/audio/states";
-import { lyricLinesAtom, selectedLinesAtom } from "$/states/main";
+import {
+	isDarkThemeAtom,
+	lyricLinesAtom,
+	selectedLinesAtom,
+} from "$/states/main";
+import {
+	accentColorAtom,
+	useCustomAccentAtom,
+	customAccentColorAtom,
+	advancedWaveformColorAtom,
+	advancedWaveformProgressColorAtom,
+	activePresetIdAtom,
+} from "$/modules/settings/states";
 import { useHoverGuide } from "../hooks";
 import { AudioRegion } from "./AudioRegion";
 import styles from "./AudioSlider.module.css";
@@ -185,6 +197,14 @@ export const AudioSlider = memo(() => {
 	const selectedLines = useAtomValue(selectedLinesAtom);
 	const audioBuffer = useAtomValue(audioBufferAtom);
 
+	const isDarkTheme = useAtomValue(isDarkThemeAtom);
+	const accentColor = useAtomValue(accentColorAtom);
+	const useCustomAccent = useAtomValue(useCustomAccentAtom);
+	const customAccentColor = useAtomValue(customAccentColorAtom);
+	const advWaveformColor = useAtomValue(advancedWaveformColorAtom);
+	const advWaveformProgress = useAtomValue(advancedWaveformProgressColorAtom);
+	const activePresetId = useAtomValue(activePresetIdAtom);
+
 	const wsContainerRef = useRef<HTMLDivElement>(null);
 	const waveSurferRef = useRef<WaveSurfer | null>(null);
 
@@ -255,10 +275,12 @@ export const AudioSlider = memo(() => {
 		const canvasStyles = getComputedStyle(wsContainerRef.current);
 		const fontColor =
 			canvasStyles.getPropertyValue("--adv-waveform-progress").trim() ||
-			canvasStyles.getPropertyValue("--accent-a11").trim();
+			canvasStyles.getPropertyValue("--accent-a11").trim() ||
+			(isDarkTheme ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)");
 		const primaryFillColor =
 			canvasStyles.getPropertyValue("--adv-waveform-color").trim() ||
-			canvasStyles.getPropertyValue("--accent-a4").trim();
+			canvasStyles.getPropertyValue("--accent-a4").trim() ||
+			(isDarkTheme ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)");
 
 		const peaks = [audioBuffer.getChannelData(0)];
 		const duration = audioBuffer.duration;
@@ -282,7 +304,44 @@ export const AudioSlider = memo(() => {
 		});
 		waveSurferRef.current = ws;
 		return ws;
-	}, [audioBuffer]);
+	}, [audioBuffer, isDarkTheme]);
+
+	useEffect(() => {
+		if (!waveSurferRef.current || !wsContainerRef.current) return;
+		const raf = requestAnimationFrame(() => {
+			if (!wsContainerRef.current || !waveSurferRef.current) return;
+			const canvasStyles = getComputedStyle(wsContainerRef.current);
+			const fontColor =
+				canvasStyles.getPropertyValue("--adv-waveform-progress").trim() ||
+				canvasStyles.getPropertyValue("--accent-a11").trim() ||
+				(isDarkTheme ? "rgba(255, 255, 255, 0.7)" : "rgba(0, 0, 0, 0.7)");
+			const primaryFillColor =
+				canvasStyles.getPropertyValue("--adv-waveform-color").trim() ||
+				canvasStyles.getPropertyValue("--accent-a4").trim() ||
+				(isDarkTheme ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)");
+
+			if (fontColor && primaryFillColor) {
+				try {
+					waveSurferRef.current.setOptions({
+						waveColor: primaryFillColor,
+						progressColor: fontColor,
+						cursorColor: fontColor,
+					});
+				} catch (e) {
+					console.error("Failed to update WaveSurfer options", e);
+				}
+			}
+		});
+		return () => cancelAnimationFrame(raf);
+	}, [
+		isDarkTheme,
+		accentColor,
+		useCustomAccent,
+		customAccentColor,
+		advWaveformColor,
+		advWaveformProgress,
+		activePresetId,
+	]);
 
 	useEffect(() => {
 		const container = wsContainerRef.current;

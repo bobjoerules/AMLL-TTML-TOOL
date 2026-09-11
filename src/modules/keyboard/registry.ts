@@ -21,6 +21,35 @@ export function registerCommand(
 	description: I18nKey,
 	category = "General",
 ) {
+	if (typeof localStorage !== "undefined") {
+		const storageKey = `keybindings:${id}`;
+		const raw = localStorage.getItem(storageKey);
+		if (raw) {
+			try {
+				const parsed = JSON.parse(raw);
+				if (
+					id === "toggleBackground" &&
+					Array.isArray(parsed) &&
+					parsed.length === 2 &&
+					parsed[0] === "Shift" &&
+					parsed[1] === "KeyB"
+				) {
+					localStorage.setItem(storageKey, JSON.stringify(defaultKeys));
+				} else if (
+					id === "toggleDuet" &&
+					Array.isArray(parsed) &&
+					parsed.length === 2 &&
+					parsed[0] === "Shift" &&
+					parsed[1] === "KeyD"
+				) {
+					localStorage.setItem(storageKey, JSON.stringify(defaultKeys));
+				}
+			} catch {
+				// ignore
+			}
+		}
+	}
+
 	const commandAtom = atomWithKeybindingStorage(id, defaultKeys);
 
 	const command: KeyBindingCommand = {

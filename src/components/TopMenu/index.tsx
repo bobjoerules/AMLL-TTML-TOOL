@@ -324,7 +324,7 @@ export const TopMenu: FC = () => {
 					/>
 				</Toolbar.Root>
 			)}
-			<Box style={{ marginLeft: "16px" }}>
+			<Box style={{ marginLeft: "16px", minWidth: 0, flexShrink: 1 }}>
 				<HeaderFileInfo />
 			</Box>
 			<CloudStatusButton />

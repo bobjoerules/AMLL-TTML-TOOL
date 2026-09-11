@@ -561,10 +561,12 @@
 .timeLabel {
 	font-size: 0.82rem;
 	font-weight: 500;
-	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-family: var(--default-font-family, inherit);
+	font-variant-numeric: tabular-nums;
 	color: rgba(255, 255, 255, 0.7);
 	min-width: 36px;
 	text-align: center;
+	white-space: nowrap;
 }
 
 .scrubberContainer {
@@ -593,11 +595,7 @@
 .scrubberFill {
 	height: 100%;
 	border-radius: 9999px;
-	background: linear-gradient(
-		90deg,
-		rgba(255, 255, 255, 0.95),
-		var(--spicy-accent, #e5484d)
-	);
+	background: #ffffff;
 	transition: width 0.05s linear;
 }
 

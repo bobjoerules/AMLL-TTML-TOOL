@@ -34,6 +34,8 @@ import {
 	cmdSyncEnd,
 	cmdSyncNext,
 	cmdSyncStart,
+	cmdToggleBackground,
+	cmdToggleDuet,
 	cmdToggleWordHighlight,
 	cmdUndo,
 	cmdUnselectAll,
@@ -65,6 +67,8 @@ export const keySelectWordsOfMatchedSelectionAtom =
 	cmdSelectWordsOfMatchedSelection.atom;
 export const keyDeleteSelectionAtom = cmdDeleteSelection.atom;
 export const keyAutoSegmentAtom = cmdAutoSegment.atom;
+export const keyToggleBackgroundAtom = cmdToggleBackground.atom;
+export const keyToggleDuetAtom = cmdToggleDuet.atom;
 
 export const keySwitchEditModeAtom = cmdSwitchEditMode.atom;
 export const keySwitchSyncModeAtom = cmdSwitchSyncMode.atom;

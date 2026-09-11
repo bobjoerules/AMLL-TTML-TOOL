@@ -1,0 +1,73 @@
+.playbackRow {
+	width: 100%;
+	margin-top: 18px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	user-select: none;
+}
+
+.timeLabel {
+	font-size: 0.82rem;
+	font-weight: 500;
+	font-family: var(--default-font-family, inherit);
+	font-variant-numeric: tabular-nums;
+	color: rgba(255, 255, 255, 0.7);
+	min-width: 36px;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.scrubberContainer {
+	flex: 1;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	position: relative;
+	touch-action: none;
+}
+
+.scrubberTrack {
+	width: 100%;
+	height: 4px;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.25);
+	position: relative;
+	overflow: hidden;
+	transition: height 0.15s ease;
+}
+
+.scrubberContainer:hover .scrubberTrack {
+	height: 6px;
+}
+
+.scrubberFill {
+	height: 100%;
+	border-radius: 9999px;
+	background: #ffffff;
+}
+
+.variantSpicy .scrubberFill {
+	background: #ffffff;
+}
+
+.scrubberThumb {
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #ffffff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	transition:
+		opacity 0.15s ease,
+		transform 0.15s ease;
+	pointer-events: none;
+}
+
+.scrubberContainer:hover .scrubberThumb {
+	opacity: 1;
+}

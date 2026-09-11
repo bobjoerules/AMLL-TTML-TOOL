@@ -77,6 +77,10 @@
 		},
 		"noSongwriter": {
 			"description": "The song has no songwriters. Do you want to continue saving?"
+		},
+		"closeWindow": {
+			"title": "Unsaved Changes",
+			"description": "You have unsaved changes. If you close the window now, these changes will be lost. Are you sure you want to close?"
 		}
 	},
 	"experimentalFeatures": {
@@ -556,9 +560,12 @@
 			"sync": "Time",
 			"preview": "Preview"
 		},
+		"sidePreview": "Preview Panel",
 		"boykisser": "boykisser",
 		"appName": "Apple Music-like Lyrics TTML Tool",
 		"menu": {
+			"showPreviewPanel": "Show Side Preview Panel",
+			"hidePreviewPanel": "Hide Side Preview Panel",
 			"undo": "Undo",
 			"redo": "Redo",
 			"selectAllLines": "Select all lines",
@@ -680,6 +687,8 @@
 			"selectWordsOfMatchedSelection": "Select similar words",
 			"deleteSelection": "Delete Selection",
 			"autoSegment": "Tools - Auto Segment",
+			"toggleBackground": "Edit/Timing - Toggle background lyric",
+			"toggleDuet": "Edit/Timing - Toggle duet lyric",
 			"switchEditMode": "Mode Switch - Switch to Edit Mode",
 			"switchSyncMode": "Mode Switch - Switch to Timing Mode",
 			"switchPreviewMode": "Mode Switch - Switch to Preview Mode",

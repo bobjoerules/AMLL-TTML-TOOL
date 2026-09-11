@@ -104,4 +104,39 @@ describe("Website Moderator and Permissions", () => {
 			) || isUserModerator("s41Sey8PJUSYHQUsS6aLLb7lsf02");
 		expect(canModDelete).toBe(true);
 	});
+
+	it("restricts artwork update permission to author or moderator only", async () => {
+		const { updateSongCoverArt } = await import("./firebase");
+		const song: FinishedTTML = {
+			id: "song-1",
+			title: "Test Song",
+			artist: "Test Artist",
+			authorUid: "author-123",
+		};
+
+		// When not logged in
+		const anonymousRes = await updateSongCoverArt(song, "data:image/png;base64,abc");
+		expect(anonymousRes.success).toBe(false);
+		expect(anonymousRes.error).toMatch(/logged in/i);
+
+		// When logged in as unauthorized stranger
+		const strangerRes = await updateSongCoverArt(song, "data:image/png;base64,abc", "stranger-999");
+		expect(strangerRes.success).toBe(false);
+		expect(strangerRes.error).toMatch(/permission/i);
+
+		// Author and moderator are allowed past the permission check
+		const authorRes = await updateSongCoverArt(song, "data:image/png;base64,abc", "author-123");
+		if (authorRes.error) {
+			expect(authorRes.error).not.toMatch(/permission|logged in/i);
+		} else {
+			expect(authorRes.success).toBe(true);
+		}
+
+		const modRes = await updateSongCoverArt(song, "data:image/png;base64,abc", "s41Sey8PJUSYHQUsS6aLLb7lsf02");
+		if (modRes.error) {
+			expect(modRes.error).not.toMatch(/permission|logged in/i);
+		} else {
+			expect(modRes.success).toBe(true);
+		}
+	});
 });

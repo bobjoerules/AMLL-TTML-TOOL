@@ -55,6 +55,46 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.5
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 11, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Keybinding Engine & Shortcut Fixes:</b> Resolved an issue
+									where modifier keys (Command/Control/Alt/Shift) could get
+									stuck in the listener state after system shortcuts or dialogs,
+									preventing all hotkeys from firing. Added event modifier
+									reconciliation and ghost key protection.
+								</Text>
+								<Text size="2">
+									• <b>Background & Duet Shortcuts:</b> Added <code>B</code> to
+									toggle background vocal (<code>isBG</code>) and <code>D</code>{" "}
+									to toggle duet vocal (<code>isDuet</code>) on selected lines
+									in Edit mode, and enabled <code>B</code> in Sync mode without
+									conflicting with word navigation.
+								</Text>
+								<Text size="2">
+									• <b>Window Close Confirmation:</b> Added unsaved changes
+									dialog prompt when closing windows with unsaved edits in the
+									desktop app.
+								</Text>
+								<Text size="2">
+									• <b>Preview Progress Bar Time Color:</b> Updated the elapsed
+									and remaining time display on the preview progress bar to
+									solid white.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Artwork Updates:</b> Fixed song artwork editing
+									permissions and allow updating cover art directly by clicking
+									the album artwork image in the checklist.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.4
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
@@ -72,10 +112,11 @@ export function ChangelogDialog() {
 									the playhead line.
 								</Text>
 								<Text size="2">
-									• <b>Mini Track View Highlight Fix:</b> Resolved an issue where
-									the bottom audio waveform bar was flooded with an unwanted red
-									highlight; replaced the viewport region with a clean neutral
-									lens that hides automatically when the spectrogram is closed.
+									• <b>Mini Track View Highlight Fix:</b> Resolved an issue
+									where the bottom audio waveform bar was flooded with an
+									unwanted red highlight; replaced the viewport region with a
+									clean neutral lens that hides automatically when the
+									spectrogram is closed.
 								</Text>
 								<Text size="2">
 									• <b>Spectrogram Playhead Improvements:</b> Centered the scrub
@@ -94,9 +135,9 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>SpotMatch Original ID Toggle:</b> Added a persistent toggle
-									to include the searched original track ID when copying IDs or
-									exporting to a <code>.txt</code> file.
+									• <b>SpotMatch Original ID Toggle:</b> Added a persistent
+									toggle to include the searched original track ID when copying
+									IDs or exporting to a <code>.txt</code> file.
 								</Text>
 								<Text size="2">
 									• <b>Deduplication & Flexible Export:</b> Prepend source track

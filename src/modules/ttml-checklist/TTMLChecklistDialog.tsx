@@ -13,7 +13,6 @@ import {
 	DocumentArrowUp16Regular,
 	Edit16Regular,
 	Globe16Regular,
-	Image16Regular,
 	List16Regular,
 	MusicNote2Filled,
 	Search16Regular,
@@ -137,6 +136,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	>([]);
 	const [isSearchingProvider, setIsSearchingProvider] = useState(false);
 	const [hasSearchedProvider, setHasSearchedProvider] = useState(false);
+	const [isHoveringCover, setIsHoveringCover] = useState(false);
 
 	const projectIdentity = useAtomValue(projectIdentityAtom);
 	const lyricLines = useAtomValue(lyricLinesAtom);
@@ -189,6 +189,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 			}
 		};
 		reader.readAsDataURL(file);
+		e.target.value = "";
 	};
 
 	const handleSearchProvider = async () => {
@@ -570,42 +571,66 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 					<Flex gap="3" align="start">
 						{/* Cover Art Preview / Upload Column */}
 						<Flex direction="column" gap="1" align="center">
-							<Box
-								style={{
-									width: "80px",
-									height: "80px",
-									borderRadius: "10px",
-									overflow: "hidden",
-									backgroundColor: "var(--gray-a4)",
-									border: "1px solid var(--gray-a5)",
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									position: "relative",
-								}}
-							>
-								{coverArt ? (
-									<img
-										src={coverArt}
-										alt={song || "Cover Art"}
-										crossOrigin="anonymous"
-										referrerPolicy="no-referrer"
-										style={{
-											width: "100%",
-											height: "100%",
-											objectFit: "cover",
-										}}
-									/>
-								) : (
-									<MusicNote2Filled
-										style={{
-											width: "32px",
-											height: "32px",
-											color: "var(--gray-8)",
-										}}
-									/>
-								)}
-							</Box>
+							<Tooltip content={t("ttmlChecklist.uploadCover", "Upload Cover")}>
+								<Box
+									role="button"
+									tabIndex={0}
+									onClick={() => fileInputRef.current?.click()}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											fileInputRef.current?.click();
+										}
+									}}
+									onMouseEnter={() => setIsHoveringCover(true)}
+									onMouseLeave={() => setIsHoveringCover(false)}
+									style={{
+										width: "80px",
+										height: "80px",
+										borderRadius: "10px",
+										overflow: "hidden",
+										backgroundColor: isHoveringCover
+											? "var(--gray-a5)"
+											: "var(--gray-a4)",
+										border: isHoveringCover
+											? "1px solid var(--accent-9)"
+											: "1px solid var(--gray-a5)",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										position: "relative",
+										cursor: "pointer",
+										transition: "border-color 0.15s, background-color 0.15s",
+									}}
+								>
+									{coverArt ? (
+										<img
+											src={coverArt}
+											alt={song || "Cover Art"}
+											crossOrigin="anonymous"
+											referrerPolicy="no-referrer"
+											style={{
+												width: "100%",
+												height: "100%",
+												objectFit: "cover",
+												opacity: isHoveringCover ? 0.85 : 1,
+												transition: "opacity 0.15s",
+											}}
+										/>
+									) : (
+										<MusicNote2Filled
+											style={{
+												width: "32px",
+												height: "32px",
+												color: isHoveringCover
+													? "var(--accent-9)"
+													: "var(--gray-8)",
+												transition: "color 0.15s",
+											}}
+										/>
+									)}
+								</Box>
+							</Tooltip>
 							<input
 								type="file"
 								accept="image/*"
@@ -613,17 +638,8 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								style={{ display: "none" }}
 								onChange={handleFileUpload}
 							/>
-							<Flex gap="1" mt="1">
-								<Button
-									type="button"
-									size="1"
-									variant="soft"
-									onClick={() => fileInputRef.current?.click()}
-									title={t("ttmlChecklist.uploadCover", "Upload Cover")}
-								>
-									<Image16Regular />
-								</Button>
-								{coverArt && (
+							{coverArt && (
+								<Flex gap="1" mt="1">
 									<Button
 										type="button"
 										size="1"
@@ -634,8 +650,8 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 									>
 										<Dismiss16Regular />
 									</Button>
-								)}
-							</Flex>
+								</Flex>
+							)}
 						</Flex>
 
 						{/* Fields Column */}
