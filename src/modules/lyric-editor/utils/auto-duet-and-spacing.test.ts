@@ -6,6 +6,7 @@ import {
 	newLyricLine,
 	newLyricWord,
 } from "$/types/ttml";
+import { applyAutoDuetBySinger, extractFirstSinger } from "./auto-duet";
 
 describe("splitTrailingSpace", () => {
 	it("splits trailing single space into baseWord and spaceWord", () => {
@@ -42,6 +43,20 @@ describe("splitTrailingSpace", () => {
 });
 
 describe("Auto duet vocalist assignment logic", () => {
+	it("extracts the first singer when multiple people are listed in vocalist", () => {
+		expect(extractFirstSinger("Raveena & JPEGMAFIA")).toBe("Raveena");
+		expect(extractFirstSinger("Raveena and JPEGMAFIA")).toBe("Raveena");
+		expect(extractFirstSinger("Raveena, JPEGMAFIA")).toBe("Raveena");
+		expect(extractFirstSinger("Raveena / JPEGMAFIA")).toBe("Raveena");
+		expect(extractFirstSinger("Raveena + JPEGMAFIA")).toBe("Raveena");
+		expect(extractFirstSinger("Raveena with JPEGMAFIA")).toBe("Raveena");
+		expect(extractFirstSinger("Raveena feat. JPEGMAFIA")).toBe("Raveena");
+		expect(extractFirstSinger("Raveena (feat. JPEGMAFIA)")).toBe("Raveena");
+		expect(extractFirstSinger("Alice")).toBe("Alice");
+		expect(extractFirstSinger("   JPEGMAFIA   ")).toBe("JPEGMAFIA");
+		expect(extractFirstSinger(undefined)).toBeUndefined();
+	});
+
 	it("identifies primary singer and secondary duet singers correctly", () => {
 		const lyrics: TTMLLyric = {
 			metadata: [],
@@ -75,38 +90,102 @@ describe("Auto duet vocalist assignment logic", () => {
 			],
 		};
 
-		const sectionMap = new Map((lyrics.sections ?? []).map((s) => [s.id, s]));
-		const singers: string[] = [];
-		const lineSingers: (string | undefined)[] = [];
-
-		for (const line of lyrics.lyricLines) {
-			let singer: string | undefined;
-			if (line.sectionId && sectionMap.has(line.sectionId)) {
-				singer = sectionMap.get(line.sectionId)!.vocalist?.trim();
-			}
-			if (!singer && line.agent) {
-				singer = line.agent.trim();
-			}
-			lineSingers.push(singer);
-			if (
-				singer &&
-				!singers.some((s) => s.toLowerCase() === singer.toLowerCase())
-			) {
-				singers.push(singer);
-			}
-		}
-
-		expect(singers).toEqual(["Alice", "Bob"]);
-
-		const primarySinger = singers[0].toLowerCase();
-		for (let i = 0; i < lyrics.lyricLines.length; i++) {
-			const singer = lineSingers[i];
-			if (!singer) continue;
-			lyrics.lyricLines[i].isDuet = singer.toLowerCase() !== primarySinger;
-		}
-
+		const result = applyAutoDuetBySinger(lyrics);
+		expect(result).toEqual({ modifiedCount: 1, singersCount: 2 });
 		expect(lyrics.lyricLines[0].isDuet).toBe(false); // Alice (primary)
 		expect(lyrics.lyricLines[1].isDuet).toBe(true); // Bob (duet)
+	});
+
+	it("uses first person for auto duet when section lists two people (e.g. Raveena & JPEGMAFIA)", () => {
+		const lyrics: TTMLLyric = {
+			metadata: [],
+			sections: [
+				{
+					id: "sec-1",
+					label: "[Verse 1: Raveena]",
+					category: "verse",
+					vocalist: "Raveena",
+				},
+				{
+					id: "sec-2",
+					label: "[Chorus: Raveena & JPEGMAFIA]",
+					category: "chorus",
+					vocalist: "Raveena & JPEGMAFIA",
+				},
+				{
+					id: "sec-3",
+					label: "[Verse 2: JPEGMAFIA]",
+					category: "verse",
+					vocalist: "JPEGMAFIA",
+				},
+			],
+			lyricLines: [
+				{
+					...newLyricLine(),
+					id: "line-1",
+					sectionId: "sec-1",
+					words: [{ ...newLyricWord(), word: "Solo Raveena" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-2",
+					sectionId: "sec-2",
+					words: [{ ...newLyricWord(), word: "Duet Chorus" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-3",
+					sectionId: "sec-3",
+					words: [{ ...newLyricWord(), word: "Solo JPEGMAFIA" }],
+				},
+			],
+		};
+
+		const result = applyAutoDuetBySinger(lyrics);
+		expect(result).toEqual({ modifiedCount: 1, singersCount: 2 });
+		// Raveena is primary (first person in Verse 1 & Chorus)
+		expect(lyrics.lyricLines[0].isDuet).toBe(false); // Raveena solo
+		expect(lyrics.lyricLines[1].isDuet).toBe(false); // Raveena & JPEGMAFIA resolves to first person Raveena (primary)
+		expect(lyrics.lyricLines[2].isDuet).toBe(true); // JPEGMAFIA solo is secondary (duet)
+	});
+
+	it("uses first person as primary even if multi-person section comes first", () => {
+		const lyrics: TTMLLyric = {
+			metadata: [],
+			sections: [
+				{
+					id: "sec-1",
+					label: "[Chorus: Raveena & JPEGMAFIA]",
+					category: "chorus",
+					vocalist: "Raveena & JPEGMAFIA",
+				},
+				{
+					id: "sec-2",
+					label: "[Verse 1: JPEGMAFIA]",
+					category: "verse",
+					vocalist: "JPEGMAFIA",
+				},
+			],
+			lyricLines: [
+				{
+					...newLyricLine(),
+					id: "line-1",
+					sectionId: "sec-1",
+					words: [{ ...newLyricWord(), word: "Chorus" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-2",
+					sectionId: "sec-2",
+					words: [{ ...newLyricWord(), word: "Verse" }],
+				},
+			],
+		};
+
+		const result = applyAutoDuetBySinger(lyrics);
+		expect(result).toEqual({ modifiedCount: 1, singersCount: 2 });
+		expect(lyrics.lyricLines[0].isDuet).toBe(false); // Raveena (first person in Raveena & JPEGMAFIA)
+		expect(lyrics.lyricLines[1].isDuet).toBe(true); // JPEGMAFIA (guest/secondary)
 	});
 });
 

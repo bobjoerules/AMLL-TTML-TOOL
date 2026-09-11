@@ -112,6 +112,7 @@ import AudioControls from "./modules/audio/components/index.tsx";
 import { useAudioFeedback } from "./modules/audio/hooks/useAudioFeedback.ts";
 import { SyncKeyBinding } from "./modules/lyric-editor/components/sync-keybinding.tsx";
 import { UrbanDictionaryKeybinding } from "./modules/lyric-editor/components/urban-dictionary-keybinding.tsx";
+import { LinePropertiesKeybinding } from "./modules/lyric-editor/components/line-properties-keybinding.tsx";
 import { AutosaveManager } from "./modules/project/autosave/AutosaveManager.tsx";
 import exportTTMLText from "./modules/project/logic/ttml-writer.ts";
 import { GlobalDragOverlay } from "./modules/project/modals/GlobalDragOverlay.tsx";
@@ -128,6 +129,7 @@ import { previewFullscreenAtom } from "./modules/settings/states/preview.ts";
 import { settingsDialogAtom, settingsTabAtom } from "./states/dialogs.ts";
 import {
 	isDarkThemeAtom,
+	isDirtyAtom,
 	isGlobalFileDraggingAtom,
 	lyricLinesAtom,
 	showPreviewPanelAtom,
@@ -519,6 +521,7 @@ function App() {
 		const titlebarBgLum = vTitlebarBg ? getLuminance(vTitlebarBg) : null;
 		const sidebarBgLum = vSidebarBg ? getLuminance(vSidebarBg) : null;
 		const dialogBgLum = vDialogBg ? getLuminance(vDialogBg) : null;
+		const audioBarBgLum = vAudioBarBg ? getLuminance(vAudioBarBg) : null;
 
 		// Mode-safe overrides:
 		// In light mode, text must be dark (lum < 0.55) and surfaces shouldn't be pitch dark (lum > 0.4 unless transparent)
@@ -561,6 +564,13 @@ function App() {
 			(isDarkTheme
 				? dialogBgLum === null || dialogBgLum < 0.65
 				: dialogBgLum === null || dialogBgLum > 0.4);
+
+		const shouldApplyAudioBarBg =
+			!!vAudioBarBg &&
+			(vAudioBarBg === "transparent" ||
+				(isDarkTheme
+					? audioBarBgLum === null || audioBarBgLum < 0.65
+					: audioBarBgLum === null || audioBarBgLum > 0.4));
 
 		const rootBg = shouldApplyEditorBg
 			? vEditorBg
@@ -614,7 +624,8 @@ function App() {
 			${vRomanColor ? `--romanization-color: ${vRomanColor} !important;` : ""}
 			${vTransColor ? `--translation-color: ${vTransColor} !important;` : ""}
 			
-			${vAudioBarBg ? `--audio-bar-bg: ${vAudioBarBg} !important;` : ""}
+			${shouldApplyAudioBarBg ? `--audio-bar-bg: ${vAudioBarBg} !important;` : ""}
+			${vAudioBarBg === "transparent" || (!vAudioBarBg && vTitlebarBg === "transparent") ? `--audio-bar-backdrop-filter: none !important;` : ""}
 			${vAudioBarText ? `--audio-bar-text: ${vAudioBarText} !important;` : ""}
 			
 			${vScrollbar ? `--scrollbar-thumb-color: ${vScrollbar} !important;` : ""}
@@ -800,21 +811,100 @@ function App() {
 
 	useEffect(() => {
 		const onBeforeClose = (evt: BeforeUnloadEvent) => {
-			const currentLyricLines = store.get(lyricLinesAtom);
-			if (
-				currentLyricLines.lyricLines.length +
-					currentLyricLines.metadata.length >
-				0
-			) {
+			if (store.get(isDirtyAtom)) {
 				evt.preventDefault();
-				evt.returnValue = false;
+				evt.returnValue = "";
 			}
 		};
 		window.addEventListener("beforeunload", onBeforeClose);
+
+		let unlistenClose: (() => void) | undefined;
+		let cancelled = false;
+		let isPrompting = false;
+
+		const isTauri =
+			typeof window !== "undefined" &&
+			(!!(window as any).__TAURI__ || !!import.meta.env.TAURI_ENV_PLATFORM);
+
+		if (isTauri) {
+			(async () => {
+				try {
+					const { getCurrentWindow } = await import("@tauri-apps/api/window");
+					const appWindow = getCurrentWindow();
+					const unlisten = await appWindow.onCloseRequested(async (event) => {
+						if (!store.get(isDirtyAtom)) {
+							return;
+						}
+
+						event.preventDefault();
+
+						if (isPrompting) {
+							return;
+						}
+						isPrompting = true;
+
+						try {
+							const title = t(
+								"confirmDialog.closeWindow.title",
+								"Unsaved Changes",
+							);
+							const description = t(
+								"confirmDialog.closeWindow.description",
+								"You have unsaved changes. If you close the window now, these changes will be lost. Are you sure you want to close?",
+							);
+
+							let confirmed = false;
+							try {
+								const { ask } = await import("@tauri-apps/plugin-dialog");
+								confirmed = await ask(description, {
+									title,
+									kind: "warning",
+								});
+							} catch (dialogErr) {
+								logError(
+									"Native dialog ask failed, falling back to confirm",
+									dialogErr,
+								);
+								confirmed = window.confirm(`${title}\n\n${description}`);
+							}
+
+							if (confirmed) {
+								if (unlistenClose) {
+									unlistenClose();
+									unlistenClose = undefined;
+								}
+								try {
+									await appWindow.destroy();
+								} catch {
+									await appWindow.close();
+								}
+							}
+						} catch (err) {
+							logError("Failed to handle close confirmation", err);
+						} finally {
+							isPrompting = false;
+						}
+					});
+
+					if (cancelled) {
+						unlisten();
+					} else {
+						unlistenClose = unlisten;
+					}
+				} catch (err) {
+					logError("Failed to register Tauri close handler", err);
+				}
+			})();
+		}
+
 		return () => {
+			cancelled = true;
 			window.removeEventListener("beforeunload", onBeforeClose);
+			if (unlistenClose) {
+				unlistenClose();
+			}
 		};
-	}, [store]);
+	}, [store, t]);
 
 	useEffect(() => {
 		const handleDragEnter = (e: DragEvent) => {
@@ -1063,6 +1153,7 @@ function App() {
 					<GlobalDragOverlay />
 					{toolMode === ToolMode.Sync && <SyncKeyBinding />}
 					<UrbanDictionaryKeybinding />
+					<LinePropertiesKeybinding />
 					<DarkThemeDetector />
 					<Flex direction="column" height="100vh">
 						{!isPreviewFullscreen && <TitleBar key="titlebar" />}

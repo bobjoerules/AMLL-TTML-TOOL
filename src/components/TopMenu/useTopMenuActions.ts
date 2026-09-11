@@ -12,6 +12,7 @@ import {
 	cloudFileManagerInitialTabAtom,
 	cloudFileManagerOpenAtom,
 } from "$/modules/cloud/states";
+import { applyAutoDuetBySinger } from "$/modules/lyric-editor/utils/auto-duet.ts";
 import { getSynchronizableUnits } from "$/modules/lyric-editor/utils/lyric-states.ts";
 import { notifySectionIssues } from "$/modules/lyric-editor/utils/notify-section-issues.tsx";
 import { validateSections } from "$/modules/lyric-editor/utils/section-system.ts";
@@ -61,6 +62,7 @@ import {
 import {
 	isDirtyAtom,
 	lyricLinesAtom,
+	markSavedAtom,
 	newLyricLinesAtom,
 	projectIdAtom,
 	redoLyricLinesAtom,
@@ -252,7 +254,10 @@ export const useTopMenuActions = () => {
 						},
 					],
 				});
-				if (savedName) setSaveFileName(savedName);
+				if (savedName) {
+					setSaveFileName(savedName);
+					store.set(markSavedAtom);
+				}
 			} catch (e) {
 				error("Failed to save TTML file", e);
 			}
@@ -622,31 +627,9 @@ export const useTopMenuActions = () => {
 		const action = () => {
 			runHistoryAction(() => {
 				editLyricLines((draft) => {
-					const sectionMap = new Map(
-						(draft.sections ?? []).map((s) => [s.id, s]),
-					);
+					const result = applyAutoDuetBySinger(draft);
 
-					const singers: string[] = [];
-					const lineSingers: (string | undefined)[] = [];
-
-					for (const line of draft.lyricLines) {
-						let singer: string | undefined;
-						if (line.sectionId && sectionMap.has(line.sectionId)) {
-							singer = sectionMap.get(line.sectionId)!.vocalist?.trim();
-						}
-						if (!singer && line.agent) {
-							singer = line.agent.trim();
-						}
-						lineSingers.push(singer);
-						if (
-							singer &&
-							!singers.some((s) => s.toLowerCase() === singer.toLowerCase())
-						) {
-							singers.push(singer);
-						}
-					}
-
-					if (singers.length < 2) {
+					if ("error" in result) {
 						toast.info(
 							t(
 								"topBar.menu.autoDuetNotEnoughSingers",
@@ -656,26 +639,13 @@ export const useTopMenuActions = () => {
 						return;
 					}
 
-					const primarySinger = singers[0].toLowerCase();
-					let modifiedCount = 0;
-
-					for (let i = 0; i < draft.lyricLines.length; i++) {
-						const singer = lineSingers[i];
-						if (!singer) continue;
-						const isSecondary = singer.toLowerCase() !== primarySinger;
-						if (draft.lyricLines[i].isDuet !== isSecondary) {
-							draft.lyricLines[i].isDuet = isSecondary;
-							modifiedCount++;
-						}
-					}
-
 					toast.success(
 						t(
 							"topBar.menu.autoDuetSuccess",
 							"Auto duet applied to {count} lines based on {singers} singers.",
 							{
-								count: modifiedCount,
-								singers: singers.length,
+								count: result.modifiedCount,
+								singers: result.singersCount,
 							},
 						),
 					);

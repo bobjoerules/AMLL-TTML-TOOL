@@ -43,6 +43,7 @@ import {
 	MusicNote224Regular,
 } from "@fluentui/react-icons";
 import styles from "./index.module.css";
+import { PreviewProgressBar } from "$/components/PreviewProgressBar";
 import { CubicSpline, progressAt, Spring, stateAt } from "./math";
 import {
 	buildSpicyLines,
@@ -278,7 +279,7 @@ export const SpicyLyrics = memo(
 		const customBackgroundImage = useAtomValue(customBackgroundImageAtom);
 		const useAccent = useAtomValue(useCustomAccentAtom);
 		const accent = useAtomValue(customAccentColorAtom);
-		const [currentTimeVal, setCurrentTime] = useAtom(currentTimeAtom);
+		const setCurrentTime = useSetAtom(currentTimeAtom);
 		const currentDuration = useAtomValue(currentDurationAtom);
 		const isPlaying = useAtomValue(audioPlayingAtom);
 
@@ -295,31 +296,9 @@ export const SpicyLyrics = memo(
 			return 0;
 		}, [currentDuration, lyrics.lyricLines]);
 
-		const formatTime = (ms: number) => {
-			const totalSecs = Math.max(0, Math.floor(ms / 1000));
-			const mins = Math.floor(totalSecs / 60);
-			const secs = totalSecs % 60;
-			return `${mins}:${secs.toString().padStart(2, "0")}`;
-		};
-
-		const progressPct =
-			totalDuration > 0
-				? Math.min(100, Math.max(0, (currentTimeVal / totalDuration) * 100))
-				: 0;
-
 		const seek = (time: number) => {
 			setCurrentTime(time);
 			audioEngine.resumeOrSeekMusic(time / 1000);
-		};
-
-		const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
-			const rect = e.currentTarget.getBoundingClientRect();
-			const percent = Math.max(
-				0,
-				Math.min(1, (e.clientX - rect.left) / rect.width),
-			);
-			const newTime = percent * totalDuration;
-			seek(newTime);
 		};
 
 		const handleTogglePlay = (e: React.MouseEvent) => {
@@ -1226,29 +1205,10 @@ export const SpicyLyrics = memo(
 									</div>
 
 									{/* Progress Scrubber */}
-									<div className={styles.playbackRow}>
-										<span className={styles.timeLabel}>
-											{formatTime(currentTimeVal)}
-										</span>
-										<div
-											className={styles.scrubberContainer}
-											onClick={handleScrub}
-										>
-											<div className={styles.scrubberTrack}>
-												<div
-													className={styles.scrubberFill}
-													style={{ width: `${progressPct}%` }}
-												/>
-											</div>
-											<div
-												className={styles.scrubberThumb}
-												style={{ left: `${progressPct}%` }}
-											/>
-										</div>
-										<span className={styles.timeLabel}>
-											{formatTime(totalDuration)}
-										</span>
-									</div>
+									<PreviewProgressBar
+										totalDuration={totalDuration}
+										variant="spicy"
+									/>
 
 									{/* Track details */}
 									<div className={styles.trackDetails}>

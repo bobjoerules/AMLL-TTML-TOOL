@@ -41,6 +41,7 @@ import {
 	MusicNote224Regular,
 } from "@fluentui/react-icons";
 import styles from "./index.module.css";
+import { PreviewProgressBar } from "$/components/PreviewProgressBar";
 
 const displayTimeAtom = atom(0);
 
@@ -486,7 +487,6 @@ export const AMLLWrapper = memo(
 		const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 		const currentDuration = useAtomValue(currentDurationAtom);
-		const currentTimeVal = useAtomValue(currentTimeAtom);
 
 		const totalDuration = useMemo(() => {
 			if (currentDuration > 0) return currentDuration;
@@ -495,29 +495,6 @@ export const AMLLWrapper = memo(
 			}
 			return 0;
 		}, [currentDuration, lyrics.lyricLines]);
-
-		const formatTime = (ms: number) => {
-			const totalSecs = Math.max(0, Math.floor(ms / 1000));
-			const mins = Math.floor(totalSecs / 60);
-			const secs = totalSecs % 60;
-			return `${mins}:${secs.toString().padStart(2, "0")}`;
-		};
-
-		const progressPct =
-			totalDuration > 0
-				? Math.min(100, Math.max(0, (currentTimeVal / totalDuration) * 100))
-				: 0;
-
-		const handleScrub = (e: React.MouseEvent<HTMLDivElement>) => {
-			const rect = e.currentTarget.getBoundingClientRect();
-			const percent = Math.max(
-				0,
-				Math.min(1, (e.clientX - rect.left) / rect.width),
-			);
-			const newTime = percent * totalDuration;
-			setCurrentTime(newTime);
-			audioEngine.resumeOrSeekMusic(newTime / 1000);
-		};
 
 		const handleTogglePlay = (e: React.MouseEvent) => {
 			e.stopPropagation();
@@ -705,29 +682,10 @@ export const AMLLWrapper = memo(
 									</div>
 
 									{/* Progress Scrubber */}
-									<div className={styles.playbackRow}>
-										<span className={styles.timeLabel}>
-											{formatTime(currentTimeVal)}
-										</span>
-										<div
-											className={styles.scrubberContainer}
-											onClick={handleScrub}
-										>
-											<div className={styles.scrubberTrack}>
-												<div
-													className={styles.scrubberFill}
-													style={{ width: `${progressPct}%` }}
-												/>
-											</div>
-											<div
-												className={styles.scrubberThumb}
-												style={{ left: `${progressPct}%` }}
-											/>
-										</div>
-										<span className={styles.timeLabel}>
-											{formatTime(totalDuration)}
-										</span>
-									</div>
+									<PreviewProgressBar
+										totalDuration={totalDuration}
+										variant="amll"
+									/>
 
 									{/* Track details */}
 									<div className={styles.trackDetails}>

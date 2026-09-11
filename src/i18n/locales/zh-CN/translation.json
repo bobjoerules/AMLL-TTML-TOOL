@@ -51,6 +51,10 @@
 		},
 		"noSongwriter": {
 			"description": "该歌曲没有记录词曲作者（songwriter），确定要保存吗？"
+		},
+		"closeWindow": {
+			"title": "未保存的更改",
+			"description": "当前文件有未保存的更改。如果关闭窗口，这些更改将会丢失。确定要关闭窗口吗？"
 		}
 	},
 	"experimentalFeatures": {
@@ -519,9 +523,12 @@
 			"sync": "打轴",
 			"preview": "预览"
 		},
+		"sidePreview": "预览面板",
 		"boykisser": "boykisser",
 		"appName": "Apple Music-like Lyrics TTML 工具",
 		"menu": {
+			"showPreviewPanel": "显示预览面板",
+			"hidePreviewPanel": "隐藏预览面板",
 			"undo": "撤销",
 			"redo": "重做",
 			"selectAllLines": "全选所有行",
@@ -638,7 +645,9 @@
 			"selectInverted": "反向选择",
 			"selectWordsOfMatchedSelection": "选择相似单词",
 			"deleteSelection": "删除选择项",
-			"autoSegment": "",
+			"autoSegment": "工具 - 自动分词",
+			"toggleBackground": "编辑/对齐 - 切换背景歌词",
+			"toggleDuet": "编辑/对齐 - 切换对唱歌词",
 			"switchEditMode": "切换模式 - 编辑模式",
 			"switchSyncMode": "切换模式 - 对齐模式",
 			"switchPreviewMode": "切换模式 - 预览模式",

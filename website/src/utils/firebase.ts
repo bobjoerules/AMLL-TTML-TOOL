@@ -368,12 +368,29 @@ export async function compressImageToDataUrl(file: File, maxSize = 512, quality 
 
 /**
  * Updates the cover art of a song across Firestore documents.
+ * Restricted to the song author or designated moderators.
  */
 export async function updateSongCoverArt(
   ttml: FinishedTTML,
-  coverArtDataUrl: string
+  coverArtDataUrl: string,
+  currentUserUid?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!db) return { success: false, error: "Firestore is not connected." };
+
+  const callerUid = currentUserUid || auth?.currentUser?.uid;
+  if (!callerUid) {
+    return { success: false, error: "You must be logged in to update artwork." };
+  }
+
+  const isAuthor = Boolean(ttml.authorUid && ttml.authorUid === callerUid);
+  const isMod = isUserModerator(callerUid);
+
+  if (!isAuthor && !isMod) {
+    return {
+      success: false,
+      error: "You do not have permission to update artwork for this song.",
+    };
+  }
 
   try {
     const payload = {
@@ -382,7 +399,7 @@ export async function updateSongCoverArt(
     };
     const promises: Promise<any>[] = [];
 
-    if (ttml.authorUid) {
+    if (ttml.authorUid && (isAuthor || isMod)) {
       const userDocRef = doc(db, "users", ttml.authorUid, "ttmls", ttml.id);
       promises.push(setDoc(userDocRef, payload, { merge: true }).catch(() => {}));
     }

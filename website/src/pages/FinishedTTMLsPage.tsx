@@ -100,6 +100,14 @@ export const FinishedTTMLsPage: React.FC = () => {
   };
 
   const handleOpenArtworkPicker = (item: FinishedTTML) => {
+    if (!user || (user.uid !== item.authorUid && !isUserModerator(user.uid))) {
+      setFeedback({
+        type: 'error',
+        message: 'Only the song author or a moderator can update artwork.',
+      });
+      setTimeout(() => setFeedback(null), 4000);
+      return;
+    }
     setActiveTrackForUpload(item);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -112,11 +120,20 @@ export const FinishedTTMLsPage: React.FC = () => {
     if (!file || !activeTrackForUpload) return;
 
     const track = activeTrackForUpload;
+    if (!user || (user.uid !== track.authorUid && !isUserModerator(user.uid))) {
+      setFeedback({
+        type: 'error',
+        message: 'Only the song author or a moderator can update artwork.',
+      });
+      setTimeout(() => setFeedback(null), 4000);
+      return;
+    }
+
     setUploadingCoverId(track.id);
 
     try {
       const dataUrl = await compressImageToDataUrl(file);
-      const res = await updateSongCoverArt(track, dataUrl);
+      const res = await updateSongCoverArt(track, dataUrl, user.uid);
       if (res.success) {
         setTtmls((prev) =>
           prev.map((t) => (t.id === track.id ? { ...t, coverArt: dataUrl } : t))
@@ -233,54 +250,70 @@ export const FinishedTTMLsPage: React.FC = () => {
         </div>
       ) : (
         <div className="ttml-grid">
-          {filtered.map((item) => (
-            <div key={item.id} className="glass-panel ttml-card">
-              <div className="ttml-cover-wrapper">
-                {item.coverArt ? (
-                  <>
-                    <img src={item.coverArt} alt={item.title} className="ttml-cover" />
-                    <button
-                      className="ttml-cover-edit-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenArtworkPicker(item);
-                      }}
-                      title="Change artwork"
-                      aria-label="Change artwork"
+          {filtered.map((item) => {
+            const canManage = Boolean(user && (user.uid === item.authorUid || isUserModerator(user.uid)));
+
+            return (
+              <div key={item.id} className="glass-panel ttml-card">
+                <div className="ttml-cover-wrapper">
+                  {item.coverArt ? (
+                    <>
+                      <img src={item.coverArt} alt={item.title} className="ttml-cover" />
+                      {canManage && (
+                        <button
+                          className="ttml-cover-edit-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenArtworkPicker(item);
+                          }}
+                          title="Change artwork"
+                          aria-label="Change artwork"
+                        >
+                          {uploadingCoverId === item.id ? (
+                            <Loader2 size={15} className="spin" />
+                          ) : (
+                            <ImagePlus size={15} />
+                          )}
+                        </button>
+                      )}
+                    </>
+                  ) : canManage ? (
+                    <div
+                      className="ttml-cover-missing"
+                      onClick={() => handleOpenArtworkPicker(item)}
+                      role="button"
+                      tabIndex={0}
+                      title="Upload artwork for this song"
                     >
                       {uploadingCoverId === item.id ? (
-                        <Loader2 size={15} className="spin" />
+                        <>
+                          <Loader2 size={30} className="spin" color="var(--accent-pink)" />
+                          <span className="ttml-cover-missing-label">Uploading...</span>
+                        </>
                       ) : (
-                        <ImagePlus size={15} />
+                        <>
+                          <div className="ttml-cover-missing-icon">
+                            <ImagePlus size={22} />
+                          </div>
+                          <span className="ttml-cover-missing-label">Add Artwork</span>
+                          <span className="ttml-cover-missing-sub">Click to upload cover</span>
+                        </>
                       )}
-                    </button>
-                  </>
-                ) : (
-                  <div
-                    className="ttml-cover-missing"
-                    onClick={() => handleOpenArtworkPicker(item)}
-                    role="button"
-                    tabIndex={0}
-                    title="Upload artwork for this song"
-                  >
-                    {uploadingCoverId === item.id ? (
-                      <>
-                        <Loader2 size={30} className="spin" color="var(--accent-pink)" />
-                        <span className="ttml-cover-missing-label">Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="ttml-cover-missing-icon">
-                          <ImagePlus size={22} />
-                        </div>
-                        <span className="ttml-cover-missing-label">Add Artwork</span>
-                        <span className="ttml-cover-missing-sub">Click to upload cover</span>
-                      </>
-                    )}
-                  </div>
-                )}
-                <span className="ttml-badge">Finished</span>
-              </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="ttml-cover-missing"
+                      style={{ cursor: 'default' }}
+                      title="No artwork provided"
+                    >
+                      <div className="ttml-cover-missing-icon" style={{ opacity: 0.5 }}>
+                        <Music size={24} />
+                      </div>
+                      <span className="ttml-cover-missing-label" style={{ opacity: 0.6 }}>No Artwork</span>
+                    </div>
+                  )}
+                  <span className="ttml-badge">Finished</span>
+                </div>
 
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <h3 className="ttml-title" title={item.title}>
@@ -355,7 +388,8 @@ export const FinishedTTMLsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

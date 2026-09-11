@@ -34,6 +34,8 @@ identifier = "core:window:allow-unmaximize"
 [[permissions]]
 identifier = "core:window:allow-set-effects"
 [[permissions]]
+identifier = "core:window:allow-destroy"
+[[permissions]]
 identifier = "decorum:allow-show-snap-overlay"
 [[permissions]]
 identifier = "shell:allow-open"
@@ -55,6 +57,12 @@ identifier = "log:default"
 
 [[permissions]]
 identifier = "dialog:default"
+[[permissions]]
+identifier = "dialog:allow-ask"
+[[permissions]]
+identifier = "dialog:allow-confirm"
+[[permissions]]
+identifier = "dialog:allow-message"
 
 [[permissions]]
 identifier = "fs:default"

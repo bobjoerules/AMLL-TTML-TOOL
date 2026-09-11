@@ -99,12 +99,18 @@ export function formatKeyBindingsAsArray(cfg: KeyBindingsConfig): string[] {
 	});
 	return sorted.map((key) => {
 		if (key.startsWith("Key")) return key.substring(3);
-		if (navigator.userAgent.includes("Mac")) {
+		if (
+			typeof navigator !== "undefined" &&
+			navigator.userAgent.includes("Mac")
+		) {
 			if (key === "Control") return "⌃";
 			if (key === "Alt") return "⌥";
 			if (key === "Shift") return "⇧";
 			if (key === "Meta") return "⌘";
-		} else if (navigator.userAgent.includes("Windows")) {
+		} else if (
+			typeof navigator !== "undefined" &&
+			navigator.userAgent.includes("Windows")
+		) {
 			if (key.startsWith("Control")) return "Ctrl";
 			if (key === "Meta") return "Win";
 		}
@@ -191,56 +197,105 @@ function triggerCallbacks(
 	}
 }
 
-window.addEventListener("keydown", (evt) => {
-	if (evt.repeat) return;
-	if (isEditing(evt)) {
+if (typeof window !== "undefined") {
+	window.addEventListener("keydown", (evt) => {
+		if (evt.repeat) return;
+		if (isEditing(evt)) {
+			pressingKeys.clear();
+			return;
+		}
+		if (pressingKeys.size === 0) {
+			downTime = evt.timeStamp;
+		}
+
+		const code = removeSideOfKeyCode(evt.code);
+
+		// 阻止空格滚动
+		if (
+			(evt.code === "Space" || evt.code === "Home" || evt.code === "End") &&
+			evt.target === document.body
+		) {
+			evt.preventDefault();
+			evt.stopPropagation();
+		}
+
+		// Reconcile modifiers with actual event state to prevent stuck ghost modifiers
+		if (evt.ctrlKey) pressingKeys.add("Control");
+		else pressingKeys.delete("Control");
+
+		if (evt.metaKey) pressingKeys.add("Meta");
+		else pressingKeys.delete("Meta");
+
+		if (evt.altKey) pressingKeys.add("Alt");
+		else pressingKeys.delete("Alt");
+
+		if (evt.shiftKey) pressingKeys.add("Shift");
+		else pressingKeys.delete("Shift");
+
+		const isModifierCode =
+			code === "Control" ||
+			code === "Meta" ||
+			code === "Alt" ||
+			code === "Shift";
+
+		// Clear any previously stuck non-modifier keys if a new non-modifier key is pressed
+		if (!isModifierCode) {
+			for (const key of pressingKeys) {
+				if (
+					key !== "Control" &&
+					key !== "Meta" &&
+					key !== "Alt" &&
+					key !== "Shift" &&
+					key !== code
+				) {
+					pressingKeys.delete(key);
+				}
+			}
+		}
+
+		pressingKeys.add(code);
+
+		if (currentTriggerMode === KeyBindingTriggerMode.KeyDown) {
+			const joined = getShortcutKey(pressingKeys);
+			triggerCallbacks(joined, evt, downTime);
+		}
+	});
+
+	window.addEventListener("keyup", (evt) => {
+		if (isEditing(evt)) {
+			pressingKeys.clear();
+			return;
+		}
+
+		const code = removeSideOfKeyCode(evt.code);
+
+		// Reconcile modifier keys with actual event state
+		if (evt.ctrlKey) pressingKeys.add("Control");
+		else pressingKeys.delete("Control");
+
+		if (evt.metaKey) pressingKeys.add("Meta");
+		else pressingKeys.delete("Meta");
+
+		if (evt.altKey) pressingKeys.add("Alt");
+		else pressingKeys.delete("Alt");
+
+		if (evt.shiftKey) pressingKeys.add("Shift");
+		else pressingKeys.delete("Shift");
+
+		if (currentTriggerMode === KeyBindingTriggerMode.KeyUp) {
+			const joined = getShortcutKey(pressingKeys);
+			triggerCallbacks(joined, evt, downTime);
+		}
+
+		pressingKeys.delete(code);
+	});
+	window.addEventListener("blur", () => {
 		pressingKeys.clear();
-		return;
-	}
-	if (pressingKeys.size === 0) {
-		downTime = evt.timeStamp;
-	}
-
-	const code = removeSideOfKeyCode(evt.code);
-
-	// 阻止空格滚动
-	if (
-		(evt.code === "Space" || evt.code === "Home" || evt.code === "End") &&
-		evt.target === document.body
-	) {
-		evt.preventDefault();
-		evt.stopPropagation();
-	}
-
-	pressingKeys.add(code);
-
-	if (currentTriggerMode === KeyBindingTriggerMode.KeyDown) {
-		const joined = getShortcutKey(pressingKeys);
-		triggerCallbacks(joined, evt, downTime);
-	}
-});
-
-window.addEventListener("keyup", (evt) => {
-	if (isEditing(evt)) {
+	});
+	window.addEventListener("focus", () => {
 		pressingKeys.clear();
-		return;
-	}
-
-	const code = removeSideOfKeyCode(evt.code);
-
-	if (currentTriggerMode === KeyBindingTriggerMode.KeyUp) {
-		const joined = getShortcutKey(pressingKeys);
-		triggerCallbacks(joined, evt, downTime);
-	}
-
-	pressingKeys.delete(code);
-});
-window.addEventListener("blur", () => {
-	pressingKeys.clear();
-});
-window.addEventListener("focus", () => {
-	pressingKeys.clear();
-});
+	});
+}
 
 export function forceInvokeKeyBindingAtom(
 	store: ReturnType<typeof createStore>,
@@ -420,6 +475,17 @@ export function recordShortcut(): Promise<KeyBindingsConfig> {
 		stopRecordingShortcut();
 		const recorded = new Set<string>();
 		const stack = new Set<string>();
+
+		const cleanup = () => {
+			stopRecordingShortcut();
+			window.removeEventListener("blur", onBlur);
+		};
+
+		const onBlur = () => {
+			cleanup();
+			reject(new Error("User canceled"));
+		};
+
 		const onKeyDown = (evt: KeyboardEvent) => {
 			recorded.add(evt.code);
 			stack.add(evt.code);
@@ -427,11 +493,13 @@ export function recordShortcut(): Promise<KeyBindingsConfig> {
 			evt.stopPropagation();
 			evt.stopImmediatePropagation();
 		};
+
 		const onKeyUp = (evt: KeyboardEvent) => {
+			const isEscape = evt.code === "Escape";
 			stack.delete(evt.code);
 			if (stack.size === 0) {
-				stopRecordingShortcut();
-				if (stack.has("Escape")) {
+				cleanup();
+				if (isEscape || recorded.has("Escape")) {
 					reject(new Error("User canceled"));
 				} else {
 					resolve([...recorded]);
@@ -441,9 +509,11 @@ export function recordShortcut(): Promise<KeyBindingsConfig> {
 			evt.stopPropagation();
 			evt.stopImmediatePropagation();
 		};
+
 		currentKeyDownEvent = onKeyDown;
 		currentKeyUpEvent = onKeyUp;
 		window.addEventListener("keydown", onKeyDown);
 		window.addEventListener("keyup", onKeyUp);
+		window.addEventListener("blur", onBlur, { once: true });
 	});
 }

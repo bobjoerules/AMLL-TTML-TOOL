@@ -128,7 +128,42 @@ export const saveStatusAtom = atom<SaveStatus>(SaveStatus.Saved);
 export const lastSavedTimeAtom = atom<number | null>(null);
 
 export const undoableLyricLinesAtom = withHistory(lyricLinesAtom, 10);
-export const isDirtyAtom = atom((get) => get(undoableLyricLinesAtom).canUndo);
+
+export const serializeLyricState = (lyric: TTMLLyric): string => {
+	return JSON.stringify({
+		lines: lyric.lyricLines,
+		metadata: lyric.metadata,
+		marks: lyric.marks || [],
+		sections: lyric.sections || [],
+	});
+};
+
+export const lastSavedContentAtom = atom<string | null>(
+	serializeLyricState({
+		lyricLines: [],
+		metadata: [],
+		marks: [],
+		sections: [],
+	}),
+);
+
+export const markSavedAtom = atom(null, (get, set) => {
+	const current = get(lyricLinesAtom);
+	set(lastSavedContentAtom, serializeLyricState(current));
+});
+
+export const isDirtyAtom = atom((get) => {
+	const current = get(lyricLinesAtom);
+	if (current.lyricLines.length === 0 && current.metadata.length === 0) {
+		return false;
+	}
+	const lastSaved = get(lastSavedContentAtom);
+	if (lastSaved === null) {
+		return current.lyricLines.length > 0 || current.metadata.length > 0;
+	}
+	return serializeLyricState(current) !== lastSaved;
+});
+
 export const undoLyricLinesAtom = atom(null, (_get, set) => {
 	set(undoableLyricLinesAtom, UNDO);
 });
@@ -156,6 +191,7 @@ export const newLyricLinesAtom = atom(
 		migrateLegacySections(newState);
 		repairSectionIntegrity(newState);
 		set(lyricLinesAtom, newState);
+		set(lastSavedContentAtom, serializeLyricState(newState));
 		set(selectedLinesAtom, new Set());
 		set(selectedWordsAtom, new Set());
 	},

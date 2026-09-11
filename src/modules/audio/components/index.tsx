@@ -205,11 +205,12 @@ export const AudioControls: FC = memo(() => {
 			data-guide-target="audio"
 			m="0"
 			style={{
-				backgroundColor: "var(--audio-bar-bg, var(--color-panel-solid))",
+				backgroundColor:
+					"var(--audio-bar-bg, var(--titlebar-bg, var(--color-panel-translucent)))",
 				backdropFilter:
-					"blur(var(--custom-backdrop-blur, 16px)) saturate(160%)",
+					"var(--audio-bar-backdrop-filter, var(--titlebar-backdrop-filter, blur(var(--custom-backdrop-blur, 16px)) saturate(160%)))",
 				WebkitBackdropFilter:
-					"blur(var(--custom-backdrop-blur, 16px)) saturate(160%)",
+					"var(--audio-bar-backdrop-filter, var(--titlebar-backdrop-filter, blur(var(--custom-backdrop-blur, 16px)) saturate(160%)))",
 				borderTop: "1px solid var(--gray-a4)",
 				height: "100%",
 				minHeight: 0,
