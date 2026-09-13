@@ -165,8 +165,18 @@ describe("LinePropertiesKeybinding commands and logic", () => {
 
 	it("cycles through multiple active voices (v1 -> v2 -> v3 -> v1) with isDuet keybinding", () => {
 		const store = createStore();
-		const line1 = { ...newLyricLine(), id: "line-1", agent: "v1", isDuet: false };
-		const line2 = { ...newLyricLine(), id: "line-2", agent: "v3", isDuet: true };
+		const line1 = {
+			...newLyricLine(),
+			id: "line-1",
+			agent: "v1",
+			isDuet: false,
+		};
+		const line2 = {
+			...newLyricLine(),
+			id: "line-2",
+			agent: "v3",
+			isDuet: true,
+		};
 
 		let state: TTMLLyric = {
 			metadata: [],

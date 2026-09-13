@@ -14,6 +14,29 @@ export const ttmlChecklistDialogAtom = atom(false);
 export const submitToAMLLDBDialogAtom = atom(false);
 export const splitWordDialogAtom = atom(false);
 export const replaceWordDialogAtom = atom(false);
+export interface FindReplaceState {
+	open: boolean;
+	replaceMode: boolean;
+	query: string;
+	replaceText: string;
+	matchCase: boolean;
+	wholeWord: boolean;
+	useRegex: boolean;
+	scope: "all" | "lyrics" | "translations" | "romanizations";
+	activeMatchIndex: number;
+}
+
+export const findReplaceStateAtom = atom<FindReplaceState>({
+	open: false,
+	replaceMode: false,
+	query: "",
+	replaceText: "",
+	matchCase: false,
+	wholeWord: false,
+	useRegex: false,
+	scope: "all",
+	activeMatchIndex: 0,
+});
 export const replaceRomanizationDialogAtom = atom({
 	open: false,
 	lineIndex: -1,

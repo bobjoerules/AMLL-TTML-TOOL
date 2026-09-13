@@ -36,23 +36,26 @@ import {
 	advancedSegmentationDialogAtom,
 	autoSegmentDialogAtom,
 	confirmDialogAtom,
+	findReplaceStateAtom,
 	historyRestoreDialogAtom,
 	latencyTestDialogAtom,
 	learnedSplitsDialogAtom,
 	metadataEditorDialogAtom,
 	openAccountSettingsAtom,
 	settingsDialogAtom,
+	spotMatchDialogAtom,
 	timeShiftDialogAtom,
 	timeStretchDialogAtom,
 	ttmlChecklistDialogAtom,
-	spotMatchDialogAtom,
 } from "$/states/dialogs.ts";
 import {
 	keyDeleteSelectionAtom,
+	keyFindAtom,
 	keyNewFileAtom,
 	keyNewWindowAtom,
 	keyOpenFileAtom,
 	keyRedoAtom,
+	keyReplaceAtom,
 	keySaveFileAtom,
 	keySelectAllAtom,
 	keySelectInvertedAtom,
@@ -116,6 +119,8 @@ export const useTopMenuActions = () => {
 	const selectWordsOfMatchedSelectionKey = useAtomValue(
 		keySelectWordsOfMatchedSelectionAtom,
 	);
+	const findKey = useAtomValue(keyFindAtom);
+	const replaceKey = useAtomValue(keyReplaceAtom);
 	const deleteSelectionKey = useAtomValue(keyDeleteSelectionAtom);
 	const runHistoryAction = useMemo(
 		() => createHistoryActionGate(requestAnimationFrame),
@@ -159,10 +164,10 @@ export const useTopMenuActions = () => {
 		if (isDirty) {
 			setConfirmDialog({
 				open: true,
-				title: t("confirmDialog.newFile.title", "确认新建文件"),
+				title: t("confirmDialog.newFile.title", "Confirm New File"),
 				description: t(
 					"confirmDialog.newFile.description",
-					"当前文件有未保存的更改。如果继续，这些更改将会丢失。确定要新建文件吗？",
+					"You have unsaved changes. If you proceed, these changes will be lost. Are you sure you want to create a new file?",
 				),
 				onConfirm: action,
 			});
@@ -486,6 +491,24 @@ export const useTopMenuActions = () => {
 
 	const onSelectWordsOfMatchedSelection = useCallback(() => {}, []);
 
+	const setFindReplaceState = useSetAtom(findReplaceStateAtom);
+
+	const onOpenFind = useCallback(() => {
+		setFindReplaceState((prev) => ({
+			...prev,
+			open: true,
+			replaceMode: false,
+		}));
+	}, [setFindReplaceState]);
+
+	const onOpenReplace = useCallback(() => {
+		setFindReplaceState((prev) => ({
+			...prev,
+			open: true,
+			replaceMode: true,
+		}));
+	}, [setFindReplaceState]);
+
 	const onDeleteSelection = useCallback(() => {
 		const selectedWordIds = store.get(selectedWordsAtom);
 		const selectedLineIds = store.get(selectedLinesAtom);
@@ -614,10 +637,13 @@ export const useTopMenuActions = () => {
 
 		setConfirmDialog({
 			open: true,
-			title: t("confirmDialog.syncLineTimestamps.title", "确认同步行时间戳"),
+			title: t(
+				"confirmDialog.syncLineTimestamps.title",
+				"Confirm Sync Line Timestamps",
+			),
 			description: t(
 				"confirmDialog.syncLineTimestamps.description",
-				"此操作将根据每行单词的时间戳自动同步所有行的起始和结束时间为第一个和最后一个音节的开始和结束时间。确定要继续吗？",
+				"This action will automatically synchronize the start and end times of all lines based on the timestamps of each word in the line, matching the start and end times of the first and last syllables. Are you sure you want to proceed?",
 			),
 			onConfirm: action,
 		});
@@ -705,6 +731,8 @@ export const useTopMenuActions = () => {
 		selectInvertedLinesKey,
 		selectWordsOfMatchedSelectionKey,
 		deleteSelectionKey,
+		findKey,
+		replaceKey,
 		undoDisabled: !undoLyricLines.canUndo,
 		redoDisabled: !undoLyricLines.canRedo,
 		onNewFile,
@@ -719,6 +747,8 @@ export const useTopMenuActions = () => {
 		onSaveFileToClipboard,
 		onUndo,
 		onRedo,
+		onOpenFind,
+		onOpenReplace,
 		onSelectAll,
 		onUnselectAll,
 		onSelectInverted,

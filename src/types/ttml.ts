@@ -171,7 +171,9 @@ export function getVoiceNumber(voice?: string | null): number {
 /**
  * Resolves the effective voice ID ("v1" ... "v1000") for a lyric line.
  */
-export function getLineVoice(line: Pick<LyricLine, "agent" | "isDuet">): string {
+export function getLineVoice(
+	line: Pick<LyricLine, "agent" | "isDuet">,
+): string {
 	if (line.agent && line.agent.trim().length > 0) {
 		return normalizeVoice(line.agent);
 	}
@@ -225,4 +227,3 @@ export function getVoiceColor(voice?: string | null): string {
 	const hue = (num * 137.5) % 360;
 	return `hsl(${Math.round(hue)}, 70%, 50%)`;
 }
-

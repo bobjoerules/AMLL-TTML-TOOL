@@ -551,7 +551,9 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
 							<Clock24Regular style={{ width: "12px", height: "12px" }} />
-							<span>{t("ribbonBar.syncMode.syncAdjustment", "打轴调整")}</span>
+							<span>
+								{t("ribbonBar.syncMode.syncAdjustment", "Timing Adjustment")}
+							</span>
 						</Flex>
 					}
 				>
@@ -565,7 +567,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
 							<Flex gap="1" align="center">
 								<Timer16Regular />
-								{t("ribbonBar.syncMode.timeOffset", "时间戳位移")}
+								{t("ribbonBar.syncMode.timeOffset", "Time Offset")}
 							</Flex>
 						</Text>
 						<TextField.Root
@@ -980,7 +982,7 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
 						<Keyboard24Regular style={{ width: "12px", height: "12px" }} />
 						<span>
-							{t("ribbonBar.syncMode.keyBindingReference", "打轴键位速查")}
+							{t("ribbonBar.syncMode.keyBindingReference", "Important Hotkeys")}
 						</span>
 					</Flex>
 				}
@@ -995,15 +997,15 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						justify="center"
 					>
 						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.syncMode.startSync", "起始轴")}
+							{t("ribbonBar.syncMode.startSync", "Mark Begin")}
 						</Text>
 						<KeyBinding kbdAtom={keySyncStartAtom} />
 						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.syncMode.continuousSync", "连续轴")}
+							{t("ribbonBar.syncMode.continuousSync", "Commit")}
 						</Text>
 						<KeyBinding kbdAtom={keySyncNextAtom} />
 						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.syncMode.endSync", "结束轴")}
+							{t("ribbonBar.syncMode.endSync", "Mark End")}
 						</Text>
 						<KeyBinding kbdAtom={keySyncEndAtom} />
 					</Grid>

@@ -134,13 +134,19 @@ export const useFileOpener = () => {
 									},
 								);
 								await audioEngine.loadMusic(flacFile);
-								toast.success(t("dialog.mp3Conversion.success", "转换成功"));
+								toast.success(
+									t("dialog.mp3Conversion.success", "Conversion successful"),
+								);
 								return;
 							} catch (e) {
 								toast.error(
-									t("dialog.mp3Conversion.failed", "转换失败: {error}", {
-										error: e instanceof Error ? e.message : String(e),
-									}),
+									t(
+										"dialog.mp3Conversion.failed",
+										"Conversion failed: {error}",
+										{
+											error: e instanceof Error ? e.message : String(e),
+										},
+									),
 								);
 								audioEngine.loadMusic(file);
 								return;
@@ -185,13 +191,19 @@ export const useFileOpener = () => {
 									},
 								);
 								await audioEngine.loadMusic(flacFile);
-								toast.success(t("dialog.mp3Conversion.success", "转换成功"));
+								toast.success(
+									t("dialog.mp3Conversion.success", "Conversion successful"),
+								);
 								return;
 							} catch (e) {
 								toast.error(
-									t("dialog.mp3Conversion.failed", "转换失败: {error}", {
-										error: e instanceof Error ? e.message : String(e),
-									}),
+									t(
+										"dialog.mp3Conversion.failed",
+										"Conversion failed: {error}",
+										{
+											error: e instanceof Error ? e.message : String(e),
+										},
+									),
 								);
 								audioEngine.loadMusic(file);
 								return;
@@ -216,7 +228,7 @@ export const useFileOpener = () => {
 					lyricData = normalizeLyricLines(rawLines);
 				} else {
 					toast.error(
-						t("error.unsupportedFileFormat", "不支持的文件格式: {ext}", {
+						t("error.unsupportedFileFormat", "Unsupported file format: {ext}", {
 							ext,
 						}),
 					);
@@ -263,7 +275,7 @@ export const useFileOpener = () => {
 				setSaveFileName(nextFileName);
 			} catch (e) {
 				logError(`Failed to open file: ${file.name}`, e);
-				toast.error(t("error.openFileFailed", "打开文件失败"));
+				toast.error(t("error.openFileFailed", "Failed to open file"));
 			}
 		},
 		[
@@ -299,10 +311,10 @@ export const useFileOpener = () => {
 			if (isDirty) {
 				setConfirmDialog({
 					open: true,
-					title: t("confirmDialog.openFile.title", "确认打开文件"),
+					title: t("confirmDialog.openFile.title", "Confirm Open File"),
 					description: t(
 						"confirmDialog.openFile.description",
-						"当前文件有未保存的更改。如果继续，这些更改将会丢失。确定要打开新文件吗？",
+						"You have unsaved changes. If you proceed, these changes will be lost. Are you sure you want to open a new file?",
 					),
 					onConfirm: run,
 				});

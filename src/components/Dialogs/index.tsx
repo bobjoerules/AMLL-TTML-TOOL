@@ -7,6 +7,7 @@ import { ImportFromLRCLIB } from "$/modules/lrclib/modals/ImportDialog.tsx";
 import { GrammarCheckDialog } from "$/modules/lyric-editor/modals/GrammarCheckDialog.tsx";
 import { UrbanDictionaryDialog } from "$/modules/lyric-editor/modals/UrbanDictionaryDialog.tsx";
 import { CombineWordsDialog } from "$/modules/lyric-editor/tools/CombineWordsDialog.tsx";
+import { FindReplaceBar } from "$/modules/lyric-editor/tools/FindReplaceBar.tsx";
 import { ReplaceRomanizationDialog } from "$/modules/lyric-editor/tools/ReplaceRomanizationDialog.tsx";
 import { ReplaceWordDialog } from "$/modules/lyric-editor/tools/ReplaceWordDialog.tsx";
 import { TimeShiftDialog } from "$/modules/lyric-editor/tools/TimeShift.tsx";
@@ -48,6 +49,7 @@ export const Dialogs = () => {
 			<CombineWordsDialog />
 			<ReplaceWordDialog />
 			<ReplaceRomanizationDialog />
+			<FindReplaceBar />
 			<LatencyTestDialog />
 			<TTMLChecklistDialog />
 			<SpotMatchDialog />

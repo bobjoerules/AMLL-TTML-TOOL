@@ -216,17 +216,17 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 				/>
 			)}
 			<ContextMenu.CheckboxItem checked={Bgchecked} onCheckedChange={bgOnCheck}>
-				{t("contextMenu.bgLyric", "背景歌词")}
+				{t("contextMenu.bgLyric", "Background Lyric")}
 			</ContextMenu.CheckboxItem>
 			<ContextMenu.CheckboxItem
 				checked={DuetChecked}
 				onCheckedChange={duetOnCheck}
 			>
-				{t("contextMenu.duetLyric", "对唱歌词")}
+				{t("contextMenu.duetLyric", "Duet Lyric")}
 			</ContextMenu.CheckboxItem>
 			<ContextMenu.Sub>
 				<ContextMenu.SubTrigger>
-					{t("contextMenu.voice", "声部 / 歌手 (Voice)")}
+					{t("contextMenu.voice", "Voice / Singer")}
 				</ContextMenu.SubTrigger>
 				<ContextMenu.SubContent>
 					{availableVoices.map((voice) => (
@@ -281,7 +281,7 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 					});
 				}}
 			>
-				{t("contextMenu.insertLineBefore", "在前插入空行")}
+				{t("contextMenu.insertLineBefore", "Insert Empty Line Before")}
 			</ContextMenu.Item>
 			<ContextMenu.Item
 				onSelect={() => {
@@ -295,12 +295,12 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 					});
 				}}
 			>
-				{t("contextMenu.insertLineAfter", "在后插入空行")}
+				{t("contextMenu.insertLineAfter", "Insert Empty Line After")}
 			</ContextMenu.Item>
 			<ContextMenu.Item onSelect={copyLines} disabled={selectedLinesSize === 0}>
 				{t("contextMenu.copyLine", {
 					count: selectedLinesSize,
-					defaultValue: "复制行",
+					defaultValue: "Copy Line",
 				})}
 			</ContextMenu.Item>
 			<ContextMenu.Item
@@ -362,7 +362,7 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 			>
 				{t("contextMenu.deleteLine", {
 					count: selectedLinesSize,
-					defaultValue: "删除行",
+					defaultValue: "Delete Line",
 				})}
 			</ContextMenu.Item>
 		</>

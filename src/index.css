@@ -492,7 +492,10 @@ button.topMenuBarButton {
 	border: 1px solid transparent !important;
 	box-shadow: none !important;
 	cursor: pointer !important;
-	transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease !important;
+	transition:
+		background-color 0.12s ease,
+		border-color 0.12s ease,
+		color 0.12s ease !important;
 	user-select: none !important;
 }
 
@@ -511,7 +514,8 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) button.topMenuBarButton:where([data-state="open"], :active) {
+:is(.light, .light-theme, [data-theme="light"])
+	button.topMenuBarButton:where([data-state="open"], :active) {
 	background-color: rgba(0, 0, 0, 0.1) !important;
 	border-color: rgba(0, 0, 0, 0.08) !important;
 }
@@ -528,14 +532,23 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	}
 }
 
-:is(.rt-DropdownMenuContent, .rt-DropdownMenuSubContent, .rt-ContextMenuContent) {
+:is(
+		.rt-DropdownMenuContent,
+		.rt-DropdownMenuSubContent,
+		.rt-ContextMenuContent
+	) {
 	min-width: 220px !important;
 	border-radius: 9px !important;
 	padding: 5px !important;
 	animation: menuPopupSlideFade 0.14s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-:is(.dark, .dark-theme, [data-theme="dark"]) :is(.rt-DropdownMenuContent, .rt-DropdownMenuSubContent, .rt-ContextMenuContent) {
+:is(.dark, .dark-theme, [data-theme="dark"])
+	:is(
+		.rt-DropdownMenuContent,
+		.rt-DropdownMenuSubContent,
+		.rt-ContextMenuContent
+	) {
 	background-color: rgba(24, 24, 28, 0.88) !important;
 	backdrop-filter: blur(28px) saturate(190%) !important;
 	-webkit-backdrop-filter: blur(28px) saturate(190%) !important;
@@ -546,7 +559,12 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 		inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) :is(.rt-DropdownMenuContent, .rt-DropdownMenuSubContent, .rt-ContextMenuContent) {
+:is(.light, .light-theme, [data-theme="light"])
+	:is(
+		.rt-DropdownMenuContent,
+		.rt-DropdownMenuSubContent,
+		.rt-ContextMenuContent
+	) {
 	background-color: rgba(255, 255, 255, 0.92) !important;
 	backdrop-filter: blur(28px) saturate(190%) !important;
 	-webkit-backdrop-filter: blur(28px) saturate(190%) !important;
@@ -558,7 +576,12 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 }
 
 /* Dropdown Menu Items */
-:is(.rt-DropdownMenuItem, .rt-DropdownMenuSubTrigger, .rt-DropdownMenuCheckboxItem, .rt-DropdownMenuRadioItem) {
+:is(
+		.rt-DropdownMenuItem,
+		.rt-DropdownMenuSubTrigger,
+		.rt-DropdownMenuCheckboxItem,
+		.rt-DropdownMenuRadioItem
+	) {
 	height: 30px !important;
 	min-height: 30px !important;
 	border-radius: 5px !important;
@@ -567,20 +590,34 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	font-weight: 450 !important;
 	color: var(--gray-12) !important;
 	cursor: pointer !important;
-	transition: background-color 0.1s ease, color 0.1s ease !important;
+	transition:
+		background-color 0.1s ease,
+		color 0.1s ease !important;
 	display: flex !important;
 	align-items: center !important;
 	gap: 8px !important;
 }
 
-:is(.dark, .dark-theme, [data-theme="dark"]) :is(.rt-DropdownMenuItem, .rt-DropdownMenuSubTrigger, .rt-DropdownMenuCheckboxItem):where([data-highlighted], :hover),
-:is(.dark, .dark-theme, [data-theme="dark"]) :is(.rt-DropdownMenuSubTrigger):where([data-state="open"]) {
+:is(.dark, .dark-theme, [data-theme="dark"])
+	:is(
+		.rt-DropdownMenuItem,
+		.rt-DropdownMenuSubTrigger,
+		.rt-DropdownMenuCheckboxItem
+	):where([data-highlighted], :hover),
+:is(.dark, .dark-theme, [data-theme="dark"])
+	:is(.rt-DropdownMenuSubTrigger):where([data-state="open"]) {
 	background-color: rgba(255, 255, 255, 0.12) !important;
 	color: #ffffff !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) :is(.rt-DropdownMenuItem, .rt-DropdownMenuSubTrigger, .rt-DropdownMenuCheckboxItem):where([data-highlighted], :hover),
-:is(.light, .light-theme, [data-theme="light"]) :is(.rt-DropdownMenuSubTrigger):where([data-state="open"]) {
+:is(.light, .light-theme, [data-theme="light"])
+	:is(
+		.rt-DropdownMenuItem,
+		.rt-DropdownMenuSubTrigger,
+		.rt-DropdownMenuCheckboxItem
+	):where([data-highlighted], :hover),
+:is(.light, .light-theme, [data-theme="light"])
+	:is(.rt-DropdownMenuSubTrigger):where([data-state="open"]) {
 	background-color: rgba(0, 0, 0, 0.07) !important;
 	color: #000000 !important;
 }
@@ -601,30 +638,40 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	transition: all 0.1s ease !important;
 }
 
-:is(.dark, .dark-theme, [data-theme="dark"]) :is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
+:is(.dark, .dark-theme, [data-theme="dark"])
+	:is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
 	color: var(--gray-11) !important;
 	background: rgba(255, 255, 255, 0.06) !important;
 	border: 1px solid rgba(255, 255, 255, 0.1) !important;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) :is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
+:is(.light, .light-theme, [data-theme="light"])
+	:is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
 	color: var(--gray-11) !important;
 	background: rgba(0, 0, 0, 0.05) !important;
 	border: 1px solid rgba(0, 0, 0, 0.1) !important;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
-:is(.dark, .dark-theme, [data-theme="dark"]) :where([data-highlighted], :hover) :is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut),
-:is(.dark, .dark-theme, [data-theme="dark"]) [data-state="open"] :is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
+:is(.dark, .dark-theme, [data-theme="dark"])
+	:where([data-highlighted], :hover)
+	:is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut),
+:is(.dark, .dark-theme, [data-theme="dark"])
+	[data-state="open"]
+	:is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
 	color: #ffffff !important;
 	background: rgba(255, 255, 255, 0.16) !important;
 	border-color: rgba(255, 255, 255, 0.22) !important;
 	opacity: 1 !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) :where([data-highlighted], :hover) :is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut),
-:is(.light, .light-theme, [data-theme="light"]) [data-state="open"] :is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
+:is(.light, .light-theme, [data-theme="light"])
+	:where([data-highlighted], :hover)
+	:is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut),
+:is(.light, .light-theme, [data-theme="light"])
+	[data-state="open"]
+	:is(.rt-DropdownMenuShortcut, .rt-BaseMenuShortcut) {
 	color: #000000 !important;
 	background: rgba(0, 0, 0, 0.1) !important;
 	border-color: rgba(0, 0, 0, 0.15) !important;
@@ -632,16 +679,30 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 }
 
 /* Subtle Separators */
-:is(.rt-DropdownMenuSeparator, .rt-BaseMenuSeparator, .rt-ContextMenuSeparator) {
+:is(
+		.rt-DropdownMenuSeparator,
+		.rt-BaseMenuSeparator,
+		.rt-ContextMenuSeparator
+	) {
 	height: 1px !important;
 	margin: 4px 6px !important;
 }
 
-:is(.dark, .dark-theme, [data-theme="dark"]) :is(.rt-DropdownMenuSeparator, .rt-BaseMenuSeparator, .rt-ContextMenuSeparator) {
+:is(.dark, .dark-theme, [data-theme="dark"])
+	:is(
+		.rt-DropdownMenuSeparator,
+		.rt-BaseMenuSeparator,
+		.rt-ContextMenuSeparator
+	) {
 	background-color: rgba(255, 255, 255, 0.09) !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"]) :is(.rt-DropdownMenuSeparator, .rt-BaseMenuSeparator, .rt-ContextMenuSeparator) {
+:is(.light, .light-theme, [data-theme="light"])
+	:is(
+		.rt-DropdownMenuSeparator,
+		.rt-BaseMenuSeparator,
+		.rt-ContextMenuSeparator
+	) {
 	background-color: rgba(0, 0, 0, 0.08) !important;
 }
 
@@ -651,7 +712,11 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	margin-left: auto !important;
 }
 
-:is(.rt-DropdownMenuSubTrigger):where([data-highlighted], :hover, [data-state="open"]) :is(.rt-DropdownMenuSubTriggerIcon, .rt-BaseMenuSubTriggerIcon) {
+:is(.rt-DropdownMenuSubTrigger):where(
+		[data-highlighted],
+		:hover,
+		[data-state="open"]
+	)
+	:is(.rt-DropdownMenuSubTriggerIcon, .rt-BaseMenuSubTriggerIcon) {
 	opacity: 1 !important;
 }
-

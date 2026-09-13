@@ -322,7 +322,7 @@ const MetadataEntry = memo(
 											disabled={!isButtonEnabled}
 											asChild={isButtonEnabled}
 											variant="soft"
-											title={t("metadataDialog.openLink", "打开链接")}
+											title={t("metadataDialog.openLink", "Open link")}
 										>
 											{isButtonEnabled ? (
 												<a
@@ -372,7 +372,10 @@ const MetadataEntry = memo(
 							)}
 							{rowHasDuplicate && (
 								<Text color="red" size="1" mb="1" mt="1" wrap="wrap">
-									{t("metadataDialog.duplicateMsg", "存在重复的元数据值")}
+									{t(
+										"metadataDialog.duplicateMsg",
+										"Found duplicate metadata values",
+									)}
 								</Text>
 							)}
 							<Button
@@ -384,7 +387,7 @@ const MetadataEntry = memo(
 									});
 								}}
 							>
-								{t("metadataDialog.addValue", "添加")}
+								{t("metadataDialog.addValue", "Add")}
 							</Button>
 						</Flex>
 					</td>
@@ -446,38 +449,38 @@ export const MetadataEditor = () => {
 		return [
 			{
 				// 歌词所匹配的歌曲名
-				label: t("metadataDialog.builtinOptions.musicName", "歌曲名称"),
+				label: t("metadataDialog.builtinOptions.musicName", "Track Name"),
 				value: "musicName",
 				icon: <MusicNote1Regular />,
 			},
 			{
 				// 歌词所匹配的歌手名
-				label: t("metadataDialog.builtinOptions.artists", "歌曲的艺术家"),
+				label: t("metadataDialog.builtinOptions.artists", "Track Artists"),
 				value: "artists",
 				icon: <Person16Regular />,
 				validation: {
 					verifier: (value: string) => !/^.+[,;&，；、].+$/.test(value),
 					message: t(
 						"metadataDialog.builtinOptions.artistsInvalidMsg",
-						"如果有多个艺术家，请多次添加该键值，避免使用分隔符",
+						"If there are multiple artists, please add this key multiple times instead of using delimiters; if an artist name contains delimiters, please ignore this message",
 					),
 				},
 			},
 			{
-				label: t("metadataDialog.builtinOptions.songwriter", "词曲作者"),
+				label: t("metadataDialog.builtinOptions.songwriter", "Songwriter"),
 				value: "songwriter",
 				icon: <Person16Regular />,
 				validation: {
 					verifier: (value: string) => !/^.+[,;&，；、].+$/.test(value),
 					message: t(
 						"metadataDialog.builtinOptions.songwriterInvalidMsg",
-						"如果有多个词曲作者，请多次添加该键值，避免使用分隔符",
+						"If there are multiple songwriters, please add this key multiple times instead of using delimiters",
 					),
 				},
 			},
 			{
 				// 歌词所匹配的专辑名
-				label: t("metadataDialog.builtinOptions.album", "歌曲的专辑名"),
+				label: t("metadataDialog.builtinOptions.album", "Album Name"),
 				value: "album",
 				icon: <AlbumRegular />,
 			},
@@ -488,7 +491,10 @@ export const MetadataEditor = () => {
 			},
 			{
 				// 歌词所匹配的网易云音乐 ID
-				label: t("metadataDialog.builtinOptions.ncmMusicId", "网易云音乐 ID"),
+				label: t(
+					"metadataDialog.builtinOptions.ncmMusicId",
+					"NetEase Music ID",
+				),
 				value: "ncmMusicId",
 				icon: <NeteaseIcon />,
 				isLinkable: true,
@@ -497,14 +503,14 @@ export const MetadataEditor = () => {
 					verifier: numeric,
 					message: t(
 						"metadataDialog.builtinOptions.ncmMusicIdInvalidMsg",
-						"网易云音乐 ID 应为纯数字",
+						"NetEase Music ID should be numeric",
 					),
 					severe: true,
 				},
 			},
 			{
 				// 歌词所匹配的 QQ 音乐 ID
-				label: t("metadataDialog.builtinOptions.qqMusicId", "QQ 音乐 ID"),
+				label: t("metadataDialog.builtinOptions.qqMusicId", "QQ Music ID"),
 				value: "qqMusicId",
 				icon: <QQMusicIcon />,
 				isLinkable: true,
@@ -513,14 +519,14 @@ export const MetadataEditor = () => {
 					verifier: alphanumeric,
 					message: t(
 						"metadataDialog.builtinOptions.qqMusicIdInvalidMsg",
-						"QQ 音乐 ID 应为字母或数字",
+						"QQ Music ID should be alphanumeric",
 					),
 					severe: true,
 				},
 			},
 			{
 				// 歌词所匹配的 Spotify 音乐 ID
-				label: t("metadataDialog.builtinOptions.spotifyId", "Spotify 音乐 ID"),
+				label: t("metadataDialog.builtinOptions.spotifyId", "Spotify Track ID"),
 				value: "spotifyId",
 				icon: <SpotifyIcon />,
 				isLinkable: true,
@@ -529,7 +535,7 @@ export const MetadataEditor = () => {
 					verifier: alphanumeric,
 					message: t(
 						"metadataDialog.builtinOptions.spotifyIdInvalidMsg",
-						"Spotify ID 应为字母或数字",
+						"Spotify Track ID should be alphanumeric",
 					),
 					severe: true,
 				},
@@ -538,7 +544,7 @@ export const MetadataEditor = () => {
 				// 歌词所匹配的 Apple Music 音乐 ID
 				label: t(
 					"metadataDialog.builtinOptions.appleMusicId",
-					"Apple Music 音乐 ID",
+					"Apple Music Track ID",
 				),
 				value: "appleMusicId",
 				icon: <AppleMusicIcon />,
@@ -548,14 +554,14 @@ export const MetadataEditor = () => {
 					verifier: numeric,
 					message: t(
 						"metadataDialog.builtinOptions.appleMusicIdInvalidMsg",
-						"Apple Music ID 应为纯数字",
+						"Apple Music Track ID should be numeric",
 					),
 					severe: true,
 				},
 			},
 			{
 				// 歌词所匹配的 ISRC 编码
-				label: t("metadataDialog.builtinOptions.isrc", "歌曲的 ISRC 号码"),
+				label: t("metadataDialog.builtinOptions.isrc", "Track ISRC Code"),
 				value: "isrc",
 				icon: <NumberSymbol16Regular />,
 				isLinkable: true,
@@ -565,7 +571,7 @@ export const MetadataEditor = () => {
 						/^[A-Z]{2}-?[A-Z0-9]{3}-?\d{2}-?\d{5}$/.test(value),
 					message: t(
 						"metadataDialog.builtinOptions.isrcInvalidMsg",
-						"ISRC 编码格式应为 CC-XXX-YY-NNNNN",
+						"ISRC code format should be CC-XXX-YY-NNNNN",
 					),
 					severe: true,
 				},
@@ -574,7 +580,7 @@ export const MetadataEditor = () => {
 				// 逐词歌词作者 GitHub ID，例如 39523898
 				label: t(
 					"metadataDialog.builtinOptions.ttmlAuthorGithub",
-					"歌词作者 GitHub ID",
+					"Lyrics Author GitHub ID",
 				),
 				value: "ttmlAuthorGithub",
 				icon: <GithubIcon />,
@@ -582,7 +588,7 @@ export const MetadataEditor = () => {
 					verifier: numeric,
 					message: t(
 						"metadataDialog.builtinOptions.ttmlAuthorGithubInvalidMsg",
-						"GitHub ID 应为纯数字",
+						"GitHub ID should be numeric",
 					),
 					severe: true,
 				},
@@ -591,7 +597,7 @@ export const MetadataEditor = () => {
 				// 逐词歌词作者 GitHub 用户名，例如 Steve-xmh
 				label: t(
 					"metadataDialog.builtinOptions.ttmlAuthorGithubLogin",
-					"歌词作者 GitHub 用户名",
+					"Lyrics Author GitHub Username",
 				),
 				value: "ttmlAuthorGithubLogin",
 				icon: <GithubIcon />,
@@ -632,7 +638,7 @@ export const MetadataEditor = () => {
 				<div className={styles.dialogHeader}>
 					<Flex align="center" gap="2" justify="between">
 						<Dialog.Title style={{ margin: 0 }}>
-							{t("metadataDialog.title", "元数据编辑器")}
+							{t("metadataDialog.title", "Metadata Editor")}
 						</Dialog.Title>
 						<IconButton variant="ghost" color="gray" asChild>
 							<a
@@ -652,9 +658,9 @@ export const MetadataEditor = () => {
 						<thead>
 							<tr>
 								<th className={styles.keyColumn}>
-									{t("metadataDialog.key", "元数据类型")}
+									{t("metadataDialog.key", "Key")}
 								</th>
-								<th>{t("metadataDialog.value", "值")}</th>
+								<th>{t("metadataDialog.value", "Value")}</th>
 							</tr>
 						</thead>
 						{lyricLines.metadata.length === 0 && (
@@ -664,7 +670,7 @@ export const MetadataEditor = () => {
 										colSpan={2}
 										style={{ color: "var(--gray-9)", textAlign: "center" }}
 									>
-										{t("metadataDialog.empty", "无任何元数据")}
+										{t("metadataDialog.empty", "No metadata")}
 									</td>
 								</tr>
 							</tbody>
@@ -696,7 +702,7 @@ export const MetadataEditor = () => {
 							}}
 						>
 							<Button variant="soft" ref={addKeyButtonRef}>
-								{t("metadataDialog.addKeyValue", "添加新键值")}
+								{t("metadataDialog.addKeyValue", "Add new key-value")}
 								<DropdownMenu.TriggerIcon />
 							</Button>
 						</DropdownMenu.Trigger>
@@ -706,7 +712,7 @@ export const MetadataEditor = () => {
 									style={{
 										flexGrow: "1",
 									}}
-									placeholder={t("metadataDialog.customKey", "自定义键名")}
+									placeholder={t("metadataDialog.customKey", "Custom Key")}
 									value={customKey}
 									onChange={(e) => setCustomKey(e.currentTarget.value)}
 								/>
@@ -726,34 +732,34 @@ export const MetadataEditor = () => {
 												});
 											}
 										});
+										setCustomKey("");
 									}}
 								>
 									<Add16Regular />
 								</IconButton>
 							</Flex>
-							{builtinOptions.map((v) => (
+							{builtinOptions.map((opt) => (
 								<DropdownMenu.Item
-									key={`builtin-option-${v.value}`}
-									shortcut={v.value}
+									key={opt.value}
 									onClick={() => {
 										setLyricLines((prev) => {
 											const existsKey = prev.metadata.find(
-												(k) => k.key === v.value,
+												(k) => k.key === opt.value,
 											);
 											if (existsKey) {
 												existsKey.value.push("");
 											} else {
 												prev.metadata.push({
-													key: v.value,
+													key: opt.value,
 													value: [""],
 												});
 											}
 										});
 									}}
 								>
-									<Flex gap="2" align="center">
-										{v.icon}
-										{v.label}
+									<Flex align="center" gap="1">
+										{opt.icon}
+										{opt.label}
 									</Flex>
 								</DropdownMenu.Item>
 							))}
@@ -773,19 +779,17 @@ export const MetadataEditor = () => {
 						)}
 					</Button>
 					<Button
-						style={{
-							flex: "1 0 auto",
-						}}
+						style={{ flex: "1 0 auto" }}
 						variant="soft"
 						onClick={() => {
 							setLyricLines((prev) => {
-								for (const option of builtinOptions) {
+								for (const opt of builtinOptions) {
 									const existsKey = prev.metadata.find(
-										(k) => k.key === option.value,
+										(k) => k.key === opt.value,
 									);
 									if (!existsKey) {
 										prev.metadata.push({
-											key: option.value,
+											key: opt.value,
 											value: [""],
 										});
 									}
@@ -793,7 +797,7 @@ export const MetadataEditor = () => {
 							});
 						}}
 					>
-						{t("metadataDialog.addPresets", "一键添加所有预设键")}
+						{t("metadataDialog.addPresets", "Add all preset keys")}
 					</Button>
 					<Button
 						style={{ flex: "1 0 auto" }}
@@ -806,7 +810,7 @@ export const MetadataEditor = () => {
 						}}
 					>
 						<Delete16Regular />
-						{t("metadataDialog.clear", "清空")}
+						{t("metadataDialog.clear", "Clear")}
 					</Button>
 				</Flex>
 			</Dialog.Content>

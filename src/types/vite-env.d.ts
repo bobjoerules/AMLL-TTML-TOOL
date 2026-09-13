@@ -13,7 +13,7 @@
 /// <reference types="vite-plugin-pwa/client" />
 
 declare module "virtual:i18next-loader" {
-	const value: typeof import("../i18n/locales/zh-CN/translation.json");
+	const value: typeof import("../i18n/locales/en-US/translation.json");
 	export default value;
 }
 

@@ -17,11 +17,14 @@ export const useAudioFeedback = () => {
 		const getMessage = (type: string) => {
 			switch (type) {
 				case "TRANSCODING":
-					return t("audio.status.transcoding", "解码失败，正在尝试转码音频...");
+					return t(
+						"audio.status.transcoding",
+						"Decoding failed, attempting to transcode audio...",
+					);
 				case "LOADING":
-					return t("audio.status.loading", "正在加载音频...");
+					return t("audio.status.loading", "Loading audio...");
 				default:
-					return t("audio.status.processing", "正在处理...");
+					return t("audio.status.processing", "Processing...");
 			}
 		};
 
@@ -54,7 +57,7 @@ export const useAudioFeedback = () => {
 	useEffect(() => {
 		if (errorMsg) {
 			toast.error(
-				`${t("audio.error.workerError", "处理音频时出错")}: ${errorMsg}`,
+				`${t("audio.error.workerError", "Error processing audio")}: ${errorMsg}`,
 				{
 					autoClose: 5000,
 					closeOnClick: true,

@@ -115,7 +115,7 @@ const GrammarCheckButton = () => {
 		>
 			<Flex gap="1" align="center">
 				<DocumentCheckmark16Regular />
-				{t("ribbonBar.editMode.grammarCheck", "语法检查")}
+				{t("ribbonBar.editMode.grammarCheck", "Grammar Check")}
 			</Flex>
 		</Button>
 	);
@@ -417,7 +417,7 @@ function EditField<
 			if (durationValue === MULTIPLE_VALUES) {
 				setFieldInput("");
 				setFieldPlaceholder(
-					t("ribbonBar.editMode.multipleValues", "多个值..."),
+					t("ribbonBar.editMode.multipleValues", "Multiple values…"),
 				);
 				return;
 			}
@@ -432,7 +432,9 @@ function EditField<
 		}
 		if (currentValue === MULTIPLE_VALUES) {
 			setFieldInput("");
-			setFieldPlaceholder(t("ribbonBar.editMode.multipleValues", "多个值..."));
+			setFieldPlaceholder(
+				t("ribbonBar.editMode.multipleValues", "Multiple values…"),
+			);
 			return;
 		}
 		setFieldInput(currentValue);
@@ -453,7 +455,7 @@ function EditField<
 					onClick={() => setShowDurationInput((v) => !v)}
 				>
 					{showDurationInput
-						? t("ribbonBar.editMode.duration", "持续时间")
+						? t("ribbonBar.editMode.duration", "Duration")
 						: label}
 				</Button>
 			) : (
@@ -880,7 +882,7 @@ const AuxiliaryDisplayField: FC = () => {
 		<Grid columns="1fr auto" gapX="4" gapY="1" flexGrow="1" align="center">
 			<Text size="1" asChild style={{ color: "var(--accent-11)" }}>
 				<label htmlFor={idTranslation}>
-					{t("ribbonBar.editMode.showTranslation", "显示翻译行")}
+					{t("ribbonBar.editMode.showTranslation", "Show Translation Line")}
 				</label>
 			</Text>
 			<Checkbox
@@ -890,7 +892,7 @@ const AuxiliaryDisplayField: FC = () => {
 			/>
 			<Text size="1" asChild style={{ color: "var(--accent-11)" }}>
 				<label htmlFor={idRomanization}>
-					{t("ribbonBar.editMode.showRomanization", "显示音译行")}
+					{t("ribbonBar.editMode.showRomanization", "Show Romanization Line")}
 				</label>
 			</Text>
 			<Checkbox
@@ -900,7 +902,10 @@ const AuxiliaryDisplayField: FC = () => {
 			/>
 			<Text size="1" asChild style={{ color: "var(--accent-11)" }}>
 				<label htmlFor={idPerWord}>
-					{t("ribbonBar.editMode.showWordRomanizationInput", "显示逐字音译")}
+					{t(
+						"ribbonBar.editMode.showWordRomanizationInput",
+						"Show Per-Word Romanization",
+					)}
 				</label>
 			</Text>
 			<Checkbox
@@ -1191,9 +1196,7 @@ const LineVoiceSelect: FC = () => {
 			onValueChange={handleVoiceChange}
 			disabled={selectedLines.size === 0}
 		>
-			<Select.Trigger
-				placeholder={t("ribbonBar.editMode.voice", "声部 / Voice")}
-			/>
+			<Select.Trigger placeholder={t("ribbonBar.editMode.voice", "Voice")} />
 			<Select.Content>
 				{currentVoice === "mixed" && (
 					<Select.Item value="mixed" disabled>
@@ -1460,7 +1463,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 				label={
 					<Flex gap="1" align="center">
 						<Add24Regular />
-						{t("ribbonBar.editMode.new", "新建")}
+						{t("ribbonBar.editMode.new", "New")}
 					</Flex>
 				}
 				isSidebar={isSidebar}
@@ -1500,7 +1503,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					>
 						<Flex gap="1" align="center">
 							<DocumentAdd16Regular />
-							{t("ribbonBar.editMode.lyricLine", "歌词行")}
+							{t("ribbonBar.editMode.lyricLine", "Lyric Line")}
 						</Flex>
 					</Button>
 				</Grid>
@@ -1511,7 +1514,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<Timer24Regular />
-							{t("ribbonBar.editMode.lineTiming", "行时间戳")}
+							{t("ribbonBar.editMode.lineTiming", "Line Timing")}
 						</Flex>
 					}
 				>
@@ -1526,7 +1529,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<Play16Regular />
-									{t("ribbonBar.editMode.startTime", "起始时间")}
+									{t("ribbonBar.editMode.startTime", "Start Time")}
 								</Flex>
 							}
 							fieldName="startTime"
@@ -1537,7 +1540,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<Stop16Regular />
-									{t("ribbonBar.editMode.endTime", "结束时间")}
+									{t("ribbonBar.editMode.endTime", "End Time")}
 								</Flex>
 							}
 							fieldName="endTime"
@@ -1553,24 +1556,24 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<Info24Regular />
-							{t("ribbonBar.editMode.lineProperties", "行属性")}
+							{t("ribbonBar.editMode.lineProperties", "Line Properties")}
 						</Flex>
 					}
 				>
 					<Grid columns="1" gap="1" gapY="1" flexGrow="1" align="center">
 						<ToggleButtonField
 							icon={<MusicNote216Regular />}
-							label={t("ribbonBar.editMode.bgLyric", "背景歌词")}
+							label={t("ribbonBar.editMode.bgLyric", "Background Vocal")}
 							fieldName="isBG"
 						/>
 						<ToggleButtonField
 							icon={<People16Regular />}
-							label={t("ribbonBar.editMode.duetLyric", "对唱歌词")}
+							label={t("ribbonBar.editMode.duetLyric", "Duet Vocal")}
 							fieldName="isDuet"
 						/>
 						<ToggleButtonField
 							icon={<DismissCircle16Regular />}
-							label={t("ribbonBar.editMode.ignoreSync", "忽略打轴")}
+							label={t("ribbonBar.editMode.ignoreSync", "Ignore Sync")}
 							fieldName="ignoreSync"
 						/>
 					</Grid>
@@ -1588,7 +1591,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<Timer24Regular />
-							{t("ribbonBar.editMode.wordTiming", "词时间戳")}
+							{t("ribbonBar.editMode.wordTiming", "Word Timing")}
 						</Flex>
 					}
 				>
@@ -1603,7 +1606,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<Play16Regular />
-									{t("ribbonBar.editMode.startTime", "起始时间")}
+									{t("ribbonBar.editMode.startTime", "Start Time")}
 								</Flex>
 							}
 							fieldName="startTime"
@@ -1615,7 +1618,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<Stop16Regular />
-									{t("ribbonBar.editMode.endTime", "结束时间")}
+									{t("ribbonBar.editMode.endTime", "End Time")}
 								</Flex>
 							}
 							fieldName="endTime"
@@ -1632,7 +1635,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<TextT24Regular />
-							{t("ribbonBar.editMode.wordProperties", "单词属性")}
+							{t("ribbonBar.editMode.wordProperties", "Word Properties")}
 						</Flex>
 					}
 				>
@@ -1647,7 +1650,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<TextT16Regular />
-									{t("ribbonBar.editMode.wordContent", "单词内容")}
+									{t("ribbonBar.editMode.wordContent", "Word Content")}
 								</Flex>
 							}
 							fieldName="word"
@@ -1659,7 +1662,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<LocalLanguage16Regular />
-									{t("ribbonBar.editMode.romanWord", "单词音译")}
+									{t("ribbonBar.editMode.romanWord", "Word Romanization")}
 								</Flex>
 							}
 							fieldName="romanWord"
@@ -1671,7 +1674,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<Warning16Regular />
-									{t("ribbonBar.editMode.obscene", "不雅用语")}
+									{t("ribbonBar.editMode.obscene", "Obscene")}
 								</Flex>
 							}
 							isWordField
@@ -1687,7 +1690,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<Notebook24Regular />
-							{t("ribbonBar.editMode.secondaryContent", "次要内容")}
+							{t("ribbonBar.editMode.secondaryContent", "Secondary Content")}
 						</Flex>
 					}
 				>
@@ -1702,7 +1705,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<Translate16Regular />
-									{t("ribbonBar.editMode.translatedLyric", "翻译歌词")}
+									{t("ribbonBar.editMode.translatedLyric", "Translation")}
 								</Flex>
 							}
 							fieldName="translatedLyric"
@@ -1714,7 +1717,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 							label={
 								<Flex gap="1" align="center">
 									<LocalLanguage16Regular />
-									{t("ribbonBar.editMode.romanLyric", "音译歌词")}
+									{t("ribbonBar.editMode.romanLyric", "Romanization")}
 								</Flex>
 							}
 							fieldName="romanLyric"
@@ -1730,7 +1733,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<LayoutRowThree24Regular />
-							{t("ribbonBar.editMode.layoutMode", "布局模式")}
+							{t("ribbonBar.editMode.layoutMode", "Layout")}
 						</Flex>
 					}
 					isSidebar={isSidebar}
@@ -1738,11 +1741,11 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<EditModeField
 						simpleModeLabel={t(
 							"settings.common.layoutModeOptions.simple",
-							"简单模式",
+							"Simple Mode",
 						)}
 						advanceModeLabel={t(
 							"settings.common.layoutModeOptions.advance",
-							"高级模式",
+							"Advanced Mode",
 						)}
 					/>
 				</RibbonSection>
@@ -1752,7 +1755,10 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<LayoutColumnThree24Regular />
-							{t("ribbonBar.editMode.auxiliaryLineDisplay", "辅助行显示")}
+							{t(
+								"ribbonBar.editMode.auxiliaryLineDisplay",
+								"Auxiliary Line Display",
+							)}
 						</Flex>
 					}
 					isSidebar={isSidebar}
@@ -1765,7 +1771,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					label={
 						<Flex gap="1" align="center">
 							<Wrench24Regular />
-							{t("ribbonBar.editMode.tools", "工具")}
+							{t("ribbonBar.editMode.tools", "Check")}
 						</Flex>
 					}
 					isSidebar={isSidebar}

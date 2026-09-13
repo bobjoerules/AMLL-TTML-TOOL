@@ -24,10 +24,10 @@ export const ConfirmationDialog = () => {
 				<Dialog.Description>{dialogState.description}</Dialog.Description>
 				<Flex gap="3" mt="4" justify="end">
 					<Button variant="soft" color="gray" onClick={handleCancel}>
-						{dialogState.cancelText || t("confirmDialog.cancel", "取消")}
+						{dialogState.cancelText || t("confirmDialog.cancel", "Cancel")}
 					</Button>
 					<Button onClick={handleConfirm}>
-						{dialogState.confirmText || t("confirmDialog.confirm", "确认")}
+						{dialogState.confirmText || t("confirmDialog.confirm", "Confirm")}
 					</Button>
 				</Flex>
 			</Dialog.Content>

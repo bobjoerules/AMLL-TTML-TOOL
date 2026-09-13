@@ -202,6 +202,9 @@ export const SettingsCommonTab = ({
 											onValueChange={(lng) => {
 												i18n.changeLanguage(lng).then(() => {
 													localStorage.setItem("language", lng);
+													if (typeof document !== "undefined") {
+														document.documentElement.lang = lng;
+													}
 												});
 											}}
 										>

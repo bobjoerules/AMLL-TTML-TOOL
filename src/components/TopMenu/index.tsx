@@ -5,31 +5,33 @@ import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { CloudStatusButton } from "$/modules/cloud/components/CloudStatusButton";
 import { autoSegmentDoublePressAtom } from "$/modules/keyboard/states";
 import {
+	guideExportedAtom,
+	guidePanelOpenAtom,
+	guideStepAtom,
+	guideWelcomeOpenAtom,
+} from "$/modules/onboarding/states";
+import {
 	changelogDialogAtom,
 	settingsDialogAtom,
 	settingsTabAtom,
 	whatsNewDialogAtom,
 } from "$/states/dialogs.ts";
 import {
-	guideExportedAtom,
-	guidePanelOpenAtom,
-	guideStepAtom,
-	guideWelcomeOpenAtom,
-} from "$/modules/onboarding/states";
-import { showPreviewPanelAtom } from "$/states/main";
-import {
 	keyAutoSegmentAtom,
 	keyDeleteSelectionAtom,
+	keyFindAtom,
 	keyNewFileAtom,
 	keyNewWindowAtom,
 	keyOpenFileAtom,
 	keyRedoAtom,
+	keyReplaceAtom,
 	keySaveFileAtom,
 	keySelectAllAtom,
 	keySelectInvertedAtom,
 	keySelectWordsOfMatchedSelectionAtom,
 	keyUndoAtom,
 } from "$/states/keybindings";
+import { showPreviewPanelAtom } from "$/states/main";
 import {
 	registerKeyBindings,
 	useDoubleKeyBindingAtom,
@@ -85,6 +87,8 @@ export const TopMenu: FC = () => {
 	useKeyBindingAtom(keySaveFileAtom, menu.onSaveFile, [menu.onSaveFile]);
 	useKeyBindingAtom(keyUndoAtom, menu.onUndo, [menu.onUndo]);
 	useKeyBindingAtom(keyRedoAtom, menu.onRedo, [menu.onRedo]);
+	useKeyBindingAtom(keyFindAtom, menu.onOpenFind, [menu.onOpenFind]);
+	useKeyBindingAtom(keyReplaceAtom, menu.onOpenReplace, [menu.onOpenReplace]);
 	useEffect(() => {
 		const unbinds = [
 			registerKeyBindings(["Control", "KeyY"], menu.onRedo),
@@ -168,6 +172,24 @@ export const TopMenu: FC = () => {
 				e.preventDefault();
 				e.stopPropagation();
 				menuRef.current.onNewWindow();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "f" &&
+				!e.shiftKey &&
+				!e.altKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onOpenFind();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
+				(e.key.toLowerCase() === "h" ||
+					(e.key.toLowerCase() === "f" && e.altKey)) &&
+				!e.shiftKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onOpenReplace();
 			}
 		};
 		window.addEventListener("keydown", onKeyDown, { capture: true });
@@ -198,6 +220,8 @@ export const TopMenu: FC = () => {
 				"menu-cloud-auth": () => menuRef.current.onOpenCloudAuth(),
 				"menu-undo": () => menuRef.current.onUndo(),
 				"menu-redo": () => menuRef.current.onRedo(),
+				"menu-find": () => menuRef.current.onOpenFind(),
+				"menu-replace": () => menuRef.current.onOpenReplace(),
 				"menu-select-all": () => menuRef.current.onSelectAll(),
 				"menu-quick-segment": () => menuRef.current.onQuickAutoSegment(),
 				"menu-auto-segment": () => menuRef.current.onAutoSegment(),
@@ -250,7 +274,7 @@ export const TopMenu: FC = () => {
 				unlisten();
 			}
 		};
-	}, []);
+	}, [store]);
 
 	const isMac =
 		typeof window !== "undefined" &&
@@ -292,7 +316,10 @@ export const TopMenu: FC = () => {
 			{showHomeButton ? (
 				<HomeMenu />
 			) : (
-				<Toolbar.Root className="topMenuToolbar" style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+				<Toolbar.Root
+					className="topMenuToolbar"
+					style={{ display: "flex", alignItems: "center", gap: "2px" }}
+				>
 					<FileMenu variant="toolbar" />
 					<EditMenu variant="toolbar" />
 					<ToolMenu variant="toolbar" />

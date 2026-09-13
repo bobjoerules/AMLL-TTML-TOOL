@@ -455,9 +455,14 @@ pub fn run() {
                 let edit_menu = Submenu::new(app, "Edit", true)?;
                 let undo_item = MenuItem::with_id(app, "menu-undo", "Undo", true, Some("CmdOrCtrl+Z"))?;
                 let redo_item = MenuItem::with_id(app, "menu-redo", "Redo", true, Some("CmdOrCtrl+Shift+Z"))?;
+                let find_item = MenuItem::with_id(app, "menu-find", "Find...", true, Some("CmdOrCtrl+F"))?;
+                let replace_item = MenuItem::with_id(app, "menu-replace", "Replace...", true, Some("CmdOrCtrl+H"))?;
                 let select_all_item = MenuItem::with_id(app, "menu-select-all", "Select All", true, Some("CmdOrCtrl+A"))?;
                 edit_menu.append(&undo_item)?;
                 edit_menu.append(&redo_item)?;
+                edit_menu.append(&PredefinedMenuItem::separator(app)?)?;
+                edit_menu.append(&find_item)?;
+                edit_menu.append(&replace_item)?;
                 edit_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 edit_menu.append(&PredefinedMenuItem::cut(app, None)?)?;
                 edit_menu.append(&PredefinedMenuItem::copy(app, None)?)?;

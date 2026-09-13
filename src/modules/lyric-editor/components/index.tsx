@@ -637,7 +637,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 				>
 					<Flex direction="column" gap="3" align="center">
 						<Text size="6" weight="bold">
-							{t("app.empty.title", "没有歌词行")}
+							{t("app.empty.title", "No lyric lines")}
 						</Text>
 						<Text
 							color="gray"
@@ -777,7 +777,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 				className={styles.locateButton}
 				variant="soft"
 				onClick={handleLocate}
-				title={t("lyricEditor.locate", "定位")}
+				title={t("lyricEditor.locate", "Locate")}
 			>
 				<MyLocation24Regular />
 			</Button>

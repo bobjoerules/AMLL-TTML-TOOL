@@ -271,7 +271,7 @@ export const SplitWordDialog = memo(() => {
 	return (
 		<Dialog.Root open={splitWordDialog} onOpenChange={splitWordDialogOpen}>
 			<Dialog.Content>
-				<Dialog.Title>{t("splitWordDialog.title", "拆分单词")}</Dialog.Title>
+				<Dialog.Title>{t("splitWordDialog.title", "Split Word")}</Dialog.Title>
 				<Flex direction="column" gap="2">
 					<Callout.Root color="blue">
 						<Callout.Icon>
@@ -280,7 +280,7 @@ export const SplitWordDialog = memo(() => {
 						<Callout.Text>
 							{t(
 								"splitWordDialog.tip",
-								"拆分后新单词将会按自身单词字符平均分配原单词的始末时间",
+								"After splitting, new words will evenly divide the original word's start/end time.",
 							)}
 						</Callout.Text>
 					</Callout.Root>
@@ -309,7 +309,7 @@ export const SplitWordDialog = memo(() => {
 									setSplitIndices(indices);
 								}}
 							>
-								{t("splitWordDialog.syllableSplit", "音节拆分")}
+								{t("splitWordDialog.syllableSplit", "Syllable Split")}
 							</Button>
 						</Flex>
 					</Box>
@@ -323,7 +323,7 @@ export const SplitWordDialog = memo(() => {
 								/>
 								{t(
 									"splitWordDialog.applyToAll",
-									"将此拆分规则应用于所有相同的单词",
+									"Apply this splitting to all identical words",
 								)}
 							</Flex>
 						</Text>
@@ -349,7 +349,7 @@ export const SplitWordDialog = memo(() => {
 									checked={ignoreCase}
 									onCheckedChange={(c) => setIgnoreCase(c as boolean)}
 								/>
-								{t("splitWordDialog.ignoreCase", "忽略大小写")}
+								{t("splitWordDialog.ignoreCase", "Ignore case")}
 							</Flex>
 						</Text>
 					</Flex>
@@ -358,7 +358,7 @@ export const SplitWordDialog = memo(() => {
 				<Flex justify="end" mt="4">
 					<Dialog.Close>
 						<Button onClick={handleSplit}>
-							{t("splitWordDialog.actionButton", "执行")}
+							{t("splitWordDialog.actionButton", "Confirm")}
 						</Button>
 					</Dialog.Close>
 				</Flex>

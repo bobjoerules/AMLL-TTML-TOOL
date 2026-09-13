@@ -222,7 +222,9 @@ describe("exportTTMLText", () => {
 			isDuet: false,
 			startTime: 1000,
 			endTime: 2000,
-			words: [{ ...newLyricWord(), word: "Voice 1", startTime: 1000, endTime: 2000 }],
+			words: [
+				{ ...newLyricWord(), word: "Voice 1", startTime: 1000, endTime: 2000 },
+			],
 		};
 		const line2 = {
 			...newLyricLine(),
@@ -230,7 +232,9 @@ describe("exportTTMLText", () => {
 			isDuet: true,
 			startTime: 2000,
 			endTime: 3000,
-			words: [{ ...newLyricWord(), word: "Voice 2", startTime: 2000, endTime: 3000 }],
+			words: [
+				{ ...newLyricWord(), word: "Voice 2", startTime: 2000, endTime: 3000 },
+			],
 		};
 		const line3 = {
 			...newLyricLine(),
@@ -238,7 +242,9 @@ describe("exportTTMLText", () => {
 			isDuet: true,
 			startTime: 3000,
 			endTime: 4000,
-			words: [{ ...newLyricWord(), word: "Voice 3", startTime: 3000, endTime: 4000 }],
+			words: [
+				{ ...newLyricWord(), word: "Voice 3", startTime: 3000, endTime: 4000 },
+			],
 		};
 		const line4 = {
 			...newLyricLine(),
@@ -246,7 +252,9 @@ describe("exportTTMLText", () => {
 			isDuet: true,
 			startTime: 4000,
 			endTime: 5000,
-			words: [{ ...newLyricWord(), word: "Voice 4", startTime: 4000, endTime: 5000 }],
+			words: [
+				{ ...newLyricWord(), word: "Voice 4", startTime: 4000, endTime: 5000 },
+			],
 		};
 
 		const ttml = {
