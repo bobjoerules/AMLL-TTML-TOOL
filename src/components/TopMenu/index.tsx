@@ -292,36 +292,11 @@ export const TopMenu: FC = () => {
 			{showHomeButton ? (
 				<HomeMenu />
 			) : (
-				<Toolbar.Root>
-					<FileMenu
-						variant="toolbar"
-						buttonStyle={{
-							borderTopRightRadius: "0",
-							borderBottomRightRadius: "0",
-							marginRight: "0px",
-						}}
-					/>
-					<EditMenu
-						variant="toolbar"
-						triggerStyle={{
-							borderRadius: "0",
-							marginRight: "0px",
-						}}
-					/>
-					<ToolMenu
-						variant="toolbar"
-						triggerStyle={{
-							borderRadius: "0",
-							marginRight: "0px",
-						}}
-					/>
-					<HelpMenu
-						variant="toolbar"
-						buttonStyle={{
-							borderTopLeftRadius: "0",
-							borderBottomLeftRadius: "0",
-						}}
-					/>
+				<Toolbar.Root className="topMenuToolbar" style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+					<FileMenu variant="toolbar" />
+					<EditMenu variant="toolbar" />
+					<ToolMenu variant="toolbar" />
+					<HelpMenu variant="toolbar" />
 				</Toolbar.Root>
 			)}
 			<Box style={{ marginLeft: "16px", minWidth: 0, flexShrink: 1 }}>

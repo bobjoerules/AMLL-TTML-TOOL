@@ -1,6 +1,7 @@
 .controls {
 	display: flex;
 	width: 86px;
+	min-width: 0;
 	height: 44px;
 	min-height: 44px;
 	align-items: center;
@@ -8,6 +9,12 @@
 	visibility: hidden;
 	pointer-events: none;
 	flex-shrink: 0;
+	overflow: hidden;
+	transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+	&.fullscreen {
+		width: 0;
+	}
 
 	& > * {
 		display: flex;

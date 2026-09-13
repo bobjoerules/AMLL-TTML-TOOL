@@ -142,3 +142,87 @@ export const newLyricLine = (): LyricLine => ({
 	isLineSynced: false,
 	language: "auto",
 });
+
+/**
+ * Normalizes a singer voice string to canonical "v#" format (1 to 1000).
+ * Examples: "v1" -> "v1", "v3" -> "v3", "2" -> "v2", "V10" -> "v10".
+ * Defaults to "v1" if invalid or not specified.
+ */
+export function normalizeVoice(voice?: string | null): string {
+	if (!voice) return "v1";
+	const trimmed = voice.trim();
+	const match = trimmed.match(/^v?(\d+)$/i);
+	if (match) {
+		const num = Math.min(1000, Math.max(1, parseInt(match[1], 10)));
+		return `v${num}`;
+	}
+	return trimmed || "v1";
+}
+
+/**
+ * Extracts the integer index from a voice ID (e.g. "v1" -> 1, "v23" -> 23).
+ */
+export function getVoiceNumber(voice?: string | null): number {
+	const norm = normalizeVoice(voice);
+	const match = norm.match(/^v(\d+)$/);
+	return match ? parseInt(match[1], 10) : 1;
+}
+
+/**
+ * Resolves the effective voice ID ("v1" ... "v1000") for a lyric line.
+ */
+export function getLineVoice(line: Pick<LyricLine, "agent" | "isDuet">): string {
+	if (line.agent && line.agent.trim().length > 0) {
+		return normalizeVoice(line.agent);
+	}
+	return line.isDuet ? "v2" : "v1";
+}
+
+/**
+ * Formats a user-friendly label for a singer voice channel.
+ */
+export function formatVoiceLabel(voice: string, singerName?: string): string {
+	const norm = normalizeVoice(voice);
+	let base = norm;
+	if (norm === "v1") {
+		base = "v1 (Primary)";
+	} else if (norm === "v2") {
+		base = "v2 (Duet)";
+	}
+	const trimmed = singerName?.trim();
+	if (
+		trimmed &&
+		trimmed.toLowerCase() !== norm.toLowerCase() &&
+		!/^v?\d+$/i.test(trimmed)
+	) {
+		return `${base} - ${trimmed}`;
+	}
+	return base;
+}
+
+const VOICE_PALETTE = [
+	"#3b82f6", // v1: Blue
+	"#10b981", // v2: Emerald green
+	"#8b5cf6", // v3: Purple
+	"#f59e0b", // v4: Amber
+	"#ec4899", // v5: Pink
+	"#06b6d4", // v6: Cyan
+	"#f97316", // v7: Orange
+	"#a855f7", // v8: Violet
+	"#14b8a6", // v9: Teal
+	"#ef4444", // v10: Red
+] as const;
+
+/**
+ * Returns a consistent hex color for a given voice ID (v1..v1000).
+ */
+export function getVoiceColor(voice?: string | null): string {
+	const num = getVoiceNumber(voice);
+	if (num >= 1 && num <= VOICE_PALETTE.length) {
+		return VOICE_PALETTE[num - 1];
+	}
+	// Deterministic HSL color for higher voice IDs up to 1000
+	const hue = (num * 137.5) % 360;
+	return `hsl(${Math.round(hue)}, 70%, 50%)`;
+}
+

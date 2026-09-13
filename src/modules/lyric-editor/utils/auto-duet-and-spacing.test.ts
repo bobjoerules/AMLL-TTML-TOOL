@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { splitTrailingSpace } from "../components/lyric-word-view";
 import {
+	formatVoiceLabel,
 	type LyricLine,
-	type TTMLLyric,
 	newLyricLine,
 	newLyricWord,
+	type TTMLLyric,
 } from "$/types/ttml";
-import { applyAutoDuetBySinger, extractFirstSinger } from "./auto-duet";
+import { splitTrailingSpace } from "../components/lyric-word-view";
+import {
+	applyAutoDuetBySinger,
+	extractFirstSinger,
+	getLineSinger,
+} from "./auto-duet";
 
 describe("splitTrailingSpace", () => {
 	it("splits trailing single space into baseWord and spaceWord", () => {
@@ -91,8 +96,13 @@ describe("Auto duet vocalist assignment logic", () => {
 		};
 
 		const result = applyAutoDuetBySinger(lyrics);
-		expect(result).toEqual({ modifiedCount: 1, singersCount: 2 });
+		expect(result).toMatchObject({
+			singersCount: 2,
+			singerMap: { Alice: "v1", Bob: "v2" },
+		});
+		expect(lyrics.lyricLines[0].agent).toBe("v1");
 		expect(lyrics.lyricLines[0].isDuet).toBe(false); // Alice (primary)
+		expect(lyrics.lyricLines[1].agent).toBe("v2");
 		expect(lyrics.lyricLines[1].isDuet).toBe(true); // Bob (duet)
 	});
 
@@ -142,10 +152,16 @@ describe("Auto duet vocalist assignment logic", () => {
 		};
 
 		const result = applyAutoDuetBySinger(lyrics);
-		expect(result).toEqual({ modifiedCount: 1, singersCount: 2 });
+		expect(result).toMatchObject({
+			singersCount: 2,
+			singerMap: { Raveena: "v1", JPEGMAFIA: "v2" },
+		});
 		// Raveena is primary (first person in Verse 1 & Chorus)
+		expect(lyrics.lyricLines[0].agent).toBe("v1");
 		expect(lyrics.lyricLines[0].isDuet).toBe(false); // Raveena solo
+		expect(lyrics.lyricLines[1].agent).toBe("v1");
 		expect(lyrics.lyricLines[1].isDuet).toBe(false); // Raveena & JPEGMAFIA resolves to first person Raveena (primary)
+		expect(lyrics.lyricLines[2].agent).toBe("v2");
 		expect(lyrics.lyricLines[2].isDuet).toBe(true); // JPEGMAFIA solo is secondary (duet)
 	});
 
@@ -183,9 +199,95 @@ describe("Auto duet vocalist assignment logic", () => {
 		};
 
 		const result = applyAutoDuetBySinger(lyrics);
-		expect(result).toEqual({ modifiedCount: 1, singersCount: 2 });
+		expect(result).toMatchObject({
+			singersCount: 2,
+			singerMap: { Raveena: "v1", JPEGMAFIA: "v2" },
+		});
+		expect(lyrics.lyricLines[0].agent).toBe("v1");
 		expect(lyrics.lyricLines[0].isDuet).toBe(false); // Raveena (first person in Raveena & JPEGMAFIA)
+		expect(lyrics.lyricLines[1].agent).toBe("v2");
 		expect(lyrics.lyricLines[1].isDuet).toBe(true); // JPEGMAFIA (guest/secondary)
+	});
+
+	it("supports 3 or more singers mapping to v1, v2, v3... up to v1000", () => {
+		const lyrics: TTMLLyric = {
+			metadata: [],
+			sections: [
+				{
+					id: "sec-1",
+					label: "[Verse 1: Singer One]",
+					category: "verse",
+					vocalist: "Singer One",
+				},
+				{
+					id: "sec-2",
+					label: "[Verse 2: Singer Two]",
+					category: "verse",
+					vocalist: "Singer Two",
+				},
+				{
+					id: "sec-3",
+					label: "[Verse 3: Singer Three]",
+					category: "verse",
+					vocalist: "Singer Three",
+				},
+				{
+					id: "sec-4",
+					label: "[Outro: Singer Four]",
+					category: "outro",
+					vocalist: "Singer Four",
+				},
+			],
+			lyricLines: [
+				{
+					...newLyricLine(),
+					id: "line-1",
+					sectionId: "sec-1",
+					words: [{ ...newLyricWord(), word: "One" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-2",
+					sectionId: "sec-2",
+					words: [{ ...newLyricWord(), word: "Two" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-3",
+					sectionId: "sec-3",
+					words: [{ ...newLyricWord(), word: "Three" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-4",
+					sectionId: "sec-4",
+					words: [{ ...newLyricWord(), word: "Four" }],
+				},
+			],
+		};
+
+		const result = applyAutoDuetBySinger(lyrics);
+		expect(result).toMatchObject({
+			singersCount: 4,
+			singerMap: {
+				"Singer One": "v1",
+				"Singer Two": "v2",
+				"Singer Three": "v3",
+				"Singer Four": "v4",
+			},
+		});
+
+		expect(lyrics.lyricLines[0].agent).toBe("v1");
+		expect(lyrics.lyricLines[0].isDuet).toBe(false);
+
+		expect(lyrics.lyricLines[1].agent).toBe("v2");
+		expect(lyrics.lyricLines[1].isDuet).toBe(true);
+
+		expect(lyrics.lyricLines[2].agent).toBe("v3");
+		expect(lyrics.lyricLines[2].isDuet).toBe(true);
+
+		expect(lyrics.lyricLines[3].agent).toBe("v4");
+		expect(lyrics.lyricLines[3].isDuet).toBe(true);
 	});
 });
 
@@ -257,5 +359,31 @@ describe("Section boundaries and line insertion continuity", () => {
 		expect(computeBounds(lines, 2)).toEqual({ isStart: false, isEnd: true });
 		// Next section is unaffected
 		expect(computeBounds(lines, 3)).toEqual({ isStart: true, isEnd: true });
+	});
+});
+
+describe("formatVoiceLabel and singer name formatting", () => {
+	it("formats voice channels without redundantly repeating voice IDs", () => {
+		expect(formatVoiceLabel("v1")).toBe("v1 (Primary)");
+		expect(formatVoiceLabel("v1", "v1")).toBe("v1 (Primary)");
+		expect(formatVoiceLabel("v2")).toBe("v2 (Duet)");
+		expect(formatVoiceLabel("v2", "v2")).toBe("v2 (Duet)");
+		expect(formatVoiceLabel("v3")).toBe("v3");
+		expect(formatVoiceLabel("v3", "v3")).toBe("v3");
+		expect(formatVoiceLabel("v4", "v4")).toBe("v4");
+	});
+
+	it("appends human singer names cleanly", () => {
+		expect(formatVoiceLabel("v1", "Alice")).toBe("v1 (Primary) - Alice");
+		expect(formatVoiceLabel("v2", "Bob")).toBe("v2 (Duet) - Bob");
+		expect(formatVoiceLabel("v3", "Charlie")).toBe("v3 - Charlie");
+	});
+
+	it("does not treat agent voice channel ID as a singer name in getLineSinger", () => {
+		const lineWithVoiceAgent = { ...newLyricLine(), agent: "v3" };
+		expect(getLineSinger(lineWithVoiceAgent, new Map())).toBeUndefined();
+
+		const lineWithHumanAgent = { ...newLyricLine(), agent: "Alice" };
+		expect(getLineSinger(lineWithHumanAgent, new Map())).toBe("Alice");
 	});
 });

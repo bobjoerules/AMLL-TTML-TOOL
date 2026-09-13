@@ -87,12 +87,17 @@ import {
 	type LyricSectionCategory,
 	newLyricLine,
 	LYRIC_SECTION_CATEGORIES,
+	formatVoiceLabel,
+	getLineVoice,
+	getVoiceColor,
+	normalizeVoice,
 } from "$/types/ttml";
 import {
 	createSectionsFromSelectedLines,
 	repairSectionIntegrity,
 	sectionCategoryLabel,
 } from "$/modules/lyric-editor/utils/section-system";
+import { getLineSinger } from "$/modules/lyric-editor/utils/auto-duet.ts";
 import { msToTimestamp, parseTimespan } from "$/utils/timestamp.ts";
 import { buildLineRomanization, getPhoneticSyllables } from "$/utils/phonetic";
 import { RibbonFrame, RibbonSection } from "./common";
@@ -693,6 +698,13 @@ function ToggleButtonField<
 					if (selectedItems.has(line.id)) {
 						(line as unknown as Record<string, unknown>)[fieldName as string] =
 							targetValue;
+						if (fieldName === "isDuet") {
+							line.agent = targetValue
+								? line.agent && line.agent !== "v1"
+									? line.agent
+									: "v2"
+								: "v1";
+						}
 					}
 				}
 			}
@@ -1102,6 +1114,117 @@ const PhoneticSection = () => {
 	);
 };
 
+const LineVoiceSelect: FC = () => {
+	const { t } = useTranslation();
+	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
+	const selectedLines = useAtomValue(selectedLinesAtom);
+	const lyrics = useAtomValue(lyricLinesAtom);
+	const lyricLines = lyrics.lyricLines;
+
+	const selectedLineObjs = useMemo(
+		() => lyricLines.filter((l) => selectedLines.has(l.id)),
+		[lyricLines, selectedLines],
+	);
+
+	const currentVoice = useMemo(() => {
+		if (selectedLineObjs.length === 0) return "v1";
+		const firstVoice = getLineVoice(selectedLineObjs[0]);
+		if (selectedLineObjs.every((l) => getLineVoice(l) === firstVoice)) {
+			return firstVoice;
+		}
+		return "mixed";
+	}, [selectedLineObjs]);
+
+	const availableVoices = useMemo(() => {
+		const voiceSet = new Set<string>(["v1", "v2", "v3", "v4"]);
+		for (const l of lyricLines) {
+			voiceSet.add(getLineVoice(l));
+		}
+		return Array.from(voiceSet).sort((a, b) => {
+			const numA = parseInt(a.replace(/\D/g, "") || "1", 10);
+			const numB = parseInt(b.replace(/\D/g, "") || "1", 10);
+			return numA - numB;
+		});
+	}, [lyricLines]);
+
+	const voiceSingers = useMemo(() => {
+		const map: Record<string, string> = {};
+		const sectionMap = new Map<string, LyricSection>();
+		for (const s of lyrics.sections || []) {
+			sectionMap.set(s.id, s);
+		}
+		for (const l of lyricLines) {
+			const v = getLineVoice(l);
+			if (!map[v]) {
+				const singer = getLineSinger(l, sectionMap);
+				if (singer) map[v] = singer;
+			}
+		}
+		return map;
+	}, [lyricLines, lyrics.sections]);
+
+	const handleVoiceChange = (val: string) => {
+		if (val === "custom") {
+			const input = window.prompt(
+				t("contextMenu.enterVoicePrompt", "Enter voice ID (v1 to v1000):"),
+				currentVoice !== "mixed" ? currentVoice : "v3",
+			);
+			if (!input) return;
+			val = input;
+		}
+		const norm = normalizeVoice(val);
+		const isDuet = norm !== "v1";
+		editLyricLines((state) => {
+			for (const line of state.lyricLines) {
+				if (selectedLines.has(line.id)) {
+					line.agent = norm;
+					line.isDuet = isDuet;
+				}
+			}
+		});
+	};
+
+	return (
+		<Select.Root
+			size="1"
+			value={currentVoice}
+			onValueChange={handleVoiceChange}
+			disabled={selectedLines.size === 0}
+		>
+			<Select.Trigger
+				placeholder={t("ribbonBar.editMode.voice", "声部 / Voice")}
+			/>
+			<Select.Content>
+				{currentVoice === "mixed" && (
+					<Select.Item value="mixed" disabled>
+						{t("sectionActions.multiple", "(Multiple)")}
+					</Select.Item>
+				)}
+				{availableVoices.map((v) => (
+					<Select.Item key={v} value={v}>
+						<Flex align="center" gap="2">
+							<span
+								style={{
+									width: 8,
+									height: 8,
+									borderRadius: "50%",
+									backgroundColor: getVoiceColor(v),
+									display: "inline-block",
+								}}
+							/>
+							{formatVoiceLabel(v, voiceSingers[v])}
+						</Flex>
+					</Select.Item>
+				))}
+				<Select.Separator />
+				<Select.Item value="custom">
+					{t("contextMenu.customVoice", "Custom Voice (v#)...")}
+				</Select.Item>
+			</Select.Content>
+		</Select.Root>
+	);
+};
+
 const RibbonSectionControls: FC<{ isSidebar?: boolean }> = ({ isSidebar }) => {
 	const { t } = useTranslation();
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
@@ -1164,7 +1287,18 @@ const RibbonSectionControls: FC<{ isSidebar?: boolean }> = ({ isSidebar }) => {
 			}
 
 			if (targetSectionIds.size === 0 || hasLinesWithoutSection) {
-				createSectionsFromSelectedLines(draft, selectedLines, cat);
+				const created = createSectionsFromSelectedLines(
+					draft,
+					selectedLines,
+					cat,
+				);
+				for (const s of created) {
+					s.category = cat;
+					const catLabel = sectionCategoryLabel(cat);
+					const numStr = s.ordinal ? ` ${s.ordinal}` : "";
+					const vocStr = s.vocalist ? `: ${s.vocalist}` : "";
+					s.label = `${catLabel}${numStr}${vocStr}`;
+				}
 			}
 
 			if (targetSectionIds.size > 0 && draft.sections) {
@@ -1293,6 +1427,7 @@ const RibbonSectionControls: FC<{ isSidebar?: boolean }> = ({ isSidebar }) => {
 						<People16Regular />
 					</TextField.Slot>
 				</TextField.Root>
+				<LineVoiceSelect />
 			</Grid>
 		</RibbonSection>
 	);

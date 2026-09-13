@@ -162,4 +162,39 @@ describe("LinePropertiesKeybinding commands and logic", () => {
 		);
 		expect(result).toBe(false);
 	});
+
+	it("cycles through multiple active voices (v1 -> v2 -> v3 -> v1) with isDuet keybinding", () => {
+		const store = createStore();
+		const line1 = { ...newLyricLine(), id: "line-1", agent: "v1", isDuet: false };
+		const line2 = { ...newLyricLine(), id: "line-2", agent: "v3", isDuet: true };
+
+		let state: TTMLLyric = {
+			metadata: [],
+			lyricLines: [line1, line2],
+		};
+		store.set(lyricLinesAtom, state);
+		store.set(selectedLinesAtom, new Set(["line-1"]));
+
+		const editLyricLines = (recipe: (draft: TTMLLyric) => void) => {
+			const clone = JSON.parse(JSON.stringify(state));
+			recipe(clone);
+			state = clone;
+			store.set(lyricLinesAtom, state);
+		};
+
+		// 1st press: v1 -> v2 (since active voices are v1, v2, v3)
+		toggleLinePropertyInStore(store, editLyricLines, ToolMode.Edit, "isDuet");
+		expect(state.lyricLines[0].agent).toBe("v2");
+		expect(state.lyricLines[0].isDuet).toBe(true);
+
+		// 2nd press: v2 -> v3
+		toggleLinePropertyInStore(store, editLyricLines, ToolMode.Edit, "isDuet");
+		expect(state.lyricLines[0].agent).toBe("v3");
+		expect(state.lyricLines[0].isDuet).toBe(true);
+
+		// 3rd press: v3 -> v1 (wrap around)
+		toggleLinePropertyInStore(store, editLyricLines, ToolMode.Edit, "isDuet");
+		expect(state.lyricLines[0].agent).toBe("v1");
+		expect(state.lyricLines[0].isDuet).toBe(false);
+	});
 });

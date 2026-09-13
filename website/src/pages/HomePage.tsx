@@ -103,12 +103,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
-          <span>AMLL TTML Tool v2.2.5 Released</span>
+          <span>AMLL TTML Tool v2.2.6 Released</span>
         </div>
 
         <div className="hero-buttons">
           <a
-            href="https://ttmleditor.bobjoerules.com"
+            href="https://ttmleditor.com"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary"

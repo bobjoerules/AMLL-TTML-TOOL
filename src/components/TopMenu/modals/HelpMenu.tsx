@@ -72,7 +72,11 @@ export const HelpMenu = (props: HelpMenuProps) => {
 		<DropdownMenu.Root>
 			<Toolbar.Button asChild>
 				<DropdownMenu.Trigger>
-					<Button variant="soft" style={props.buttonStyle}>
+					<Button
+						variant="ghost"
+						className="topMenuBarButton"
+						style={props.buttonStyle}
+					>
 						<Trans i18nKey="topBar.menu.help">Help</Trans>
 					</Button>
 				</DropdownMenu.Trigger>

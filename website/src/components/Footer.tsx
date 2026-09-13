@@ -35,7 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
             Tinko
           </button>
           <a
-            href="https://ttmleditor.bobjoerules.com"
+            href="https://ttmleditor.com"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"

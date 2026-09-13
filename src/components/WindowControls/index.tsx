@@ -1,6 +1,7 @@
 import {
 	type ReactNode,
 	useCallback,
+	useEffect,
 	useLayoutEffect,
 	useMemo,
 	useState,
@@ -25,6 +26,7 @@ export interface WindowControlsProps {
 
 export interface SystemControlProps {
 	isMaximized: boolean;
+	isFullscreen?: boolean;
 	onClosed: () => void;
 	onMaximized: () => void;
 	onMinimized: () => void;
@@ -32,6 +34,7 @@ export interface SystemControlProps {
 
 export default function WindowControls(props: WindowControlsProps) {
 	const [variant, setVariant] = useState<WindowControlsVariant>("windows");
+	const [isFullscreen, setIsFullscreen] = useState(false);
 	const placeLeft = useMemo(() => variant === "macos", [variant]);
 
 	useLayoutEffect(() => {
@@ -50,6 +53,74 @@ export default function WindowControls(props: WindowControlsProps) {
 				return setVariant("windows");
 		}
 	}, [props.variant]);
+
+	useEffect(() => {
+		let isCleanedUp = false;
+		let unlistenResized: (() => void) | undefined;
+		let timer: ReturnType<typeof setTimeout> | null = null;
+
+		const updateFullscreenState = async () => {
+			try {
+				if (
+					typeof window !== "undefined" &&
+					(!!(window as unknown as { __TAURI__?: unknown }).__TAURI__ ||
+						!!import.meta.env.TAURI_ENV_PLATFORM)
+				) {
+					const { getCurrentWindow } = await import("@tauri-apps/api/window");
+					const fs = await getCurrentWindow().isFullscreen();
+					if (!isCleanedUp) {
+						setIsFullscreen(fs);
+					}
+					return;
+				}
+			} catch {}
+
+			if (!isCleanedUp) {
+				setIsFullscreen(!!document.fullscreenElement);
+			}
+		};
+
+		const handleResize = () => {
+			updateFullscreenState();
+			if (timer) clearTimeout(timer);
+			timer = setTimeout(updateFullscreenState, 350);
+		};
+
+		updateFullscreenState();
+
+		window.addEventListener("resize", handleResize);
+		document.addEventListener("fullscreenchange", handleResize);
+
+		if (
+			typeof window !== "undefined" &&
+			(!!(window as unknown as { __TAURI__?: unknown }).__TAURI__ ||
+				!!import.meta.env.TAURI_ENV_PLATFORM)
+		) {
+			import("@tauri-apps/api/window")
+				.then(({ getCurrentWindow }) => {
+					if (isCleanedUp) return;
+					return getCurrentWindow().onResized(() => {
+						handleResize();
+					});
+				})
+				.then((unlisten) => {
+					if (isCleanedUp) {
+						unlisten?.();
+					} else {
+						unlistenResized = unlisten;
+					}
+				})
+				.catch(() => {});
+		}
+
+		return () => {
+			isCleanedUp = true;
+			if (timer) clearTimeout(timer);
+			window.removeEventListener("resize", handleResize);
+			document.removeEventListener("fullscreenchange", handleResize);
+			unlistenResized?.();
+		};
+	}, []);
 
 	const onClosed = useCallback(async () => {
 		if (props.onClosed) return props.onClosed();
@@ -104,6 +175,7 @@ export default function WindowControls(props: WindowControlsProps) {
 			return (
 				<MacOSSystemsControls
 					isMaximized={false}
+					isFullscreen={isFullscreen}
 					onClosed={onClosed}
 					onMaximized={onMaximized}
 					onMinimized={onMinimized}

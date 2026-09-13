@@ -55,6 +55,29 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.6
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 13, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Multi-Singer Duet &amp; Voice Channel Engine:</b> Added support for three or more singer agents (v1, v2, v3, up to v1000) across line properties, auto-duet assignments, line vocal badges, ribbon controls, and Apple TTML head metadata exports.
+								</Text>
+								<Text size="2">
+									• <b>macOS Fullscreen Titlebar Optimization:</b> Dynamically collapse the window control spacer when entering native macOS fullscreen mode so titlebar content smoothly shifts to the left screen edge.
+								</Text>
+								<Text size="2">
+									• <b>Double Tooltip Fix:</b> Eliminated redundant native browser tooltips stacking over styled Radix UI tooltips on the Side Preview Panel toggle button.
+								</Text>
+								<Text size="2">
+									• <b>Domain &amp; Link Updates:</b> Updated canonical web application links and website documentation to ttmleditor.com.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.5
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

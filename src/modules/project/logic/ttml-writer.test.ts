@@ -214,4 +214,56 @@ describe("exportTTMLText", () => {
 		expect(xml).toContain("<p");
 		expect(xml).toContain("<span");
 	});
+
+	it("exports multi-singer agents (v1, v2, v3, v4) in metadata and on lines", () => {
+		const line1 = {
+			...newLyricLine(),
+			agent: "v1",
+			isDuet: false,
+			startTime: 1000,
+			endTime: 2000,
+			words: [{ ...newLyricWord(), word: "Voice 1", startTime: 1000, endTime: 2000 }],
+		};
+		const line2 = {
+			...newLyricLine(),
+			agent: "v2",
+			isDuet: true,
+			startTime: 2000,
+			endTime: 3000,
+			words: [{ ...newLyricWord(), word: "Voice 2", startTime: 2000, endTime: 3000 }],
+		};
+		const line3 = {
+			...newLyricLine(),
+			agent: "v3",
+			isDuet: true,
+			startTime: 3000,
+			endTime: 4000,
+			words: [{ ...newLyricWord(), word: "Voice 3", startTime: 3000, endTime: 4000 }],
+		};
+		const line4 = {
+			...newLyricLine(),
+			agent: "v4",
+			isDuet: true,
+			startTime: 4000,
+			endTime: 5000,
+			words: [{ ...newLyricWord(), word: "Voice 4", startTime: 4000, endTime: 5000 }],
+		};
+
+		const ttml = {
+			metadata: [],
+			lyricLines: [line1, line2, line3, line4],
+		};
+
+		const xml = exportTTMLText(ttml);
+		expect(xml).toMatch(/<ttm:agent\s+type="person"\s+xml:id="v1"/);
+		expect(xml).toMatch(/<ttm:agent\s+type="other"\s+xml:id="v2"/);
+		expect(xml).toMatch(/<ttm:agent\s+type="other"\s+xml:id="v3"/);
+		expect(xml).toMatch(/<ttm:agent\s+type="other"\s+xml:id="v4"/);
+
+		// Line agent attributes
+		expect(xml).toContain('ttm:agent="v1"');
+		expect(xml).toContain('ttm:agent="v2"');
+		expect(xml).toContain('ttm:agent="v3"');
+		expect(xml).toContain('ttm:agent="v4"');
+	});
 });
