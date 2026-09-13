@@ -71,6 +71,9 @@ export function ChangelogDialog() {
 									• <b>Double Tooltip Fix:</b> Eliminated redundant native browser tooltips stacking over styled Radix UI tooltips on the Side Preview Panel toggle button.
 								</Text>
 								<Text size="2">
+									• <b>Modern Top Menus &amp; Acrylic Surfaces:</b> Redesigned the top menu bar buttons (File, Edit, Tools, Help) and dropdown surfaces with translucent acrylic blur, smooth slide-and-fade popup animations, Fluent cloud icons, and keycap-style keyboard shortcut badges.
+								</Text>
+								<Text size="2">
 									• <b>Domain &amp; Link Updates:</b> Updated canonical web application links and website documentation to ttmleditor.com.
 								</Text>
 							</Flex>
