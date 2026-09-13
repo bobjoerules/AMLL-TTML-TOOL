@@ -1,4 +1,8 @@
-import { Button, DropdownMenu } from "@radix-ui/themes";
+import { Button, DropdownMenu, Flex } from "@radix-ui/themes";
+import {
+	CloudArrowDown20Regular,
+	CloudArrowUp20Regular,
+} from "@fluentui/react-icons";
 import { Toolbar } from "radix-ui";
 import type { CSSProperties } from "react";
 import { Trans } from "react-i18next";
@@ -50,10 +54,16 @@ const FileMenuItems = () => {
 			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={menu.onOpenFromCloud}>
-				☁️ <Trans i18nKey="topBar.menu.openFromCloud">Open from Cloud...</Trans>
+				<Flex align="center" gap="2">
+					<CloudArrowDown20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+					<Trans i18nKey="topBar.menu.openFromCloud">Open from Cloud...</Trans>
+				</Flex>
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onSaveToCloud}>
-				☁️ <Trans i18nKey="topBar.menu.saveToCloud">Save to Cloud...</Trans>
+				<Flex align="center" gap="2">
+					<CloudArrowUp20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+					<Trans i18nKey="topBar.menu.saveToCloud">Save to Cloud...</Trans>
+				</Flex>
 			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={menu.onOpenHistoryRestore}>
@@ -95,7 +105,11 @@ export const FileMenu = (props: FileMenuProps) => {
 		<DropdownMenu.Root>
 			<Toolbar.Button asChild>
 				<DropdownMenu.Trigger>
-					<Button variant="soft" style={props.buttonStyle}>
+					<Button
+						variant="ghost"
+						className="topMenuBarButton"
+						style={props.buttonStyle}
+					>
 						<Trans i18nKey="topBar.menu.file">File</Trans>
 					</Button>
 				</DropdownMenu.Trigger>

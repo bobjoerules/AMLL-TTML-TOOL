@@ -639,13 +639,18 @@ export const useTopMenuActions = () => {
 						return;
 					}
 
+					const mappingSummary = Object.entries(result.singerMap)
+						.map(([singer, voice]) => `${singer} (${voice})`)
+						.join(", ");
+
 					toast.success(
 						t(
 							"topBar.menu.autoDuetSuccess",
-							"Auto duet applied to {count} lines based on {singers} singers.",
+							"Auto duet assigned {singers} singers to {count} lines: {mapping}",
 							{
 								count: result.modifiedCount,
 								singers: result.singersCount,
+								mapping: mappingSummary,
 							},
 						),
 					);
@@ -658,7 +663,7 @@ export const useTopMenuActions = () => {
 			title: t("confirmDialog.autoDuet.title", "Auto Duet Based on Singer"),
 			description: t(
 				"confirmDialog.autoDuet.description",
-				"This will automatically assign lines sung by secondary/guest vocalists as Duet (isDuet = true) and the main vocalist as primary (isDuet = false). Continue?",
+				"This will automatically assign lines sung by detected vocalists to sequential voices (v1, v2, v3, ... v1000) and mark additional vocalists as Duet. Continue?",
 			),
 			onConfirm: action,
 		});

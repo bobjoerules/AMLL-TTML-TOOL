@@ -118,7 +118,11 @@ export const ToolMenu = (props: ToolMenuProps) => {
 		<DropdownMenu.Root>
 			<Toolbar.Button asChild>
 				<DropdownMenu.Trigger style={props.triggerStyle}>
-					<Button variant="soft" style={props.buttonStyle}>
+					<Button
+						variant="ghost"
+						className="topMenuBarButton"
+						style={props.buttonStyle}
+					>
 						<Trans i18nKey="topBar.menu.tool">Tools</Trans>
 					</Button>
 				</DropdownMenu.Trigger>

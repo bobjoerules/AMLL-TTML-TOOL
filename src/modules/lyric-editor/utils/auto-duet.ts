@@ -43,7 +43,10 @@ export function getLineSinger(
 		}
 	}
 	if (!rawSinger && line.agent) {
-		rawSinger = line.agent.trim();
+		const trimmedAgent = line.agent.trim();
+		if (!/^v?\d+$/i.test(trimmedAgent)) {
+			rawSinger = trimmedAgent;
+		}
 	}
 	return extractFirstSinger(rawSinger);
 }
@@ -52,6 +55,7 @@ export type AutoDuetResult =
 	| {
 			modifiedCount: number;
 			singersCount: number;
+			singerMap: Record<string, string>;
 	  }
 	| {
 			error: "not_enough_singers";
@@ -60,8 +64,11 @@ export type AutoDuetResult =
 /**
  * Applies auto-duet assignment to the lyrics draft.
  * Vocalists are resolved per line using the first singer if multiple singers are listed.
- * The primary singer (first encountered in the song) gets isDuet = false,
- * and secondary/guest singers get isDuet = true.
+ * Vocalists are assigned sequential voices (v1, v2, v3, ... v1000) in order of appearance:
+ * - 1st singer -> v1 (isDuet = false)
+ * - 2nd singer -> v2 (isDuet = true)
+ * - 3rd singer -> v3 (isDuet = true)
+ * - ... up to v1000.
  */
 export function applyAutoDuetBySinger(draft: TTMLLyric): AutoDuetResult {
 	const sectionMap = new Map((draft.sections ?? []).map((s) => [s.id, s]));
@@ -84,18 +91,39 @@ export function applyAutoDuetBySinger(draft: TTMLLyric): AutoDuetResult {
 		return { error: "not_enough_singers" };
 	}
 
-	const primarySinger = singers[0].toLowerCase();
+	// Create singer to voice mapping (v1, v2, v3, ... v1000)
+	const singerMap: Record<string, string> = {};
+	singers.forEach((singer, idx) => {
+		const voiceNum = Math.min(1000, idx + 1);
+		singerMap[singer] = `v${voiceNum}`;
+	});
+
 	let modifiedCount = 0;
 
 	for (let i = 0; i < draft.lyricLines.length; i++) {
 		const singer = lineSingers[i];
 		if (!singer) continue;
-		const isSecondary = singer.toLowerCase() !== primarySinger;
-		if (draft.lyricLines[i].isDuet !== isSecondary) {
-			draft.lyricLines[i].isDuet = isSecondary;
+		const singerKey = singers.find(
+			(s) => s.toLowerCase() === singer.toLowerCase(),
+		);
+		if (!singerKey) continue;
+		const assignedVoice = singerMap[singerKey] || "v1";
+		const isDuet = assignedVoice !== "v1";
+
+		let changed = false;
+		if (draft.lyricLines[i].agent !== assignedVoice) {
+			draft.lyricLines[i].agent = assignedVoice;
+			changed = true;
+		}
+		if (draft.lyricLines[i].isDuet !== isDuet) {
+			draft.lyricLines[i].isDuet = isDuet;
+			changed = true;
+		}
+		if (changed) {
 			modifiedCount++;
 		}
 	}
 
-	return { modifiedCount, singersCount: singers.length };
+	return { modifiedCount, singersCount: singers.length, singerMap };
 }
+

@@ -79,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
 
           <div className="nav-actions">
             <a
-              href="https://ttmleditor.bobjoerules.com"
+              href="https://ttmleditor.com"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary btn-sm nav-desktop-action"
@@ -189,7 +189,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
 
             <div className="nav-mobile-actions">
               <a
-                href="https://ttmleditor.bobjoerules.com"
+                href="https://ttmleditor.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary btn-sm nav-mobile-action-btn"

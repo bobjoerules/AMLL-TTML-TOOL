@@ -1,4 +1,9 @@
-import { Cloud24Regular } from "@fluentui/react-icons";
+import {
+	Cloud24Regular,
+	FolderOpen20Regular,
+	Save20Regular,
+	Settings20Regular,
+} from "@fluentui/react-icons";
 import { Avatar, Button, DropdownMenu, Flex, Text } from "@radix-ui/themes";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { FC } from "react";
@@ -108,14 +113,23 @@ export const CloudStatusButton: FC = () => {
 				</DropdownMenu.Label>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item onSelect={() => handleOpenCloudManager("open")}>
-					📂 {t("cloud.myCloudLibrary", "My Cloud Library...")}
+					<Flex align="center" gap="2">
+						<FolderOpen20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+						{t("cloud.myCloudLibrary", "My Cloud Library...")}
+					</Flex>
 				</DropdownMenu.Item>
 				<DropdownMenu.Item onSelect={() => handleOpenCloudManager("save")}>
-					💾 {t("cloud.saveToCloud", "Save Current to Cloud...")}
+					<Flex align="center" gap="2">
+						<Save20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+						{t("cloud.saveToCloud", "Save Current to Cloud...")}
+					</Flex>
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item onSelect={handleOpenAuth}>
-					⚙️ {t("cloud.accountSettings", "Cloud Account Settings...")}
+					<Flex align="center" gap="2">
+						<Settings20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+						{t("cloud.accountSettings", "Cloud Account Settings...")}
+					</Flex>
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>

@@ -15,7 +15,12 @@
  * 但是可能会有信息会丢失
  */
 
-import type { LyricLine, LyricWord, TTMLLyric } from "../../../types/ttml.ts";
+import {
+	getLineVoice,
+	type LyricLine,
+	type LyricWord,
+	type TTMLLyric,
+} from "../../../types/ttml.ts";
 import {
 	type LyricTextNormalizationOptions,
 	normalizeLyricText,
@@ -232,7 +237,13 @@ export default function exportTTMLText(
 	ttRoot.appendChild(head);
 
 	const body = createEl("body");
-	const hasOtherPerson = !!lyric.find((v) => v.isDuet);
+
+	const agents = new Set<string>();
+	agents.add("v1");
+	for (const l of lyric) {
+		const voice = getLineVoice(l);
+		agents.add(voice);
+	}
 
 	const metadataEl = createEl("metadata");
 	const mainPersonAgent = createEl("ttm:agent");
@@ -241,10 +252,21 @@ export default function exportTTMLText(
 
 	metadataEl.appendChild(mainPersonAgent);
 
-	if (hasOtherPerson) {
+	const otherAgents = Array.from(agents)
+		.filter((a) => a !== "v1")
+		.sort((a, b) => {
+			const matchA = a.match(/^v(\d+)$/i);
+			const matchB = b.match(/^v(\d+)$/i);
+			if (matchA && matchB) {
+				return parseInt(matchA[1], 10) - parseInt(matchB[1], 10);
+			}
+			return a.localeCompare(b);
+		});
+
+	for (const agentId of otherAgents) {
 		const otherPersonAgent = createEl("ttm:agent");
 		otherPersonAgent.setAttribute("type", "other");
-		otherPersonAgent.setAttribute("xml:id", "v2");
+		otherPersonAgent.setAttribute("xml:id", agentId);
 
 		metadataEl.appendChild(otherPersonAgent);
 	}
@@ -339,7 +361,7 @@ export default function exportTTMLText(
 			lineP.setAttribute("begin", msToTimestamp(beginTime));
 			lineP.setAttribute("end", msToTimestamp(endTime));
 
-			lineP.setAttribute("ttm:agent", line.isDuet ? "v2" : "v1");
+			lineP.setAttribute("ttm:agent", getLineVoice(line));
 
 			const itunesKey = `L${++i}`;
 			lineP.setAttribute("itunes:key", itunesKey);

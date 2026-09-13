@@ -67,7 +67,14 @@ import {
 	ToolMode,
 	toolModeAtom,
 } from "$/states/main.ts";
-import { type LyricLine, newLyricLine, newLyricWord } from "$/types/ttml.ts";
+import {
+	formatVoiceLabel,
+	getLineVoice,
+	getVoiceColor,
+	type LyricLine,
+	newLyricLine,
+	newLyricWord,
+} from "$/types/ttml.ts";
 import { msToTimestamp } from "$/utils/timestamp.ts";
 import {
 	copySectionTimings,
@@ -1009,7 +1016,60 @@ export const LyricLineView: FC<{
 								{line.isBG && (
 									<VideoBackgroundEffectFilled color="var(--accent-9)" />
 								)}
-								{line.isDuet && <TextAlignRightFilled color="#44AA33" />}
+								{(() => {
+									const lineVoice = getLineVoice(line);
+									if (!line.isDuet && lineVoice === "v1") return null;
+									const voiceColor = getVoiceColor(lineVoice);
+									return (
+										<span
+											title={formatVoiceLabel(lineVoice)}
+											style={{
+												display: "inline-flex",
+												alignItems: "center",
+												justifyContent: "center",
+												fontSize: "9px",
+												fontWeight: 700,
+												padding: "1px 3px",
+												borderRadius: "3px",
+												backgroundColor: `${voiceColor}20`,
+												color: voiceColor,
+												border: `1px solid ${voiceColor}80`,
+												lineHeight: 1,
+												cursor: "pointer",
+												marginTop: "2px",
+												userSelect: "none",
+											}}
+											onClick={(e) => {
+												e.stopPropagation();
+												editLyricLines((state) => {
+													const curLine = state.lyricLines[lineIndex];
+													if (!curLine) return;
+													const voiceSet = new Set<string>(["v1", "v2"]);
+													for (const l of state.lyricLines) {
+														voiceSet.add(getLineVoice(l));
+													}
+													const sorted = Array.from(voiceSet).sort((a, b) => {
+														const numA = parseInt(
+															a.replace(/\D/g, "") || "1",
+															10,
+														);
+														const numB = parseInt(
+															b.replace(/\D/g, "") || "1",
+															10,
+														);
+														return numA - numB;
+													});
+													const idx = sorted.indexOf(lineVoice);
+													const nextVoice = sorted[(idx + 1) % sorted.length];
+													curLine.agent = nextVoice;
+													curLine.isDuet = nextVoice !== "v1";
+												});
+											}}
+										>
+											{lineVoice}
+										</span>
+									);
+								})()}
 							</>
 						)}
 					</Flex>

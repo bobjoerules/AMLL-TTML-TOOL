@@ -17,13 +17,14 @@
  */
 
 import { uid } from "uid";
-import type {
-	LyricLine,
-	LyricWord,
-	LyricWordBase,
-	Mark,
-	TTMLLyric,
-	TTMLMetadata,
+import {
+	type LyricLine,
+	type LyricWord,
+	type LyricWordBase,
+	type Mark,
+	normalizeVoice,
+	type TTMLLyric,
+	type TTMLMetadata,
 } from "../../../types/ttml.ts";
 import { log } from "../../../utils/logging.ts";
 import { parseTimespan } from "../../../utils/timestamp.ts";
@@ -466,6 +467,8 @@ export function parseLyric(ttmlText: string): TTMLLyric {
 		}
 
 		const agentId = getAttr(lineEl, "agent") || getAttr(lineEl, "participant");
+		const rawVoice = agentId || (isDuet ? "v2" : undefined);
+		const normalizedVoice = rawVoice ? normalizeVoice(rawVoice) : undefined;
 
 		const line: LyricLine = {
 			id: uid(),
@@ -473,8 +476,12 @@ export function parseLyric(ttmlText: string): TTMLLyric {
 			translatedLyric: "",
 			romanLyric: "",
 			isBG,
-			isDuet: isBG ? isDuet : !!agentId && agentId !== mainAgentId,
-			agent: agentId || undefined,
+			isDuet: isBG
+				? isDuet || (!!normalizedVoice && normalizedVoice !== mainAgentId)
+				: !!normalizedVoice
+					? normalizedVoice !== mainAgentId
+					: isDuet,
+			agent: normalizedVoice,
 			startTime: parsedStartTime,
 			endTime: parsedEndTime,
 			ignoreSync: false,

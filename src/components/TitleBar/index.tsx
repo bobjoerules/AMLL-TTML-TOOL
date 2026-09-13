@@ -152,7 +152,7 @@ export const TitleBar: FC = () => {
 								color={showPreviewPanel ? undefined : "gray"}
 								onClick={() => setShowPreviewPanel((prev) => !prev)}
 								style={{ cursor: "pointer", fontWeight: 500 }}
-								title={
+								aria-label={
 									showPreviewPanel
 										? t(
 												"topBar.menu.hidePreviewPanel",

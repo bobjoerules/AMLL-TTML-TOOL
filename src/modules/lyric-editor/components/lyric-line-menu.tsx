@@ -1,11 +1,19 @@
-import { ContextMenu } from "@radix-ui/themes";
+import { ContextMenu, Flex } from "@radix-ui/themes";
 import { atom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { useSetImmerAtom } from "jotai-immer";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { lyricLinesAtom, selectedLinesAtom } from "$/states/main";
-import { type LyricLine, newLyricLine, newLyricWord } from "$/types/ttml";
+import {
+	formatVoiceLabel,
+	getLineVoice,
+	getVoiceColor,
+	type LyricLine,
+	newLyricLine,
+	newLyricWord,
+	normalizeVoice,
+} from "$/types/ttml";
 import {
 	globalEnableInsertAtom,
 	timingCopyPlacementAtom,
@@ -58,6 +66,52 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 		else return "indeterminate" as const;
 	});
 
+	const currentVoice = React.useMemo(() => {
+		const lines = store.get(lyricLinesAtom).lyricLines;
+		const selected = store.get(selectedLinesAtom);
+		const selectedLineObjs = lines.filter((line) => selected.has(line.id));
+		if (selectedLineObjs.length === 0) {
+			const cur = lines[lineIndex];
+			return cur ? getLineVoice(cur) : "v1";
+		}
+		const firstVoice = getLineVoice(selectedLineObjs[0]);
+		if (selectedLineObjs.every((l) => getLineVoice(l) === firstVoice)) {
+			return firstVoice;
+		}
+		return "mixed";
+	}, [store, lineIndex]);
+
+	const availableVoices = React.useMemo(() => {
+		const lines = store.get(lyricLinesAtom).lyricLines;
+		const voiceSet = new Set<string>(["v1", "v2", "v3", "v4"]);
+		for (const l of lines) {
+			voiceSet.add(getLineVoice(l));
+		}
+		return Array.from(voiceSet).sort((a, b) => {
+			const numA = parseInt(a.replace(/\D/g, "") || "1", 10);
+			const numB = parseInt(b.replace(/\D/g, "") || "1", 10);
+			return numA - numB;
+		});
+	}, [store]);
+
+	function setVoice(voice: string) {
+		const norm = normalizeVoice(voice);
+		const isDuet = norm !== "v1";
+		setDuetChecked(isDuet);
+		editLyricLines((state) => {
+			const targetIds =
+				selectedLines.size > 0
+					? selectedLines
+					: new Set([state.lyricLines[lineIndex]?.id]);
+			for (const line of state.lyricLines) {
+				if (targetIds.has(line.id)) {
+					line.agent = norm;
+					line.isDuet = isDuet;
+				}
+			}
+		});
+	}
+
 	function bgOnCheck(checked: boolean) {
 		setBgChecked(checked);
 		editLyricLines((state) => {
@@ -71,10 +125,20 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 	function duetOnCheck(checked: boolean) {
 		setDuetChecked(checked);
 		editLyricLines((state) => {
-			const lines = state.lyricLines.filter((line) =>
-				selectedLines.has(line.id),
-			);
-			for (const line of lines) line.isDuet = checked;
+			const targetIds =
+				selectedLines.size > 0
+					? selectedLines
+					: new Set([state.lyricLines[lineIndex]?.id]);
+			for (const line of state.lyricLines) {
+				if (targetIds.has(line.id)) {
+					line.isDuet = checked;
+					line.agent = checked
+						? line.agent && line.agent !== "v1"
+							? line.agent
+							: "v2"
+						: "v1";
+				}
+			}
 		});
 	}
 
@@ -160,6 +224,50 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 			>
 				{t("contextMenu.duetLyric", "对唱歌词")}
 			</ContextMenu.CheckboxItem>
+			<ContextMenu.Sub>
+				<ContextMenu.SubTrigger>
+					{t("contextMenu.voice", "声部 / 歌手 (Voice)")}
+				</ContextMenu.SubTrigger>
+				<ContextMenu.SubContent>
+					{availableVoices.map((voice) => (
+						<ContextMenu.CheckboxItem
+							key={voice}
+							checked={currentVoice === voice}
+							onSelect={() => setVoice(voice)}
+						>
+							<Flex align="center" gap="2">
+								<span
+									style={{
+										width: 8,
+										height: 8,
+										borderRadius: "50%",
+										backgroundColor: getVoiceColor(voice),
+										display: "inline-block",
+									}}
+								/>
+								{formatVoiceLabel(voice)}
+							</Flex>
+						</ContextMenu.CheckboxItem>
+					))}
+					<ContextMenu.Separator />
+					<ContextMenu.Item
+						onSelect={() => {
+							const input = window.prompt(
+								t(
+									"contextMenu.enterVoicePrompt",
+									"Enter voice ID (v1 to v1000):",
+								),
+								currentVoice !== "mixed" ? currentVoice : "v3",
+							);
+							if (input) {
+								setVoice(input);
+							}
+						}}
+					>
+						{t("contextMenu.customVoice", "Custom Voice (v#)...")}
+					</ContextMenu.Item>
+				</ContextMenu.SubContent>
+			</ContextMenu.Sub>
 			<ContextMenu.Separator />
 			<ContextMenu.Item
 				onSelect={() => {

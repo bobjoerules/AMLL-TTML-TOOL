@@ -31,6 +31,7 @@ export interface SpicyLine {
 	text?: string;
 	isBackground: boolean;
 	isDuet: boolean;
+	agent?: string;
 	isDotLine?: boolean;
 	translation?: string;
 	words: SpicyToken[];
@@ -240,7 +241,8 @@ export function buildSpicyLines(
 			isRtl: isRtl(lineText(line, false)),
 			text,
 			isBackground: !!line.isBG,
-			isDuet: !!line.isDuet,
+			isDuet: line.agent ? line.agent !== "v1" : !!line.isDuet,
+			agent: line.agent || (line.isDuet ? "v2" : "v1"),
 			translation: line.translatedLyric || undefined,
 			words: makeTokens(line.words, simple, romanized, !!line.isBG),
 		};

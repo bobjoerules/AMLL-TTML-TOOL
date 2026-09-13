@@ -96,7 +96,11 @@ export const EditMenu = (props: EditMenuProps) => {
 		<DropdownMenu.Root>
 			<Toolbar.Button asChild>
 				<DropdownMenu.Trigger style={props.triggerStyle}>
-					<Button variant="soft" style={props.buttonStyle}>
+					<Button
+						variant="ghost"
+						className="topMenuBarButton"
+						style={props.buttonStyle}
+					>
 						<Trans i18nKey="topBar.menu.edit">编辑</Trans>
 					</Button>
 				</DropdownMenu.Trigger>

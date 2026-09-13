@@ -59,6 +59,16 @@ export const keyBindingTriggerModeAtom = atom(
 	},
 );
 
+export function isApplePlatform(): boolean {
+	if (typeof navigator === "undefined") return false;
+	const ua = navigator.userAgent || "";
+	const platform =
+		(navigator as any).userAgentData?.platform || navigator.platform || "";
+	return (
+		/Mac|iPhone|iPod|iPad/i.test(platform) || /Macintosh|Mac OS X/i.test(ua)
+	);
+}
+
 export function formatKeyBindings(cfg: KeyBindingsConfig): string {
 	const sorted = [...cfg].sort((a, b) => {
 		const indexA = MODIFIER_ORDER.indexOf(a);
@@ -68,24 +78,34 @@ export function formatKeyBindings(cfg: KeyBindingsConfig): string {
 		if (indexB !== -1) return 1;
 		return a.localeCompare(b);
 	});
+
+	const isMac = isApplePlatform();
+
 	return sorted
-		.map((key) => {
-			if (key.startsWith("Key")) return key.substring(3);
-			if (key.endsWith("Right")) return key.substring(0, key.length - 5);
-			if (key.endsWith("Left")) return key.substring(0, key.length - 4);
-			if (navigator.userAgent.includes("Mac")) {
+		.map((rawKey) => {
+			let key = rawKey;
+			if (key.startsWith("Key")) key = key.substring(3);
+			if (key.endsWith("Right")) key = key.substring(0, key.length - 5);
+			if (key.endsWith("Left")) key = key.substring(0, key.length - 4);
+
+			if (isMac) {
 				if (key === "Control") return "⌃";
 				if (key === "Alt") return "⌥";
 				if (key === "Shift") return "⇧";
 				if (key === "Meta") return "⌘";
 				if (key === "Backspace") return "⌫";
-			} else if (navigator.userAgent.includes("Windows")) {
+			} else {
 				if (key.startsWith("Control")) return "Ctrl";
-				if (key === "Meta") return "Win";
+				if (key === "Meta") return "Ctrl";
+				if (key === "Shift") return "Shift";
+				if (key === "Alt") return "Alt";
+				if (key === "Backspace") return "Backspace";
+				if (key === "Delete") return "Del";
+				if (key === "Escape") return "Esc";
 			}
 			return key;
 		})
-		.join(navigator.userAgent.includes("Mac") ? " " : " + ");
+		.join(isMac ? " " : "+");
 }
 
 export function formatKeyBindingsAsArray(cfg: KeyBindingsConfig): string[] {
@@ -97,22 +117,29 @@ export function formatKeyBindingsAsArray(cfg: KeyBindingsConfig): string[] {
 		if (indexB !== -1) return 1;
 		return a.localeCompare(b);
 	});
-	return sorted.map((key) => {
-		if (key.startsWith("Key")) return key.substring(3);
-		if (
-			typeof navigator !== "undefined" &&
-			navigator.userAgent.includes("Mac")
-		) {
+
+	const isMac = isApplePlatform();
+
+	return sorted.map((rawKey) => {
+		let key = rawKey;
+		if (key.startsWith("Key")) key = key.substring(3);
+		if (key.endsWith("Right")) key = key.substring(0, key.length - 5);
+		if (key.endsWith("Left")) key = key.substring(0, key.length - 4);
+
+		if (isMac) {
 			if (key === "Control") return "⌃";
 			if (key === "Alt") return "⌥";
 			if (key === "Shift") return "⇧";
 			if (key === "Meta") return "⌘";
-		} else if (
-			typeof navigator !== "undefined" &&
-			navigator.userAgent.includes("Windows")
-		) {
+			if (key === "Backspace") return "⌫";
+		} else {
 			if (key.startsWith("Control")) return "Ctrl";
-			if (key === "Meta") return "Win";
+			if (key === "Meta") return "Ctrl";
+			if (key === "Shift") return "Shift";
+			if (key === "Alt") return "Alt";
+			if (key === "Backspace") return "Backspace";
+			if (key === "Delete") return "Del";
+			if (key === "Escape") return "Esc";
 		}
 		return key;
 	});

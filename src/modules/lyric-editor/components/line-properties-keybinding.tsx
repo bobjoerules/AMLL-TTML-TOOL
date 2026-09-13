@@ -12,7 +12,7 @@ import {
 	ToolMode,
 	toolModeAtom,
 } from "$/states/main.ts";
-import type { TTMLLyric } from "$/types/ttml.ts";
+import { getLineVoice, type TTMLLyric } from "$/types/ttml.ts";
 import { useKeyBindingAtom } from "$/utils/keybindings.ts";
 
 export type LineToggleProperty = "isBG" | "isDuet";
@@ -60,14 +60,56 @@ export function toggleLinePropertyInStore(
 	const targetLines = lyricLinesState.lyricLines.filter((l) =>
 		targetLineIds.has(l.id),
 	);
+
+	if (property === "isDuet") {
+		// Collect active voices in the song (always include v1 and v2)
+		const voiceSet = new Set<string>(["v1", "v2"]);
+		for (const l of lyricLinesState.lyricLines) {
+			voiceSet.add(getLineVoice(l));
+		}
+		const sortedVoices = Array.from(voiceSet).sort((a, b) => {
+			const numA = parseInt(a.replace(/\D/g, "") || "1", 10);
+			const numB = parseInt(b.replace(/\D/g, "") || "1", 10);
+			return numA - numB;
+		});
+
+		const firstLineVoice = getLineVoice(targetLines[0]);
+		const allSameVoice = targetLines.every(
+			(l) => getLineVoice(l) === firstLineVoice,
+		);
+
+		let nextVoice = "v2";
+		if (allSameVoice) {
+			const currIdx = sortedVoices.indexOf(firstLineVoice);
+			if (currIdx !== -1) {
+				nextVoice = sortedVoices[(currIdx + 1) % sortedVoices.length];
+			}
+		} else {
+			const hasV1 = targetLines.some((l) => getLineVoice(l) === "v1");
+			nextVoice = hasV1 ? "v2" : "v1";
+		}
+
+		const isNextDuet = nextVoice !== "v1";
+		editLyricLines((draft) => {
+			for (const line of draft.lyricLines) {
+				if (targetLineIds.has(line.id)) {
+					line.agent = nextVoice;
+					line.isDuet = isNextDuet;
+				}
+			}
+		});
+
+		return true;
+	}
+
 	const allActive =
-		targetLines.length > 0 && targetLines.every((l) => !!l[property]);
+		targetLines.length > 0 && targetLines.every((l) => !!l.isBG);
 	const targetValue = !allActive;
 
 	editLyricLines((draft) => {
 		for (const line of draft.lyricLines) {
 			if (targetLineIds.has(line.id)) {
-				line[property] = targetValue;
+				line.isBG = targetValue;
 			}
 		}
 	});
