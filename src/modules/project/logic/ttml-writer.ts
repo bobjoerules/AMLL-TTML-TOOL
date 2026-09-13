@@ -481,7 +481,7 @@ export default function exportTTMLText(
 				if (bgLine.translatedLyric) {
 					const span = createEl("span");
 					span.setAttribute("ttm:role", "x-translation");
-					span.setAttribute("xml:lang", "zh-CN");
+					span.setAttribute("xml:lang", "en");
 					span.appendChild(doc.createTextNode(bgLine.translatedLyric));
 					bgLineSpan.appendChild(span);
 				}
@@ -499,7 +499,7 @@ export default function exportTTMLText(
 			if (!exportAsStandaloneBackground && line.translatedLyric) {
 				const span = createEl("span");
 				span.setAttribute("ttm:role", "x-translation");
-				span.setAttribute("xml:lang", "zh-CN");
+				span.setAttribute("xml:lang", "en");
 				span.appendChild(doc.createTextNode(line.translatedLyric));
 				lineP.appendChild(span);
 			}

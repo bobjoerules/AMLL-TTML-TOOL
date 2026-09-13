@@ -126,4 +126,3 @@ export function applyAutoDuetBySinger(draft: TTMLLyric): AutoDuetResult {
 
 	return { modifiedCount, singersCount: singers.length, singerMap };
 }
-

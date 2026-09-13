@@ -88,7 +88,7 @@ export const TitleBar: FC = () => {
 				>
 					<SegmentedControl.Item
 						value={ToolMode.Edit}
-						title={t("topBar.modeBtns.edit", "编辑")}
+						title={t("topBar.modeBtns.edit", "Edit")}
 					>
 						<Flex align="center" gap="1" px="1">
 							<Edit24Regular
@@ -98,13 +98,13 @@ export const TitleBar: FC = () => {
 								}}
 							/>
 							<span className={styles.tabLabel}>
-								{t("topBar.modeBtns.edit", "编辑")}
+								{t("topBar.modeBtns.edit", "Edit")}
 							</span>
 						</Flex>
 					</SegmentedControl.Item>
 					<SegmentedControl.Item
 						value={ToolMode.Sync}
-						title={t("topBar.modeBtns.sync", "打轴")}
+						title={t("topBar.modeBtns.sync", "Sync")}
 					>
 						<Flex align="center" gap="1" px="1">
 							<Timer24Regular
@@ -114,13 +114,13 @@ export const TitleBar: FC = () => {
 								}}
 							/>
 							<span className={styles.tabLabel}>
-								{t("topBar.modeBtns.sync", "打轴")}
+								{t("topBar.modeBtns.sync", "Sync")}
 							</span>
 						</Flex>
 					</SegmentedControl.Item>
 					<SegmentedControl.Item
 						value={ToolMode.Preview}
-						title={t("topBar.modeBtns.preview", "预览")}
+						title={t("topBar.modeBtns.preview", "Preview")}
 					>
 						<Flex align="center" gap="1" px="1">
 							<Play24Regular
@@ -130,7 +130,7 @@ export const TitleBar: FC = () => {
 								}}
 							/>
 							<span className={styles.tabLabel}>
-								{t("topBar.modeBtns.preview", "预览")}
+								{t("topBar.modeBtns.preview", "Preview")}
 							</span>
 						</Flex>
 					</SegmentedControl.Item>

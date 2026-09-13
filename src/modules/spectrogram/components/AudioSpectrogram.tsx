@@ -270,15 +270,15 @@ export const AudioSpectrogram: FC = memo(() => {
 		if (isInvalidEndTime) {
 			hoverTimeFormatted = t(
 				"spectrogram.invalidEndTime",
-				"不能选择此结束时间",
+				"Cannot select this end time",
 			);
 			tooltipBgColor = "var(--red-9)";
 		} else if (editingTimeField && !editingTimeField.isWord) {
 			const fieldName =
 				editingTimeField.field === "startTime"
-					? t("ribbonBar.editMode.startTime", "起始时间")
-					: t("ribbonBar.editMode.endTime", "结束时间");
-			hoverTimeFormatted = `${t("common.clickToSet", "点击设置")}${fieldName}: ${hoverTimeFormatted}`;
+					? t("ribbonBar.editMode.startTime", "Start Time")
+					: t("ribbonBar.editMode.endTime", "End Time");
+			hoverTimeFormatted = `${t("common.clickToSet", "Click to set ")}${fieldName}: ${hoverTimeFormatted}`;
 			tooltipBgColor = "var(--accent-9)";
 		}
 
@@ -619,11 +619,11 @@ export const AudioSpectrogram: FC = memo(() => {
 								<Text color="gray" size="3">
 									{t(
 										"spectrogram.noAudioLoaded",
-										"请先加载一个音频文件来渲染频谱图哦",
+										"Please load an audio file first to render the spectrogram",
 									)}
 								</Text>
 								<Button variant="soft" onClick={handleLoadMusic}>
-									{t("spectrogram.loadAudio", "加载音频文件")}
+									{t("spectrogram.loadAudio", "Load Audio File")}
 								</Button>
 							</Flex>
 						</div>
@@ -851,7 +851,7 @@ export const AudioSpectrogram: FC = memo(() => {
 
 					<Popover.Root>
 						<Tooltip
-							content={t("spectrogram.settings", "频谱图设置")}
+							content={t("spectrogram.settings", "Spectrogram Settings")}
 							side="left"
 						>
 							<Popover.Trigger>
@@ -863,13 +863,13 @@ export const AudioSpectrogram: FC = memo(() => {
 						<Popover.Content side="left" align="end" style={{ width: 240 }}>
 							<Flex direction="column" gap="3">
 								<Text size="2" weight="bold">
-									{t("spectrogram.settings", "频谱图设置")}
+									{t("spectrogram.settings", "Spectrogram Settings")}
 								</Text>
 
 								<Flex direction="column" gap="2">
 									<Text size="1" color="gray">
 										{t("spectrogram.fftSize", "FFT Size")} (
-										{t("spectrogram.resolution", "解析度")})
+										{t("spectrogram.resolution", "Resolution")})
 									</Text>
 									<Select.Root
 										value={fftSize.toString()}
@@ -898,7 +898,7 @@ export const AudioSpectrogram: FC = memo(() => {
 
 								<Flex align="center" gap="2">
 									<Text size="1" color="gray">
-										{t("spectrogram.height", "高度")}
+										{t("spectrogram.height", "Height")}
 									</Text>
 									<Slider
 										size="1"

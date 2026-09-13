@@ -93,10 +93,10 @@ export const HeaderFileInfo = () => {
 		if (isDefaultName && suggestedFile) {
 			setConfirmDialog({
 				open: true,
-				title: t("confirmDialog.useMetadataName.title", "使用元数据命名？"),
+				title: t("confirmDialog.useMetadataName.title", "Use metadata name?"),
 				description: t(
 					"confirmDialog.useMetadataName.description",
-					'是否使用"{name}"作为文件名？',
+					'Use "{name}" as file name?',
 					{ name: suggestedFile.baseName },
 				),
 				onConfirm: () => {
@@ -132,7 +132,7 @@ export const HeaderFileInfo = () => {
 					</Text>
 					{autoSaveExpanded && (
 						<Text size="1" color="gray">
-							{t("header.status.autoSavedAt", "已自动保存于 {time}", {
+							{t("header.status.autoSavedAt", "Auto-saved at {time}", {
 								time: autoSaveTimeLabel,
 							})}
 						</Text>

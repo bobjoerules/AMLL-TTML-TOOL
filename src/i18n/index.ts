@@ -16,20 +16,28 @@ declare module "i18next" {
 	}
 }
 
+const savedLanguage =
+	typeof localStorage !== "undefined" ? localStorage.getItem("language") : null;
+const initialLanguage = savedLanguage || "en-US";
+
 i18n
 	.use(initReactI18next)
 	.use(ICU)
 	.init({
 		resources,
-		debug: import.meta.env.DEV,
+		lng: initialLanguage,
 		fallbackLng: "en-US",
+		debug: import.meta.env.DEV,
 		interpolation: {
 			escapeValue: false,
 		},
 		returnNull: false,
 	})
-	.then(() =>
-		i18n.changeLanguage(localStorage.getItem("language") || navigator.language),
-	);
+	.then(() => {
+		if (typeof document !== "undefined") {
+			document.documentElement.lang =
+				i18n.resolvedLanguage || i18n.language || "en-US";
+		}
+	});
 
 export default i18n;

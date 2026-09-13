@@ -81,21 +81,30 @@ const validateMetadata = (
 	const musicName = metadatas.find((m) => m.key === "musicName");
 	if (!musicName?.value?.length) {
 		result.push(
-			t("submitToAMLLDB.validation.missingMusicName", "元数据缺少音乐名称"),
+			t(
+				"submitToAMLLDB.validation.missingMusicName",
+				"Metadata missing track name",
+			),
 		);
 	}
 
 	const artists = metadatas.find((m) => m.key === "artists");
 	if (!artists?.value?.length) {
 		result.push(
-			t("submitToAMLLDB.validation.missingArtists", "元数据缺少音乐作者"),
+			t(
+				"submitToAMLLDB.validation.missingArtists",
+				"Metadata missing track artists",
+			),
 		);
 	}
 
 	const album = metadatas.find((m) => m.key === "album");
 	if (!album?.value?.length) {
 		result.push(
-			t("submitToAMLLDB.validation.missingAlbum", "元数据缺少音乐专辑名称"),
+			t(
+				"submitToAMLLDB.validation.missingAlbum",
+				"Metadata missing album name",
+			),
 		);
 	}
 
@@ -111,7 +120,7 @@ const validateMetadata = (
 		result.push(
 			t(
 				"submitToAMLLDB.validation.missingMusicId",
-				"元数据缺少音乐平台对应歌曲 ID",
+				"Metadata missing platform track ID",
 			),
 		);
 	}
@@ -133,7 +142,7 @@ export const SubmitToAMLLDBDialog = memo(() => {
 	const [comment, setComment] = useState("");
 	const [processing, setProcessing] = useState(false);
 	const [submitReason, setSubmitReason] = useState(
-		t("submitToAMLLDB.defaultReason", "新歌词提交"),
+		t("submitToAMLLDB.defaultReason", "New lyrics submission"),
 	);
 	const store = useStore();
 
@@ -144,16 +153,20 @@ export const SubmitToAMLLDBDialog = memo(() => {
 			const errors = validateMetadata(metadatas, t);
 			if (errors.length > 0) {
 				toast.error(
-					t("submitToAMLLDB.errors.validation", "提交验证失败：\n{errors}", {
-						errors: errors.join("\n"),
-					}),
+					t(
+						"submitToAMLLDB.errors.validation",
+						"Submission validation failed:\n{errors}",
+						{
+							errors: errors.join("\n"),
+						},
+					),
 				);
 				return;
 			}
 
 			if (store.get(lyricLinesAtom).lyricLines.length === 0) {
 				toast.error(
-					t("submitToAMLLDB.errors.noLyrics", "歌词还什么都没有呢？"),
+					t("submitToAMLLDB.errors.noLyrics", "There's no lyrics content yet?"),
 				);
 				return;
 			}
@@ -201,11 +214,11 @@ export const SubmitToAMLLDBDialog = memo(() => {
 
 			issueUrl.searchParams.append(
 				"labels",
-				t("submitToAMLLDB.labels.submit", "歌词提交/补正"),
+				t("submitToAMLLDB.labels.submit", "Lyrics Submit/Correction"),
 			);
 			issueUrl.searchParams.append(
 				"title",
-				t("submitToAMLLDB.issueTitle", "[歌词提交/修正] {name}", { name }),
+				t("submitToAMLLDB.issueTitle", "[Lyrics Submit/Fix] {name}", { name }),
 			);
 			issueUrl.searchParams.append(
 				"body",
@@ -223,7 +236,7 @@ ${comment}
 			toast.error(
 				t(
 					"submitToAMLLDB.errors.submitFailed",
-					"提交发生错误，请查看控制台确认原因！",
+					"Submission failed, check console for reason!",
 				),
 			);
 		}
@@ -243,10 +256,10 @@ ${comment}
 		if (genNameFromMetadata) {
 			const name =
 				metadatas.find((m) => m.key === "musicName")?.value?.join(", ") ??
-				t("submitToAMLLDB.unknownTitle", "未知曲名");
+				t("submitToAMLLDB.unknownTitle", "Unknown Title");
 			const artists =
 				metadatas.find((m) => m.key === "artists")?.value?.join(", ") ??
-				t("submitToAMLLDB.unknownArtist", "未知歌手");
+				t("submitToAMLLDB.unknownArtist", "Unknown Artist");
 			setName(`${artists} - ${name}`);
 		}
 	}, [genNameFromMetadata, metadatas, t]);
@@ -256,13 +269,16 @@ ${comment}
 			<Dialog.Content>
 				<VisuallyHidden>
 					<Dialog.Description>
-						{t("submitToAMLLDB.description", "提交歌词到 AMLL 歌词数据库")}
+						{t(
+							"submitToAMLLDB.description",
+							"Submit lyrics to AMLL Lyrics Database",
+						)}
 					</Dialog.Description>
 				</VisuallyHidden>
 				<Dialog.Title>
 					{t(
 						"submitToAMLLDB.title",
-						"提交歌词到 AMLL 歌词数据库（仅简体中文用户）",
+						"Submit lyrics to AMLL Lyrics Database (Simplified Chinese users only)",
 					)}
 				</Dialog.Title>
 				<Flex direction="column" gap="4">
@@ -290,28 +306,34 @@ ${comment}
 											"首先，感谢您的慷慨歌词贡献！",
 										)}
 										<br />
-										{t("submitToAMLLDB.cc0Agreement", "通过提交，你将默认同意")}{" "}
+										{t(
+											"submitToAMLLDB.cc0Agreement",
+											"By submitting you agree to",
+										)}{" "}
 										<Text weight="bold" color="orange">
 											{t(
 												"submitToAMLLDB.cc0Rights",
-												"使用 CC0 共享协议完全放弃歌词所有权",
+												"use the CC0 license and fully waive ownership of the lyrics",
 											)}
 										</Text>
-										{t("submitToAMLLDB.andSubmit", "并提交到歌词数据库！")}
+										{t(
+											"submitToAMLLDB.andSubmit",
+											"and submit to the lyrics database!",
+										)}
 										<br />
 										{t(
 											"submitToAMLLDB.futureUse",
-											"并且歌词将会在以后被 AMLL 系程序作为默认 TTML 歌词源获取！",
+											"And the lyrics will be used as default TTML source by AMLL systems in the future!",
 										)}
 										<br />
 										{t(
 											"submitToAMLLDB.rightsWarning",
-											"如果您对歌词所有权比较看重的话，请勿提交歌词哦！",
+											"If you value retaining ownership, please do NOT submit!",
 										)}
 										<br />
 										{t(
 											"submitToAMLLDB.submitInstructions",
-											"请输入以下提交信息然后跳转到 Github 议题提交页面！",
+											"Enter the following info then jump to the GitHub issue submission page!",
 										)}
 									</p>
 								</Callout.Text>
@@ -321,7 +343,7 @@ ${comment}
 								size="1"
 								onClick={() => setHideWarning(true)}
 							>
-								{t("submitToAMLLDB.closeWarning", "关闭上述警告信息")}
+								{t("submitToAMLLDB.closeWarning", "Close warning message")}
 							</Button>
 						</>
 					)}
@@ -329,19 +351,22 @@ ${comment}
 						<Box flexShrink="0">
 							<Text as="label" size="2">
 								<Flex direction="column" gap="2">
-									{t("submitToAMLLDB.uploadDbType", "歌词库类型")}
+									{t("submitToAMLLDB.uploadDbType", "Lyrics Database Type")}
 									<RadioGroup.Root
 										value={uploadDbType}
 										onValueChange={(v) => setUploadDbType(v as UploadDBType)}
 									>
 										<RadioGroup.Item value={UploadDBType.Official}>
-											{t("submitToAMLLDB.uploadDbTypeOfficial", "官方歌词库")}
+											{t(
+												"submitToAMLLDB.uploadDbTypeOfficial",
+												"Official Database",
+											)}
 										</RadioGroup.Item>
 										<RadioGroup.Item value={UploadDBType.User}>
-											{t("submitToAMLLDB.uploadDbTypeUser", "用户歌词库")}
+											{t("submitToAMLLDB.uploadDbTypeUser", "User Database")}
 										</RadioGroup.Item>
 										<RadioGroup.Item value={UploadDBType.Both}>
-											{t("submitToAMLLDB.uploadDbTypeBoth", "全部歌词库")}
+											{t("submitToAMLLDB.uploadDbTypeBoth", "Both Databases")}
 										</RadioGroup.Item>
 									</RadioGroup.Root>
 								</Flex>
@@ -388,12 +413,12 @@ ${comment}
 								checked={genNameFromMetadata}
 								onCheckedChange={(v) => setGenNameFromMetadata(!!v)}
 							/>
-							{t("submitToAMLLDB.genFromName", "从元数据中生成")}
+							{t("submitToAMLLDB.genFromName", "Generate from metadata")}
 						</Flex>
 					</Text>
 					<Text as="label" size="2">
 						<Flex direction="column" gap="2">
-							{t("submitToAMLLDB.musicName", "音乐名称")}
+							{t("submitToAMLLDB.musicName", "Track Title")}
 							<TextField.Root
 								value={name}
 								disabled={genNameFromMetadata}
@@ -401,34 +426,34 @@ ${comment}
 							/>
 							{t(
 								"submitToAMLLDB.musicNameDesc",
-								"推荐使用 歌手 - 歌曲 格式，方便仓库管理员确认你的歌曲是否存在",
+								"Recommended format: Artist - Song Title",
 							)}
 						</Flex>
 					</Text>
 					<Text as="label" size="2">
 						<Flex direction="column" gap="2">
-							{t("submitToAMLLDB.submitReason", "提交缘由")}
+							{t("submitToAMLLDB.submitReason", "Reason")}
 							<RadioGroup.Root
 								value={submitReason}
 								onValueChange={setSubmitReason}
 							>
 								<RadioGroup.Item value="新歌词提交">
-									{t("submitToAMLLDB.submitReasonNew", "新歌词提交")}
+									{t("submitToAMLLDB.submitReasonNew", "New lyrics submission")}
 								</RadioGroup.Item>
 								<RadioGroup.Item value="修正已有歌词">
-									{t("submitToAMLLDB.submitReasonFix", "修正已有歌词")}
+									{t("submitToAMLLDB.submitReasonFix", "Fix existing lyrics")}
 								</RadioGroup.Item>
 							</RadioGroup.Root>
 						</Flex>
 					</Text>
 					<Text as="label" size="2">
 						<Flex direction="column" gap="2">
-							{t("submitToAMLLDB.comment", "备注")}
+							{t("submitToAMLLDB.comment", "Comment")}
 							<TextArea
 								resize="vertical"
 								placeholder={t(
 									"submitToAMLLDB.commentPlaceholder",
-									"有什么需要补充说明的呢？",
+									"Anything else you want to add?",
 								)}
 								value={comment}
 								onChange={(e) => setComment(e.currentTarget.value)}
@@ -443,7 +468,7 @@ ${comment}
 							<Callout.Text>
 								{t(
 									"submitToAMLLDB.issueFoundTitle",
-									"发现以下问题，请修正后再提交：",
+									"Please fix the following issues before submitting:",
 								)}
 								<ul>
 									{issues.map((issue) => (
@@ -458,7 +483,7 @@ ${comment}
 						disabled={issues.length > 0}
 						onClick={onSubmit}
 					>
-						{t("submitToAMLLDB.submitBtn", "上传歌词并创建议题")}
+						{t("submitToAMLLDB.submitBtn", "Upload and Create Issue")}
 					</Button>
 				</Flex>
 			</Dialog.Content>

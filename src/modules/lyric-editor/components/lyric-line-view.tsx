@@ -266,8 +266,8 @@ const SubLineEdit = memo(
 		const label = useMemo(
 			() =>
 				type === "translatedLyric"
-					? t("lyricLineView.translatedLabel", "翻译：")
-					: t("lyricLineView.romanLabel", "音译："),
+					? t("lyricLineView.translatedLabel", "Translation: ")
+					: t("lyricLineView.romanLabel", "Romanization: "),
 			[type, t],
 		);
 
@@ -323,7 +323,7 @@ const SubLineEdit = memo(
 						}}
 					>
 						{line[type] || (
-							<Text color="gray">{t("lyricLineView.empty", "无")}</Text>
+							<Text color="gray">{t("lyricLineView.empty", "None")}</Text>
 						)}
 					</Button>
 				)}
@@ -381,7 +381,7 @@ const InsertLineButton = ({
 						count: selectedLinesCount,
 						defaultValue: "Duplicate {count} selected line(s) here",
 					})
-				: t("lyricLineView.insertLine", "在此插入新行")}
+				: t("lyricLineView.insertLine", "Insert line here")}
 		</Button>
 	);
 };
@@ -1276,7 +1276,10 @@ export const LyricLineView: FC<{
 									)}
 									{toolMode === ToolMode.Edit && (
 										<TextField.Root
-											placeholder={t("lyricLineView.insertWord", "插入单词…")}
+											placeholder={t(
+												"lyricLineView.insertWord",
+												"Insert word…",
+											)}
 											className={classNames(
 												styles.insertWordField,
 												words.length === 0 && styles.empty,
@@ -1414,7 +1417,7 @@ export const LyricLineView: FC<{
 								count: selectedLinesCount,
 								defaultValue: "Duplicate {count} selected line(s) here",
 							})
-						: t("lyricLineView.insertLine", "在此插入新行")}
+						: t("lyricLineView.insertLine", "Insert line here")}
 				</Button>
 			)}
 		</Box>

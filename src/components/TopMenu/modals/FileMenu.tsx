@@ -55,13 +55,17 @@ const FileMenuItems = () => {
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={menu.onOpenFromCloud}>
 				<Flex align="center" gap="2">
-					<CloudArrowDown20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+					<CloudArrowDown20Regular
+						style={{ width: 15, height: 15, flexShrink: 0 }}
+					/>
 					<Trans i18nKey="topBar.menu.openFromCloud">Open from Cloud...</Trans>
 				</Flex>
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onSaveToCloud}>
 				<Flex align="center" gap="2">
-					<CloudArrowUp20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+					<CloudArrowUp20Regular
+						style={{ width: 15, height: 15, flexShrink: 0 }}
+					/>
 					<Trans i18nKey="topBar.menu.saveToCloud">Save to Cloud...</Trans>
 				</Flex>
 			</DropdownMenu.Item>

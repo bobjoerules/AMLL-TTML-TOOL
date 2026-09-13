@@ -11,15 +11,16 @@ const reloadPage = () => window.location.reload();
 if (isWebsite) {
 	updateServiceWorker = registerSW({
 		onOfflineReady() {
-			toast.info(
-				t("pwa.offlineReady", "网站已成功离线缓存，后续可离线访问本网页"),
-			);
+			toast.info(t("pwa.offlineReady", "Website is cached for offline use"));
 		},
 		onNeedRefresh() {
 			toast.info(
 				<Flex direction="column" gap="2" align="stretch">
 					<div>
-						{t("pwa.updateRefresh", "网站已更新，刷新网页以使用最新版本！")}
+						{t(
+							"pwa.updateRefresh",
+							"Update available, refresh to get the latest version!",
+						)}
 					</div>
 					<Button
 						size="2"
@@ -27,7 +28,7 @@ if (isWebsite) {
 							void updateServiceWorker?.();
 						}}
 					>
-						{t("pwa.refresh", "刷新")}
+						{t("pwa.refresh", "Refresh")}
 					</Button>
 				</Flex>,
 			);

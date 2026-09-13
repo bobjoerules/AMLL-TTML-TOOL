@@ -173,11 +173,11 @@ export const TimeShiftDialog = () => {
 	return (
 		<Dialog.Root open={open} onOpenChange={setOpen}>
 			<Dialog.Content maxWidth="450px">
-				<Dialog.Title>{t("timeShiftDialog.title", "平移时间")}</Dialog.Title>
+				<Dialog.Title>{t("timeShiftDialog.title", "Shift Time")}</Dialog.Title>
 				<Flex direction="column" gap="4">
 					<Flex direction="column" gap="2">
 						<Text size="2" weight="bold">
-							{t("timeShiftDialog.amount", "偏移量 (ms)")}
+							{t("timeShiftDialog.amount", "Offset (ms)")}
 						</Text>
 						<Flex gap="3" align="center">
 							<Flex gap="1">
@@ -234,7 +234,7 @@ export const TimeShiftDialog = () => {
 
 					<Flex direction="column" gap="1">
 						<Text size="2" weight="bold">
-							{t("timeShiftDialog.direction", "方向")}
+							{t("timeShiftDialog.direction", "Direction")}
 						</Text>
 						<RadioGroup.Root
 							value={direction}
@@ -242,28 +242,28 @@ export const TimeShiftDialog = () => {
 							style={{ flexDirection: "row", gap: "16px" }}
 						>
 							<RadioGroup.Item value="advance">
-								{t("timeShiftDialog.advance", "提前 (-)")}
+								{t("timeShiftDialog.advance", "Earlier (-)")}
 							</RadioGroup.Item>
 							<RadioGroup.Item value="delay">
-								{t("timeShiftDialog.delay", "延后 (+)")}
+								{t("timeShiftDialog.delay", "Later (+)")}
 							</RadioGroup.Item>
 						</RadioGroup.Root>
 					</Flex>
 
 					<Flex direction="column" gap="2">
 						<Text size="2" weight="bold">
-							{t("timeShiftDialog.scopeLabel", "应用于")}
+							{t("timeShiftDialog.scopeLabel", "Apply to")}
 						</Text>
 						<RadioGroup.Root
 							value={scope}
 							onValueChange={(v) => setScope(v as ShiftScope)}
 						>
 							<RadioGroup.Item value="all">
-								{t("timeShiftDialog.scope.all", "所有行")}
+								{t("timeShiftDialog.scope.all", "All lines")}
 							</RadioGroup.Item>
 
 							<RadioGroup.Item value="selected" disabled={!hasSelection}>
-								{t("timeShiftDialog.scope.selected", "所选行")}
+								{t("timeShiftDialog.scope.selected", "Selected lines")}
 								{hasSelection && ` (${selectedLines.size})`}
 							</RadioGroup.Item>
 
@@ -271,18 +271,21 @@ export const TimeShiftDialog = () => {
 								value="selected-following"
 								disabled={!hasSelection}
 							>
-								{t("timeShiftDialog.scope.selectedFollowing", "所选行及其后续")}
+								{t(
+									"timeShiftDialog.scope.selectedFollowing",
+									"Selected lines and following",
+								)}
 							</RadioGroup.Item>
 
 							<RadioGroup.Item value="custom">
-								{t("timeShiftDialog.scope.custom", "自定义范围")}
+								{t("timeShiftDialog.scope.custom", "Custom range")}
 							</RadioGroup.Item>
 						</RadioGroup.Root>
 					</Flex>
 
 					{scope === "custom" && (
 						<Flex align="center" gap="2" ml="4">
-							<Text size="2">{t("timeShiftDialog.fromLine", "从")}</Text>
+							<Text size="2">{t("timeShiftDialog.fromLine", "From line")}</Text>
 							<TextField.Root
 								style={{ width: "60px" }}
 								size="1"
@@ -290,7 +293,7 @@ export const TimeShiftDialog = () => {
 								value={customStart}
 								onChange={(e) => setCustomStart(e.target.value)}
 							/>
-							<Text size="2">{t("timeShiftDialog.toLine", "行 到")}</Text>
+							<Text size="2">{t("timeShiftDialog.toLine", "to")}</Text>
 							<TextField.Root
 								style={{ width: "60px" }}
 								size="1"
@@ -298,7 +301,7 @@ export const TimeShiftDialog = () => {
 								value={customEnd}
 								onChange={(e) => setCustomEnd(e.target.value)}
 							/>
-							<Text size="2">{t("timeShiftDialog.line", "行")}</Text>
+							<Text size="2">{t("timeShiftDialog.line", "line")}</Text>
 						</Flex>
 					)}
 				</Flex>
@@ -306,10 +309,10 @@ export const TimeShiftDialog = () => {
 				<Flex gap="3" mt="5" justify="end">
 					<Dialog.Close>
 						<Button variant="soft" color="gray">
-							{t("common.cancel", "取消")}
+							{t("common.cancel", "Cancel")}
 						</Button>
 					</Dialog.Close>
-					<Button onClick={handleConfirm}>{t("common.apply", "应用")}</Button>
+					<Button onClick={handleConfirm}>{t("common.apply", "Apply")}</Button>
 				</Flex>
 			</Dialog.Content>
 		</Dialog.Root>

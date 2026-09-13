@@ -68,16 +68,18 @@ export const ReplaceWordDialog = memo(() => {
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
 			<Dialog.Content maxWidth="400px">
-				<Dialog.Title>{t("replaceWordDialog.title", "替换单词")}</Dialog.Title>
+				<Dialog.Title>
+					{t("replaceWordDialog.title", "Replace Word")}
+				</Dialog.Title>
 				<Dialog.Description size="2" mb="4">
-					{t("replaceWordDialog.description", "新的单词内容:")}
+					{t("replaceWordDialog.description", "New word content:")}
 				</Dialog.Description>
 
 				<Flex direction="column" gap="3">
 					<TextField.Root
 						value={replacementText}
 						onChange={(e) => setReplacementText(e.target.value)}
-						placeholder={t("replaceWordDialog.placeholder", "新单词")}
+						placeholder={t("replaceWordDialog.placeholder", "New word")}
 						onKeyDown={(e) => {
 							if (e.key === "Enter") handleConfirm();
 						}}
@@ -93,7 +95,7 @@ export const ReplaceWordDialog = memo(() => {
 								/>
 								{t(
 									"replaceWordDialog.applyToAll",
-									"将替换应用于所有相同的单词",
+									"Apply replacement to all identical words",
 								)}
 							</Flex>
 						</Text>
@@ -112,7 +114,10 @@ export const ReplaceWordDialog = memo(() => {
 									onCheckedChange={(c) => setCaseSensitive(c as boolean)}
 									disabled={!applyToAll}
 								/>
-								{t("replaceWordDialog.caseSensitive", "区分大小写（完全一致）")}
+								{t(
+									"replaceWordDialog.caseSensitive",
+									"Case sensitive (exact match)",
+								)}
 							</Flex>
 						</Text>
 					</Flex>
@@ -121,10 +126,12 @@ export const ReplaceWordDialog = memo(() => {
 				<Flex gap="3" mt="4" justify="end">
 					<Dialog.Close>
 						<Button variant="soft" color="gray">
-							{t("common.cancel", "取消")}
+							{t("common.cancel", "Cancel")}
 						</Button>
 					</Dialog.Close>
-					<Button onClick={handleConfirm}>{t("common.confirm", "确认")}</Button>
+					<Button onClick={handleConfirm}>
+						{t("common.confirm", "Confirm")}
+					</Button>
 				</Flex>
 			</Dialog.Content>
 		</Dialog.Root>

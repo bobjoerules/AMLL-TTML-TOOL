@@ -56,7 +56,9 @@ export const HistoryRestoreDialog = () => {
 			}
 		} catch (e) {
 			logError("Failed to load project list", e);
-			toast.error(t("historyRestoreDialog.loadError", "加载历史记录失败"));
+			toast.error(
+				t("historyRestoreDialog.loadError", "Failed to load history"),
+			);
 		}
 	}, [t]);
 
@@ -71,14 +73,14 @@ export const HistoryRestoreDialog = () => {
 
 	const getProjectDisplayName = (project: ProjectInfo) => {
 		if (project.id === "legacy_autosave_archive") {
-			return t("autosave.legacyProjectName", "旧版本快照");
+			return t("autosave.legacyProjectName", "Legacy Snapshot");
 		}
 		if (project.id === "untitled_project") {
-			return t("autosave.untitledProjectName", "未命名项目");
+			return t("autosave.untitledProjectName", "Untitled Project");
 		}
 
 		if (project.name === "Untitled Project") {
-			return t("autosave.untitledProjectName", "未命名项目");
+			return t("autosave.untitledProjectName", "Untitled Project");
 		}
 
 		return project.name;
@@ -87,10 +89,10 @@ export const HistoryRestoreDialog = () => {
 	const handleRestoreLatest = (project: ProjectInfo) => {
 		setConfirmDialog({
 			open: true,
-			title: t("historyRestoreDialog.confirm.title", "确认恢复"),
+			title: t("historyRestoreDialog.confirm.title", "Confirm Restore"),
 			description: t(
 				"historyRestoreDialog.confirm.description",
-				"此操作将覆盖当前编辑器中的所有内容，确定要恢复此快照吗？",
+				"This will overwrite all content in the current editor. Are you sure you want to restore this snapshot?",
 			),
 			onConfirm: async () => {
 				const latestLyric = await getProjectLatestState(project.id);
@@ -98,9 +100,9 @@ export const HistoryRestoreDialog = () => {
 					setProjectId(project.id);
 					setNewLyrics(latestLyric);
 					setIsOpen(false);
-					toast.success(t("common.success", "恢复成功"));
+					toast.success(t("common.success", "Restored successfully"));
 				} else {
-					toast.error(t("common.error", "数据已损坏或丢失"));
+					toast.error(t("common.error", "Data corrupted or missing"));
 				}
 			},
 		});
@@ -109,16 +111,16 @@ export const HistoryRestoreDialog = () => {
 	const handleRestoreVersion = (version: ProjectVersion) => {
 		setConfirmDialog({
 			open: true,
-			title: t("historyRestoreDialog.confirm.title", "确认恢复"),
+			title: t("historyRestoreDialog.confirm.title", "Confirm Restore"),
 			description: t(
 				"historyRestoreDialog.confirm.description",
-				"此操作将覆盖当前编辑器中的所有内容，确定要恢复此快照吗？",
+				"This will overwrite all content in the current editor. Are you sure you want to restore this snapshot?",
 			),
 			onConfirm: () => {
 				setProjectId(version.projectId);
 				setNewLyrics(version.data);
 				setIsOpen(false);
-				toast.success(t("common.success", "恢复成功"));
+				toast.success(t("common.success", "Restored successfully"));
 			},
 		});
 	};
@@ -127,10 +129,13 @@ export const HistoryRestoreDialog = () => {
 		e.stopPropagation();
 		setConfirmDialog({
 			open: true,
-			title: t("historyRestoreDialog.deleteProject.title", "删除项目记录"),
+			title: t(
+				"historyRestoreDialog.deleteProject.title",
+				"Delete Project Record",
+			),
 			description: t(
 				"historyRestoreDialog.deleteProject.description",
-				"确定要删除该项目的所有自动保存记录吗？此操作无法撤销。",
+				"Are you sure you want to delete all autosave records for this project? This cannot be undone.",
 			),
 			onConfirm: async () => {
 				await deleteProject(projectId);
@@ -138,7 +143,7 @@ export const HistoryRestoreDialog = () => {
 				if (selectedProjectId === projectId) {
 					setSelectedProjectId(null);
 				}
-				toast.success(t("common.deleteSuccess", "删除成功"));
+				toast.success(t("common.deleteSuccess", "Deleted successfully"));
 			},
 		});
 	};
@@ -149,11 +154,15 @@ export const HistoryRestoreDialog = () => {
 		const hours = Math.floor(minutes / 60);
 		const days = Math.floor(hours / 24);
 
-		if (days > 0) return t("time.daysAgo", "{count}天前", { count: days });
-		if (hours > 0) return t("time.hoursAgo", "{count}小时前", { count: hours });
+		if (days > 0)
+			return t("time.daysAgo", "{count} day(s) ago", { count: days });
+		if (hours > 0)
+			return t("time.hoursAgo", "{count} hour(s) ago", { count: hours });
 		if (minutes > 0)
-			return t("time.minutesAgo", "{count}分钟前", { count: minutes });
-		return t("time.justNow", "刚刚");
+			return t("time.minutesAgo", "{count} minute(s) ago", {
+				count: minutes,
+			});
+		return t("time.justNow", "Just now");
 	};
 
 	useEffect(() => {
@@ -191,12 +200,12 @@ export const HistoryRestoreDialog = () => {
 			>
 				<VisuallyHidden>
 					<Dialog.Title>
-						{t("historyRestoreDialog.projects", "最近项目")}
+						{t("historyRestoreDialog.projects", "Recent Projects")}
 					</Dialog.Title>
 					<Dialog.Description>
 						{t(
 							"historyRestoreDialog.confirm.description",
-							"恢复或管理项目历史快照",
+							"Restore or manage project history snapshots",
 						)}
 					</Dialog.Description>
 				</VisuallyHidden>
@@ -227,7 +236,7 @@ export const HistoryRestoreDialog = () => {
 							style={{ borderBottom: "1px solid var(--gray-5)" }}
 						>
 							<Heading size="3">
-								{t("historyRestoreDialog.projects", "最近项目")}
+								{t("historyRestoreDialog.projects", "Recent Projects")}
 							</Heading>
 						</Flex>
 
@@ -243,7 +252,7 @@ export const HistoryRestoreDialog = () => {
 											<Text size="2" color="gray" align="center">
 												{t(
 													"historyRestoreDialog.noProjects",
-													"暂无自动保存记录",
+													"No autosave records",
 												)}
 											</Text>
 										</Box>
@@ -333,7 +342,10 @@ export const HistoryRestoreDialog = () => {
 												style={{ minWidth: 0 }}
 											>
 												<Text weight="bold">
-													{t("historyRestoreDialog.latestState", "最新版本")}
+													{t(
+														"historyRestoreDialog.latestState",
+														"Latest Version",
+													)}
 												</Text>
 												<Text size="1" color="gray">
 													{new Date(
@@ -344,7 +356,10 @@ export const HistoryRestoreDialog = () => {
 											<Button
 												onClick={() => handleRestoreLatest(currentProject)}
 											>
-												{t("historyRestoreDialog.restoreLatest", "恢复此版本")}
+												{t(
+													"historyRestoreDialog.restoreLatest",
+													"Restore this version",
+												)}
 											</Button>
 										</Flex>
 									</Card>
@@ -352,7 +367,7 @@ export const HistoryRestoreDialog = () => {
 										currentProject.latestState.metadata.length > 0 && (
 											<Box mt="2">
 												<Text size="2" weight="bold" mb="2" as="div">
-													{t("metadata.title", "元数据信息")}
+													{t("metadata.title", "Metadata")}
 												</Text>
 												<ScrollArea type="auto" scrollbars="horizontal">
 													<Flex gap="2" wrap="wrap" pb="1" pr="3">
@@ -380,7 +395,10 @@ export const HistoryRestoreDialog = () => {
 									<Flex align="center" gap="2" mb="3" style={{ flexShrink: 0 }}>
 										<HistoryRegular />
 										<Text weight="bold" size="2">
-											{t("historyRestoreDialog.historyVersions", "其它版本")}
+											{t(
+												"historyRestoreDialog.historyVersions",
+												"Other Versions",
+											)}
 										</Text>
 									</Flex>
 
@@ -396,7 +414,7 @@ export const HistoryRestoreDialog = () => {
 												<Table.Header>
 													<Table.Row>
 														<Table.ColumnHeaderCell>
-															{t("common.time", "时间")}
+															{t("common.time", "Time")}
 														</Table.ColumnHeaderCell>
 														<Table.ColumnHeaderCell width="100px" />
 													</Table.Row>
@@ -408,7 +426,7 @@ export const HistoryRestoreDialog = () => {
 																<Text color="gray" size="2">
 																	{t(
 																		"historyRestoreDialog.noHistory",
-																		"没有可用的历史记录",
+																		"No history records available",
 																	)}
 																</Text>
 															</Table.Cell>
@@ -438,7 +456,7 @@ export const HistoryRestoreDialog = () => {
 																			handleRestoreVersion(version)
 																		}
 																	>
-																		{t("common.restore", "恢复")}
+																		{t("common.restore", "Restore")}
 																	</Button>
 																</Table.Cell>
 															</Table.Row>
@@ -461,7 +479,7 @@ export const HistoryRestoreDialog = () => {
 								<Text mt="2">
 									{t(
 										"historyRestoreDialog.selectProject",
-										"请从左侧选择一个项目",
+										"Please select a project from the left",
 									)}
 								</Text>
 							</Flex>

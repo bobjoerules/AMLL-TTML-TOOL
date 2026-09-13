@@ -37,7 +37,7 @@ export const TouchSyncPanel: FC = () => {
 						)
 					}
 				>
-					{t("touchSyncPanel.prevWord", "跳上词")}
+					{t("touchSyncPanel.prevWord", "Previous Word")}
 				</Button>
 
 				<Button
@@ -59,7 +59,7 @@ export const TouchSyncPanel: FC = () => {
 						)
 					}
 				>
-					{t("touchSyncPanel.nextWord", "跳下词")}
+					{t("touchSyncPanel.nextWord", "Next Word")}
 				</Button>
 				<Button
 					variant="soft"
@@ -72,7 +72,7 @@ export const TouchSyncPanel: FC = () => {
 						forceInvokeKeyBindingAtom(store, keySyncStartAtom, evt.nativeEvent)
 					}
 				>
-					{t("ribbonBar.syncMode.startSync", "起始轴")}
+					{t("ribbonBar.syncMode.startSync", "Start Sync")}
 				</Button>
 				<Button
 					variant="soft"
@@ -85,7 +85,7 @@ export const TouchSyncPanel: FC = () => {
 						forceInvokeKeyBindingAtom(store, keySyncNextAtom, evt.nativeEvent)
 					}
 				>
-					{t("ribbonBar.syncMode.continuousSync", "连续轴")}
+					{t("ribbonBar.syncMode.continuousSync", "Continuous Sync")}
 				</Button>
 				<Button
 					variant="soft"
@@ -98,7 +98,7 @@ export const TouchSyncPanel: FC = () => {
 						forceInvokeKeyBindingAtom(store, keySyncEndAtom, evt.nativeEvent)
 					}
 				>
-					{t("ribbonBar.syncMode.endSync", "结束轴")}
+					{t("ribbonBar.syncMode.endSync", "End Sync")}
 				</Button>
 			</Grid>
 		</Card>

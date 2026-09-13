@@ -20,6 +20,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { recalculateWordTime } from "$/modules/segmentation/utils/segmentation.ts";
 import { useSegmentationConfig } from "$/modules/segmentation/utils/useSegmentationConfig.ts";
 import {
@@ -77,6 +78,7 @@ export const RubyEditor = ({
 	const word = useAtomValue(wordAtom);
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
 	const store = useStore();
+	const { t } = useTranslation();
 	const rubyWords = word.ruby ?? [];
 	const { config: segmentationConfig } = useSegmentationConfig();
 	const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -259,21 +261,25 @@ export const RubyEditor = ({
 						>
 							<Warning48Color />
 							<Text size="5">
-								你正在使用测试中的
-								<Text as="span" weight="bold">
-									{" "}
-									注音{" "}
-								</Text>
-								功能
+								{t(
+									"rubyEditor.warning.title",
+									"You are using the experimental Ruby annotation feature",
+								)}
 							</Text>
 							<Text size="4" align="center">
-								一旦你添加了注音内容，保存的文件将无法被不支持该结构的解析器使用
+								{t(
+									"rubyEditor.warning.desc1",
+									"Once you add ruby content, saved files cannot be used by parsers that do not support this structure.",
+								)}
 							</Text>
 							<Text size="4" align="center">
-								如果仍要在不支持的解析器中使用，可能会出现缺少文字等现象
+								{t(
+									"rubyEditor.warning.desc2",
+									"If used in unsupported parsers, text may appear missing or corrupted.",
+								)}
 							</Text>
 							<Dialog.Close>
-								<Button>我已了解</Button>
+								<Button>{t("common.understood", "I Understand")}</Button>
 							</Dialog.Close>
 						</Flex>
 					</Flex>

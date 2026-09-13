@@ -84,6 +84,20 @@ export const cmdSelectWordsOfMatchedSelection = registerCommand(
 	"Edit",
 );
 
+export const cmdFind = registerCommand(
+	"find",
+	[CONTROL_KEY, "KeyF"],
+	t("settingsDialog.keybindings.find", "Find"),
+	"Edit",
+);
+
+export const cmdReplace = registerCommand(
+	"replace",
+	[CONTROL_KEY, "KeyH"],
+	t("settingsDialog.keybindings.replace", "Replace"),
+	"Edit",
+);
+
 export const cmdDeleteSelection = registerCommand(
 	"deleteSelection",
 	[DELETE_KEY],

@@ -172,20 +172,23 @@ export const ImportExportLyric = () => {
 		<>
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger>
-					{t("topBar.menu.importLyric.import", "导入歌词...")}
+					{t("topBar.menu.importLyric.import", "Import lyrics")}
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent>
 					<DropdownMenu.Item onClick={() => setAppleTtmlImportDialog(true)}>
 						{t(
 							"topBar.menu.importLyric.fromAppleTtml",
-							"From Apple Music TTML (Spotify)...",
+							"Import from Apple Music TTML (Spotify)…",
 						)}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => setImportFromTextDialog(true)}>
-						{t("topBar.menu.importLyric.fromPlainText", "从纯文本导入")}
+						{t(
+							"topBar.menu.importLyric.fromPlainText",
+							"Import from plain text…",
+						)}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => setImportFromLRCLIBDialog(true)}>
-						{t("topBar.menu.importLyric.fromLRCLIB", "从 LRCLIB 导入...")}
+						{t("topBar.menu.importLyric.fromLRCLIB", "Import from LRCLIB...")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => setLyricallyImportDialog(true)}>
 						{t(
@@ -195,25 +198,28 @@ export const ImportExportLyric = () => {
 					</DropdownMenu.Item>
 
 					<DropdownMenu.Item onClick={() => setGeniusImportLyricsDialog(true)}>
-						{t("topBar.menu.importLyric.fromGenius", "从 Genius 导入…")}
+						{t("topBar.menu.importLyric.fromGenius", "Import from Genius…")}
 					</DropdownMenu.Item>
 
 					<DropdownMenu.Item onClick={() => onImportLyric("lrc")}>
-						{t("topBar.menu.importLyric.fromLyRiC", "从 LyRiC 文件导入")}
+						{t("topBar.menu.importLyric.fromLyRiC", "Import from LyRiC file…")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => onImportLyric("eslrc")}>
-						{t("topBar.menu.importLyric.fromESLyRiC", "从 ESLyRiC 文件导入")}
+						{t(
+							"topBar.menu.importLyric.fromESLyRiC",
+							"Import from ESLyRiC file…",
+						)}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => onImportLyric("qrc")}>
-						{t("topBar.menu.importLyric.fromQRC", "从 QRC 文件导入")}
+						{t("topBar.menu.importLyric.fromQRC", "Import from QRC file…")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => onImportLyric("yrc")}>
-						{t("topBar.menu.importLyric.fromYRC", "从 YRC 文件导入")}
+						{t("topBar.menu.importLyric.fromYRC", "Import from YRC file…")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={() => onImportLyric("lys")}>
 						{t(
 							"topBar.menu.importLyric.fromLrcfySylb",
-							"从 Lyricify Syllable 文件导入",
+							"Import from Lyricify Syllable file…",
 						)}
 					</DropdownMenu.Item>
 					{importers.length > 0 && <DropdownMenu.Separator />}
@@ -229,29 +235,29 @@ export const ImportExportLyric = () => {
 			</DropdownMenu.Sub>
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger>
-					{t("topBar.menu.exportLyric.export", "导出歌词...")}
+					{t("topBar.menu.exportLyric.export", "Export lyrics")}
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent>
 					<DropdownMenu.Item onClick={onExportLyric(stringifyLrc, "lrc")}>
-						{t("topBar.menu.exportLyric.toLyRiC", "导出到 LyRiC")}
+						{t("topBar.menu.exportLyric.toLyRiC", "Export to LyRiC")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={onExportLyric(stringifyEslrc, "lrc")}>
-						{t("topBar.menu.exportLyric.toESLyRiC", "导出到 ESLyRiC")}
+						{t("topBar.menu.exportLyric.toESLyRiC", "Export to ESLyRiC")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={onExportLyric(stringifyQrc, "qrc")}>
-						{t("topBar.menu.exportLyric.toQRC", "导出到 QRC")}
+						{t("topBar.menu.exportLyric.toQRC", "Export to QRC")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={onExportLyric(stringifyYrc, "yrc")}>
-						{t("topBar.menu.exportLyric.toYRC", "导出到 YRC")}
+						{t("topBar.menu.exportLyric.toYRC", "Export to YRC")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={onExportLyric(stringifyLys, "lys")}>
 						{t(
 							"topBar.menu.exportLyric.toLrcfySylb",
-							"导出到 Lyricify Syllable",
+							"Export to Lyricify Syllable",
 						)}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onClick={onExportLyric(stringifyAss, "ass")}>
-						{t("topBar.menu.exportLyric.toASS", "导出到 ASS 字幕")}
+						{t("topBar.menu.exportLyric.toASS", "Export to ASS subtitles")}
 					</DropdownMenu.Item>
 
 					{exporters.length > 0 && <DropdownMenu.Separator />}

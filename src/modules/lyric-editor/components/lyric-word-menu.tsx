@@ -87,7 +87,7 @@ export const LyricWordMenu = ({
 					setOpenSplitWordDialog(true);
 				}}
 			>
-				{t("contextMenu.splitWord", "拆分单词…")}
+				{t("contextMenu.splitWord", "Split Word…")}
 			</ContextMenu.Item>
 			{/[\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF\u4E00-\u9FA5]/.test(
 				word.word,
@@ -174,7 +174,7 @@ export const LyricWordMenu = ({
 					setOpenReplaceWordDialog(true);
 				}}
 			>
-				{t("contextMenu.replaceWord", "替换单词…")}
+				{t("contextMenu.replaceWord", "Replace Word…")}
 			</ContextMenu.Item>
 			<ContextMenu.Item
 				disabled={selectedWordsSize !== 1}
@@ -231,7 +231,7 @@ export const LyricWordMenu = ({
 					setCombineWordsDialog({ open: true, lineIndex });
 				}}
 			>
-				{t("contextMenu.combineWords", "合并单词")}
+				{t("contextMenu.combineWords", "Combine Words")}
 				<span style={{ marginLeft: "auto", color: "var(--gray-9)" }}>
 					Shift+click
 				</span>
@@ -256,7 +256,7 @@ export const LyricWordMenu = ({
 			>
 				{t("contextMenu.deleteWords", {
 					count: selectedWordsSize,
-					defaultValue: "删除选定单词",
+					defaultValue: "Delete Selected Words",
 				})}
 			</ContextMenu.Item>
 
@@ -266,7 +266,10 @@ export const LyricWordMenu = ({
 				disabled={selectedWordsSize !== 1}
 				onSelect={() => afterToNewLine()}
 			>
-				{t("contextMenu.moveFollowingWordToNewLine", "此后单词拆至新行")}
+				{t(
+					"contextMenu.moveFollowingWordToNewLine",
+					"Split Following Words to New Line",
+				)}
 			</ContextMenu.Item>
 
 			<ContextMenu.Item
@@ -275,7 +278,7 @@ export const LyricWordMenu = ({
 			>
 				{t("contextMenu.moveWordToNewLine", {
 					count: selectedWordsSize,
-					defaultValue: "所选单词拆至新行",
+					defaultValue: "Split Selected Words to New Line",
 				})}
 			</ContextMenu.Item>
 

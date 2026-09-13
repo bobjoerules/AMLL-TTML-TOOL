@@ -114,7 +114,9 @@ export const CloudStatusButton: FC = () => {
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item onSelect={() => handleOpenCloudManager("open")}>
 					<Flex align="center" gap="2">
-						<FolderOpen20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+						<FolderOpen20Regular
+							style={{ width: 15, height: 15, flexShrink: 0 }}
+						/>
 						{t("cloud.myCloudLibrary", "My Cloud Library...")}
 					</Flex>
 				</DropdownMenu.Item>
@@ -127,7 +129,9 @@ export const CloudStatusButton: FC = () => {
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item onSelect={handleOpenAuth}>
 					<Flex align="center" gap="2">
-						<Settings20Regular style={{ width: 15, height: 15, flexShrink: 0 }} />
+						<Settings20Regular
+							style={{ width: 15, height: 15, flexShrink: 0 }}
+						/>
 						{t("cloud.accountSettings", "Cloud Account Settings...")}
 					</Flex>
 				</DropdownMenu.Item>
