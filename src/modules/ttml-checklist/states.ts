@@ -5,3 +5,9 @@ export const ttmlChecklistAtom = atomWithStorage<TTMLChecklistEntry[]>(
 	"ttmlChecklist",
 	[],
 );
+
+export const checklistShowUploadedToDbAtom = atomWithStorage<boolean>(
+	"checklistShowUploadedToDb",
+	false,
+);
+

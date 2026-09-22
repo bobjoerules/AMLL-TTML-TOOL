@@ -41,6 +41,38 @@
 		color 0.15s ease;
 }
 
+.toggleButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: var(--radius-2, 4px);
+	border: none;
+	background: transparent;
+	color: var(--gray-10, #aaa);
+	cursor: pointer;
+	padding: 0;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
+}
+
+.toggleButton:hover {
+	background: var(--gray-a4, rgba(255, 255, 255, 0.1));
+	color: var(--gray-12, #fff);
+}
+
+.toggleButtonActive {
+	background: var(--accent-a4, rgba(0, 150, 255, 0.2));
+	color: var(--accent-11, #38bdf8);
+}
+
+.toggleButtonActive:hover {
+	background: var(--accent-a5, rgba(0, 150, 255, 0.3));
+	color: var(--accent-11, #38bdf8);
+}
+
 .closeButton:hover {
 	background: var(--red-a4, rgba(255, 0, 0, 0.2));
 	color: var(--red-11, #ff5555);

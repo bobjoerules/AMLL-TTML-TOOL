@@ -201,6 +201,7 @@
 			"showTranslation": "Show Translation",
 			"showRoman": "Show Romanization",
 			"maskObsceneWords": "Mask Obscene Words",
+			"bgFollowsDuet": "BG Follows Duet",
 			"word": "Word",
 			"fadeWidth": "Fade Width",
 			"instantFade": "Instant Fade Out",
@@ -326,7 +327,11 @@
 			"forceRefresh": "Force refresh",
 			"clearWebsiteCache": "Clear cached website data",
 			"clearWebsiteCacheTitle": "Clear cached website data?",
-			"clearWebsiteCacheDescription": "This removes offline website files and reloads the page. Your saved projects and preferences will not be deleted."
+			"clearWebsiteCacheDescription": "This removes offline website files and reloads the page. Your saved projects and preferences will not be deleted.",
+			"checklist": {
+				"showUploadedToDb": "Show \"Mark as uploaded to database\" in checklist",
+				"showUploadedToDbDesc": "Displays a button on each checklist item to track whether the song has been uploaded to the database."
+			}
 		},
 		"appearance": {
 			"mode": {
@@ -596,6 +601,7 @@
 			"learnedSplits": "Learned Splits...",
 			"syncLineTimestamps": "Sync Line Timestamps",
 			"ttmlChecklist": "TTML Checklist",
+			"statsAndProfiles": "User Profiles & Stats...",
 			"spotMatch": "SpotMatch (Alternate Spotify IDs)...",
 			"tool": "Tools",
 			"importLyric": {
@@ -1327,7 +1333,14 @@
 		"signInRequired": "Please sign in to sync your checklist with the cloud.",
 		"loadCloudTTML": "Download TTML",
 		"loadCloudTTMLTooltip": "Download & load linked TTML from Cloud",
-		"cloudLinked": "Cloud Linked"
+		"cloudLinked": "Cloud Linked",
+		"uploadedToDatabase": "Uploaded to Database",
+		"uploadedToDbBadge": "Uploaded to Database",
+		"markUploadedToDb": "Mark as uploaded to database",
+		"unmarkUploadedToDb": "Mark as not uploaded to database",
+		"uploadedTab": "Uploaded to Database",
+		"statsAndProfiles": "View Community Stats & Creator Profiles on Web",
+		"statsAndProfilesShort": "Stats"
 	},
 	"autoSegmentDialog": {
 		"title": "Auto Segment",
@@ -1390,7 +1403,28 @@
 		"downloadingAudio": "Downloading attached audio...",
 		"audioDownloadFailed": "Loaded TTML, but could not download attached audio.",
 		"deletedSuccess": "Deleted \"{title}\" from Cloud.",
-		"confirmDelete": "Are you sure you want to delete \"{title}\" from your Cloud library?"
+		"confirmDelete": "Are you sure you want to delete \"{title}\" from your Cloud library?",
+		"onlineProfileTitle": "Online Creator Profile & Community Hub",
+		"onlineProfileDesc": "View your public profile, synced songs catalog, and community leaderboard stats on the web.",
+		"viewOnlineProfile": "View Public Profile",
+		"viewCommunityStats": "Community Leaderboard",
+		"copyProfileLink": "Copy online profile URL",
+		"profileLinkCopied": "Profile link copied to clipboard!",
+		"copyLink": "Copy Link",
+		"browseOnlineStats": "Explore Community Stats & Leaderboard",
+		"stats": {
+			"savedSongs": "Saved TTML Lyrics",
+			"song": "song",
+			"songs": "songs",
+			"totalLines": "Total Synced Lines",
+			"lines": "lines",
+			"playtime": "Synced Music Playtime",
+			"uniqueArtists": "Artists Covered",
+			"artist": "artist",
+			"artists": "artists",
+			"accountCreated": "Account Created",
+			"lastSignIn": "Last Active Sign-In"
+		}
 	},
 	"appleTtml": {
 		"dialogTitle": "Import Apple Music TTML",
@@ -1414,6 +1448,7 @@
 		"importSuccess": "Imported Apple Music TTML with full timings successfully!",
 		"fetchError": "Failed to fetch Apple Music TTML.",
 		"searchError": "Failed to search songs.",
+		"notFound": "No song found for this Spotify ID.",
 		"noResults": "No songs found for your search.",
 		"noLyricsFound": "No time-synced lyrics or TTML found for this song.",
 		"parseError": "Failed to parse imported TTML."

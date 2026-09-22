@@ -219,6 +219,7 @@ export function buildSpicyLines(
 	simple: boolean,
 	romanized: boolean,
 	forceLineSynced = false,
+	bgFollowsDuet = true,
 ): SpicyLine[] {
 	const normalized = source.map((line) => {
 		const text = lineText(line, romanized);
@@ -264,6 +265,13 @@ export function buildSpicyLines(
 	let lastMainLine: SpicyLine | undefined;
 	for (let i = 0; i < normalized.length; i++) {
 		const line = normalized[i];
+		if (line.isBackground && bgFollowsDuet) {
+			const refLine = lastMainLine ?? firstMainLine;
+			if (refLine) {
+				line.isDuet = refLine.isDuet;
+				line.agent = refLine.agent;
+			}
+		}
 		result.push(line);
 		if (!line.isBackground) {
 			latestMainEnd = Math.max(latestMainEnd, line.endTime);

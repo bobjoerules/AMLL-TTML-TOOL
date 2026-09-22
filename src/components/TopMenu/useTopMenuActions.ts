@@ -408,6 +408,14 @@ export const useTopMenuActions = () => {
 		setTTMLChecklistDialog(true);
 	}, [setTTMLChecklistDialog]);
 
+	const onOpenStatsAndProfiles = useCallback(async () => {
+		if (import.meta.env.TAURI_ENV_PLATFORM) {
+			await open("https://amll-ttml.web.app/#stats");
+		} else {
+			window.open("https://amll-ttml.web.app/#stats", "_blank");
+		}
+	}, []);
+
 	const onOpenSpotMatch = useCallback(() => {
 		setSpotMatchDialog(true);
 	}, [setSpotMatchDialog]);
@@ -767,6 +775,7 @@ export const useTopMenuActions = () => {
 		onAutoDuetBySinger,
 		onOpenLatencyTest,
 		onOpenTTMLChecklist,
+		onOpenStatsAndProfiles,
 		onOpenSpotMatch,
 		onOpenGitHub,
 		onOpenWiki,

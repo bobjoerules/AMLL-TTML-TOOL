@@ -39,7 +39,7 @@
 
 /* Lyric line base styles - font only, let the library handle position/opacity */
 :global(.amll-lyric-line) {
-	font-family: var(--default-font-family) !important;
+	font-family: var(--preview-font-family, var(--default-font-family)) !important;
 	font-size: 3.8rem !important;
 	font-weight: 850 !important;
 	line-height: 1.15 !important;

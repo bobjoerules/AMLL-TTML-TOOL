@@ -7,7 +7,7 @@
 	user-select: none;
 	background-color: transparent;
 	color: #fff;
-	font-family: var(--default-font-family, "Inter", -apple-system, sans-serif);
+	font-family: var(--preview-font-family, var(--default-font-family, "Inter", -apple-system, sans-serif));
 	display: flex;
 	flex-direction: column;
 }
@@ -254,7 +254,10 @@
 	}
 }
 .isToxi {
-	font-family: "SF Pro Display", "Inter", sans-serif;
+	font-family: var(
+		--toxi-font-family,
+		var(--preview-font-family, "SF Pro Display", "Inter", sans-serif)
+	) !important;
 }
 
 .isToxi::before {
@@ -263,6 +266,7 @@
 
 .isToxi .wordStatic,
 .isToxi .word {
+	font-family: inherit !important;
 	font-size: 2.2rem;
 	font-weight: 700;
 	letter-spacing: -0.01em;

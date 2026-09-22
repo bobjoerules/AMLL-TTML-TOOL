@@ -2,11 +2,17 @@ import {
 	ArrowClockwise24Regular,
 	Camera24Regular,
 	Cloud24Regular,
+	Copy16Regular,
 	DocumentBulletList24Regular,
 	Edit24Regular,
+	Globe16Regular,
 	Image24Regular,
 	Link24Regular,
 	MusicNote224Regular,
+	Open16Regular,
+	Person16Regular,
+	ShieldCheckmarkRegular,
+	Timer24Regular,
 } from "@fluentui/react-icons";
 import {
 	Avatar,
@@ -21,7 +27,9 @@ import {
 	Separator,
 	Text,
 	TextField,
+	Tooltip,
 } from "@radix-ui/themes";
+import { open } from "@tauri-apps/plugin-shell";
 import { useAtomValue, useSetAtom } from "jotai";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,6 +53,16 @@ import {
 	currentUserAtom,
 } from "$/modules/cloud/states";
 import { fetchUserTTMLList } from "$/modules/cloud/ttmlStorage";
+
+const MODERATOR_UIDS = new Set(["s41Sey8PJUSYHQUsS6aLLb7lsf02"]);
+
+const openExternal = async (url: string) => {
+	if (import.meta.env.TAURI_ENV_PLATFORM) {
+		await open(url);
+	} else {
+		window.open(url, "_blank");
+	}
+};
 
 export const SettingsAccountTab = memo(() => {
 	const { t } = useTranslation();
@@ -119,25 +137,62 @@ export const SettingsAccountTab = memo(() => {
 		}
 	}, [authUser]);
 
-	const { uniqueSongCount, totalLinesCount } = useMemo(() => {
-		const uniqueSongs = new Map<string, number>();
+	const isMod = Boolean(user?.uid && MODERATOR_UIDS.has(user.uid));
+
+	const {
+		uniqueSongCount,
+		totalLinesCount,
+		totalDurationMs,
+		uniqueArtistCount,
+	} = useMemo(() => {
+		const uniqueSongs = new Map<
+			string,
+			{ lines: number; duration: number }
+		>();
+		const artists = new Set<string>();
+
 		for (const item of cloudTTMLList) {
 			const nameKey = (item.title || "").trim().toLowerCase() || item.id;
 			const lines = item.lineCount || 0;
+			const duration = item.durationMs || 0;
+			const artist = (item.artist || "").trim().toLowerCase();
+			if (artist) {
+				artists.add(artist);
+			}
+
 			const existing = uniqueSongs.get(nameKey);
-			if (existing === undefined || lines > existing) {
-				uniqueSongs.set(nameKey, lines);
+			if (existing === undefined || lines > existing.lines) {
+				uniqueSongs.set(nameKey, { lines, duration });
 			}
 		}
-		let total = 0;
-		for (const lines of uniqueSongs.values()) {
-			total += lines;
+
+		let totalLines = 0;
+		let totalDuration = 0;
+		for (const s of uniqueSongs.values()) {
+			totalLines += s.lines;
+			totalDuration += s.duration;
 		}
+
 		return {
 			uniqueSongCount: uniqueSongs.size,
-			totalLinesCount: total,
+			totalLinesCount: totalLines,
+			totalDurationMs: totalDuration,
+			uniqueArtistCount: artists.size,
 		};
 	}, [cloudTTMLList]);
+
+	const formatDuration = (ms: number): string => {
+		const totalSeconds = Math.floor(ms / 1000);
+		const hours = Math.floor(totalSeconds / 3600);
+		const minutes = Math.floor((totalSeconds % 3600) / 60);
+		if (hours > 0) {
+			return `${hours}h ${minutes}m`;
+		}
+		if (minutes > 0) {
+			return `${minutes} min`;
+		}
+		return totalSeconds > 0 ? `${totalSeconds}s` : "0 min";
+	};
 
 	const handleRefresh = async () => {
 		try {
@@ -298,7 +353,13 @@ export const SettingsAccountTab = memo(() => {
 											: t("cloud.signIn", "Sign In")}
 								</Button>
 
-								<Flex justify="center" mt="2">
+								<Flex
+									justify="center"
+									align="center"
+									direction="column"
+									gap="2"
+									mt="2"
+								>
 									<Button
 										size="2"
 										variant="ghost"
@@ -315,6 +376,22 @@ export const SettingsAccountTab = memo(() => {
 													"cloud.dontHaveAccount",
 													"Don't have an account? Sign Up",
 												)}
+									</Button>
+									<Button
+										size="1"
+										variant="ghost"
+										color="purple"
+										type="button"
+										style={{ cursor: "pointer" }}
+										onClick={() =>
+											openExternal("https://amll-ttml.web.app/#stats")
+										}
+									>
+										<Globe16Regular style={{ width: 14, height: 14 }} />
+										{t(
+											"cloud.browseOnlineStats",
+											"Explore Community Stats & Leaderboard",
+										)}
 									</Button>
 								</Flex>
 							</Flex>
@@ -456,6 +533,24 @@ export const SettingsAccountTab = memo(() => {
 									/>
 									{t("cloud.synced", "Synced")}
 								</Badge>
+								{isMod && (
+									<Badge
+										color="amber"
+										size="1"
+										variant="surface"
+										radius="full"
+										style={{
+											display: "inline-flex",
+											alignItems: "center",
+											gap: "4px",
+											padding: "2px 8px",
+											fontWeight: 600,
+										}}
+									>
+										<ShieldCheckmarkRegular style={{ width: 13, height: 13 }} />
+										<span>MODERATOR</span>
+									</Badge>
+								)}
 							</Flex>
 							{user.email && (
 								<Text size="2" color="gray">
@@ -583,18 +678,101 @@ export const SettingsAccountTab = memo(() => {
 				</Dialog.Content>
 			</Dialog.Root>
 
+			{/* Online Profile & Community Link Card */}
+			<Card
+				variant="surface"
+				style={{
+					padding: 16,
+					borderRadius: 12,
+					border: "1px solid var(--accent-a5)",
+					background:
+						"linear-gradient(135deg, var(--accent-a3) 0%, var(--purple-a2) 100%)",
+				}}
+			>
+				<Flex justify="between" align="center" wrap="wrap" gap="3">
+					<Flex direction="column" gap="1" style={{ flex: 1, minWidth: 220 }}>
+						<Flex align="center" gap="2">
+							<Globe16Regular style={{ color: "var(--accent-9)" }} />
+							<Heading size="3">
+								{t(
+									"cloud.onlineProfileTitle",
+									"Online Creator Profile & Community Hub",
+								)}
+							</Heading>
+						</Flex>
+						<Text size="2" color="gray">
+							{t(
+								"cloud.onlineProfileDesc",
+								"View your public profile, synced songs catalog, and community leaderboard stats on the web.",
+							)}
+						</Text>
+					</Flex>
+
+					<Flex align="center" gap="2" wrap="wrap">
+						<Button
+							variant="solid"
+							size="2"
+							style={{ cursor: "pointer" }}
+							onClick={() =>
+								openExternal(
+									`https://amll-ttml.web.app/#user=${encodeURIComponent(user.uid)}`,
+								)
+							}
+						>
+							<Open16Regular style={{ width: 15, height: 15 }} />
+							{t("cloud.viewOnlineProfile", "View Public Profile")}
+						</Button>
+						<Button
+							variant="soft"
+							color="purple"
+							size="2"
+							style={{ cursor: "pointer" }}
+							onClick={() => openExternal("https://amll-ttml.web.app/#stats")}
+						>
+							{t("cloud.viewCommunityStats", "Community Leaderboard")}
+						</Button>
+						<Tooltip
+							content={t("cloud.copyProfileLink", "Copy online profile URL")}
+						>
+							<Button
+								variant="soft"
+								color="gray"
+								size="2"
+								style={{ cursor: "pointer" }}
+								onClick={() => {
+									navigator.clipboard.writeText(
+										`https://amll-ttml.web.app/#user=${encodeURIComponent(user.uid)}`,
+									);
+									toast.success(
+										t(
+											"cloud.profileLinkCopied",
+											"Profile link copied to clipboard!",
+										),
+									);
+								}}
+							>
+								<Copy16Regular style={{ width: 15, height: 15 }} />
+								{t("cloud.copyLink", "Copy Link")}
+							</Button>
+						</Tooltip>
+					</Flex>
+				</Flex>
+			</Card>
+
 			{/* User Statistics Grid */}
 			<Grid columns="2" gap="3">
 				<Card variant="surface" style={{ padding: 16 }}>
 					<Flex justify="between" align="start">
 						<Flex direction="column" gap="1">
 							<Text size="2" color="gray" weight="medium">
-								Saved TTML Lyrics
+								{t("cloud.stats.savedSongs", "Saved TTML Lyrics")}
 							</Text>
 							<Heading size="6">
 								{uniqueSongCount}{" "}
 								<Text size="2" color="gray" weight="regular">
-									{uniqueSongCount === 1 ? "song" : "songs"}
+									{uniqueSongCount === 1
+										? t("cloud.stats.song", "song")
+										: t("cloud.stats.songs", "songs")}
 								</Text>
 							</Heading>
 						</Flex>
@@ -608,12 +786,12 @@ export const SettingsAccountTab = memo(() => {
 					<Flex justify="between" align="start">
 						<Flex direction="column" gap="1">
 							<Text size="2" color="gray" weight="medium">
-								Total Synced Lines
+								{t("cloud.stats.totalLines", "Total Synced Lines")}
 							</Text>
 							<Heading size="6">
-								{totalLinesCount}{" "}
+								{totalLinesCount.toLocaleString()}{" "}
 								<Text size="2" color="gray" weight="regular">
-									lines
+									{t("cloud.stats.lines", "lines")}
 								</Text>
 							</Heading>
 						</Flex>
@@ -624,9 +802,44 @@ export const SettingsAccountTab = memo(() => {
 				</Card>
 
 				<Card variant="surface" style={{ padding: 16 }}>
+					<Flex justify="between" align="start">
+						<Flex direction="column" gap="1">
+							<Text size="2" color="gray" weight="medium">
+								{t("cloud.stats.playtime", "Synced Music Playtime")}
+							</Text>
+							<Heading size="6">{formatDuration(totalDurationMs)}</Heading>
+						</Flex>
+						<Timer24Regular
+							style={{ width: 24, height: 24, color: "var(--accent-9)" }}
+						/>
+					</Flex>
+				</Card>
+
+				<Card variant="surface" style={{ padding: 16 }}>
+					<Flex justify="between" align="start">
+						<Flex direction="column" gap="1">
+							<Text size="2" color="gray" weight="medium">
+								{t("cloud.stats.uniqueArtists", "Artists Covered")}
+							</Text>
+							<Heading size="6">
+								{uniqueArtistCount}{" "}
+								<Text size="2" color="gray" weight="regular">
+									{uniqueArtistCount === 1
+										? t("cloud.stats.artist", "artist")
+										: t("cloud.stats.artists", "artists")}
+								</Text>
+							</Heading>
+						</Flex>
+						<Person16Regular
+							style={{ width: 24, height: 24, color: "var(--accent-9)" }}
+						/>
+					</Flex>
+				</Card>
+
+				<Card variant="surface" style={{ padding: 16 }}>
 					<Flex direction="column" gap="1">
 						<Text size="1" color="gray" weight="medium">
-							Account Created
+							{t("cloud.stats.accountCreated", "Account Created")}
 						</Text>
 						<Text size="2" weight="bold">
 							{creationDateFormatted}
@@ -637,7 +850,7 @@ export const SettingsAccountTab = memo(() => {
 				<Card variant="surface" style={{ padding: 16 }}>
 					<Flex direction="column" gap="1">
 						<Text size="1" color="gray" weight="medium">
-							Last Active Sign-In
+							{t("cloud.stats.lastSignIn", "Last Active Sign-In")}
 						</Text>
 						<Text size="2" weight="bold">
 							{lastLoginFormatted}

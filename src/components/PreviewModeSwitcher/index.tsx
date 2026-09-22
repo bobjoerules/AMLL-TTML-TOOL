@@ -22,19 +22,48 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 }) => {
 	const previewModeType = useAtomValue(previewModeTypeAtom);
 	const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
-	const [controlsVisible, setControlsVisible] = useState(true);
+	const [controlsVisible, setControlsVisible] = useState(false);
 	const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+	const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
-	const handleMouseMove = useCallback(() => {
-		if (isPanel) return;
-		setControlsVisible(true);
-		if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-		if (isFullscreen) {
-			hideTimerRef.current = setTimeout(() => {
-				setControlsVisible(false);
-			}, 3000);
-		}
-	}, [isFullscreen, isPanel]);
+	const handleMouseMove = useCallback(
+		(e: React.MouseEvent) => {
+			if (isPanel) return;
+			if (!isFullscreen) {
+				setControlsVisible(true);
+				return;
+			}
+
+			// Discard synthetic mousemove events dispatched by browsers when DOM elements
+			// scroll/animate underneath a stationary cursor
+			if (
+				lastPosRef.current &&
+				lastPosRef.current.x === e.clientX &&
+				lastPosRef.current.y === e.clientY
+			) {
+				return;
+			}
+			lastPosRef.current = { x: e.clientX, y: e.clientY };
+
+			// Only reveal when user moves up towards the top controls
+			if (e.clientY <= 72) {
+				setControlsVisible(true);
+				if (hideTimerRef.current) {
+					clearTimeout(hideTimerRef.current);
+					hideTimerRef.current = null;
+				}
+			} else {
+				// Hide when moving down away from top controls
+				if (!hideTimerRef.current) {
+					hideTimerRef.current = setTimeout(() => {
+						setControlsVisible(false);
+						hideTimerRef.current = null;
+					}, 200);
+				}
+			}
+		},
+		[isFullscreen, isPanel],
+	);
 
 	useEffect(() => {
 		if (isPanel) return;
@@ -42,9 +71,12 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 			setControlsVisible(true);
 			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
 		} else {
+			// Briefly show the exit button for 2.5s on entering fullscreen, then hide
+			setControlsVisible(true);
 			hideTimerRef.current = setTimeout(() => {
 				setControlsVisible(false);
-			}, 3000);
+				hideTimerRef.current = null;
+			}, 2500);
 		}
 		return () => {
 			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -61,29 +93,43 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 					type="button"
 					style={{
 						position: "absolute",
-						top: 20,
-						right: 24,
+						top: 16,
+						right: 20,
+						height: 36,
+						boxSizing: "border-box",
 						zIndex: 9999,
 						display: "flex",
 						alignItems: "center",
 						gap: 6,
-						padding: "8px 16px",
+						padding: "0 16px",
 						borderRadius: 9999,
-						background: "rgba(0, 0, 0, 0.55)",
-						backdropFilter: "blur(16px)",
-						WebkitBackdropFilter: "blur(16px)",
+						background: "rgba(0, 0, 0, 0.45)",
+						backdropFilter: "blur(14px)",
+						WebkitBackdropFilter: "blur(14px)",
 						border: "1px solid rgba(255, 255, 255, 0.2)",
 						color: "rgba(255, 255, 255, 0.95)",
 						fontSize: "0.85rem",
 						fontWeight: 600,
 						cursor: "pointer",
-						boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
-						transition: "opacity 0.3s ease, transform 0.3s ease",
+						boxShadow: "0 4px 16px rgba(0, 0, 0, 0.35)",
+						transition: "opacity 0.25s ease, transform 0.25s ease",
 						opacity: controlsVisible ? 1 : 0,
 						pointerEvents: controlsVisible ? "auto" : "none",
 						transform: controlsVisible ? "translateY(0)" : "translateY(-8px)",
 					}}
 					onClick={() => setIsFullscreen(false)}
+					onMouseEnter={() => {
+						if (hideTimerRef.current) {
+							clearTimeout(hideTimerRef.current);
+							hideTimerRef.current = null;
+						}
+						setControlsVisible(true);
+					}}
+					onMouseLeave={() => {
+						if (isFullscreen) {
+							setControlsVisible(false);
+						}
+					}}
 					title="Exit Fullscreen (Esc)"
 				>
 					<FullScreenMinimize20Regular />

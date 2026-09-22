@@ -300,6 +300,9 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 				audioStoragePath: d.audioStoragePath || null,
 				audioFileName: d.audioFileName || null,
 				audioSize: d.audioSize || null,
+				coverArt: d.coverArt || null,
+				publishedToCommunity: Boolean(d.publishedToCommunity || d.finished),
+				finished: Boolean(d.finished),
 			};
 		});
 

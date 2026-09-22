@@ -80,6 +80,9 @@ const ToolMenuItems = () => {
 			<DropdownMenu.Item onSelect={menu.onOpenTTMLChecklist}>
 				{t("topBar.menu.ttmlChecklist", "TTML Checklist...")}
 			</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={menu.onOpenStatsAndProfiles}>
+				{t("topBar.menu.statsAndProfiles", "User Profiles & Stats...")}
+			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenSpotMatch}>
 				{t("topBar.menu.spotMatch", "SpotMatch (Alternate Spotify IDs)...")}
 			</DropdownMenu.Item>

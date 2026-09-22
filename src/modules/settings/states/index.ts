@@ -254,9 +254,22 @@ export const syncGradientToAccentAtom = atomWithStorage<boolean>(
 	false,
 );
 
+export type FontSelectionTarget = "app" | "editor" | "preview";
+export const fontSelectionTargetAtom = atom<FontSelectionTarget>("app");
+
 export const appFontAtom = atomWithStorage<string>(
 	"appFont",
 	'"MiSans", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+);
+
+export const editorFontAtom = atomWithStorage<string>(
+	"editorFont",
+	"inherit",
+);
+
+export const previewFontAtom = atomWithStorage<string>(
+	"previewFont",
+	"default",
 );
 
 export const customFontDataAtom = atomWithStorage<string | null>(
@@ -265,6 +278,24 @@ export const customFontDataAtom = atomWithStorage<string | null>(
 );
 export const customFontNameAtom = atomWithStorage<string | null>(
 	"customFontName",
+	null,
+);
+
+export const customEditorFontDataAtom = atomWithStorage<string | null>(
+	"customEditorFontData",
+	null,
+);
+export const customEditorFontNameAtom = atomWithStorage<string | null>(
+	"customEditorFontName",
+	null,
+);
+
+export const customPreviewFontDataAtom = atomWithStorage<string | null>(
+	"customPreviewFontData",
+	null,
+);
+export const customPreviewFontNameAtom = atomWithStorage<string | null>(
+	"customPreviewFontName",
 	null,
 );
 

@@ -43,6 +43,9 @@ import {
 	wrapLyricLinesAtom,
 } from "$/modules/settings/states/index.ts";
 import {
+	autoSegmentOnLineSyncAtom,
+	autoSegmentSyncModeAtom,
+	type AutoSegmentSyncMode,
 	enableTimeModeDoubleClickEditAtom,
 	showTouchSyncPanelAtom,
 	syncLevelModeAtom,
@@ -94,6 +97,7 @@ import {
 	ClipboardPaste16Regular,
 	FastForward16Regular,
 	TextWrap16Regular,
+	Cut16Regular,
 } from "@fluentui/react-icons";
 
 export const LineTimingTools = () => {
@@ -510,6 +514,12 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	const [syncTimeOffset, setSyncTimeOffset] = useAtom(syncTimeOffsetAtom);
 	const [syncCommitOffset, setSyncCommitOffset] = useAtom(syncCommitOffsetAtom);
 	const [syncLevelMode, setSyncLevelMode] = useAtom(syncLevelModeAtom);
+	const [autoSegmentOnLineSync, setAutoSegmentOnLineSync] = useAtom(
+		autoSegmentOnLineSyncAtom,
+	);
+	const [autoSegmentSyncMode, setAutoSegmentSyncMode] = useAtom(
+		autoSegmentSyncModeAtom,
+	);
 	const [instantFade, setInstantFade] = useAtom(instantHighlightFadeAtom);
 	const [spectrogramOnlyShowSyncLine, setSpectrogramOnlyShowSyncLine] = useAtom(
 		spectrogramOnlyShowSyncLineAtom,
@@ -818,6 +828,53 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 												setEnableTimeModeDoubleClickEdit(!!v)
 											}
 										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<Cut16Regular />
+												{t(
+													"ribbonBar.syncMode.autoSegmentOnSync",
+													"Auto-Segment Single Words",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={autoSegmentOnLineSync}
+											onCheckedChange={(v) => setAutoSegmentOnLineSync(!!v)}
+										/>
+										{autoSegmentOnLineSync && (
+											<Flex
+												direction="row"
+												align="center"
+												justify="between"
+												gap="2"
+												style={{
+													gridColumn: "span 2",
+													paddingLeft: "24px",
+													paddingTop: "2px",
+												}}
+											>
+												<Text size="1" color="gray">
+													{t("ribbonBar.syncMode.splitType", "Split:")}
+												</Text>
+												<SegmentedControl.Root
+													value={autoSegmentSyncMode}
+													onValueChange={(v) =>
+														setAutoSegmentSyncMode(v as AutoSegmentSyncMode)
+													}
+													size="1"
+												>
+													<SegmentedControl.Item value="word">
+														{t("settings.common.autoSegmentModeWord", "Word")}
+													</SegmentedControl.Item>
+													<SegmentedControl.Item value="syllable">
+														{t(
+															"settings.common.autoSegmentModeSyllable",
+															"Syllable",
+														)}
+													</SegmentedControl.Item>
+												</SegmentedControl.Root>
+											</Flex>
+										)}
 									</Grid>
 								</Flex>
 							</Popover.Content>

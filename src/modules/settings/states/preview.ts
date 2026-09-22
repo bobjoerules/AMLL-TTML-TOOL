@@ -49,3 +49,7 @@ export const previewShowAlbumArtworkAtom = atomWithStorage<boolean>(
 	"previewShowAlbumArtwork",
 	true,
 );
+export const bgFollowsDuetAtom = atomWithStorage<boolean>(
+	"previewBgFollowsDuet",
+	true,
+);

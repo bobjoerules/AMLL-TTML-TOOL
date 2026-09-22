@@ -55,6 +55,29 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.8
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 21, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Preserve Audio Pitch on Slow Playback:</b> Retained native audio pitch through Web Audio routing when slowing down audio playback with Preserve Pitch enabled, allowing accurate syllable synchronization at 0.75x and 0.5x speeds without dropping pitch octaves.
+								</Text>
+								<Text size="2">
+									• <b>Direct Spotify Track ID &amp; Link Importer:</b> Enhanced Apple Music TTML importer to directly accept raw Spotify track IDs, protocol-less URLs (<code>open.spotify.com/track/...</code>), URIs (<code>spotify:track:...</code>), and links with query parameters, immediately switching to "Fetch TTML".
+								</Text>
+								<Text size="2">
+									• <b>Missing Track Error Handling:</b> Added clear error reporting and toast alerts (<code>No song found for this Spotify ID</code>) when querying invalid or non-existent track IDs.
+								</Text>
+								<Text size="2">
+									• <b>Cloud Accounts &amp; Modern UI Polish:</b> Added user profile statistics, direct web dashboard navigation, aligned Cloud modal styling with the TTML Checklist aesthetics, and modernized app branding assets and app icons.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.7
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

@@ -330,7 +330,21 @@ export const FinishedTTMLsPage: React.FC = () => {
 
                 {item.authorName && (
                   <p className="ttml-author" style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                    Uploaded by <span style={{ color: 'var(--text-secondary)' }}>{item.authorName}</span>
+                    Uploaded by{' '}
+                    <a
+                      href={`#user=${encodeURIComponent(item.authorUid || item.authorName)}`}
+                      title={`View ${item.authorName}'s profile and stats`}
+                      style={{
+                        color: 'var(--accent-pink)',
+                        textDecoration: 'none',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                      onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                    >
+                      {item.authorName}
+                    </a>
                   </p>
                 )}
 

@@ -175,6 +175,7 @@
 			"showTranslation": "显示翻译",
 			"showRoman": "显示注音",
 			"maskObsceneWords": "屏蔽不雅词汇",
+			"bgFollowsDuet": "伴唱跟随对唱",
 			"word": "单词",
 			"fadeWidth": "淡化宽度",
 			"instantFade": "即时淡出",
@@ -285,7 +286,11 @@
 			"customBackgroundBlur": "模糊半径",
 			"customBackgroundBrightness": "亮度",
 			"customBackgroundEnabled": "背景已设置",
-			"customBackgroundManage": "设置"
+			"customBackgroundManage": "设置",
+			"checklist": {
+				"showUploadedToDb": "在待办清单中显示“标记已上传到数据库”",
+				"showUploadedToDbDesc": "在每个清单条目上显示一个按钮，用于追踪该歌曲是否已上传到数据库。"
+			}
 		},
 		"about": {
 			"update": "更新",
@@ -559,6 +564,7 @@
 			"learnedSplits": "Learned Splits...",
 			"syncLineTimestamps": "同步行时间戳",
 			"ttmlChecklist": "TTML 待办清单...",
+			"statsAndProfiles": "用户主页与社区统计...",
 			"spotMatch": "SpotMatch (替代 Spotify ID)...",
 			"tool": "工具",
 			"importLyric": {
@@ -1266,7 +1272,14 @@
 		"signInRequired": "请先登录账号以同步云端清单。",
 		"loadCloudTTML": "下载云端 TTML",
 		"loadCloudTTMLTooltip": "下载并打开与此歌曲关联的云端 TTML 歌词",
-		"cloudLinked": "已关联云端"
+		"cloudLinked": "已关联云端",
+		"uploadedToDatabase": "已上传到数据库",
+		"uploadedToDbBadge": "已上传到数据库",
+		"markUploadedToDb": "标记为已上传到数据库",
+		"unmarkUploadedToDb": "取消标记已上传到数据库",
+		"uploadedTab": "已上传数据库",
+		"statsAndProfiles": "在网页上查看社区统计与创作者主页",
+		"statsAndProfilesShort": "社区统计"
 	},
 	"autoSegmentDialog": {
 		"title": "Auto Segment",
@@ -1329,7 +1342,28 @@
 		"downloadingAudio": "正在下载云端音频...",
 		"audioDownloadFailed": "已加载 TTML 歌词，但下载关联音频失败。",
 		"deletedSuccess": "已从云端删除 \"{title}\"。",
-		"confirmDelete": "确定要从云端资料库中删除 \"{title}\" 吗？"
+		"confirmDelete": "确定要从云端资料库中删除 \"{title}\" 吗？",
+		"onlineProfileTitle": "线上创作者主页与社区中心",
+		"onlineProfileDesc": "在网页上查看您的公开个人主页、同步歌词目录以及社区排行榜数据。",
+		"viewOnlineProfile": "查看公开主页",
+		"viewCommunityStats": "社区排行榜",
+		"copyProfileLink": "复制个人主页网址",
+		"profileLinkCopied": "个人主页链接已复制到剪贴板！",
+		"copyLink": "复制链接",
+		"browseOnlineStats": "探索社区统计与创作者排行榜",
+		"stats": {
+			"savedSongs": "云端保存歌曲",
+			"song": "首",
+			"songs": "首",
+			"totalLines": "累计打轴行数",
+			"lines": "行",
+			"playtime": "打轴音乐总时长",
+			"uniqueArtists": "涵盖歌手数",
+			"artist": "位",
+			"artists": "位",
+			"accountCreated": "账号创建时间",
+			"lastSignIn": "最近活跃登录"
+		}
 	},
 	"importChooser": {
 		"title": "导入歌词",
@@ -1379,6 +1413,7 @@
 		"importSuccess": "已成功导入完整时间轴的 Apple Music TTML！",
 		"fetchError": "获取 Apple Music TTML 失败。",
 		"searchError": "搜索歌曲失败。",
+		"notFound": "未找到此 Spotify ID 对应的歌曲。",
 		"noResults": "未找到相关歌曲。",
 		"noLyricsFound": "该歌曲暂无同步歌词或 TTML。",
 		"parseError": "解析 TTML 失败。"

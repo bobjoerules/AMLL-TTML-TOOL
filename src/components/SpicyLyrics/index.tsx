@@ -35,6 +35,7 @@ import {
 	spicyBackgroundModeAtom,
 	spicyForceLineSyncedAtom,
 	spicySimpleLyricsModeAtom,
+	bgFollowsDuetAtom,
 } from "$/modules/settings/states/preview";
 import { lyricLinesAtom, projectIdentityAtom } from "$/states/main";
 import {
@@ -279,14 +280,16 @@ export const SpicyLyrics = memo(
 		const customBackgroundImage = useAtomValue(customBackgroundImageAtom);
 		const useAccent = useAtomValue(useCustomAccentAtom);
 		const accent = useAtomValue(customAccentColorAtom);
+		const bgFollowsDuet = useAtomValue(bgFollowsDuetAtom);
 		const setCurrentTime = useSetAtom(currentTimeAtom);
 		const currentDuration = useAtomValue(currentDurationAtom);
 		const isPlaying = useAtomValue(audioPlayingAtom);
 
 		const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
 		const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
-		const [controlsVisible, setControlsVisible] = useState(true);
+		const [controlsVisible, setControlsVisible] = useState(false);
 		const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+		const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
 		const totalDuration = useMemo(() => {
 			if (currentDuration > 0) return currentDuration;
@@ -310,24 +313,53 @@ export const SpicyLyrics = memo(
 			}
 		};
 
-		const handleMouseMove = useCallback(() => {
-			setControlsVisible(true);
-			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-			if (isFullscreen) {
-				hideTimerRef.current = setTimeout(() => {
-					setControlsVisible(false);
-				}, 3000);
-			}
-		}, [isFullscreen]);
+		const handleMouseMove = useCallback(
+			(e: React.MouseEvent) => {
+				if (!isFullscreen) {
+					setControlsVisible(true);
+					return;
+				}
+
+				// Discard synthetic mousemove events dispatched by browsers when DOM elements
+				// scroll/animate underneath a stationary cursor
+				if (
+					lastPosRef.current &&
+					lastPosRef.current.x === e.clientX &&
+					lastPosRef.current.y === e.clientY
+				) {
+					return;
+				}
+				lastPosRef.current = { x: e.clientX, y: e.clientY };
+
+				if (e.clientY <= 72) {
+					setControlsVisible(true);
+					if (hideTimerRef.current) {
+						clearTimeout(hideTimerRef.current);
+						hideTimerRef.current = null;
+					}
+				} else {
+					if (!hideTimerRef.current) {
+						hideTimerRef.current = setTimeout(() => {
+							setControlsVisible(false);
+							hideTimerRef.current = null;
+						}, 200);
+					}
+				}
+			},
+			[isFullscreen],
+		);
 
 		useEffect(() => {
 			if (!isFullscreen) {
 				setControlsVisible(true);
 				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
 			} else {
+				// Briefly show controls for 2.5s on entering fullscreen, then hide
+				setControlsVisible(true);
 				hideTimerRef.current = setTimeout(() => {
 					setControlsVisible(false);
-				}, 3000);
+					hideTimerRef.current = null;
+				}, 2500);
 			}
 			return () => {
 				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -355,8 +387,14 @@ export const SpicyLyrics = memo(
 
 		const lines = useMemo(
 			() =>
-				buildSpicyLines(lyrics.lyricLines, simple, romanized, forceLineSynced),
-			[lyrics.lyricLines, simple, romanized, forceLineSynced],
+				buildSpicyLines(
+					lyrics.lyricLines,
+					simple,
+					romanized,
+					forceLineSynced,
+					bgFollowsDuet,
+				),
+			[lyrics.lyricLines, simple, romanized, forceLineSynced, bgFollowsDuet],
 		);
 		const hasDuetLines = useMemo(
 			() => lines.some((line) => !line.isDotLine && line.isDuet),
@@ -1149,6 +1187,7 @@ export const SpicyLyrics = memo(
 							styles.floatingControls,
 							isFullscreen && !controlsVisible && styles.autohideHidden,
 						)}
+						style={isFullscreen ? { right: 205 } : undefined}
 					>
 						<button
 							type="button"

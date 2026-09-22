@@ -273,4 +273,63 @@ describe("buildSpicyLines", () => {
 
 		expect(dot).toMatchObject({ startTime: 3_000, endTime: 6_000 });
 	});
+
+	it("inherits duet alignment and agent for background vocals when bgFollowsDuet is true", () => {
+		const duetMain = newLyricLine();
+		duetMain.id = "duet-main";
+		duetMain.startTime = 0;
+		duetMain.endTime = 2_000;
+		duetMain.isDuet = true;
+		duetMain.agent = "v2";
+		duetMain.words = [
+			{ ...newLyricWord(), startTime: 0, endTime: 2_000, word: "Duet lead" },
+		];
+
+		const background = newLyricLine();
+		background.id = "bg-line";
+		background.startTime = 500;
+		background.endTime = 2_000;
+		background.isBG = true;
+		background.isDuet = false;
+		background.words = [
+			{ ...newLyricWord(), startTime: 500, endTime: 2_000, word: "Duet harmony" },
+		];
+
+		const linesWithFollow = buildSpicyLines([duetMain, background], false, false, false, true);
+		const bgWithFollow = linesWithFollow.find((l) => l.id === "bg-line");
+		expect(bgWithFollow?.isDuet).toBe(true);
+		expect(bgWithFollow?.agent).toBe("v2");
+
+		const linesWithoutFollow = buildSpicyLines([duetMain, background], false, false, false, false);
+		const bgWithoutFollow = linesWithoutFollow.find((l) => l.id === "bg-line");
+		expect(bgWithoutFollow?.isDuet).toBe(false);
+		expect(bgWithoutFollow?.agent).toBe("v1");
+	});
+
+	it("does not make background vocals duet when preceding main line is not duet", () => {
+		const soloMain = newLyricLine();
+		soloMain.id = "solo-main";
+		soloMain.startTime = 0;
+		soloMain.endTime = 2_000;
+		soloMain.isDuet = false;
+		soloMain.agent = "v1";
+		soloMain.words = [
+			{ ...newLyricWord(), startTime: 0, endTime: 2_000, word: "Solo lead" },
+		];
+
+		const background = newLyricLine();
+		background.id = "bg-line";
+		background.startTime = 500;
+		background.endTime = 2_000;
+		background.isBG = true;
+		background.words = [
+			{ ...newLyricWord(), startTime: 500, endTime: 2_000, word: "Solo harmony" },
+		];
+
+		const lines = buildSpicyLines([soloMain, background], false, false, false, true);
+		const bg = lines.find((l) => l.id === "bg-line");
+		expect(bg?.isDuet).toBe(false);
+		expect(bg?.agent).toBe("v1");
+	});
 });
+

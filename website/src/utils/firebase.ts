@@ -418,3 +418,183 @@ export async function updateSongCoverArt(
   }
 }
 
+export interface UserProfileStats {
+  uid: string;
+  displayName: string;
+  photoURL?: string;
+  isModerator: boolean;
+  totalSongs: number;
+  totalLines: number;
+  totalDurationMs: number;
+  wordSyncSongs: number;
+  lineSyncSongs: number;
+  uniqueArtists: string[];
+  firstContribution?: number;
+  lastContribution?: number;
+  songs: FinishedTTML[];
+}
+
+export interface CommunityGlobalStats {
+  totalSongs: number;
+  totalLines: number;
+  totalDurationMs: number;
+  totalCreators: number;
+  totalWordSync: number;
+  totalArtists: number;
+}
+
+export function isSongWordSync(ttml: FinishedTTML): boolean {
+  if (!ttml.rawTTML) return false;
+  return (
+    /itunes:timing=["']Word["']/i.test(ttml.rawTTML) ||
+    /<span\b[^>]*\bbegin=/i.test(ttml.rawTTML)
+  );
+}
+
+export async function fetchUserProfilesWithStats(): Promise<{
+  profiles: UserProfileStats[];
+  globalStats: CommunityGlobalStats;
+}> {
+  const songs = await fetchFinishedTTMLs();
+
+  // Fetch registered user profiles for rich avatar & up-to-date display name
+  const userDocsMap = new Map<string, { displayName?: string; photoURL?: string }>();
+  if (db) {
+    try {
+      const snap = await getDocs(query(collection(db, "users"), limit(150)));
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        userDocsMap.set(docSnap.id, {
+          displayName: data.displayName || data.name,
+          photoURL: data.photoURL || data.avatarUrl || data.photoUrl,
+        });
+      });
+    } catch {
+      // Allowed to fail gracefully if security rules restrict users collection
+    }
+  }
+
+  const creatorsMap = new Map<
+    string,
+    {
+      uid: string;
+      displayName: string;
+      photoURL?: string;
+      songs: FinishedTTML[];
+      artistsSet: Set<string>;
+      totalLines: number;
+      totalDurationMs: number;
+      wordSyncSongs: number;
+      lineSyncSongs: number;
+      firstContribution: number;
+      lastContribution: number;
+    }
+  >();
+
+  const allArtistsSet = new Set<string>();
+  let globalTotalLines = 0;
+  let globalTotalDuration = 0;
+  let globalWordSync = 0;
+
+  for (const song of songs) {
+    const isWord = isSongWordSync(song);
+    if (isWord) globalWordSync++;
+    globalTotalLines += song.lineCount || 0;
+    globalTotalDuration += song.durationMs || 0;
+    if (song.artist && song.artist.trim()) {
+      allArtistsSet.add(song.artist.trim().toLowerCase());
+    }
+
+    const uid = song.authorUid || (song.authorName ? `author:${song.authorName.toLowerCase()}` : "community");
+    const userDoc = song.authorUid ? userDocsMap.get(song.authorUid) : undefined;
+    const displayName =
+      userDoc?.displayName ||
+      song.authorName ||
+      (song.authorUid ? `Creator (${song.authorUid.slice(0, 6)})` : "Community Creator");
+    const photoURL = userDoc?.photoURL;
+
+    let creator = creatorsMap.get(uid);
+    if (!creator) {
+      creator = {
+        uid: song.authorUid || uid,
+        displayName,
+        photoURL,
+        songs: [],
+        artistsSet: new Set<string>(),
+        totalLines: 0,
+        totalDurationMs: 0,
+        wordSyncSongs: 0,
+        lineSyncSongs: 0,
+        firstContribution: song.createdAt || Date.now(),
+        lastContribution: song.updatedAt || song.createdAt || Date.now(),
+      };
+      creatorsMap.set(uid, creator);
+    } else {
+      // Prioritize registered user doc or better non-generic displayName
+      if (userDoc?.displayName) {
+        creator.displayName = userDoc.displayName;
+      } else if (!creator.displayName || creator.displayName.startsWith("Creator (")) {
+        if (song.authorName) creator.displayName = song.authorName;
+      }
+      if (photoURL && !creator.photoURL) {
+        creator.photoURL = photoURL;
+      }
+    }
+
+    creator.songs.push(song);
+    if (song.artist && song.artist.trim()) {
+      creator.artistsSet.add(song.artist.trim());
+    }
+    creator.totalLines += song.lineCount || 0;
+    creator.totalDurationMs += song.durationMs || 0;
+    if (isWord) {
+      creator.wordSyncSongs++;
+    } else {
+      creator.lineSyncSongs++;
+    }
+
+    const t = song.updatedAt || song.createdAt || 0;
+    if (t > 0) {
+      if (!creator.firstContribution || t < creator.firstContribution) {
+        creator.firstContribution = t;
+      }
+      if (t > creator.lastContribution) {
+        creator.lastContribution = t;
+      }
+    }
+  }
+
+  const profiles: UserProfileStats[] = Array.from(creatorsMap.values()).map((c) => ({
+    uid: c.uid,
+    displayName: c.displayName,
+    photoURL: c.photoURL,
+    isModerator: isUserModerator(c.uid),
+    totalSongs: c.songs.length,
+    totalLines: c.totalLines,
+    totalDurationMs: c.totalDurationMs,
+    wordSyncSongs: c.wordSyncSongs,
+    lineSyncSongs: c.lineSyncSongs,
+    uniqueArtists: Array.from(c.artistsSet),
+    firstContribution: c.firstContribution,
+    lastContribution: c.lastContribution,
+    songs: c.songs.sort(
+      (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
+    ),
+  }));
+
+  // Sort creators by song count descending, then total lines
+  profiles.sort((a, b) => b.totalSongs - a.totalSongs || b.totalLines - a.totalLines);
+
+  const globalStats: CommunityGlobalStats = {
+    totalSongs: songs.length,
+    totalLines: globalTotalLines,
+    totalDurationMs: globalTotalDuration,
+    totalCreators: profiles.length,
+    totalWordSync: globalWordSync,
+    totalArtists: allArtistsSet.size,
+  };
+
+  return { profiles, globalStats };
+}
+
+

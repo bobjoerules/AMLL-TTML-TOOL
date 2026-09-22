@@ -58,6 +58,7 @@ import {
 	type AppleTtmlSearchResult,
 	type AppleTtmlSong,
 	extractSpotifyTrackId,
+	isSpotifyTrackId,
 } from "../api/client";
 
 export const ImportAppleTtmlDialog = () => {
@@ -96,10 +97,16 @@ export const ImportAppleTtmlDialog = () => {
 			try {
 				const trackId = extractSpotifyTrackId(idOrUrl);
 				setLastSpotifyId(trackId);
-				const song = await AppleTtmlApi.getLyrics(idOrUrl);
+				const song = await AppleTtmlApi.getLyrics(trackId || idOrUrl);
+				if (!song || (!song.name && !song.artist)) {
+					throw new Error(
+						t("appleTtml.notFound", "No song found for this Spotify ID."),
+					);
+				}
 				setSelectedSong(song);
 			} catch (err) {
 				console.error("Failed to fetch Apple TTML song:", err);
+				setSelectedSong(null);
 				toast.error(
 					(err as Error)?.message ||
 						t("appleTtml.fetchError", "Failed to fetch Apple Music TTML."),
@@ -133,9 +140,8 @@ export const ImportAppleTtmlDialog = () => {
 				}
 			}
 
-			// If user provided a Spotify URL or direct 22-char ID, fetch directly!
-			const looksLikeId =
-				/^[a-zA-Z0-9]{22}$/.test(target) || isSpotifyUrl(target);
+			// If user provided a Spotify URL or direct track ID, fetch directly!
+			const looksLikeId = isSpotifyUrl(target) || isSpotifyTrackId(target);
 
 			if (looksLikeId) {
 				await fetchSongDetails(target);
@@ -426,8 +432,7 @@ export const ImportAppleTtmlDialog = () => {
 					>
 						{isSearching || isFetchingSong ? (
 							<Spinner />
-						) : isSpotifyUrl(query) ||
-							/^[a-zA-Z0-9]{22}$/.test(query.trim()) ? (
+						) : isSpotifyUrl(query) || isSpotifyTrackId(query) ? (
 							<>
 								<ArrowDownload24Regular style={{ width: 18, height: 18 }} />
 								{t("appleTtml.fetchLyrics", "Fetch TTML")}

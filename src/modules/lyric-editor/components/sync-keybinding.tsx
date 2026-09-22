@@ -19,11 +19,24 @@ import {
 	syncJudgeModeAtom,
 } from "$/modules/settings/states";
 import {
+	autoSegmentOnLineSyncAtom,
+	autoSegmentSyncModeAtom,
 	smartFirstWordActiveIdAtom,
 	syncLevelModeAtom,
 	syncTimeOffsetAtom,
 	syncCommitOffsetAtom,
 } from "$/modules/settings/states/sync";
+import {
+	segmentationCustomRulesAtom,
+	segmentationEngineAtom,
+	segmentationIgnoreListTextAtom,
+	segmentationLearnedRulesAtom,
+	segmentationPunctuationModeAtom,
+	segmentationPunctuationWeightAtom,
+	segmentationRemoveEmptySegmentsAtom,
+	segmentationSplitCJKAtom,
+} from "$/modules/segmentation/states";
+import { maybeAutoSegmentLine } from "../utils/auto-segment-sync";
 import {
 	keyMoveFirstWordAndPlayAtom,
 	keyMoveLastWordAndPlayAtom,
@@ -126,6 +139,42 @@ function setUnitEndTimeCloned(
 
 	line.words[wordIndex] = nextWord;
 }
+
+const getAutoSegmentOptions = (store: ReturnType<typeof useStore>) => {
+	const enabled = store.get(autoSegmentOnLineSyncAtom);
+	const mode = store.get(autoSegmentSyncModeAtom);
+	if (!enabled) return { enabled: false, mode };
+
+	const engine = store.get(segmentationEngineAtom);
+	const splitCJK = store.get(segmentationSplitCJKAtom);
+	const punctuationMode = store.get(segmentationPunctuationModeAtom);
+	const punctuationWeightStr = store.get(segmentationPunctuationWeightAtom);
+	const removeEmptySegments = store.get(segmentationRemoveEmptySegmentsAtom);
+	const ignoreListText = store.get(segmentationIgnoreListTextAtom);
+	const customRules = store.get(segmentationCustomRulesAtom);
+	const learnedRules = store.get(segmentationLearnedRulesAtom);
+
+	const weight = parseFloat(punctuationWeightStr);
+	const punctuationWeight = Number.isNaN(weight) ? 0.2 : weight;
+	const ignoreList = new Set(
+		ignoreListText.split("\n").filter((line) => line.trim() !== ""),
+	);
+
+	return {
+		enabled: true,
+		mode,
+		segmentationConfig: {
+			engine,
+			splitCJK,
+			punctuationMode,
+			punctuationWeight,
+			removeEmptySegments,
+			ignoreList,
+			customRules,
+			learnedRules,
+		},
+	};
+};
 
 export const SyncKeyBinding: FC = () => {
 	const store = useStore();
@@ -421,7 +470,10 @@ export const SyncKeyBinding: FC = () => {
 						nextLines[absoluteNextLineIndex] = nextLine;
 					}
 
-					nextLines[location.lineIndex] = curLine;
+					nextLines[location.lineIndex] = maybeAutoSegmentLine(
+						curLine,
+						getAutoSegmentOptions(store),
+					);
 					return { ...state, lyricLines: nextLines };
 				});
 
@@ -491,7 +543,10 @@ export const SyncKeyBinding: FC = () => {
 						currentTime,
 					);
 					nextLine.endTime = currentTime;
-					nextLines[location.lineIndex] = nextLine;
+					nextLines[location.lineIndex] = maybeAutoSegmentLine(
+						nextLine,
+						getAutoSegmentOptions(store),
+					);
 
 					return { ...state, lyricLines: nextLines };
 				});
@@ -526,6 +581,15 @@ export const SyncKeyBinding: FC = () => {
 					curRubyIndex,
 					currentTime,
 				);
+
+				const curEditLine = getLineToEdit(curLineIndex);
+				if (curEditLine.words.length === 1) {
+					curEditLine.endTime = currentTime;
+					nextLines[curLineIndex] = maybeAutoSegmentLine(
+						curEditLine,
+						getAutoSegmentOptions(store),
+					);
+				}
 
 				// 2. Scan forward for next selection
 				targetSelection = null;
@@ -665,7 +729,10 @@ export const SyncKeyBinding: FC = () => {
 						}
 					}
 
-					nextLines[location.lineIndex] = curLine;
+					nextLines[location.lineIndex] = maybeAutoSegmentLine(
+						curLine,
+						getAutoSegmentOptions(store),
+					);
 					return { ...state, lyricLines: nextLines };
 				});
 
@@ -703,7 +770,10 @@ export const SyncKeyBinding: FC = () => {
 					currentTime,
 				);
 				if (location.isLastWord) nextLine.endTime = currentTime;
-				nextLines[location.lineIndex] = nextLine;
+				nextLines[location.lineIndex] = maybeAutoSegmentLine(
+					nextLine,
+					getAutoSegmentOptions(store),
+				);
 
 				return { ...state, lyricLines: nextLines };
 			});

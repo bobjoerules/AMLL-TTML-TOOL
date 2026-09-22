@@ -13,6 +13,8 @@ import {
 	TopSpeed24Regular,
 	VideoBackgroundEffect24Regular,
 	TextWrap24Regular,
+	Cut24Regular,
+	Database24Regular,
 } from "@fluentui/react-icons";
 import {
 	Box,
@@ -21,6 +23,7 @@ import {
 	Flex,
 	Heading,
 	Link,
+	SegmentedControl,
 	Select,
 	Slider,
 	Switch,
@@ -30,6 +33,7 @@ import {
 import { useAtom } from "jotai";
 import { useTranslation } from "react-i18next";
 import { playbackRateAtom, volumeAtom } from "$/modules/audio/states";
+import { checklistShowUploadedToDbAtom } from "$/modules/ttml-checklist/states";
 
 import {
 	autosaveEnabledAtom,
@@ -49,6 +53,9 @@ import {
 	wrapLyricLinesAtom,
 } from "$/modules/settings/states";
 import {
+	autoSegmentOnLineSyncAtom,
+	autoSegmentSyncModeAtom,
+	type AutoSegmentSyncMode,
 	enableUpcomingWordHighlightAtom,
 	syncTimeOffsetAtom,
 	syncCommitOffsetAtom,
@@ -91,6 +98,12 @@ export const SettingsCommonTab = ({
 	);
 	const [syncTimeOffset, setSyncTimeOffset] = useAtom(syncTimeOffsetAtom);
 	const [syncCommitOffset, setSyncCommitOffset] = useAtom(syncCommitOffsetAtom);
+	const [autoSegmentOnLineSync, setAutoSegmentOnLineSync] = useAtom(
+		autoSegmentOnLineSyncAtom,
+	);
+	const [autoSegmentSyncMode, setAutoSegmentSyncMode] = useAtom(
+		autoSegmentSyncModeAtom,
+	);
 
 	const [compactBGInSync, setCompactBGInSync] = useAtom(compactBGInSyncAtom);
 	const [normalizeApostrophesOnImport, setNormalizeApostrophesOnImport] =
@@ -104,6 +117,9 @@ export const SettingsCommonTab = ({
 		geniusCategorizationEnabledAtom,
 	);
 	const [wrapLyricLines, setWrapLyricLines] = useAtom(wrapLyricLinesAtom);
+	const [checklistShowUploadedToDb, setChecklistShowUploadedToDb] = useAtom(
+		checklistShowUploadedToDbAtom,
+	);
 
 	const { t, i18n } = useTranslation();
 	const currentLanguage = i18n.resolvedLanguage || i18n.language;
@@ -587,6 +603,76 @@ export const SettingsCommonTab = ({
 							</Flex>
 						</Text>
 					</Card>
+
+					<Card>
+						<Flex direction="column" gap="3">
+							<Flex gap="3" align="center">
+								<Cut24Regular />
+								<Box flexGrow="1">
+									<Flex gap="2" align="center" justify="between">
+										<Flex direction="column" gap="1">
+											<Text>
+												{t(
+													"settings.common.autoSegmentOnSync",
+													"Auto-Segment Single-Word Lines on Timing",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"settings.common.autoSegmentOnSyncDesc",
+													"When timing a line that contains only a single word box, automatically split it into words or syllables and distribute the timestamps.",
+												)}
+											</Text>
+										</Flex>
+										<Switch
+											checked={autoSegmentOnLineSync}
+											onCheckedChange={setAutoSegmentOnLineSync}
+										/>
+									</Flex>
+								</Box>
+							</Flex>
+
+							{autoSegmentOnLineSync && (
+								<Flex
+									direction="column"
+									gap="2"
+									pl="6"
+									style={{ borderTop: "1px solid var(--gray-a4)", paddingTop: "8px" }}
+								>
+									<Flex align="center" justify="between" gap="4">
+										<Flex direction="column" gap="1">
+											<Text size="2">
+												{t("settings.common.autoSegmentMode", "Split Type")}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"settings.common.autoSegmentModeDesc",
+													"Choose whether to split into whole words or syllables.",
+												)}
+											</Text>
+										</Flex>
+										<SegmentedControl.Root
+											value={autoSegmentSyncMode}
+											onValueChange={(v) =>
+												setAutoSegmentSyncMode(v as AutoSegmentSyncMode)
+											}
+											size="1"
+										>
+											<SegmentedControl.Item value="word">
+												{t("settings.common.autoSegmentModeWord", "By Word")}
+											</SegmentedControl.Item>
+											<SegmentedControl.Item value="syllable">
+												{t(
+													"settings.common.autoSegmentModeSyllable",
+													"By Syllable",
+												)}
+											</SegmentedControl.Item>
+										</SegmentedControl.Root>
+									</Flex>
+								</Flex>
+							)}
+						</Flex>
+					</Card>
 				</Flex>
 			)}
 
@@ -963,6 +1049,40 @@ export const SettingsCommonTab = ({
 								</Flex>
 							</Box>
 						</Flex>
+					</Card>
+
+					<Heading size="4" mt="4">
+						{t("settings.group.checklist", "TTML Checklist")}
+					</Heading>
+
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
+								<Database24Regular />
+								<Box flexGrow="1">
+									<Flex gap="2" align="center" justify="between">
+										<Flex direction="column" gap="1">
+											<Text>
+												{t(
+													"settings.common.checklist.showUploadedToDb",
+													"Show 'Mark as uploaded to database' button",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"settings.common.checklist.showUploadedToDbDesc",
+													"Displays a button on each checklist item to track whether the song has been uploaded to the database.",
+												)}
+											</Text>
+										</Flex>
+										<Switch
+											checked={checklistShowUploadedToDb}
+											onCheckedChange={setChecklistShowUploadedToDb}
+										/>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
 					</Card>
 				</Flex>
 			)}
