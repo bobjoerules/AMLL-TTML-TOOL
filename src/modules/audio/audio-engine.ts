@@ -220,16 +220,16 @@ class AudioEngine extends EventTarget {
 	}
 
 	public async recreateContext(): Promise<AudioContext> {
-		const wasPlaying = this._isPlaying;
+		const wasPlaying = this.musicPlaying;
 		const currentPos = this.musicCurrentTime;
+		const currentRate = this._musicPlayBackRate;
+		const currentPreserves = this._preservesPitch;
 
-		if (this._activeSourceNode) {
+		if (this._mediaElementSourceNode) {
 			try {
-				this._activeSourceNode.onended = null;
-				this._activeSourceNode.stop();
-				this._activeSourceNode.disconnect();
+				this._mediaElementSourceNode.disconnect();
 			} catch {}
-			this._activeSourceNode = null;
+			this._mediaElementSourceNode = null;
 		}
 
 		if (this._ctx) {
@@ -276,35 +276,75 @@ class AudioEngine extends EventTarget {
 			}
 		}
 
-		if (wasPlaying && this.musicBuffer) {
+		// Recreate audio element for new AudioContext because createMediaElementSource can only be called once per element
+		if (this._audioEl) {
+			const currentSrc = this._audioEl.src;
+			try {
+				this._audioEl.pause();
+				this._audioEl.removeAttribute("src");
+				this._audioEl.load();
+			} catch {}
+			this._audioEl = null;
+			this._listenersSetup = false;
+
+			if (currentSrc) {
+				const newEl = this.audioEl;
+				newEl.src = currentSrc;
+				newEl.currentTime = currentPos;
+				newEl.playbackRate = currentRate;
+				newEl.preservesPitch = currentPreserves;
+				(newEl as any).webkitPreservesPitch = currentPreserves;
+				(newEl as any).mozPreservesPitch = currentPreserves;
+				this.connectAudioToContext();
+				this.setupAudioListeners();
+			}
+		}
+
+		if (wasPlaying) {
 			void this.resumeOrSeekMusic(currentPos);
 		}
 		return newCtx;
 	}
 
 	//#region Audio element
-	// Since an element is required to sync with waveform.js,
-	// all audio playback is done through this element
+	// Audio playback is routed through HTMLAudioElement with createMediaElementSource
+	// to enable native pitch preservation when changing playbackRate.
 	private _audioEl: HTMLAudioElement | null = null;
+	private _mediaElementSourceNode: MediaElementAudioSourceNode | null = null;
+	private _preservesPitch = true;
+
 	get audioEl() {
 		if (this._audioEl) return this._audioEl;
 		this._audioEl = document.createElement("audio");
 		this._audioEl.crossOrigin = "anonymous";
-		this._audioEl.volume = this._volume;
-		// Keep muted so macOS WebKit/TouchBar never plays duplicate audio
-		this._audioEl.muted = true;
-		this._audioEl.preload = "metadata";
+		this._audioEl.volume = 1;
+		this._audioEl.preservesPitch = this._preservesPitch;
+		(this._audioEl as any).webkitPreservesPitch = this._preservesPitch;
+		(this._audioEl as any).mozPreservesPitch = this._preservesPitch;
+		this._audioEl.playbackRate = this._musicPlayBackRate;
+		this._audioEl.preload = "auto";
 		return this._audioEl;
 	}
 
-	private _activeSourceNode: AudioBufferSourceNode | null = null;
 	private _isPlaying = false;
 	private _startTimeInContext = 0;
 	private _startOffsetInSeconds = 0;
 	private _pausedPosition = 0;
 
 	private connectAudioToContext() {
-		// Playback is driven directly via Web Audio AudioBufferSourceNode connected to eqEntryPoint.
+		if (!this._mediaElementSourceNode && this._audioEl) {
+			try {
+				this._mediaElementSourceNode = this.ctx.createMediaElementSource(
+					this._audioEl,
+				);
+				this._mediaElementSourceNode.connect(this.eqEntryPoint);
+			} catch (e) {
+				console.warn(
+					"[AudioEngine] Error connecting media element to AudioContext:",
+					e,
+				);
+			}
+		}
 	}
 
 	/** Handle browser autoplay policy, macOS sleep, device changes and interruption */
@@ -355,10 +395,33 @@ class AudioEngine extends EventTarget {
 		this._listenersSetup = true;
 
 		audioEl.addEventListener("ratechange", () => {
-			this.musicPlayBackRate = audioEl.playbackRate;
+			if (this._musicPlayBackRate !== audioEl.playbackRate) {
+				this._musicPlayBackRate = audioEl.playbackRate;
+				this.dispatchEvent(new Event("music-playback-rate-change"));
+			}
 		});
-		audioEl.addEventListener("volumechange", () => {
-			this.volume = audioEl.volume;
+		audioEl.addEventListener("ended", () => {
+			this._isPlaying = false;
+			this._pausedPosition = this.musicDuration;
+			this.updateMediaSessionState();
+			this.dispatchEvent(new Event("music-pause"));
+			this.dispatchEvent(new Event("music-seeked"));
+		});
+		audioEl.addEventListener("pause", () => {
+			this._isPlaying = false;
+			this._pausedPosition = audioEl.currentTime;
+			this.updateMediaSessionState();
+			this.dispatchEvent(new Event("music-pause"));
+		});
+		audioEl.addEventListener("play", () => {
+			this._isPlaying = true;
+			this.updateMediaSessionState();
+			this.dispatchEvent(new Event("music-resume"));
+		});
+		audioEl.addEventListener("seeked", () => {
+			this._pausedPosition = audioEl.currentTime;
+			this.updateMediaSessionState();
+			this.dispatchEvent(new Event("music-seeked"));
 		});
 	}
 
@@ -394,7 +457,7 @@ class AudioEngine extends EventTarget {
 	public updateMediaSessionState() {
 		if (typeof navigator === "undefined" || !("mediaSession" in navigator))
 			return;
-		navigator.mediaSession.playbackState = this._isPlaying
+		navigator.mediaSession.playbackState = this.musicPlaying
 			? "playing"
 			: "paused";
 		if (
@@ -421,25 +484,19 @@ class AudioEngine extends EventTarget {
 	private auditionSourceNode: AudioBufferSourceNode | null = null;
 
 	get musicLoaded() {
-		return !!this.musicBuffer;
+		return !!this._audioEl?.src || !!this.musicBuffer;
 	}
 
 	get musicPlaying() {
-		if (this.musicBuffer) return this._isPlaying;
 		if (!this._audioEl) return false;
 		return !this._audioEl.paused && !this._audioEl.ended;
 	}
 
 	get musicCurrentTime() {
-		if (this.musicBuffer) {
-			if (!this._isPlaying) return this._pausedPosition;
-			const elapsed =
-				(this.ctx.currentTime - this._startTimeInContext) *
-				this._musicPlayBackRate;
-			const pos = this._startOffsetInSeconds + elapsed;
-			return Math.min(this.musicDuration, Math.max(0, pos));
+		if (this._audioEl) {
+			return this._audioEl.currentTime;
 		}
-		return this._audioEl?.currentTime ?? 0;
+		return this._pausedPosition;
 	}
 
 	get interpolatedCurrentTime() {
@@ -447,8 +504,11 @@ class AudioEngine extends EventTarget {
 	}
 
 	get musicDuration() {
+		if (this._audioEl && this._audioEl.duration && !isNaN(this._audioEl.duration)) {
+			return this._audioEl.duration;
+		}
 		if (this.musicBuffer) return this.musicBuffer.duration;
-		return this._audioEl?.duration ?? 0;
+		return 0;
 	}
 
 	private _musicPlayBackRate = 1;
@@ -457,20 +517,14 @@ class AudioEngine extends EventTarget {
 	}
 	set musicPlayBackRate(v: number) {
 		if (this._musicPlayBackRate === v) return;
-		if (this._isPlaying && this.musicBuffer) {
-			const currentPos = this.musicCurrentTime;
-			this._musicPlayBackRate = v;
-			if (this._activeSourceNode) {
-				this._activeSourceNode.playbackRate.value = v;
-			}
-			this._startTimeInContext = this.ctx.currentTime;
-			this._startOffsetInSeconds = currentPos;
-		} else {
-			this._musicPlayBackRate = v;
-		}
+		this._musicPlayBackRate = v;
 		if (this._audioEl) {
+			this._audioEl.preservesPitch = this._preservesPitch;
+			(this._audioEl as any).webkitPreservesPitch = this._preservesPitch;
+			(this._audioEl as any).mozPreservesPitch = this._preservesPitch;
 			this._audioEl.playbackRate = v;
 		}
+		this.updateMediaSessionState();
 		this.dispatchEvent(new Event("music-playback-rate-change"));
 	}
 
@@ -481,17 +535,19 @@ class AudioEngine extends EventTarget {
 		if (this._volume === v) return;
 		this._volume = v;
 		this.gain.gain.value = v;
-		if (this._audioEl) {
-			this._audioEl.volume = v;
-		}
 		this.dispatchEvent(new Event("volume-change"));
 	}
 
 	get preservesPitch() {
-		return this.audioEl.preservesPitch;
+		return this._preservesPitch;
 	}
 	set preservesPitch(v: boolean) {
-		this.audioEl.preservesPitch = v;
+		this._preservesPitch = v;
+		if (this._audioEl) {
+			this._audioEl.preservesPitch = v;
+			(this._audioEl as any).webkitPreservesPitch = v;
+			(this._audioEl as any).mozPreservesPitch = v;
+		}
 		this.dispatchEvent(new Event("music-preserves-pitch-change"));
 	}
 
@@ -510,25 +566,19 @@ class AudioEngine extends EventTarget {
 		const clampedOffset = Math.min(duration, Math.max(0, offset));
 		this._pausedPosition = clampedOffset;
 
-		if (this._isPlaying && this.musicBuffer) {
-			this.resumeOrSeekMusic(clampedOffset);
-		} else {
-			this.dispatchEvent(new Event("music-seeked"));
+		if (this._audioEl) {
+			this._audioEl.currentTime = clampedOffset;
 		}
+		this.updateMediaSessionState();
+		this.dispatchEvent(new Event("music-seeked"));
 	}
 
 	async resumeOrSeekMusic(offset = this.musicCurrentTime) {
-		if (!this.musicBuffer) {
-			if (this._audioEl) {
-				await this.resumeContext();
-				this._audioEl.currentTime = offset;
-				this._audioEl.play();
-				this.dispatchEvent(new Event("music-resume"));
-			}
-			return;
-		}
-
 		await this.resumeContext();
+
+		const audioEl = this.audioEl;
+		this.connectAudioToContext();
+		this.setupAudioListeners();
 
 		const duration = this.musicDuration;
 		let clampedOffset = Math.min(duration, Math.max(0, offset));
@@ -536,104 +586,32 @@ class AudioEngine extends EventTarget {
 			clampedOffset = 0;
 		}
 
-		if (this._activeSourceNode) {
-			try {
-				this._activeSourceNode.onended = null;
-				this._activeSourceNode.stop();
-				this._activeSourceNode.disconnect();
-			} catch {
-				// Already stopped
-			}
-			this._activeSourceNode = null;
+		audioEl.preservesPitch = this._preservesPitch;
+		(audioEl as any).webkitPreservesPitch = this._preservesPitch;
+		(audioEl as any).mozPreservesPitch = this._preservesPitch;
+		audioEl.playbackRate = this._musicPlayBackRate;
+
+		if (Math.abs(audioEl.currentTime - clampedOffset) > 0.01) {
+			audioEl.currentTime = clampedOffset;
 		}
+		this._pausedPosition = clampedOffset;
 
 		try {
-			const source = this.ctx.createBufferSource();
-			source.buffer = this.musicBuffer;
-			source.playbackRate.value = this._musicPlayBackRate;
-			source.connect(this.eqEntryPoint);
-
-			this._activeSourceNode = source;
-			this._startTimeInContext = this.ctx.currentTime;
-			this._startOffsetInSeconds = clampedOffset;
-			this._pausedPosition = clampedOffset;
+			await audioEl.play();
 			this._isPlaying = true;
-
-			source.onended = () => {
-				if (this._activeSourceNode === source) {
-					this._activeSourceNode = null;
-					this._isPlaying = false;
-					this._pausedPosition = this.musicDuration;
-					this.updateMediaSessionState();
-					this.dispatchEvent(new Event("music-pause"));
-					this.dispatchEvent(new Event("music-seeked"));
-				}
-			};
-
-			source.start(0, clampedOffset);
 			this.updateMediaSessionState();
 			this.dispatchEvent(new Event("music-resume"));
 		} catch (err) {
-			console.warn(
-				"[AudioEngine] Playback start failed, recreating context...",
-				err,
-			);
-			await this.recreateContext();
-			const source = this.ctx.createBufferSource();
-			source.buffer = this.musicBuffer;
-			source.playbackRate.value = this._musicPlayBackRate;
-			source.connect(this.eqEntryPoint);
-
-			this._activeSourceNode = source;
-			this._startTimeInContext = this.ctx.currentTime;
-			this._startOffsetInSeconds = clampedOffset;
-			this._pausedPosition = clampedOffset;
-			this._isPlaying = true;
-
-			source.onended = () => {
-				if (this._activeSourceNode === source) {
-					this._activeSourceNode = null;
-					this._isPlaying = false;
-					this._pausedPosition = this.musicDuration;
-					this.updateMediaSessionState();
-					this.dispatchEvent(new Event("music-pause"));
-					this.dispatchEvent(new Event("music-seeked"));
-				}
-			};
-
-			source.start(0, clampedOffset);
-			this.updateMediaSessionState();
-			this.dispatchEvent(new Event("music-resume"));
+			console.warn("[AudioEngine] Playback failed:", err);
 		}
 	}
 
 	pauseMusic() {
-		if (!this._isPlaying) {
-			if (this._audioEl && !this._audioEl.paused) {
-				this._audioEl.pause();
-				this.updateMediaSessionState();
-				this.dispatchEvent(new Event("music-pause"));
-			}
-			return;
-		}
-		this._pausedPosition = this.musicCurrentTime;
-		this._isPlaying = false;
-
-		if (this._activeSourceNode) {
-			try {
-				this._activeSourceNode.onended = null;
-				this._activeSourceNode.stop();
-				this._activeSourceNode.disconnect();
-			} catch {
-				// Already stopped
-			}
-			this._activeSourceNode = null;
-		}
-
 		if (this._audioEl) {
-			this._audioEl.currentTime = this._pausedPosition;
+			this._audioEl.pause();
+			this._pausedPosition = this._audioEl.currentTime;
 		}
-
+		this._isPlaying = false;
 		this.updateMediaSessionState();
 		this.dispatchEvent(new Event("music-pause"));
 	}
@@ -786,7 +764,7 @@ class AudioEngine extends EventTarget {
 				.catch(() => {
 					// Audio playback is still valid when a format has no readable tags.
 				});
-			if (this.musicBuffer) {
+			if (this.musicBuffer || this._audioEl?.src) {
 				this.pauseMusic();
 				this.musicBuffer = null;
 				this._rawAudioData = null;
@@ -844,6 +822,9 @@ class AudioEngine extends EventTarget {
 					audioEl.onloadedmetadata = null;
 					audioEl.onerror = null;
 
+					audioEl.preservesPitch = this._preservesPitch;
+					(audioEl as any).webkitPreservesPitch = this._preservesPitch;
+					(audioEl as any).mozPreservesPitch = this._preservesPitch;
 					audioEl.playbackRate = this._musicPlayBackRate;
 
 					this.dispatchEvent(new Event("music-load"));

@@ -19,12 +19,15 @@ import {
 	Star16Filled,
 	Star16Regular,
 	Timer16Regular,
+	Database16Regular,
+	DataUsage20Regular,
 } from "@fluentui/react-icons";
 import {
 	Badge,
 	Box,
 	Button,
 	Card,
+	Checkbox,
 	Dialog,
 	Flex,
 	IconButton,
@@ -89,11 +92,12 @@ import {
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
 	toggleChecklistEntryFavorite,
+	toggleChecklistEntryUploadedToDb,
 	type TTMLChecklistEntry,
 	type TTMLChecklistEntryInput,
 	updateChecklistEntry,
 } from "./logic";
-import { ttmlChecklistAtom } from "./states";
+import { ttmlChecklistAtom, checklistShowUploadedToDbAtom } from "./states";
 
 type ProviderSearchResult = {
 	id: string | number;
@@ -124,6 +128,9 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	);
 	const sourceUrl = initial?.sourceUrl;
 	const [notes, setNotes] = useState(initial?.notes ?? "");
+	const [uploadedToDatabase, setUploadedToDatabase] = useState(
+		initial?.uploadedToDatabase ?? false,
+	);
 
 	// Provider Search state
 	const [showProviderSearch, setShowProviderSearch] = useState(!initial);
@@ -346,6 +353,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								sourceId,
 								sourceUrl,
 								notes,
+								uploadedToDatabase,
 							});
 						}
 					}}
@@ -721,22 +729,42 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 						size="2"
 					/>
 
-					<Flex justify="end" gap="2" mt="1">
-						{onCancel && (
-							<Button
-								type="button"
-								variant="soft"
-								color="gray"
-								onClick={onCancel}
-							>
-								{t("ttmlChecklist.cancel", "Cancel")}
+					<Flex justify="between" align="center" mt="2" wrap="wrap" gap="2">
+						<label
+							style={{
+								display: "inline-flex",
+								alignItems: "center",
+								gap: "8px",
+								cursor: "pointer",
+								userSelect: "none",
+							}}
+						>
+							<Checkbox
+								checked={uploadedToDatabase}
+								onCheckedChange={(checked) => setUploadedToDatabase(!!checked)}
+							/>
+							<Text size="2" color="gray">
+								{t("ttmlChecklist.uploadedToDatabase", "Uploaded to Database")}
+							</Text>
+						</label>
+
+						<Flex justify="end" gap="2">
+							{onCancel && (
+								<Button
+									type="button"
+									variant="soft"
+									color="gray"
+									onClick={onCancel}
+								>
+									{t("ttmlChecklist.cancel", "Cancel")}
+								</Button>
+							)}
+							<Button type="submit" disabled={!valid} variant="solid">
+								{initial
+									? t("ttmlChecklist.save", "Save")
+									: t("ttmlChecklist.add", "Add to checklist")}
 							</Button>
-						)}
-						<Button type="submit" disabled={!valid} variant="solid">
-							{initial
-								? t("ttmlChecklist.save", "Save")
-								: t("ttmlChecklist.add", "Add to checklist")}
-						</Button>
+						</Flex>
 					</Flex>
 				</form>
 			</Flex>
@@ -755,6 +783,8 @@ const ChecklistEntryCard = memo(
 		onLoadCloud,
 		isLoadingCloud,
 		onToggleFavorite,
+		showUploadedToDb,
+		onToggleUploadedToDb,
 	}: {
 		entry: TTMLChecklistEntry;
 		onComplete: (id: string, completed: boolean) => void;
@@ -765,6 +795,8 @@ const ChecklistEntryCard = memo(
 		onLoadCloud?: (docId: string) => void;
 		isLoadingCloud?: boolean;
 		onToggleFavorite?: (id: string) => void;
+		showUploadedToDb?: boolean;
+		onToggleUploadedToDb?: (id: string) => void;
 	}) => {
 		const { t } = useTranslation();
 		const [editing, setEditing] = useState(false);
@@ -902,6 +934,16 @@ const ChecklistEntryCard = memo(
 									style={{ flexShrink: 0 }}
 								>
 									{t("ttmlChecklist.completed", "Completed")}
+								</Badge>
+							)}
+							{entry.uploadedToDatabase && (
+								<Badge
+									size="1"
+									color="purple"
+									variant="surface"
+									style={{ fontWeight: 600, flexShrink: 0 }}
+								>
+									{t("ttmlChecklist.uploadedToDbBadge", "Uploaded to Database")}
 								</Badge>
 							)}
 						</Flex>
@@ -1128,6 +1170,47 @@ const ChecklistEntryCard = memo(
 							</IconButton>
 						</Tooltip>
 
+						{showUploadedToDb && (
+							<Tooltip
+								content={
+									entry.uploadedToDatabase
+										? t(
+												"ttmlChecklist.unmarkUploadedToDb",
+												"Mark as not uploaded to database",
+											)
+										: t(
+												"ttmlChecklist.markUploadedToDb",
+												"Mark as uploaded to database",
+											)
+								}
+							>
+								<IconButton
+									size="2"
+									variant={entry.uploadedToDatabase ? "solid" : "soft"}
+									color={entry.uploadedToDatabase ? "purple" : "gray"}
+									onClick={() => onToggleUploadedToDb?.(entry.id)}
+									aria-label={
+										entry.uploadedToDatabase
+											? t(
+													"ttmlChecklist.unmarkUploadedToDb",
+													"Mark as not uploaded to database",
+												)
+											: t(
+													"ttmlChecklist.markUploadedToDb",
+													"Mark as uploaded to database",
+												)
+									}
+									style={{
+										borderRadius: "8px",
+										cursor: "pointer",
+										flexShrink: 0,
+									}}
+								>
+									<Database16Regular />
+								</IconButton>
+							</Tooltip>
+						)}
+
 						<Tooltip content={t("ttmlChecklist.edit", "Edit checklist item")}>
 							<IconButton
 								size="2"
@@ -1173,9 +1256,10 @@ export const TTMLChecklistDialog = () => {
 	const { t } = useTranslation();
 	const [open, setOpen] = useAtom(ttmlChecklistDialogAtom);
 	const [storedEntries, setStoredEntries] = useAtom(ttmlChecklistAtom);
+	const checklistShowUploadedToDb = useAtomValue(checklistShowUploadedToDbAtom);
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [filterTab, setFilterTab] = useState<
-		"all" | "pending" | "completed" | "favorites"
+		"all" | "pending" | "completed" | "favorites" | "uploaded"
 	>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 	const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -1207,6 +1291,7 @@ export const TTMLChecklistDialog = () => {
 	const totalCount = entries.length;
 	const completedCount = entries.filter((e) => e.completed).length;
 	const favoritesCount = entries.filter((e) => e.favorite).length;
+	const uploadedCount = entries.filter((e) => e.uploadedToDatabase).length;
 	const pendingCount = totalCount - completedCount;
 	const progressPercent =
 		totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -1220,6 +1305,8 @@ export const TTMLChecklistDialog = () => {
 			result = result.filter((e) => e.completed);
 		} else if (filterTab === "favorites") {
 			result = result.filter((e) => Boolean(e.favorite));
+		} else if (filterTab === "uploaded") {
+			result = result.filter((e) => Boolean(e.uploadedToDatabase));
 		}
 
 		const q = deferredSearchQuery.toLowerCase().trim();
@@ -1273,6 +1360,13 @@ export const TTMLChecklistDialog = () => {
 	const handleToggleFavorite = useCallback(
 		(id: string) => {
 			setStoredEntries((prev) => toggleChecklistEntryFavorite(prev, id));
+		},
+		[setStoredEntries],
+	);
+
+	const handleToggleUploadedToDb = useCallback(
+		(id: string) => {
+			setStoredEntries((prev) => toggleChecklistEntryUploadedToDb(prev, id));
 		},
 		[setStoredEntries],
 	);
@@ -1799,6 +1893,38 @@ export const TTMLChecklistDialog = () => {
 								</IconButton>
 							</Tooltip>
 
+							{/* Stats & Profiles Web Button */}
+							<Tooltip
+								content={t(
+									"ttmlChecklist.statsAndProfiles",
+									"View Community Stats & Creator Profiles on Web",
+								)}
+							>
+								<Button
+									size="2"
+									variant="surface"
+									color="purple"
+									onClick={() =>
+										window.open("https://amll-ttml.web.app/#stats", "_blank")
+									}
+									style={{
+										height: "32px",
+										borderRadius: "8px",
+										cursor: "pointer",
+										marginLeft: "4px",
+									}}
+									aria-label={t(
+										"ttmlChecklist.statsAndProfiles",
+										"Stats & Profiles",
+									)}
+								>
+									<DataUsage20Regular
+										style={{ width: "16px", height: "16px" }}
+									/>
+									{t("ttmlChecklist.statsAndProfilesShort", "Stats")}
+								</Button>
+							</Tooltip>
+
 							{/* Import Album Button */}
 							<Tooltip
 								content={t(
@@ -2221,6 +2347,55 @@ export const TTMLChecklistDialog = () => {
 										)}
 									</button>
 								</Tooltip>
+								{checklistShowUploadedToDb && (
+									<Tooltip
+										content={`${t("ttmlChecklist.uploadedTab", "Uploaded to Database")} (${uploadedCount})`}
+									>
+										<button
+											type="button"
+											onClick={() => setFilterTab("uploaded")}
+											style={{
+												position: "relative",
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												padding: "6px 12px 9px 12px",
+												borderRadius: "8px",
+												border: "none",
+												background:
+													filterTab === "uploaded"
+														? "var(--color-surface)"
+														: "transparent",
+												color:
+													filterTab === "uploaded"
+														? "var(--purple-11)"
+														: "var(--gray-10)",
+												cursor: "pointer",
+												transition: "all 0.15s ease",
+												boxShadow:
+													filterTab === "uploaded"
+														? "0 1px 3px rgba(0, 0, 0, 0.2)"
+														: "none",
+											}}
+										>
+											<Database16Regular style={{ width: 16, height: 16 }} />
+											{filterTab === "uploaded" && (
+												<span
+													style={{
+														position: "absolute",
+														bottom: "3px",
+														left: "6px",
+														right: "6px",
+														height: "2.5px",
+														borderRadius: "2px",
+														backgroundColor: "var(--purple-9)",
+														boxShadow: "0 0 6px var(--purple-9)",
+													}}
+												/>
+											)}
+										</button>
+									</Tooltip>
+								)}
 							</Flex>
 						</Flex>
 
@@ -2277,6 +2452,8 @@ export const TTMLChecklistDialog = () => {
 										<ChecklistEntryCard
 											key={entry.id}
 											entry={entry}
+											showUploadedToDb={checklistShowUploadedToDb}
+											onToggleUploadedToDb={handleToggleUploadedToDb}
 											onComplete={handleComplete}
 											onDelete={handleDelete}
 											onEdit={handleEdit}

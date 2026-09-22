@@ -29,6 +29,16 @@ export const syncLevelModeAtom = atomWithStorage<SyncLevelMode>(
 	"word",
 );
 
+export type AutoSegmentSyncMode = "word" | "syllable";
+export const autoSegmentOnLineSyncAtom = atomWithStorage(
+	"sync.autoSegmentOnLineSync",
+	false,
+);
+export const autoSegmentSyncModeAtom = atomWithStorage<AutoSegmentSyncMode>(
+	"sync.autoSegmentMode",
+	"word",
+);
+
 export const enableUpcomingWordHighlightAtom = atomWithStorage(
 	"enableUpcomingWordHighlight",
 	false,

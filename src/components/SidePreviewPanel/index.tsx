@@ -1,4 +1,5 @@
-import { Flex, Select, Text } from "@radix-ui/themes";
+import classNames from "classnames";
+import { Flex, Select, Text, Tooltip } from "@radix-ui/themes";
 import { useAtom, useSetAtom } from "jotai";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,10 +8,12 @@ import {
 	Sparkle16Regular,
 	MusicNote216Regular,
 	Timer16Regular,
+	People16Regular,
 } from "@fluentui/react-icons";
 import {
 	PreviewModeType,
 	previewModeTypeAtom,
+	bgFollowsDuetAtom,
 } from "$/modules/settings/states/preview";
 import { showPreviewPanelAtom } from "$/states/main";
 import { PreviewModeSwitcher } from "$/components/PreviewModeSwitcher";
@@ -20,6 +23,7 @@ export const SidePreviewPanel = memo(() => {
 	const { t } = useTranslation();
 	const setShowPreviewPanel = useSetAtom(showPreviewPanelAtom);
 	const [previewModeType, setPreviewModeType] = useAtom(previewModeTypeAtom);
+	const [bgFollowsDuet, setBgFollowsDuet] = useAtom(bgFollowsDuetAtom);
 
 	return (
 		<div className={styles.sidePreviewContainer}>
@@ -65,14 +69,31 @@ export const SidePreviewPanel = memo(() => {
 					</Select.Content>
 				</Select.Root>
 
-				<button
-					type="button"
-					className={styles.closeButton}
-					onClick={() => setShowPreviewPanel(false)}
-					title={t("common.close", "Close Preview Panel")}
-				>
-					<Dismiss12Regular />
-				</button>
+				<Flex align="center" gap="1">
+					<Tooltip content={t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}>
+						<button
+							type="button"
+							className={classNames(
+								styles.toggleButton,
+								bgFollowsDuet && styles.toggleButtonActive,
+							)}
+							onClick={() => setBgFollowsDuet((v) => !v)}
+							title={t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}
+							aria-label={t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}
+						>
+							<People16Regular />
+						</button>
+					</Tooltip>
+
+					<button
+						type="button"
+						className={styles.closeButton}
+						onClick={() => setShowPreviewPanel(false)}
+						title={t("common.close", "Close Preview Panel")}
+					>
+						<Dismiss12Regular />
+					</button>
+				</Flex>
 			</div>
 
 			<div className={styles.previewBody}>

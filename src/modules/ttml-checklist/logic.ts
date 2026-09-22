@@ -15,6 +15,7 @@ export interface TTMLChecklistEntry {
 	notes: string;
 	completed: boolean;
 	favorite?: boolean;
+	uploadedToDatabase?: boolean;
 	createdAt: number;
 }
 
@@ -30,6 +31,7 @@ export type TTMLChecklistEntryInput = {
 	cloudAudioUrl?: string;
 	notes?: string;
 	favorite?: boolean;
+	uploadedToDatabase?: boolean;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -133,6 +135,9 @@ export function mergeChecklistEntries(
 				? `${primary.notes}\n${secondary.notes}`
 				: primary.notes || secondary.notes,
 		completed: primary.completed || secondary.completed,
+		...(primary.uploadedToDatabase || secondary.uploadedToDatabase
+			? { uploadedToDatabase: true }
+			: {}),
 		...(primary.favorite || secondary.favorite ? { favorite: true } : {}),
 		createdAt: Math.max(primary.createdAt, secondary.createdAt),
 	};
@@ -261,6 +266,9 @@ export function normalizeChecklistEntries(
 						: undefined,
 				notes: typeof item.notes === "string" ? item.notes.trim() : "",
 				completed: item.completed === true,
+				...(item.uploadedToDatabase === true
+					? { uploadedToDatabase: true }
+					: {}),
 				...(item.favorite === true ? { favorite: true } : {}),
 				createdAt:
 					typeof item.createdAt === "number" && Number.isFinite(item.createdAt)
@@ -297,6 +305,7 @@ export function createChecklistEntry(
 		cloudAudioUrl: input.cloudAudioUrl?.trim() || undefined,
 		notes: input.notes?.trim() ?? "",
 		completed: false,
+		...(input.uploadedToDatabase ? { uploadedToDatabase: true } : {}),
 		...(input.favorite ? { favorite: true } : {}),
 		createdAt,
 	};
@@ -357,6 +366,10 @@ export function updateChecklistEntry(
 						cloudDocId: input.cloudDocId ?? entry.cloudDocId,
 						cloudAudioUrl: input.cloudAudioUrl ?? entry.cloudAudioUrl,
 						notes: input.notes?.trim() ?? "",
+						uploadedToDatabase:
+							input.uploadedToDatabase !== undefined
+								? input.uploadedToDatabase
+								: entry.uploadedToDatabase,
 					}
 				: entry,
 		),
@@ -412,6 +425,7 @@ export function linkUploadedTTMLToChecklist(
 				album: album || entry.album,
 				coverArt: coverArt || entry.coverArt,
 				completed: isCompleted ? true : entry.completed,
+				uploadedToDatabase: true,
 			};
 		}
 		return entry;
@@ -435,6 +449,7 @@ export function linkUploadedTTMLToChecklist(
 		cloudAudioUrl: audioUrl,
 		notes: "Uploaded from Cloud",
 		completed: isCompleted,
+		uploadedToDatabase: true,
 		createdAt: Date.now(),
 	};
 
@@ -452,6 +467,39 @@ export function setChecklistEntryCompleted(
 ): TTMLChecklistEntry[] {
 	return normalizeChecklistEntries(
 		entries.map((entry) => (entry.id === id ? { ...entry, completed } : entry)),
+	);
+}
+
+export function setChecklistEntryUploadedToDb(
+	entries: TTMLChecklistEntry[],
+	id: string,
+	uploadedToDatabase: boolean,
+): TTMLChecklistEntry[] {
+	return normalizeChecklistEntries(
+		entries.map((entry) =>
+			entry.id === id
+				? {
+						...entry,
+						uploadedToDatabase: uploadedToDatabase ? true : undefined,
+					}
+				: entry,
+		),
+	);
+}
+
+export function toggleChecklistEntryUploadedToDb(
+	entries: TTMLChecklistEntry[],
+	id: string,
+): TTMLChecklistEntry[] {
+	return normalizeChecklistEntries(
+		entries.map((entry) =>
+			entry.id === id
+				? {
+						...entry,
+						uploadedToDatabase: !entry.uploadedToDatabase ? true : undefined,
+					}
+				: entry,
+		),
 	);
 }
 

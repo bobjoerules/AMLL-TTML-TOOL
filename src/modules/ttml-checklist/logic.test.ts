@@ -6,7 +6,9 @@ import {
 	linkUploadedTTMLToChecklist,
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
+	setChecklistEntryUploadedToDb,
 	toggleChecklistEntryFavorite,
+	toggleChecklistEntryUploadedToDb,
 	updateChecklistEntry,
 } from "./logic";
 
@@ -215,5 +217,27 @@ describe("TTML checklist", () => {
 
 		const unfavorited = toggleChecklistEntryFavorite(favorited, "fav-1");
 		expect(unfavorited[0].favorite).toBeUndefined();
+	});
+
+	it("toggles and sets uploaded to database status", () => {
+		const initial = [
+			{
+				id: "db-1",
+				song: "DB Song",
+				artist: "Artist",
+				notes: "",
+				completed: true,
+				createdAt: 100,
+			},
+		];
+
+		const uploaded = toggleChecklistEntryUploadedToDb(initial, "db-1");
+		expect(uploaded[0].uploadedToDatabase).toBe(true);
+
+		const unuploaded = toggleChecklistEntryUploadedToDb(uploaded, "db-1");
+		expect(unuploaded[0].uploadedToDatabase).toBeUndefined();
+
+		const explicitlySet = setChecklistEntryUploadedToDb(initial, "db-1", true);
+		expect(explicitlySet[0].uploadedToDatabase).toBe(true);
 	});
 });

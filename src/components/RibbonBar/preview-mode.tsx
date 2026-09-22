@@ -15,6 +15,7 @@ import {
 	Flex,
 	Grid,
 	SegmentedControl,
+	Select,
 	Switch,
 	Text,
 	TextField,
@@ -35,6 +36,7 @@ import {
 	Apps16Regular,
 	MusicNote216Regular,
 	Fire16Regular,
+	Sparkle16Regular,
 	Timer16Regular,
 	LocalLanguage16Regular,
 	Warning16Regular,
@@ -42,6 +44,7 @@ import {
 	Flash16Regular,
 	ArrowSync16Regular,
 	TopSpeed16Regular,
+	People16Regular,
 } from "@fluentui/react-icons";
 import {
 	hideObsceneWordsAtom,
@@ -56,6 +59,7 @@ import {
 	spicyForceLineSyncedAtom,
 	spicySimpleLyricsModeAtom,
 	vsyncAtom,
+	bgFollowsDuetAtom,
 } from "$/modules/settings/states/preview";
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
@@ -85,6 +89,7 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	const [spicyBackgroundMode, setSpicyBackgroundMode] = useAtom(
 		spicyBackgroundModeAtom,
 	);
+	const [bgFollowsDuet, setBgFollowsDuet] = useAtom(bgFollowsDuetAtom);
 	const { t } = useTranslation();
 	const [showAdvanced, setShowAdvanced] = useAtom(advancedRibbonControlsAtom);
 
@@ -99,35 +104,44 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					</Flex>
 				}
 			>
-				<SegmentedControl.Root
+				<Select.Root
 					value={previewModeType}
 					onValueChange={(v) => setPreviewModeType(v as PreviewModeType)}
+					size="2"
 				>
-					<SegmentedControl.Item value={PreviewModeType.Standard}>
-						<Flex gap="1" align="center">
-							<DocumentText16Regular />
-							{t("ribbonBar.previewMode.standard", "Standard")}
-						</Flex>
-					</SegmentedControl.Item>
-					<SegmentedControl.Item value={PreviewModeType.Toxi}>
-						<Flex gap="1" align="center">
-							<MusicNote216Regular />
-							{"Toxi"}
-						</Flex>
-					</SegmentedControl.Item>
-					<SegmentedControl.Item value={PreviewModeType.Spicy}>
-						<Flex gap="1" align="center">
-							<Fire16Regular />
-							{"Spicy"}
-						</Flex>
-					</SegmentedControl.Item>
-					<SegmentedControl.Item value={PreviewModeType.Timing}>
-						<Flex gap="1" align="center">
-							<Timer16Regular />
-							{t("ribbonBar.previewMode.timing", "Timing")}
-						</Flex>
-					</SegmentedControl.Item>
-				</SegmentedControl.Root>
+					<Select.Trigger
+						style={{
+							minWidth: "165px",
+							fontWeight: 500,
+						}}
+					/>
+					<Select.Content position="popper" size="2">
+						<Select.Item value={PreviewModeType.Standard}>
+							<Flex align="center" gap="2">
+								<MusicNote216Regular />
+								<Text>{t("ribbonBar.previewMode.standard", "Standard")}</Text>
+							</Flex>
+						</Select.Item>
+						<Select.Item value={PreviewModeType.Spicy}>
+							<Flex align="center" gap="2">
+								<Sparkle16Regular />
+								<Text>SpicyLyrics</Text>
+							</Flex>
+						</Select.Item>
+						<Select.Item value={PreviewModeType.Toxi}>
+							<Flex align="center" gap="2">
+								<MusicNote216Regular />
+								<Text>Toxi (Apple Style)</Text>
+							</Flex>
+						</Select.Item>
+						<Select.Item value={PreviewModeType.Timing}>
+							<Flex align="center" gap="2">
+								<Timer16Regular />
+								<Text>Timing Overview</Text>
+							</Flex>
+						</Select.Item>
+					</Select.Content>
+				</Select.Root>
 			</RibbonSection>
 			{previewModeType === PreviewModeType.Spicy && (
 				<RibbonSection
@@ -234,6 +248,16 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<Checkbox
 						checked={hideObsceneWords}
 						onCheckedChange={(v) => setHideObsceneWords(!!v)}
+					/>
+					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
+						<Flex gap="1" align="center">
+							<People16Regular />
+							{t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}
+						</Flex>
+					</Text>
+					<Checkbox
+						checked={bgFollowsDuet}
+						onCheckedChange={(v) => setBgFollowsDuet(!!v)}
 					/>
 				</Grid>
 			</RibbonSection>

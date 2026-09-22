@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield, Menu, X } from 'lucide-react';
+import { Flame, Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield, Menu, X, Award } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import { GithubIcon } from './GithubIcon';
 import { AuthModal } from './AuthModal';
@@ -7,8 +7,8 @@ import { ProfileModal } from './ProfileModal';
 import { isUserModerator, subscribeToAuth } from '../utils/firebase';
 
 interface NavbarProps {
-  currentTab: 'home' | 'finished' | 'tinko';
-  onSelectTab: (tab: 'home' | 'finished' | 'tinko') => void;
+  currentTab: 'home' | 'finished' | 'stats' | 'tinko';
+  onSelectTab: (tab: 'home' | 'finished' | 'stats' | 'tinko') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
@@ -61,6 +61,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                   onClick={() => onSelectTab('finished')}
                 >
                   Finished TTMLs
+                </button>
+              </li>
+              <li>
+                <button
+                  className={`nav-link ${currentTab === 'stats' ? 'active' : ''}`}
+                  onClick={() => onSelectTab('stats')}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <Award size={15} color="var(--accent-pink)" />
+                    Stats & Profiles
+                  </span>
                 </button>
               </li>
               <li>
@@ -170,6 +181,18 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 }}
               >
                 Finished TTMLs
+              </button>
+              <button
+                className={`nav-mobile-link ${currentTab === 'stats' ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectTab('stats');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <Award size={16} color="var(--accent-pink)" />
+                  Stats & Profiles
+                </span>
               </button>
               <button
                 className={`nav-mobile-link ${currentTab === 'tinko' ? 'active' : ''}`}

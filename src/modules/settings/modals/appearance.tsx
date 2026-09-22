@@ -41,6 +41,9 @@ import { backgroundGradients } from "$/modules/settings/states/gradients";
 import {
 	accentColorAtom,
 	appFontAtom,
+	editorFontAtom,
+	previewFontAtom,
+	fontSelectionTargetAtom,
 	backgroundModeAtom,
 	customAccentColorAtom,
 	customGradientAngleAtom,
@@ -795,6 +798,9 @@ export const SettingsAppearanceTab = () => {
 		}
 	};
 	const setIsFontSelectionOpen = useSetAtom(fontSelectionDialogAtom);
+	const setFontSelectionTarget = useSetAtom(fontSelectionTargetAtom);
+	const editorFont = useAtomValue(editorFontAtom);
+	const previewFont = useAtomValue(previewFontAtom);
 
 	const [showBackgroundSettings, setShowBackgroundSettings] = useState(false);
 	const { t } = useTranslation();
@@ -2007,28 +2013,114 @@ export const SettingsAppearanceTab = () => {
 					</Flex>
 					<Flex direction="column" gap="3">
 						<Heading size="4">
-							{t("settings.appearance.font", "Application Font")}
+							{t("settings.appearance.font", "Fonts & Typography")}
 						</Heading>
-						<Card>
-							<Flex direction="column" gap="3">
-								<Flex direction="column" gap="1">
-									<Text size="2" weight="bold">
-										{t("settings.appearance.currentFont", "Current Font")}
-									</Text>
-									<Text size="1" color="gray" style={{ fontFamily: appFont }}>
-										{appFont.split(",")[0].replace(/"/g, "")}
-									</Text>
+						<Grid columns="3" gap="3">
+							<Card>
+								<Flex direction="column" gap="3" justify="between" style={{ height: "100%" }}>
+									<Flex direction="column" gap="1">
+										<Text size="2" weight="bold">
+											{t("settings.appearance.fontScopeApp", "Application UI")}
+										</Text>
+										<Text size="1" color="gray" style={{ fontFamily: appFont }}>
+											{appFont.split(",")[0].replace(/"/g, "")}
+										</Text>
+									</Flex>
+									<Button
+										variant="soft"
+										style={{ cursor: "pointer" }}
+										onClick={() => {
+											setFontSelectionTarget("app");
+											setIsFontSelectionOpen(true);
+										}}
+									>
+										<TextT24Regular />
+										{t("settings.appearance.changeFont", "Change Font...")}
+									</Button>
 								</Flex>
-								<Button
-									variant="soft"
-									style={{ cursor: "pointer" }}
-									onClick={() => setIsFontSelectionOpen(true)}
-								>
-									<TextT24Regular />
-									{t("settings.appearance.changeFont", "Change Font...")}
-								</Button>
-							</Flex>
-						</Card>
+							</Card>
+
+							<Card>
+								<Flex direction="column" gap="3" justify="between" style={{ height: "100%" }}>
+									<Flex direction="column" gap="1">
+										<Text size="2" weight="bold">
+											{t("settings.appearance.fontScopeEditor", "Lyric Editor")}
+										</Text>
+										<Text
+											size="1"
+											color="gray"
+											style={{
+												fontFamily:
+													editorFont === "inherit" ? appFont : editorFont,
+											}}
+										>
+											{editorFont === "inherit"
+												? t(
+														"settings.appearance.inheritAppFont",
+														"Inherit Application Font",
+													)
+												: editorFont.split(",")[0].replace(/"/g, "")}
+										</Text>
+									</Flex>
+									<Button
+										variant="soft"
+										style={{ cursor: "pointer" }}
+										onClick={() => {
+											setFontSelectionTarget("editor");
+											setIsFontSelectionOpen(true);
+										}}
+									>
+										<TextT24Regular />
+										{t("settings.appearance.changeFont", "Change Font...")}
+									</Button>
+								</Flex>
+							</Card>
+
+							<Card>
+								<Flex direction="column" gap="3" justify="between" style={{ height: "100%" }}>
+									<Flex direction="column" gap="1">
+										<Text size="2" weight="bold">
+											{t("settings.appearance.fontScopePreview", "Lyrics Preview")}
+										</Text>
+										<Text
+											size="1"
+											color="gray"
+											style={{
+												fontFamily:
+													previewFont === "default"
+														? '"SpicyLyrics", sans-serif'
+														: previewFont === "inherit"
+															? appFont
+															: previewFont,
+											}}
+										>
+											{previewFont === "default"
+												? t(
+														"settings.appearance.defaultPreviewFont",
+														"Default (SpicyLyrics / Toxi)",
+													)
+												: previewFont === "inherit"
+													? t(
+															"settings.appearance.inheritAppFont",
+															"Inherit Application Font",
+														)
+													: previewFont.split(",")[0].replace(/"/g, "")}
+										</Text>
+									</Flex>
+									<Button
+										variant="soft"
+										style={{ cursor: "pointer" }}
+										onClick={() => {
+											setFontSelectionTarget("preview");
+											setIsFontSelectionOpen(true);
+										}}
+									>
+										<TextT24Regular />
+										{t("settings.appearance.changeFont", "Change Font...")}
+									</Button>
+								</Flex>
+							</Card>
+						</Grid>
 					</Flex>
 
 					<Flex direction="column" gap="3">

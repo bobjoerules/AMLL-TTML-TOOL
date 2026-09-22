@@ -38,7 +38,7 @@ export interface AppleTtmlSearchResult {
 }
 
 export function extractSpotifyTrackId(input: string): string {
-	if (!input) return "";
+	if (!input || typeof input !== "string") return "";
 	const trimmed = input.trim();
 
 	// Match Spotify Track URL or URI
@@ -50,7 +50,9 @@ export function extractSpotifyTrackId(input: string): string {
 	}
 
 	// Regex check for Spotify track url/uri if not caught by parseSpotifyUrl
-	const urlMatch = trimmed.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]+)/i);
+	const urlMatch = trimmed.match(
+		/(?:https?:\/\/)?open\.spotify\.com\/track\/([a-zA-Z0-9]+)/i,
+	);
 	if (urlMatch) {
 		return urlMatch[1];
 	}
@@ -60,9 +62,35 @@ export function extractSpotifyTrackId(input: string): string {
 		return uriMatch[1];
 	}
 
-	// Remove any query params or hashes if user pasted something raw
-	const cleanId = trimmed.split("?")[0].split("#")[0].trim();
-	return cleanId;
+	const trackPrefixMatch = trimmed.match(/^track\/([a-zA-Z0-9]+)/i);
+	if (trackPrefixMatch) {
+		return trackPrefixMatch[1];
+	}
+
+	// Remove quotes, query params, hashes, trailing slashes if user pasted something raw
+	const clean = trimmed
+		.replace(/^["']|["']$/g, "")
+		.split("?")[0]
+		.split("#")[0]
+		.replace(/\/+$/, "")
+		.trim();
+
+	// Check if clean string is an alphanumeric ID
+	if (/^[a-zA-Z0-9]+$/.test(clean)) {
+		return clean;
+	}
+
+	return "";
+}
+
+/**
+ * Checks whether an input string looks like a Spotify track ID or Spotify track URL/URI.
+ */
+export function isSpotifyTrackId(input: string): boolean {
+	if (!input || typeof input !== "string") return false;
+	const id = extractSpotifyTrackId(input);
+	// Spotify IDs are Base62 strings between 18 and 25 characters (typically 22)
+	return /^[a-zA-Z0-9]{18,25}$/.test(id);
 }
 
 const BASE_URL = "https://lyrics.rmmreviv.al";
@@ -147,6 +175,10 @@ export const AppleTtmlApi = {
 			const detail =
 				data.errors[0].detail || data.errors[0].title || "Unknown error";
 			throw new Error(`Error fetching lyrics: ${detail}`);
+		}
+
+		if (!data || (!data.name && !data.artist)) {
+			throw new Error("No song found for this Spotify ID.");
 		}
 
 		return data;

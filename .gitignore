@@ -42,7 +42,8 @@ ffmpeg-core.js
 .env.development
 .env.test
 .env.production
-.vercel
-.env*.local
-
 AGENTS.md
+
+# Python
+__pycache__/
+*.pyc

@@ -47,8 +47,10 @@
 	overflow: hidden;
 	color: white;
 	background: #111;
-	font-family:
-		"SpicyLyrics", "Noto Sans Georgian", "VazirmatnRegular", sans-serif;
+	font-family: var(
+		--preview-font-family,
+		"SpicyLyrics", "Noto Sans Georgian", "VazirmatnRegular", sans-serif
+	);
 }
 
 .fpsCounter {
@@ -190,6 +192,7 @@
 .line {
 	--blur: 0px;
 	--line-size: clamp(1.85rem, 7cqw, 3.5rem);
+	font-family: inherit;
 	display: flex;
 	flex-wrap: wrap;
 	box-sizing: border-box;

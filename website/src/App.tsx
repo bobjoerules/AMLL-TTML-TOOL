@@ -3,16 +3,19 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { FinishedTTMLsPage } from './pages/FinishedTTMLsPage';
+import { StatsPage } from './pages/StatsPage';
 import { TinkoPage } from './pages/TinkoPage';
 
 export const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'tinko'>('home');
+  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'stats' | 'tinko'>('home');
 
   // Handle URL hash routing
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash.includes('finished') || hash.includes('ttmls')) {
+      if (hash.includes('stats') || hash.includes('user=')) {
+        setCurrentTab('stats');
+      } else if (hash.includes('finished') || hash.includes('ttmls')) {
         setCurrentTab('finished');
       } else if (hash.includes('tinko')) {
         setCurrentTab('tinko');
@@ -26,7 +29,7 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  const handleSelectTab = (tab: 'home' | 'finished' | 'tinko') => {
+  const handleSelectTab = (tab: 'home' | 'finished' | 'stats' | 'tinko') => {
     setCurrentTab(tab);
     window.location.hash = tab === 'home' ? '' : tab;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -43,6 +46,7 @@ export const App: React.FC = () => {
       <main style={{ flex: 1 }}>
         {currentTab === 'home' && <HomePage onNavigate={handleSelectTab} />}
         {currentTab === 'finished' && <FinishedTTMLsPage />}
+        {currentTab === 'stats' && <StatsPage onNavigateTab={handleSelectTab} />}
         {currentTab === 'tinko' && <TinkoPage />}
       </main>
 

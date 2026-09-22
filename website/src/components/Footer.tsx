@@ -3,7 +3,7 @@ import { Music, Heart, ExternalLink, Flame } from 'lucide-react';
 import { GithubIcon } from './GithubIcon';
 
 interface FooterProps {
-  onSelectTab: (tab: 'home' | 'finished' | 'tinko') => void;
+  onSelectTab: (tab: 'home' | 'finished' | 'stats' | 'tinko') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
@@ -30,6 +30,9 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
           </button>
           <button className="footer-link" onClick={() => onSelectTab('finished')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             Finished TTMLs
+          </button>
+          <button className="footer-link" onClick={() => onSelectTab('stats')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            Stats & Profiles
           </button>
           <button className="footer-link" onClick={() => onSelectTab('tinko')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             Tinko

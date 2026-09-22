@@ -52,7 +52,7 @@ export const isSpotifyUrl = (text: string): boolean => {
 	if (!text || typeof text !== "string") return false;
 	const trimmed = text.trim();
 	return (
-		/https?:\/\/open\.spotify\.com\/(track|album)\/([a-zA-Z0-9]+)/i.test(
+		/(?:https?:\/\/)?open\.spotify\.com\/(track|album)\/([a-zA-Z0-9]+)/i.test(
 			trimmed,
 		) || /spotify:(track|album):([a-zA-Z0-9]+)/i.test(trimmed)
 	);
@@ -68,7 +68,7 @@ export const parseSpotifyUrl = (
 	const trimmed = url.trim();
 
 	const urlMatch = trimmed.match(
-		/https?:\/\/open\.spotify\.com\/(track|album)\/([a-zA-Z0-9]+)/i,
+		/(?:https?:\/\/)?open\.spotify\.com\/(track|album)\/([a-zA-Z0-9]+)/i,
 	);
 	if (urlMatch) {
 		return {

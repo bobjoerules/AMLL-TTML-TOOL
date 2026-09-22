@@ -33,6 +33,7 @@ import {
 	memo,
 	useCallback,
 	useEffect,
+	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
@@ -92,6 +93,12 @@ import {
 	appFontStyleAtom,
 	customFontDataAtom,
 	customFontNameAtom,
+	editorFontAtom,
+	previewFontAtom,
+	customEditorFontDataAtom,
+	customEditorFontNameAtom,
+	customPreviewFontDataAtom,
+	customPreviewFontNameAtom,
 	appLayoutOrderAtom,
 	vRibbonPositionAtom,
 	allowConsecutiveBackgroundLinesAtom,
@@ -360,10 +367,16 @@ function App() {
 	const customGradientAngle = useAtomValue(customGradientAngleAtom);
 	const customGradientSize = useAtomValue(customGradientSizeAtom);
 	const appFont = useAtomValue(appFontAtom);
+	const editorFont = useAtomValue(editorFontAtom);
+	const previewFont = useAtomValue(previewFontAtom);
 	const appFontWeight = useAtomValue(appFontWeightAtom);
 	const appFontStyle = useAtomValue(appFontStyleAtom);
 	const customFontData = useAtomValue(customFontDataAtom);
 	const customFontName = useAtomValue(customFontNameAtom);
+	const customEditorFontData = useAtomValue(customEditorFontDataAtom);
+	const customEditorFontName = useAtomValue(customEditorFontNameAtom);
+	const customPreviewFontData = useAtomValue(customPreviewFontDataAtom);
+	const customPreviewFontName = useAtomValue(customPreviewFontNameAtom);
 	const glassmorphismBlur = useAtomValue(glassmorphismBlurAtom);
 	const advPrimaryText = useAtomValue(advancedPrimaryTextColorAtom);
 	const advSecondaryText = useAtomValue(advancedSecondaryTextColorAtom);
@@ -473,27 +486,45 @@ function App() {
 	}, [isRaining]);
 
 	useEffect(() => {
-		// Extract font name from appFont string (e.g., '"Inter", sans-serif' -> 'Inter')
-		const match = appFont.match(/"([^"]+)"/);
-		if (match) {
-			const fontName = match[1];
-			// Only load if it's not the custom font and not a system default
-			if (
-				fontName !== customFontName &&
-				!["MiSans", "Inter", "system-ui"].includes(fontName)
-			) {
-				const fontId = `google-font-${fontName.replace(/\s+/g, "-")}`;
-				if (!document.getElementById(fontId)) {
-					const link = document.createElement("link");
-					link.id = fontId;
-					link.rel = "stylesheet";
-					// Load Regular(400), Bold(700) and their Italic versions
-					link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, "+")}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
-					document.head.appendChild(link);
+		const fontsToCheck = [appFont];
+		if (editorFont && editorFont !== "inherit") fontsToCheck.push(editorFont);
+		if (previewFont && previewFont !== "default" && previewFont !== "inherit") {
+			fontsToCheck.push(previewFont);
+		}
+
+		const customNames = [
+			customFontName,
+			customEditorFontName,
+			customPreviewFontName,
+		].filter(Boolean);
+
+		for (const fontStr of fontsToCheck) {
+			const match = fontStr.match(/"([^"]+)"/);
+			if (match) {
+				const fontName = match[1];
+				if (
+					!customNames.includes(fontName) &&
+					!["MiSans", "Inter", "system-ui", "SpicyLyrics"].includes(fontName)
+				) {
+					const fontId = `google-font-${fontName.replace(/\s+/g, "-")}`;
+					if (!document.getElementById(fontId)) {
+						const link = document.createElement("link");
+						link.id = fontId;
+						link.rel = "stylesheet";
+						link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, "+")}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+						document.head.appendChild(link);
+					}
 				}
 			}
 		}
-	}, [appFont, customFontName]);
+	}, [
+		appFont,
+		editorFont,
+		previewFont,
+		customFontName,
+		customEditorFontName,
+		customPreviewFontName,
+	]);
 
 	const customThemeStyles = useCustomAccent
 		? generateRadixScale(customAccentColor, isDarkTheme)
@@ -508,16 +539,38 @@ function App() {
 		}
 
 		let customFontFace = "";
-		if (customFontData && customFontName) {
-			customFontFace = `
-			@font-face {
-				font-family: "${customFontName}";
-				src: url("${customFontData}");
-				font-weight: normal;
-				font-style: normal;
+		const customFonts = [
+			{ name: customFontName, data: customFontData },
+			{ name: customEditorFontName, data: customEditorFontData },
+			{ name: customPreviewFontName, data: customPreviewFontData },
+		];
+		for (const cf of customFonts) {
+			if (cf.name && cf.data) {
+				customFontFace += `
+				@font-face {
+					font-family: "${cf.name}";
+					src: url("${cf.data}");
+					font-weight: normal;
+					font-style: normal;
+				}
+				`;
 			}
-			`;
 		}
+
+		const resolvedEditorFont =
+			editorFont === "inherit" || !editorFont ? appFont : editorFont;
+		const resolvedPreviewFont =
+			previewFont === "default" || !previewFont
+				? '"SpicyLyrics", "Noto Sans Georgian", "VazirmatnRegular", sans-serif'
+				: previewFont === "inherit"
+					? appFont
+					: previewFont;
+		const resolvedToxiFont =
+			previewFont === "default" || !previewFont
+				? '"SF Pro Display", "SF Pro", "Inter", -apple-system, BlinkMacSystemFont, sans-serif'
+				: previewFont === "inherit"
+					? appFont
+					: previewFont;
 
 		const primaryLum = advPrimaryText ? getLuminance(advPrimaryText) : null;
 		const secondaryLum = advSecondaryText
@@ -588,6 +641,9 @@ function App() {
 		${customFontFace}
 		:root {
 			--default-font-family: ${appFont} !important;
+			--editor-font-family: ${resolvedEditorFont} !important;
+			--preview-font-family: ${resolvedPreviewFont} !important;
+			--toxi-font-family: ${resolvedToxiFont} !important;
 			${vEditorBg === "transparent" ? `--color-background: transparent !important; background-color: transparent !important;` : `--color-background: ${rootBg} !important; background-color: ${rootBg} !important;`}
 		}
 		body {
@@ -605,6 +661,9 @@ function App() {
 		}
 		.radix-themes {
 			--default-font-family: ${appFont} !important;
+			--editor-font-family: ${resolvedEditorFont} !important;
+			--preview-font-family: ${resolvedPreviewFont} !important;
+			--toxi-font-family: ${resolvedToxiFont} !important;
 			--glass-blur: ${glassmorphismBlur}px !important;
 			--backdrop-blur: ${glassmorphismBlur}px !important;
 			${shouldApplyPrimaryText ? `--gray-12: ${advPrimaryText} !important;` : ""}
@@ -709,7 +768,35 @@ function App() {
 		appFontStyle,
 		customFontData,
 		customFontName,
+		editorFont,
+		previewFont,
+		customEditorFontData,
+		customEditorFontName,
+		customPreviewFontData,
+		customPreviewFontName,
 	]);
+
+	useLayoutEffect(() => {
+		const root = document.documentElement;
+		root.style.setProperty("--default-font-family", appFont);
+		const resolvedEditorFont =
+			editorFont === "inherit" || !editorFont ? appFont : editorFont;
+		const resolvedPreviewFont =
+			previewFont === "default" || !previewFont
+				? '"SpicyLyrics", "Noto Sans Georgian", "VazirmatnRegular", sans-serif'
+				: previewFont === "inherit"
+					? appFont
+					: previewFont;
+		const resolvedToxiFont =
+			previewFont === "default" || !previewFont
+				? '"SF Pro Display", "SF Pro", "Inter", -apple-system, BlinkMacSystemFont, sans-serif'
+				: previewFont === "inherit"
+					? appFont
+					: previewFont;
+		root.style.setProperty("--editor-font-family", resolvedEditorFont);
+		root.style.setProperty("--preview-font-family", resolvedPreviewFont);
+		root.style.setProperty("--toxi-font-family", resolvedToxiFont);
+	}, [appFont, editorFont, previewFont]);
 
 	const backgroundMode = useAtomValue(backgroundModeAtom);
 	const selectedGradientId = useAtomValue(selectedGradientAtom);

@@ -31,6 +31,14 @@ import {
 	appFontWeightAtom,
 	customFontDataAtom,
 	customFontNameAtom,
+	editorFontAtom,
+	previewFontAtom,
+	fontSelectionTargetAtom,
+	type FontSelectionTarget,
+	customEditorFontDataAtom,
+	customEditorFontNameAtom,
+	customPreviewFontDataAtom,
+	customPreviewFontNameAtom,
 } from "../states/index.ts";
 
 // A massive library of popular Google Fonts (300+)
@@ -365,14 +373,73 @@ const DEFAULT_FONTS = [
 export const FontSelectionDialog = () => {
 	const { t } = useTranslation();
 	const [isOpen, setIsOpen] = useAtom(fontSelectionDialogAtom);
+	const [targetScope, setTargetScope] = useAtom(fontSelectionTargetAtom);
 	const [appFont, setAppFont] = useAtom(appFontAtom);
+	const [editorFont, setEditorFont] = useAtom(editorFontAtom);
+	const [previewFont, setPreviewFont] = useAtom(previewFontAtom);
+
 	const [appFontWeight, setAppFontWeight] = useAtom(appFontWeightAtom);
 	const [appFontStyle, setAppFontStyle] = useAtom(appFontStyleAtom);
-	const setCustomFontData = useSetAtom(customFontDataAtom);
+
+	const [customFontData, setCustomFontData] = useAtom(customFontDataAtom);
 	const [customFontName, setCustomFontName] = useAtom(customFontNameAtom);
+	const [customEditorFontData, setCustomEditorFontData] = useAtom(
+		customEditorFontDataAtom,
+	);
+	const [customEditorFontName, setCustomEditorFontName] = useAtom(
+		customEditorFontNameAtom,
+	);
+	const [customPreviewFontData, setCustomPreviewFontData] = useAtom(
+		customPreviewFontDataAtom,
+	);
+	const [customPreviewFontName, setCustomPreviewFontName] = useAtom(
+		customPreviewFontNameAtom,
+	);
+
+	const currentFont =
+		targetScope === "editor"
+			? editorFont
+			: targetScope === "preview"
+				? previewFont
+				: appFont;
+
+	const currentCustomName =
+		targetScope === "editor"
+			? customEditorFontName
+			: targetScope === "preview"
+				? customPreviewFontName
+				: customFontName;
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const standardStacks = useMemo(() => {
+		const stacks = [...DEFAULT_FONTS];
+		if (targetScope === "editor") {
+			stacks.unshift({
+				label: t("settings.appearance.inheritAppFont", "Inherit Application Font"),
+				value: "inherit",
+			});
+		} else if (targetScope === "preview") {
+			stacks.unshift(
+				{
+					label: t(
+						"settings.appearance.defaultPreviewFont",
+						"Default (SpicyLyrics / Toxi)",
+					),
+					value: "default",
+				},
+				{
+					label: t(
+						"settings.appearance.inheritAppFont",
+						"Inherit Application Font",
+					),
+					value: "inherit",
+				},
+			);
+		}
+		return stacks;
+	}, [targetScope, t]);
 
 	const filteredGoogleFonts = useMemo(() => {
 		const search = searchQuery.toLowerCase();
@@ -385,13 +452,58 @@ export const FontSelectionDialog = () => {
 	}, [searchQuery]);
 
 	const handleSelectFont = (fontFamily: string, isGoogleFont = true) => {
+		const val = isGoogleFont ? `"${fontFamily}", sans-serif` : fontFamily;
 		if (isGoogleFont) {
-			setAppFont(`"${fontFamily}", sans-serif`);
-			// Ensure it's loaded - simple way is to touch a hidden element or just rely on CSS injection
-		} else {
-			setAppFont(fontFamily);
+			const fontId = `google-font-${fontFamily.replace(/\s+/g, "-")}`;
+			if (!document.getElementById(fontId)) {
+				const link = document.createElement("link");
+				link.id = fontId;
+				link.rel = "stylesheet";
+				link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, "+")}:wght@300;400;500;600;700;800&display=swap`;
+				document.head.appendChild(link);
+			}
 		}
-		// setIsOpen(false); // Keep it open for user to "preview" maybe?
+		if (targetScope === "editor") {
+			setEditorFont(val);
+			document.documentElement.style.setProperty(
+				"--editor-font-family",
+				val === "inherit" ? appFont : val,
+			);
+		} else if (targetScope === "preview") {
+			setPreviewFont(val);
+			document.documentElement.style.setProperty(
+				"--preview-font-family",
+				val === "default"
+					? '"SpicyLyrics", "Noto Sans Georgian", "VazirmatnRegular", sans-serif'
+					: val === "inherit"
+						? appFont
+						: val,
+			);
+			document.documentElement.style.setProperty(
+				"--toxi-font-family",
+				val === "default"
+					? '"SF Pro Display", "SF Pro", "Inter", -apple-system, BlinkMacSystemFont, sans-serif'
+					: val === "inherit"
+						? appFont
+						: val,
+			);
+		} else {
+			setAppFont(val);
+			document.documentElement.style.setProperty("--default-font-family", val);
+			if (editorFont === "inherit") {
+				document.documentElement.style.setProperty("--editor-font-family", val);
+			}
+			if (previewFont === "inherit") {
+				document.documentElement.style.setProperty(
+					"--preview-font-family",
+					val,
+				);
+				document.documentElement.style.setProperty(
+					"--toxi-font-family",
+					val,
+				);
+			}
+		}
 	};
 
 	const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -402,9 +514,30 @@ export const FontSelectionDialog = () => {
 		reader.onload = (event) => {
 			const dataUrl = event.target?.result as string;
 			const fontName = file.name.split(".")[0].replace(/[^a-zA-Z0-9]/g, "");
-			setCustomFontData(dataUrl);
-			setCustomFontName(fontName);
-			setAppFont(`"${fontName}", sans-serif`);
+			const fontVal = `"${fontName}", sans-serif`;
+			if (targetScope === "editor") {
+				setCustomEditorFontData(dataUrl);
+				setCustomEditorFontName(fontName);
+				setEditorFont(fontVal);
+				document.documentElement.style.setProperty("--editor-font-family", fontVal);
+			} else if (targetScope === "preview") {
+				setCustomPreviewFontData(dataUrl);
+				setCustomPreviewFontName(fontName);
+				setPreviewFont(fontVal);
+				document.documentElement.style.setProperty(
+					"--preview-font-family",
+					fontVal,
+				);
+				document.documentElement.style.setProperty(
+					"--toxi-font-family",
+					fontVal,
+				);
+			} else {
+				setCustomFontData(dataUrl);
+				setCustomFontName(fontName);
+				setAppFont(fontVal);
+				document.documentElement.style.setProperty("--default-font-family", fontVal);
+			}
 			toast.success(
 				t(
 					"settings.appearance.fontImportSuccess",
@@ -416,11 +549,38 @@ export const FontSelectionDialog = () => {
 	};
 
 	const clearCustomFont = () => {
-		setCustomFontData(null);
-		setCustomFontName(null);
-		setAppFont(
-			'"MiSans", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-		);
+		if (targetScope === "editor") {
+			setCustomEditorFontData(null);
+			setCustomEditorFontName(null);
+			setEditorFont("inherit");
+			document.documentElement.style.setProperty("--editor-font-family", appFont);
+		} else if (targetScope === "preview") {
+			setCustomPreviewFontData(null);
+			setCustomPreviewFontName(null);
+			setPreviewFont("default");
+			document.documentElement.style.setProperty(
+				"--preview-font-family",
+				'"SpicyLyrics", "Noto Sans Georgian", "VazirmatnRegular", sans-serif',
+			);
+			document.documentElement.style.setProperty(
+				"--toxi-font-family",
+				'"SF Pro Display", "SF Pro", "Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+			);
+		} else {
+			setCustomFontData(null);
+			setCustomFontName(null);
+			const defaultFont =
+				'"MiSans", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+			setAppFont(defaultFont);
+			document.documentElement.style.setProperty(
+				"--default-font-family",
+				defaultFont,
+			);
+		}
+	};
+
+	const isFontSelected = (fontValue: string) => {
+		return currentFont === fontValue;
 	};
 
 	return (
@@ -457,10 +617,32 @@ export const FontSelectionDialog = () => {
 					</Dialog.Close>
 				</Flex>
 
-				<Flex direction="column" gap="5" height="calc(100% - 50px)">
+				<Flex direction="column" gap="4" height="calc(100% - 50px)">
+					<Flex direction="column" gap="2">
+						<Text size="2" weight="bold" color="gray">
+							{t("settings.appearance.fontScope", "Customize Font For:")}
+						</Text>
+						<SegmentedControl.Root
+							size="3"
+							value={targetScope}
+							onValueChange={(v) => setTargetScope(v as FontSelectionTarget)}
+							style={{ width: "100%" }}
+						>
+							<SegmentedControl.Item value="app" style={{ flexGrow: 1 }}>
+								{t("settings.appearance.fontScopeApp", "Application UI")}
+							</SegmentedControl.Item>
+							<SegmentedControl.Item value="editor" style={{ flexGrow: 1 }}>
+								{t("settings.appearance.fontScopeEditor", "Lyric Editor")}
+							</SegmentedControl.Item>
+							<SegmentedControl.Item value="preview" style={{ flexGrow: 1 }}>
+								{t("settings.appearance.fontScopePreview", "Lyrics Preview")}
+							</SegmentedControl.Item>
+						</SegmentedControl.Root>
+					</Flex>
+
 					<Card
 						variant="surface"
-						style={{ padding: "40px", backgroundColor: "var(--gray-2)" }}
+						style={{ padding: "24px", backgroundColor: "var(--gray-2)" }}
 					>
 						<Grid columns="2" gap="6" width="100%">
 							<Flex direction="column" gap="3">
@@ -533,7 +715,7 @@ export const FontSelectionDialog = () => {
 						</Button>
 					</Flex>
 
-					{customFontName && (
+					{currentCustomName && (
 						<Card
 							variant="surface"
 							style={{ backgroundColor: "var(--accent-3)" }}
@@ -552,9 +734,9 @@ export const FontSelectionDialog = () => {
 									</Text>
 									<Text
 										size="3"
-										style={{ fontFamily: `"${customFontName}", sans-serif` }}
+										style={{ fontFamily: `"${currentCustomName}", sans-serif` }}
 									>
-										{customFontName}
+										{currentCustomName}
 									</Text>
 								</Flex>
 								<Flex gap="2">
@@ -562,9 +744,9 @@ export const FontSelectionDialog = () => {
 										variant="solid"
 										size="1"
 										onClick={() =>
-											handleSelectFont(`"${customFontName}", sans-serif`, false)
+											handleSelectFont(`"${currentCustomName}", sans-serif`, false)
 										}
-										disabled={appFont === `"${customFontName}", sans-serif`}
+										disabled={currentFont === `"${currentCustomName}", sans-serif`}
 									>
 										{t("common.apply", "Apply")}
 									</Button>
@@ -592,7 +774,7 @@ export const FontSelectionDialog = () => {
 									{t("settings.appearance.defaultFonts", "Standard Stacks")}
 								</Heading>
 								<Grid columns="repeat(auto-fill, minmax(280px, 1fr))" gap="3">
-									{DEFAULT_FONTS.map((font) => (
+									{standardStacks.map((font) => (
 										<Card
 											key={font.label}
 											style={{
@@ -601,14 +783,13 @@ export const FontSelectionDialog = () => {
 												minHeight: "60px",
 												display: "flex",
 												alignItems: "center",
-												border:
-													appFont === font.value
-														? "2px solid var(--accent-9)"
-														: "none",
+												border: isFontSelected(font.value)
+													? "2px solid var(--accent-9)"
+													: "none",
 											}}
 											onClick={() => handleSelectFont(font.value, false)}
 										>
-											<Text size="3" style={{ fontFamily: font.value }}>
+											<Text size="3" style={{ fontFamily: font.value === "inherit" || font.value === "default" ? undefined : font.value }}>
 												{font.label}
 											</Text>
 										</Card>
@@ -632,9 +813,10 @@ export const FontSelectionDialog = () => {
 													display: "flex",
 													alignItems: "center",
 													border:
-														appFont === `"${font}", sans-serif`
-															? "2px solid var(--accent-9)"
-															: "none",
+													isFontSelected(`"${font}", sans-serif`) ||
+													isFontSelected(font)
+														? "2px solid var(--accent-9)"
+														: "none",
 												}}
 												onClick={() => handleSelectFont(font, false)}
 											>
@@ -670,7 +852,7 @@ export const FontSelectionDialog = () => {
 												flexDirection: "column",
 												justifyContent: "center",
 												border:
-													appFont === `"${font}", sans-serif`
+													isFontSelected(`"${font}", sans-serif`) || isFontSelected(font)
 														? "2px solid var(--accent-9)"
 														: "none",
 											}}

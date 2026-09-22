@@ -22,6 +22,7 @@ import {
 	instantHighlightFadeAtom,
 	previewFullscreenAtom,
 	previewShowAlbumArtworkAtom,
+	bgFollowsDuetAtom,
 } from "$/modules/settings/states/preview";
 import {
 	isDarkThemeAtom,
@@ -155,7 +156,11 @@ interface LineGroup {
 
 const StaticLineGroup = memo(
 	({ group, isPast }: { group: LineGroup; isPast: boolean }) => {
+		const bgFollowsDuet = useAtomValue(bgFollowsDuetAtom);
 		const mainTimed = isLineTimed(group.main);
+		const isMainDuet = Boolean(
+			group.main.isDuet || (group.main.agent && group.main.agent !== "v1"),
+		);
 		return (
 			<div
 				className={classNames(
@@ -182,13 +187,16 @@ const StaticLineGroup = memo(
 				{/* BG lines */}
 				{group.bg.map((bgLine, i) => {
 					const bgTimed = isLineTimed(bgLine);
+					const isDuet = bgFollowsDuet
+						? isMainDuet
+						: Boolean(bgLine.isDuet || (bgLine.agent && bgLine.agent !== "v1"));
 					return (
 						<div
 							key={bgLine.id || i}
 							className={classNames(
 								styles.line,
 								styles.lineBG,
-								bgLine.isDuet && styles.lineDuetR,
+								isDuet && styles.lineDuetR,
 								!bgTimed && styles.lineUnsynced,
 							)}
 						>
@@ -215,7 +223,11 @@ const ActiveLineGroup = memo(
 	}) => {
 		const showTranslation = useAtomValue(showTranslationLinesAtom);
 		const showRoman = useAtomValue(showRomanLinesAtom);
+		const bgFollowsDuet = useAtomValue(bgFollowsDuetAtom);
 		const mainTimed = isLineTimed(group.main);
+		const isMainDuet = Boolean(
+			group.main.isDuet || (group.main.agent && group.main.agent !== "v1"),
+		);
 		return (
 			<div
 				className={classNames(
@@ -251,6 +263,9 @@ const ActiveLineGroup = memo(
 				{/* BG lines - also highlight when group is active */}
 				{group.bg.map((bgLine, i) => {
 					const bgTimed = isLineTimed(bgLine);
+					const isDuet = bgFollowsDuet
+						? isMainDuet
+						: Boolean(bgLine.isDuet || (bgLine.agent && bgLine.agent !== "v1"));
 					return (
 						<div
 							key={bgLine.id || i}
@@ -258,7 +273,7 @@ const ActiveLineGroup = memo(
 								styles.line,
 								styles.lineBG,
 								styles.lineBGActive,
-								bgLine.isDuet && styles.lineDuetR,
+								isDuet && styles.lineDuetR,
 								!bgTimed && styles.lineUnsynced,
 							)}
 						>
@@ -483,8 +498,9 @@ export const AMLLWrapper = memo(
 
 		const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
 		const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
-		const [controlsVisible, setControlsVisible] = useState(true);
+		const [controlsVisible, setControlsVisible] = useState(false);
 		const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+		const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
 		const currentDuration = useAtomValue(currentDurationAtom);
 
@@ -505,24 +521,53 @@ export const AMLLWrapper = memo(
 			}
 		};
 
-		const handleMouseMove = useCallback(() => {
-			setControlsVisible(true);
-			if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-			if (isFullscreen) {
-				hideTimerRef.current = setTimeout(() => {
-					setControlsVisible(false);
-				}, 3000);
-			}
-		}, [isFullscreen]);
+		const handleMouseMove = useCallback(
+			(e: React.MouseEvent) => {
+				if (!isFullscreen) {
+					setControlsVisible(true);
+					return;
+				}
+
+				// Discard synthetic mousemove events dispatched by browsers when DOM elements
+				// scroll/animate underneath a stationary cursor
+				if (
+					lastPosRef.current &&
+					lastPosRef.current.x === e.clientX &&
+					lastPosRef.current.y === e.clientY
+				) {
+					return;
+				}
+				lastPosRef.current = { x: e.clientX, y: e.clientY };
+
+				if (e.clientY <= 72) {
+					setControlsVisible(true);
+					if (hideTimerRef.current) {
+						clearTimeout(hideTimerRef.current);
+						hideTimerRef.current = null;
+					}
+				} else {
+					if (!hideTimerRef.current) {
+						hideTimerRef.current = setTimeout(() => {
+							setControlsVisible(false);
+							hideTimerRef.current = null;
+						}, 200);
+					}
+				}
+			},
+			[isFullscreen],
+		);
 
 		useEffect(() => {
 			if (!isFullscreen) {
 				setControlsVisible(true);
 				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
 			} else {
+				// Briefly show controls for 2.5s on entering fullscreen, then hide
+				setControlsVisible(true);
 				hideTimerRef.current = setTimeout(() => {
 					setControlsVisible(false);
-				}, 3000);
+					hideTimerRef.current = null;
+				}, 2500);
 			}
 			return () => {
 				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -626,6 +671,7 @@ export const AMLLWrapper = memo(
 							styles.floatingControls,
 							isFullscreen && !controlsVisible && styles.autohideHidden,
 						)}
+						style={isFullscreen ? { right: 205 } : undefined}
 					>
 						<button
 							type="button"
