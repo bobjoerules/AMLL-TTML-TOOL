@@ -33,6 +33,7 @@ export interface SaveCloudTTMLInput {
 	audioFileName?: string | null;
 	onProgress?: (percent: number) => void;
 	publishToCommunity?: boolean;
+	isCompleted?: boolean;
 }
 
 export async function uploadAudioToCloud(
@@ -189,6 +190,27 @@ export async function saveTTMLToCloud(
 	}
 
 	const isPublished = Boolean(input.publishToCommunity);
+	let isCompleted = Boolean(input.isCompleted);
+	if (!isCompleted && !isPublished && input.rawTTML) {
+		try {
+			const { parseLyric } = await import("$/modules/project/logic/ttml-parser");
+			const { isTTML100PercentCompleted } = await import(
+				"$/modules/ttml-checklist/logic"
+			);
+			const parsed = parseLyric(input.rawTTML);
+			if (isTTML100PercentCompleted(parsed)) {
+				isCompleted = true;
+			}
+		} catch {
+			// ignore
+		}
+	}
+	const isFinished = isPublished || isCompleted;
+
+	const tags: string[] = [];
+	if (isFinished) tags.push("finished");
+	if (isPublished) tags.push("community");
+
 	const metadata: Omit<CloudTTMLMetadata, "id"> & {
 		coverArt?: string | null;
 		tags?: string[];
@@ -210,8 +232,8 @@ export async function saveTTMLToCloud(
 		audioFileName,
 		audioSize,
 		coverArt,
-		tags: isPublished ? ["finished", "community"] : [],
-		finished: isPublished,
+		tags,
+		finished: isFinished,
 		publishedToCommunity: isPublished,
 	};
 
@@ -335,8 +357,14 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 				audioFileName: d.audioFileName || null,
 				audioSize: d.audioSize || null,
 				coverArt: d.coverArt || null,
-				publishedToCommunity: Boolean(d.publishedToCommunity || d.finished),
-				finished: Boolean(d.finished),
+				publishedToCommunity: Boolean(d.publishedToCommunity),
+				finished: Boolean(
+					d.finished ||
+					d.completed ||
+					d.publishedToCommunity ||
+					(Array.isArray(d.tags) &&
+						(d.tags.includes("finished") || d.tags.includes("completed"))),
+				),
 			});
 		}
 
@@ -562,5 +590,37 @@ export async function deleteTTMLFromCloud(docId: string): Promise<void> {
 	} catch {}
 
 	// Refresh the local list
+	await fetchUserTTMLList();
+}
+
+export async function updateTTMLFinishedInCloud(
+	docId: string,
+	finished: boolean,
+): Promise<void> {
+	const auth = getFirebaseAuth();
+	const user = auth.currentUser;
+	if (!user) {
+		throw new Error("You must be logged in to update lyrics.");
+	}
+
+	const db = getFirebaseFirestore();
+	const docRef = doc(db, "users", user.uid, "ttmls", docId);
+	const docSnap = await getDoc(docRef);
+	if (!docSnap.exists()) return;
+
+	const d = docSnap.data();
+	const tags = new Set<string>(Array.isArray(d.tags) ? d.tags : []);
+	if (finished) {
+		tags.add("finished");
+	} else {
+		tags.delete("finished");
+	}
+
+	await updateDoc(docRef, {
+		finished,
+		tags: Array.from(tags),
+		updatedAt: Date.now(),
+	});
+
 	await fetchUserTTMLList();
 }

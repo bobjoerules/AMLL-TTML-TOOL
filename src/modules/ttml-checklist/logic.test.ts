@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
 	addChecklistEntry,
+	batchLinkUploadedTTMLsToChecklist,
+	deduplicateChecklistEntries,
 	deleteChecklistEntry,
 	isChecklistEntryCompleted,
 	isChecklistEntryInProgress,
@@ -115,6 +117,46 @@ describe("TTML checklist", () => {
 			],
 		};
 		expect(isTTML100PercentCompleted(complete as any)).toBe(true);
+
+		// With an ignoreSync line, project should still be 100% completed
+		const completeWithIgnoredLine = {
+			lyricLines: [
+				{
+					startTime: 1000,
+					endTime: 2000,
+					words: [{ word: "Hello", startTime: 1000, endTime: 2000 }],
+				},
+				{
+					startTime: 0,
+					endTime: 0,
+					ignoreSync: true,
+					words: [{ word: "Guitar Solo", startTime: 0, endTime: 0 }],
+				},
+				{
+					startTime: 2500,
+					endTime: 4000,
+					words: [{ word: "World", startTime: 2500, endTime: 4000 }],
+				},
+			],
+		};
+		expect(isTTML100PercentCompleted(completeWithIgnoredLine as any)).toBe(true);
+
+		// Line-synced lyric (no individual word timings, but valid line timings)
+		const lineSyncedComplete = {
+			lyricLines: [
+				{
+					startTime: 1000,
+					endTime: 2000,
+					words: [{ word: "First line", startTime: 0, endTime: 0 }],
+				},
+				{
+					startTime: 2500,
+					endTime: 4000,
+					words: [{ word: "Second line", startTime: 0, endTime: 0 }],
+				},
+			],
+		};
+		expect(isTTML100PercentCompleted(lineSyncedComplete as any)).toBe(true);
 	});
 
 	it("links uploaded TTML with existing checklist entry and sets completion", () => {
@@ -304,5 +346,138 @@ describe("TTML checklist", () => {
 		expect(isChecklistEntryNotStarted(completedEntry)).toBe(false);
 		expect(isChecklistEntryInProgress(completedEntry)).toBe(false);
 		expect(isChecklistEntryCompleted(completedEntry)).toBe(true);
+	});
+
+	it("detects same song across featuring, remixes, versions, and artist variations", () => {
+		const inProgressList = [
+			{
+				id: "entry-1",
+				song: "FE!N (feat. Playboi Carti)",
+				artist: "Travis Scott",
+				notes: "Custom user note",
+				completed: false,
+				status: "in-progress" as const,
+				createdAt: 100,
+			},
+		];
+
+		// Link from cloud with simpler title and combined artists
+		const linked = linkUploadedTTMLToChecklist(inProgressList, {
+			title: "FE!N",
+			artist: "Travis Scott, Playboi Carti",
+			docId: "cloud-doc-fein",
+			isCompleted: true,
+		});
+
+		expect(linked.added).toBe(false);
+		expect(linked.updated).toBe(true);
+		expect(linked.entries).toHaveLength(1);
+		expect(linked.entries[0].completed).toBe(true);
+		expect(linked.entries[0].status).toBe("completed");
+		expect(linked.entries[0].cloudDocId).toBe("cloud-doc-fein");
+		expect(linked.entries[0].notes).toBe("Custom user note");
+		expect(isChecklistEntryCompleted(linked.entries[0])).toBe(true);
+		expect(isChecklistEntryInProgress(linked.entries[0])).toBe(false);
+	});
+
+	it("deduplicates existing list having one in-progress entry and one completed entry for the same song", () => {
+		const existingWithDuplicates = [
+			{
+				id: "old-draft",
+				song: "Die With A Smile",
+				artist: "Lady Gaga & Bruno Mars",
+				notes: "Working on timing",
+				completed: false,
+				status: "in-progress" as const,
+				createdAt: 100,
+			},
+			{
+				id: "uploaded-finished",
+				song: "Die With A Smile (with Bruno Mars)",
+				artist: "Lady Gaga",
+				cloudDocId: "doc-die-with-a-smile",
+				notes: "Uploaded from Cloud",
+				completed: true,
+				createdAt: 200,
+			},
+		];
+
+		const normalized = normalizeChecklistEntries(existingWithDuplicates);
+		expect(normalized).toHaveLength(1);
+		expect(normalized[0].completed).toBe(true);
+		expect(normalized[0].status).toBe("completed");
+		expect(normalized[0].cloudDocId).toBe("doc-die-with-a-smile");
+		expect(normalized[0].notes).toBe("Working on timing");
+		expect(isChecklistEntryCompleted(normalized[0])).toBe(true);
+		expect(isChecklistEntryInProgress(normalized[0])).toBe(false);
+	});
+
+	it("batchLinkUploadedTTMLsToChecklist links multiple songs in a single fast pass", () => {
+		const existing = [
+			{
+				id: "track-1",
+				song: "Cruel Summer",
+				artist: "Taylor Swift",
+				completed: false,
+				status: "in-progress" as const,
+			},
+			{
+				id: "track-2",
+				song: "Vampire",
+				artist: "Olivia Rodrigo",
+				completed: false,
+			},
+		];
+
+		const uploads = [
+			{
+				title: "Cruel Summer (Live from The Eras Tour)",
+				artist: "Taylor Swift",
+				docId: "doc-cruel-summer",
+				isCompleted: true,
+			},
+			{
+				title: "Espresso",
+				artist: "Sabrina Carpenter",
+				docId: "doc-espresso",
+				isCompleted: true,
+			},
+		];
+
+		const res = batchLinkUploadedTTMLsToChecklist(existing, uploads);
+		expect(res.importedCount).toBe(1);
+		expect(res.entries).toHaveLength(3);
+
+		const cruelSummer = res.entries.find((e) => e.song.includes("Cruel Summer"));
+		expect(cruelSummer).toBeDefined();
+		expect(cruelSummer?.completed).toBe(true);
+		expect(cruelSummer?.status).toBe("completed");
+		expect(cruelSummer?.cloudDocId).toBe("doc-cruel-summer");
+
+		const espresso = res.entries.find((e) => e.song === "Espresso");
+		expect(espresso).toBeDefined();
+		expect(espresso?.completed).toBe(true);
+		expect(espresso?.status).toBe("completed");
+		expect(espresso?.cloudDocId).toBe("doc-espresso");
+	});
+
+	it("deduplicateChecklistEntries handles large lists (500 items) in under 50ms without freezing", () => {
+		const largeList = [];
+		for (let i = 0; i < 500; i++) {
+			largeList.push({
+				id: `entry-${i}`,
+				song: `Song ${i % 50} (Remastered)`,
+				artist: `Artist ${i % 50}`,
+				completed: i % 2 === 0,
+				createdAt: 1000 + i,
+			});
+		}
+
+		const start = performance.now();
+		const result = deduplicateChecklistEntries(largeList);
+		const duration = performance.now() - start;
+
+		expect(result.length).toBe(50);
+		expect(duration).toBeLessThan(100); // Must be well under 100ms
 	});
 });

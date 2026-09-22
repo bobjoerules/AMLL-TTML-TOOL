@@ -68,12 +68,12 @@ export function isTTML100PercentCompleted(lines: {
 		return false;
 	}
 	const meaningfulLines = lines.lyricLines.filter((l) => {
+		if (l.ignoreSync) return false;
 		const text =
-			l.words
-				?.map((w: any) => w.word)
-				.join("")
-				.trim() || "";
-		return text.length > 0;
+			(Array.isArray(l.words)
+				? l.words.map((w: any) => w.word).join("")
+				: "") || "";
+		return text.trim().length > 0;
 	});
 	if (meaningfulLines.length === 0) return false;
 
@@ -91,27 +91,215 @@ export function isTTML100PercentCompleted(lines: {
 					w.word && typeof w.word === "string" && w.word.trim().length > 0,
 			);
 			if (validWords.length > 0) {
-				return validWords.every(
-					(w: any) =>
-						typeof w.endTime === "number" &&
-						typeof w.startTime === "number" &&
-						w.endTime >= w.startTime &&
-						w.endTime > 0,
+				const hasSyllableSync = validWords.some(
+					(w: any) => typeof w.endTime === "number" && w.endTime > 0,
 				);
+				// If words have individual syllable sync, verify every word has timing
+				if (hasSyllableSync) {
+					return validWords.every(
+						(w: any) =>
+							typeof w.endTime === "number" &&
+							typeof w.startTime === "number" &&
+							w.endTime >= w.startTime &&
+							w.endTime > 0,
+					);
+				}
 			}
 		}
 		return true;
 	});
 }
 
+const normKeyCache = new Map<string, string>();
+
 export function normalizeSongKey(str: string): string {
-	return str
+	if (!str) return "";
+	const cached = normKeyCache.get(str);
+	if (cached !== undefined) return cached;
+
+	const computed = str
 		.toLowerCase()
 		.normalize("NFKD")
 		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/[’'"`´]/g, "")
-		.replace(/[\s\-_.,/\\()[\]{}!?:;]/g, "")
+		.replace(/[’'"`´“”]/g, "")
+		.replace(
+			/[\s\-_.,/\\()[\]{}!?:;~～〜・―—–「」『』【】（）［］〈〉《》〔〕｛｝&+#$*^%@|<>]+/g,
+			"",
+		)
 		.trim();
+
+	if (normKeyCache.size > 5000) normKeyCache.clear();
+	normKeyCache.set(str, computed);
+	return computed;
+}
+
+const baseSongCache = new Map<string, string>();
+
+/**
+ * Strips featuring artists, version info (live, acoustic, remaster, radio edit, etc.),
+ * and extra descriptor parentheticals to extract the core canonical song title.
+ */
+export function getBaseSongTitle(title: string): string {
+	if (!title) return "";
+	const cached = baseSongCache.get(title);
+	if (cached !== undefined) return cached;
+
+	let t = title.trim();
+
+	// Convert unicode/fullwidth brackets to standard brackets
+	t = t
+		.replace(/[（［【「『〈《〔｛]/g, "(")
+		.replace(/[）］】」』〉》〕｝]/g, ")");
+
+	// 1. Remove parenthetical feature descriptions: (feat. ...), (with ...), etc.
+	t = t.replace(
+		/\s*\((?:feat\.?|ft\.?|featuring|with)\s+[^)]+\)/gi,
+		"",
+	);
+	// 2. Remove dash features: - feat. ... or - with ...
+	t = t.replace(
+		/\s*[-–—~〜]\s*(?:feat\.?|ft\.?|featuring|with)\s+.*$/gi,
+		"",
+	);
+	// 3. Remove trailing feat. ... / ft. ...
+	t = t.replace(/\s+(?:feat\.?|ft\.?|featuring|with)\s+.*$/gi, "");
+
+	// 4. Remove common version/descriptor parentheticals
+	const versionRegex =
+		/\s*\((?:remaster(?:ed)?(?:\s+\d{4})?|\d{4}\s+remaster|taylor'?s\s+version|from\s+the\s+vault|live(?:\s+at|\s+from)?(?:\s+[^)]*)?|acoustic(?:\s+version)?|instrumental|clean(?:\s+version)?|explicit(?:\s+version)?|radio\s+edit|radio\s+mix|single\s+version|album\s+version|extended(?:\s+mix|\s+version)?|deluxe(?:\s+edition)?|bonus\s+track|official\s+(?:audio|video|music\s+video)|original\s+soundtrack|ost|from\s+["'][^"']+["']|from\s+the\s+[^)]+|remix)\)/gi;
+	t = t.replace(versionRegex, "");
+
+	// 5. Remove trailing dash versions: - Remastered..., - Live..., etc.
+	const dashVersionRegex =
+		/\s*[-–—~〜]\s*(?:remaster(?:ed)?(?:\s+\d{4})?|\d{4}\s+remaster|taylor'?s\s+version|from\s+the\s+vault|live(?:\s+at|\s+from)?(?:\s+.*)?|acoustic(?:\s+version)?|instrumental|clean(?:\s+version)?|explicit(?:\s+version)?|radio\s+edit|single\s+version|album\s+version|extended(?:\s+mix|\s+version)?|deluxe(?:\s+edition)?|bonus\s+track|official\s+.*|remix)$/gi;
+	t = t.replace(dashVersionRegex, "");
+
+	// 6. If title still has trailing parenthetical e.g. "Song (Subtitle)", extract base if reasonable
+	const genericParenMatch = t.match(/^(.*?)\s*\([^)]+\)\s*$/);
+	if (genericParenMatch && genericParenMatch[1]?.trim().length >= 2) {
+		t = genericParenMatch[1].trim();
+	}
+
+	const result = normalizeSongKey(t);
+	if (baseSongCache.size > 5000) baseSongCache.clear();
+	baseSongCache.set(title, result);
+	return result;
+}
+
+const artistTokensCache = new Map<string, { primary: string; all: string[] }>();
+
+export function extractArtistTokens(artist?: string): {
+	primary: string;
+	all: string[];
+} {
+	if (!artist || !artist.trim()) {
+		return { primary: "", all: [] };
+	}
+
+	const cached = artistTokensCache.get(artist);
+	if (cached !== undefined) return cached;
+
+	const cleanRaw = artist.trim().replace(/^[Tt]he\s+/, "");
+	const rawTokens = cleanRaw
+		.split(/[\/,;+&xX]|\s+(?:and|with|feat\.?|ft\.?|featuring|vs\.?|pres\.?)\s+/i)
+		.map((t) => normalizeSongKey(t))
+		.filter((t) => t.length > 0);
+
+	const primary = rawTokens[0] || normalizeSongKey(cleanRaw);
+	const all = rawTokens.length > 0 ? rawTokens : [primary];
+
+	const res = { primary, all };
+	if (artistTokensCache.size > 5000) artistTokensCache.clear();
+	artistTokensCache.set(artist, res);
+	return res;
+}
+
+export function areArtistsCompatible(
+	artistA?: string,
+	artistB?: string,
+): boolean {
+	const a = (artistA || "").trim();
+	const b = (artistB || "").trim();
+
+	// If either artist is omitted, treat as compatible based on title
+	if (!a || !b) return true;
+
+	const normA = normalizeSongKey(a);
+	const normB = normalizeSongKey(b);
+
+	if (normA === normB) return true;
+
+	const stripTheA = normA.replace(/^the/, "");
+	const stripTheB = normB.replace(/^the/, "");
+	if (stripTheA === stripTheB) return true;
+
+	if (
+		(normA.length >= 3 && normB.includes(normA)) ||
+		(normB.length >= 3 && normA.includes(normB)) ||
+		(stripTheA.length >= 3 && stripTheB.includes(stripTheA)) ||
+		(stripTheB.length >= 3 && stripTheA.includes(stripTheB))
+	) {
+		return true;
+	}
+
+	const tokensA = extractArtistTokens(a);
+	const tokensB = extractArtistTokens(b);
+
+	if (
+		tokensA.primary &&
+		tokensB.primary &&
+		(tokensA.primary === tokensB.primary ||
+			tokensA.primary.replace(/^the/, "") ===
+				tokensB.primary.replace(/^the/, ""))
+	) {
+		return true;
+	}
+
+	if (
+		tokensA.primary.length >= 3 &&
+		tokensB.primary.length >= 3 &&
+		(tokensA.primary.includes(tokensB.primary) ||
+			tokensB.primary.includes(tokensA.primary))
+	) {
+		return true;
+	}
+
+	for (const tA of tokensA.all) {
+		if (tA.length >= 3) {
+			for (const tB of tokensB.all) {
+				if (tB.length >= 3 && (tA === tB || tA.includes(tB) || tB.includes(tA))) {
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+export function areSongTitlesDuplicate(songA: string, songB: string): boolean {
+	if (!songA || !songB) return false;
+
+	const normA = normalizeSongKey(songA);
+	const normB = normalizeSongKey(songB);
+	if (normA && normB && normA === normB) return true;
+
+	const baseA = getBaseSongTitle(songA);
+	const baseB = getBaseSongTitle(songB);
+	if (baseA && baseB && baseA === baseB) return true;
+
+	if (baseA && normB && baseA.length >= 2 && baseA === normB) return true;
+	if (baseB && normA && baseB.length >= 2 && baseB === normA) return true;
+
+	return false;
+}
+
+export function extractSpotifyTrackId(input?: string): string | null {
+	if (!input) return null;
+	const match = input.match(
+		/(?:spotify:track:|https?:\/\/(?:open\.)?spotify\.com\/track\/)?([a-zA-Z0-9]{22})/,
+	);
+	return match ? match[1] : null;
 }
 
 export function areChecklistEntriesDuplicate(
@@ -121,23 +309,81 @@ export function areChecklistEntriesDuplicate(
 	if (a.cloudDocId && b.cloudDocId && a.cloudDocId === b.cloudDocId) {
 		return true;
 	}
-	if (!a.song || !b.song) return false;
-	const normA = normalizeSongKey(a.song);
-	const normB = normalizeSongKey(b.song);
-	if (normA !== normB) return false;
 
-	const artistA = normalizeSongKey(a.artist || "");
-	const artistB = normalizeSongKey(b.artist || "");
-	if (artistA && artistB && artistA !== artistB) {
+	const spotA =
+		(a.source === "spotify" && a.sourceId ? String(a.sourceId) : null) ||
+		extractSpotifyTrackId(a.sourceUrl);
+	const spotB =
+		(b.source === "spotify" && b.sourceId ? String(b.sourceId) : null) ||
+		extractSpotifyTrackId(b.sourceUrl);
+	if (spotA && spotB && spotA === spotB) {
+		return true;
+	}
+
+	if (
+		a.source &&
+		b.source &&
+		a.source === b.source &&
+		a.sourceId !== undefined &&
+		b.sourceId !== undefined &&
+		String(a.sourceId) === String(b.sourceId)
+	) {
+		return true;
+	}
+
+	if (a.sourceUrl && b.sourceUrl && a.sourceUrl === b.sourceUrl) {
+		return true;
+	}
+
+	if (!a.song || !b.song) return false;
+
+	if (!areSongTitlesDuplicate(a.song, b.song)) {
 		return false;
 	}
+
+	if (!areArtistsCompatible(a.artist, b.artist)) {
+		return false;
+	}
+
 	return true;
+}
+
+function mergeNotes(notesA?: string, notesB?: string): string {
+	const a = (notesA || "").trim();
+	const b = (notesB || "").trim();
+	if (!a) return b;
+	if (!b) return a;
+	if (a === b) return a;
+	if (a === "Uploaded from Cloud") return b;
+	if (b === "Uploaded from Cloud") return a;
+	return `${a}\n${b}`;
 }
 
 export function mergeChecklistEntries(
 	primary: TTMLChecklistEntry,
 	secondary: TTMLChecklistEntry,
 ): TTMLChecklistEntry {
+	const isCompleted = Boolean(
+		primary.completed ||
+			secondary.completed ||
+			primary.status === "completed" ||
+			secondary.status === "completed",
+	);
+
+	let status: "not-started" | "in-progress" | "completed" | undefined;
+	if (isCompleted) {
+		status = "completed";
+	} else if (
+		primary.status === "in-progress" ||
+		secondary.status === "in-progress" ||
+		primary.cloudDocId ||
+		secondary.cloudDocId
+	) {
+		status = "in-progress";
+	} else if (primary.status || secondary.status) {
+		status = primary.status || secondary.status;
+	}
+
 	return {
 		id: primary.id,
 		song: primary.song || secondary.song,
@@ -149,17 +395,17 @@ export function mergeChecklistEntries(
 		sourceUrl: primary.sourceUrl || secondary.sourceUrl,
 		cloudDocId: primary.cloudDocId || secondary.cloudDocId,
 		cloudAudioUrl: primary.cloudAudioUrl || secondary.cloudAudioUrl,
-		notes:
-			primary.notes && secondary.notes && primary.notes !== secondary.notes
-				? `${primary.notes}\n${secondary.notes}`
-				: primary.notes || secondary.notes,
-		completed: primary.completed || secondary.completed,
-		status: primary.status || secondary.status,
+		notes: mergeNotes(primary.notes, secondary.notes),
+		completed: isCompleted,
+		status,
 		...(primary.uploadedToDatabase || secondary.uploadedToDatabase
 			? { uploadedToDatabase: true }
 			: {}),
 		...(primary.favorite || secondary.favorite ? { favorite: true } : {}),
-		createdAt: Math.max(primary.createdAt, secondary.createdAt),
+		createdAt: Math.min(
+			primary.createdAt || Date.now(),
+			secondary.createdAt || Date.now(),
+		),
 	};
 }
 
@@ -168,50 +414,102 @@ export function deduplicateChecklistEntries(
 ): TTMLChecklistEntry[] {
 	const result: TTMLChecklistEntry[] = [];
 	const cloudMap = new Map<string, number>();
-	const songMap = new Map<string, number[]>();
+	const spotifyMap = new Map<string, number>();
+	const sourceMap = new Map<string, number>();
+	const songKeyMap = new Map<string, number[]>();
 
-	const normSongCache = new WeakMap<TTMLChecklistEntry, string>();
-	const normArtistCache = new WeakMap<TTMLChecklistEntry, string>();
-
-	const getNormSong = (e: TTMLChecklistEntry): string => {
-		let val = normSongCache.get(e);
-		if (val === undefined) {
-			val = normalizeSongKey(e.song || "");
-			normSongCache.set(e, val);
+	const registerEntry = (entry: TTMLChecklistEntry, index: number) => {
+		if (entry.cloudDocId) {
+			cloudMap.set(entry.cloudDocId, index);
 		}
-		return val;
-	};
-
-	const getNormArtist = (e: TTMLChecklistEntry): string => {
-		let val = normArtistCache.get(e);
-		if (val === undefined) {
-			val = normalizeSongKey(e.artist || "");
-			normArtistCache.set(e, val);
+		const spotId =
+			(entry.source === "spotify" && entry.sourceId ? String(entry.sourceId) : null) ||
+			extractSpotifyTrackId(entry.sourceUrl);
+		if (spotId) {
+			spotifyMap.set(spotId, index);
 		}
-		return val;
+		if (entry.source && entry.sourceId !== undefined) {
+			sourceMap.set(`${entry.source}:${entry.sourceId}`, index);
+		}
+		if (entry.song) {
+			const norm = normalizeSongKey(entry.song);
+			if (norm) {
+				const list = songKeyMap.get(norm);
+				if (list) {
+					if (!list.includes(index)) list.push(index);
+				} else {
+					songKeyMap.set(norm, [index]);
+				}
+			}
+			const base = getBaseSongTitle(entry.song);
+			if (base && base !== norm) {
+				const list = songKeyMap.get(base);
+				if (list) {
+					if (!list.includes(index)) list.push(index);
+				} else {
+					songKeyMap.set(base, [index]);
+				}
+			}
+		}
 	};
 
 	for (const entry of entries) {
 		let existingIndex = -1;
 
+		// 1. Direct cloud document ID match
 		if (entry.cloudDocId && cloudMap.has(entry.cloudDocId)) {
 			existingIndex = cloudMap.get(entry.cloudDocId)!;
 		}
 
+		// 2. Direct Spotify ID match
+		if (existingIndex === -1) {
+			const spotId =
+				(entry.source === "spotify" && entry.sourceId ? String(entry.sourceId) : null) ||
+				extractSpotifyTrackId(entry.sourceUrl);
+			if (spotId && spotifyMap.has(spotId)) {
+				existingIndex = spotifyMap.get(spotId)!;
+			}
+		}
+
+		// 3. Direct source + sourceId match
+		if (existingIndex === -1 && entry.source && entry.sourceId !== undefined) {
+			const srcKey = `${entry.source}:${entry.sourceId}`;
+			if (sourceMap.has(srcKey)) {
+				existingIndex = sourceMap.get(srcKey)!;
+			}
+		}
+
+		// 4. Candidate lookup based on matching normalized/base song titles
 		if (existingIndex === -1 && entry.song) {
-			const normSong = getNormSong(entry);
-			if (normSong) {
-				const candidates = songMap.get(normSong);
-				if (candidates) {
-					const normArtist = getNormArtist(entry);
-					for (const idx of candidates) {
-						const target = result[idx];
-						const targetArtist = getNormArtist(target);
-						if (!normArtist || !targetArtist || normArtist === targetArtist) {
-							existingIndex = idx;
-							break;
-						}
-					}
+			const candidates = new Set<number>();
+			const norm = normalizeSongKey(entry.song);
+			const base = getBaseSongTitle(entry.song);
+
+			if (norm && songKeyMap.has(norm)) {
+				for (const idx of songKeyMap.get(norm)!) {
+					candidates.add(idx);
+				}
+			}
+			if (base && songKeyMap.has(base)) {
+				for (const idx of songKeyMap.get(base)!) {
+					candidates.add(idx);
+				}
+			}
+
+			for (const idx of candidates) {
+				if (areChecklistEntriesDuplicate(result[idx], entry)) {
+					existingIndex = idx;
+					break;
+				}
+			}
+		}
+
+		// 5. Fallback scan only if entry had no song title (rare legacy edge case)
+		if (existingIndex === -1 && !entry.song) {
+			for (let i = 0; i < result.length; i++) {
+				if (areChecklistEntriesDuplicate(result[i], entry)) {
+					existingIndex = i;
+					break;
 				}
 			}
 		}
@@ -219,24 +517,11 @@ export function deduplicateChecklistEntries(
 		if (existingIndex >= 0) {
 			const merged = mergeChecklistEntries(result[existingIndex], entry);
 			result[existingIndex] = merged;
-			if (merged.cloudDocId) {
-				cloudMap.set(merged.cloudDocId, existingIndex);
-			}
+			registerEntry(merged, existingIndex);
 		} else {
 			const newIdx = result.length;
 			result.push(entry);
-			if (entry.cloudDocId) {
-				cloudMap.set(entry.cloudDocId, newIdx);
-			}
-			const normSong = getNormSong(entry);
-			if (normSong) {
-				const list = songMap.get(normSong);
-				if (list) {
-					list.push(newIdx);
-				} else {
-					songMap.set(normSong, [newIdx]);
-				}
-			}
+			registerEntry(entry, newIdx);
 		}
 	}
 	return result;
@@ -469,13 +754,15 @@ export function linkUploadedTTMLToChecklist(
 
 		if (isMatch) {
 			found = true;
+			const shouldBeCompleted = isCompleted ? true : entry.completed;
 			return {
 				...entry,
 				cloudDocId: docId,
 				cloudAudioUrl: audioUrl || entry.cloudAudioUrl,
 				album: album || entry.album,
 				coverArt: coverArt || entry.coverArt,
-				completed: isCompleted ? true : entry.completed,
+				completed: shouldBeCompleted,
+				status: shouldBeCompleted ? "completed" : entry.status,
 			};
 		}
 		return entry;
@@ -499,6 +786,7 @@ export function linkUploadedTTMLToChecklist(
 		cloudAudioUrl: audioUrl,
 		notes: "Uploaded from Cloud",
 		completed: isCompleted,
+		status: isCompleted ? "completed" : "in-progress",
 		createdAt: Date.now(),
 	};
 
@@ -509,13 +797,114 @@ export function linkUploadedTTMLToChecklist(
 	};
 }
 
+export interface UploadedTTMLPayload {
+	title: string;
+	artist: string;
+	album?: string;
+	coverArt?: string | null;
+	docId: string;
+	rawTTML?: string;
+	audioUrl?: string | null;
+	isCompleted?: boolean;
+}
+
+export function batchLinkUploadedTTMLsToChecklist(
+	entries: TTMLChecklistEntry[],
+	uploads: UploadedTTMLPayload[],
+): { entries: TTMLChecklistEntry[]; importedCount: number } {
+	if (uploads.length === 0) {
+		return { entries, importedCount: 0 };
+	}
+
+	let currentEntries = [...entries];
+	let importedCount = 0;
+
+	for (const uploaded of uploads) {
+		const title = uploaded.title?.trim() || "Untitled";
+		const artist = uploaded.artist?.trim() || "";
+		const album = uploaded.album?.trim() || undefined;
+		const coverArt = uploaded.coverArt?.trim() || undefined;
+		const audioUrl = uploaded.audioUrl?.trim() || undefined;
+		const docId = uploaded.docId;
+
+		let isCompleted = uploaded.isCompleted ?? false;
+		if (!isCompleted && uploaded.rawTTML) {
+			try {
+				const parsed = parseLyric(uploaded.rawTTML);
+				isCompleted = isTTML100PercentCompleted(parsed);
+			} catch {
+				// ignore parse error
+			}
+		}
+
+		let matchedIndex = -1;
+		for (let i = 0; i < currentEntries.length; i++) {
+			const entry = currentEntries[i];
+			if (
+				(entry.cloudDocId && entry.cloudDocId === docId) ||
+				areChecklistEntriesDuplicate(entry, {
+					song: title,
+					artist,
+					cloudDocId: docId,
+				})
+			) {
+				matchedIndex = i;
+				break;
+			}
+		}
+
+		if (matchedIndex >= 0) {
+			const existing = currentEntries[matchedIndex];
+			const shouldBeCompleted = isCompleted ? true : existing.completed;
+			currentEntries[matchedIndex] = {
+				...existing,
+				cloudDocId: docId,
+				cloudAudioUrl: audioUrl || existing.cloudAudioUrl,
+				album: album || existing.album,
+				coverArt: coverArt || existing.coverArt,
+				completed: shouldBeCompleted,
+				status: shouldBeCompleted ? "completed" : existing.status,
+			};
+		} else {
+			const newEntry: TTMLChecklistEntry = {
+				id: uid(),
+				song: title,
+				artist,
+				album,
+				coverArt,
+				cloudDocId: docId,
+				cloudAudioUrl: audioUrl,
+				notes: "Uploaded from Cloud",
+				completed: isCompleted,
+				status: isCompleted ? "completed" : "in-progress",
+				createdAt: Date.now(),
+			};
+			currentEntries.push(newEntry);
+			importedCount++;
+		}
+	}
+
+	return {
+		entries: normalizeChecklistEntries(currentEntries),
+		importedCount,
+	};
+}
+
 export function setChecklistEntryCompleted(
 	entries: TTMLChecklistEntry[],
 	id: string,
 	completed: boolean,
 ): TTMLChecklistEntry[] {
 	return normalizeChecklistEntries(
-		entries.map((entry) => (entry.id === id ? { ...entry, completed } : entry)),
+		entries.map((entry) =>
+			entry.id === id
+				? {
+						...entry,
+						completed,
+						status: completed ? "completed" : undefined,
+				  }
+				: entry,
+		),
 	);
 }
 

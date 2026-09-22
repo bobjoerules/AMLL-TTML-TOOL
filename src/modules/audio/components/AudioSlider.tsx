@@ -299,7 +299,19 @@ export const AudioSlider = memo(() => {
 			duration: duration,
 			interact: true,
 		});
+		ws.on("dragstart", () => {
+			isDraggingRef.current = true;
+		});
+		ws.on("dragend", () => {
+			isDraggingRef.current = false;
+			const time = audioEngine.musicCurrentTime;
+			setCurrentTime(Math.round(time * 1000));
+			if (waveSurferRef.current) {
+				waveSurferRef.current.setTime(time);
+			}
+		});
 		ws.on("interaction", (newTime: number) => {
+			setCurrentTime(Math.round(newTime * 1000));
 			audioEngine.seekMusic(newTime);
 		});
 		waveSurferRef.current = ws;
@@ -378,6 +390,7 @@ export const AudioSlider = memo(() => {
 		let isDestroyed = false;
 
 		const syncClock = () => {
+			if (isDraggingRef.current) return;
 			const time = audioEngine.musicCurrentTime;
 			setCurrentTime(Math.round(time * 1000));
 			if (waveSurferRef.current) {
@@ -391,10 +404,12 @@ export const AudioSlider = memo(() => {
 				return;
 			}
 
-			const currentTime = audioEngine.musicCurrentTime;
-			setCurrentTime(Math.round(currentTime * 1000));
-			if (waveSurferRef.current) {
-				waveSurferRef.current.setTime(currentTime);
+			if (!isDraggingRef.current) {
+				const currentTime = audioEngine.musicCurrentTime;
+				setCurrentTime(Math.round(currentTime * 1000));
+				if (waveSurferRef.current) {
+					waveSurferRef.current.setTime(currentTime);
+				}
 			}
 			frameId = requestAnimationFrame(onFrame);
 		};
@@ -411,6 +426,14 @@ export const AudioSlider = memo(() => {
 		const handleSeek = syncClock;
 		const handleTimeUpdate = syncClock;
 		const handlePlaybackRateChange = syncClock;
+
+		const handleWindowMouseUp = () => {
+			if (isDraggingRef.current) {
+				isDraggingRef.current = false;
+				syncClock();
+			}
+		};
+		window.addEventListener("mouseup", handleWindowMouseUp);
 
 		audioEngine.addEventListener("music-unload", handleMusicUnload);
 		audioEngine.addEventListener("music-resume", handlePlay);
@@ -431,6 +454,7 @@ export const AudioSlider = memo(() => {
 			isDestroyed = true;
 			if (frameId !== null) cancelAnimationFrame(frameId);
 			destroyWaveSurfer();
+			window.removeEventListener("mouseup", handleWindowMouseUp);
 			audioEngine.removeEventListener("music-unload", handleMusicUnload);
 			audioEngine.removeEventListener("music-resume", handlePlay);
 			audioEngine.removeEventListener("music-pause", handlePause);

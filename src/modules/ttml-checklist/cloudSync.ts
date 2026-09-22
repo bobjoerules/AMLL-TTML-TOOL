@@ -17,10 +17,12 @@ import {
 	isFirebaseConfigured,
 } from "$/modules/cloud/firebase";
 import {
+	batchLinkUploadedTTMLsToChecklist,
 	deduplicateChecklistEntries,
 	linkUploadedTTMLToChecklist,
 	normalizeChecklistEntries,
 	type TTMLChecklistEntry,
+	type UploadedTTMLPayload,
 } from "./logic";
 import { ttmlChecklistAtom } from "./states";
 
@@ -49,8 +51,7 @@ export async function syncFinishedCloudTTMLsToChecklist(
 		const collectionRef = collection(db, "users", uid, "ttmls");
 		const snap = await getDocs(collectionRef);
 
-		let updatedEntries = [...currentEntries];
-		let importedCount = 0;
+		const finishedUploads: UploadedTTMLPayload[] = [];
 
 		snap.forEach((docSnap) => {
 			const d = docSnap.data();
@@ -60,7 +61,7 @@ export async function syncFinishedCloudTTMLsToChecklist(
 				d.publishedToCommunity === true;
 
 			if (isFinished) {
-				const linkResult = linkUploadedTTMLToChecklist(updatedEntries, {
+				finishedUploads.push({
 					title: d.title || "Untitled",
 					artist: d.artist || "",
 					album: d.album || undefined,
@@ -70,18 +71,10 @@ export async function syncFinishedCloudTTMLsToChecklist(
 					audioUrl: d.audioUrl || null,
 					isCompleted: true,
 				});
-
-				if (linkResult.added || linkResult.updated) {
-					updatedEntries = linkResult.entries;
-					if (linkResult.added) importedCount++;
-				}
 			}
 		});
 
-		return {
-			entries: normalizeChecklistEntries(updatedEntries),
-			importedCount,
-		};
+		return batchLinkUploadedTTMLsToChecklist(currentEntries, finishedUploads);
 	} catch (err) {
 		console.warn("Could not sync finished cloud TTMLs to checklist:", err);
 		return { entries: currentEntries, importedCount: 0 };
@@ -236,12 +229,14 @@ export function useChecklistCloudSync() {
 	const isRemoteUpdateRef = useRef(false);
 	const lastUploadedHashRef = useRef("");
 	const isInitialSyncDoneRef = useRef(false);
+	const hasCheckedCloudTTMLsRef = useRef(false);
 	const currentSyncedUidRef = useRef<string | null>(null);
 
 	// Realtime listener when logged in
 	useEffect(() => {
 		if (!user?.uid || !isFirebaseConfigured()) {
 			isInitialSyncDoneRef.current = false;
+			hasCheckedCloudTTMLsRef.current = false;
 			currentSyncedUidRef.current = null;
 			return;
 		}
@@ -250,6 +245,7 @@ export function useChecklistCloudSync() {
 		if (currentSyncedUidRef.current !== user.uid) {
 			currentSyncedUidRef.current = user.uid;
 			isInitialSyncDoneRef.current = false;
+			hasCheckedCloudTTMLsRef.current = false;
 			lastUploadedHashRef.current = "";
 		}
 
@@ -276,12 +272,17 @@ export function useChecklistCloudSync() {
 							}
 						}
 
-						// Scan for finished cloud TTMLs and incorporate them
-						const finishedSync = await syncFinishedCloudTTMLsToChecklist(
-							remoteEntries,
-							user.uid,
-						);
-						remoteEntries = finishedSync.entries;
+						let importedCount = 0;
+						// Only scan for finished cloud TTMLs ONCE per session/user, NOT on every recurring snapshot update
+						if (!hasCheckedCloudTTMLsRef.current) {
+							hasCheckedCloudTTMLsRef.current = true;
+							const finishedSync = await syncFinishedCloudTTMLsToChecklist(
+								remoteEntries,
+								user.uid,
+							);
+							remoteEntries = finishedSync.entries;
+							importedCount = finishedSync.importedCount;
+						}
 
 						const currentEntries = globalStore.get(ttmlChecklistAtom);
 
@@ -302,7 +303,7 @@ export function useChecklistCloudSync() {
 									...currentEntries,
 								]);
 								if (
-									finishedSync.importedCount > 0 ||
+									importedCount > 0 ||
 									resolvedEntries.length !== remoteEntries.length
 								) {
 									void saveChecklistToCloud(resolvedEntries, user.uid);

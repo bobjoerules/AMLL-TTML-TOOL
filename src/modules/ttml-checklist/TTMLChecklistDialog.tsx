@@ -1471,34 +1471,18 @@ export const TTMLChecklistDialog = () => {
 		(albumTracks: AlbumTrackItem[]) => {
 			if (!albumTracks.length) return;
 
-			const existingKeys = new Set(
-				entries.map(
-					(item) => `${item.song.toLowerCase()}|${item.artist.toLowerCase()}`,
-				),
-			);
-
-			const newEntries: TTMLChecklistEntry[] = [];
+			let nextList = [...entries];
 			for (const t of albumTracks) {
-				const key = `${t.song.toLowerCase()}|${t.artist.toLowerCase()}`;
-				if (!existingKeys.has(key)) {
-					existingKeys.add(key);
-					newEntries.push(
-						createChecklistEntry({
-							song: t.song,
-							artist: t.artist,
-							album: t.album,
-							coverArt: t.coverArt,
-							source: t.source,
-							sourceId: t.sourceId,
-						}),
-					);
-				}
+				nextList = addChecklistEntry(nextList, {
+					song: t.song,
+					artist: t.artist,
+					album: t.album,
+					coverArt: t.coverArt,
+					source: t.source,
+					sourceId: t.sourceId,
+				});
 			}
-
-			if (newEntries.length > 0) {
-				const nextList = [...newEntries, ...entries];
-				save(nextList);
-			}
+			save(nextList);
 		},
 		[entries, save],
 	);

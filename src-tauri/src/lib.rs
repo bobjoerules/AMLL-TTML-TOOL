@@ -49,7 +49,7 @@ fn connect_discord() -> Result<DiscordIpcClient, String> {
 }
 
 #[tauri::command]
-fn set_discord_activity(
+async fn set_discord_activity(
     payload: DiscordActivityPayload,
     discord: tauri::State<'_, DiscordState>,
 ) -> Result<(), String> {
@@ -148,7 +148,7 @@ fn set_discord_activity(
 }
 
 #[tauri::command]
-fn clear_discord_activity(discord: tauri::State<'_, DiscordState>) -> Result<(), String> {
+async fn clear_discord_activity(discord: tauri::State<'_, DiscordState>) -> Result<(), String> {
     let mut connection = discord.0.lock().map_err(|e| e.to_string())?;
     if let Some(client) = connection.client.as_mut() {
         let result = client.clear_activity().map_err(|e| e.to_string());
