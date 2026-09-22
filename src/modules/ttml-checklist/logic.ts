@@ -14,6 +14,7 @@ export interface TTMLChecklistEntry {
 	cloudAudioUrl?: string;
 	notes: string;
 	completed: boolean;
+	status?: "not-started" | "in-progress" | "completed";
 	favorite?: boolean;
 	uploadedToDatabase?: boolean;
 	createdAt: number;
@@ -30,9 +31,27 @@ export type TTMLChecklistEntryInput = {
 	cloudDocId?: string;
 	cloudAudioUrl?: string;
 	notes?: string;
+	completed?: boolean;
+	status?: "not-started" | "in-progress" | "completed";
 	favorite?: boolean;
 	uploadedToDatabase?: boolean;
 };
+
+export function isChecklistEntryCompleted(entry: TTMLChecklistEntry): boolean {
+	return Boolean(entry.completed || entry.status === "completed");
+}
+
+export function isChecklistEntryInProgress(entry: TTMLChecklistEntry): boolean {
+	if (isChecklistEntryCompleted(entry)) return false;
+	if (entry.status === "in-progress") return true;
+	if (entry.status === "not-started") return false;
+	return Boolean(entry.cloudDocId);
+}
+
+export function isChecklistEntryNotStarted(entry: TTMLChecklistEntry): boolean {
+	if (isChecklistEntryCompleted(entry)) return false;
+	return !isChecklistEntryInProgress(entry);
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -135,6 +154,7 @@ export function mergeChecklistEntries(
 				? `${primary.notes}\n${secondary.notes}`
 				: primary.notes || secondary.notes,
 		completed: primary.completed || secondary.completed,
+		status: primary.status || secondary.status,
 		...(primary.uploadedToDatabase || secondary.uploadedToDatabase
 			? { uploadedToDatabase: true }
 			: {}),
@@ -266,6 +286,12 @@ export function normalizeChecklistEntries(
 						: undefined,
 				notes: typeof item.notes === "string" ? item.notes.trim() : "",
 				completed: item.completed === true,
+				status:
+					item.status === "not-started" ||
+					item.status === "in-progress" ||
+					item.status === "completed"
+						? item.status
+						: undefined,
 				...(item.uploadedToDatabase === true
 					? { uploadedToDatabase: true }
 					: {}),
@@ -304,7 +330,8 @@ export function createChecklistEntry(
 		cloudDocId: input.cloudDocId?.trim() || undefined,
 		cloudAudioUrl: input.cloudAudioUrl?.trim() || undefined,
 		notes: input.notes?.trim() ?? "",
-		completed: false,
+		completed: input.completed ?? (input.status === "completed"),
+		status: input.status,
 		...(input.uploadedToDatabase ? { uploadedToDatabase: true } : {}),
 		...(input.favorite ? { favorite: true } : {}),
 		createdAt,
@@ -321,6 +348,23 @@ export function toggleChecklistEntryFavorite(
 				? { ...entry, favorite: !entry.favorite ? true : undefined }
 				: entry,
 		),
+	);
+}
+
+export function toggleChecklistEntryComplete(
+	entries: TTMLChecklistEntry[],
+	id: string,
+): TTMLChecklistEntry[] {
+	return normalizeChecklistEntries(
+		entries.map((entry) => {
+			if (entry.id !== id) return entry;
+			const nextCompleted = !entry.completed;
+			return {
+				...entry,
+				completed: nextCompleted,
+				status: nextCompleted ? "completed" : undefined,
+			};
+		}),
 	);
 }
 
@@ -366,6 +410,13 @@ export function updateChecklistEntry(
 						cloudDocId: input.cloudDocId ?? entry.cloudDocId,
 						cloudAudioUrl: input.cloudAudioUrl ?? entry.cloudAudioUrl,
 						notes: input.notes?.trim() ?? "",
+						completed:
+							input.completed !== undefined
+								? input.completed
+								: input.status === "completed"
+									? true
+									: entry.completed,
+						status: input.status !== undefined ? input.status : entry.status,
 						uploadedToDatabase:
 							input.uploadedToDatabase !== undefined
 								? input.uploadedToDatabase
@@ -425,7 +476,6 @@ export function linkUploadedTTMLToChecklist(
 				album: album || entry.album,
 				coverArt: coverArt || entry.coverArt,
 				completed: isCompleted ? true : entry.completed,
-				uploadedToDatabase: true,
 			};
 		}
 		return entry;
@@ -449,7 +499,6 @@ export function linkUploadedTTMLToChecklist(
 		cloudAudioUrl: audioUrl,
 		notes: "Uploaded from Cloud",
 		completed: isCompleted,
-		uploadedToDatabase: true,
 		createdAt: Date.now(),
 	};
 

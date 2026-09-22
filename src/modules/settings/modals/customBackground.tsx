@@ -18,6 +18,11 @@ import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import {
+	backgroundModeAtom,
+	selectedGradientAtom,
+	useCustomGradientAtom,
+} from "$/modules/settings/states";
 
 const CUSTOM_BACKGROUND_DB = "amll-custom-background";
 const CUSTOM_BACKGROUND_STORE = "background-image";
@@ -25,17 +30,26 @@ const CUSTOM_BACKGROUND_KEY = "main";
 
 type CustomBackgroundRecord = {
 	key: string;
-	blob: Blob;
+	blob?: Blob;
+	buffer?: ArrayBuffer;
+	mime?: string;
 	updatedAt: number;
 };
 
-const customBackgroundDbPromise = openDB(CUSTOM_BACKGROUND_DB, 1, {
-	upgrade(db) {
-		if (!db.objectStoreNames.contains(CUSTOM_BACKGROUND_STORE)) {
-			db.createObjectStore(CUSTOM_BACKGROUND_STORE, { keyPath: "key" });
-		}
-	},
-});
+const getCustomBackgroundDb = async () => {
+	if (typeof indexedDB === "undefined") return null;
+	try {
+		return await openDB(CUSTOM_BACKGROUND_DB, 1, {
+			upgrade(db) {
+				if (!db.objectStoreNames.contains(CUSTOM_BACKGROUND_STORE)) {
+					db.createObjectStore(CUSTOM_BACKGROUND_STORE, { keyPath: "key" });
+				}
+			},
+		});
+	} catch {
+		return null;
+	}
+};
 
 const readLegacyCustomBackground = async () => {
 	try {
@@ -61,41 +75,51 @@ const readLegacyCustomBackground = async () => {
 
 export const readCustomBackgroundBlob = async () => {
 	try {
-		const db = await customBackgroundDbPromise;
-		const record = (await db.get(
-			CUSTOM_BACKGROUND_STORE,
-			CUSTOM_BACKGROUND_KEY,
-		)) as CustomBackgroundRecord | undefined;
-		if (record?.blob) return record.blob;
-	} catch {}
+		const db = await getCustomBackgroundDb();
+		if (db) {
+			const record = (await db.get(
+				CUSTOM_BACKGROUND_STORE,
+				CUSTOM_BACKGROUND_KEY,
+			)) as CustomBackgroundRecord | undefined;
+			if (record) {
+				if (record.buffer && record.mime) {
+					return new Blob([record.buffer], { type: record.mime });
+				}
+				if (record.blob) return record.blob;
+			}
+		}
+	} catch (e) {
+		console.warn("Failed to read custom background from IndexedDB:", e);
+	}
 	const legacy = await readLegacyCustomBackground();
 	if (!legacy) return null;
 	try {
-		const db = await customBackgroundDbPromise;
-		const record: CustomBackgroundRecord = {
-			key: CUSTOM_BACKGROUND_KEY,
-			blob: legacy,
-			updatedAt: Date.now(),
-		};
-		await db.put(CUSTOM_BACKGROUND_STORE, record);
+		await writeCustomBackgroundBlob(legacy);
 	} catch {}
 	return legacy;
 };
 
 export const writeCustomBackgroundBlob = async (blob: Blob | null) => {
 	try {
-		const db = await customBackgroundDbPromise;
+		const db = await getCustomBackgroundDb();
+		if (!db) return;
 		if (!blob) {
 			await db.delete(CUSTOM_BACKGROUND_STORE, CUSTOM_BACKGROUND_KEY);
 			return;
 		}
+		const buffer = await blob.arrayBuffer();
+		const mime = blob.type || "image/png";
 		const record: CustomBackgroundRecord = {
 			key: CUSTOM_BACKGROUND_KEY,
 			blob,
+			buffer,
+			mime,
 			updatedAt: Date.now(),
 		};
 		await db.put(CUSTOM_BACKGROUND_STORE, record);
-	} catch {}
+	} catch (e) {
+		console.warn("Failed to write custom background to IndexedDB:", e);
+	}
 };
 
 const customBackgroundImageValueAtom = atom<string | null>(null);
@@ -132,6 +156,17 @@ export const customBackgroundImageInitAtom = atom(null, async (get, set) => {
 	set(customBackgroundImageValueAtom, url);
 });
 
+export const hasCustomBackgroundAtom = atom((get) => {
+	const mode = get(backgroundModeAtom);
+	if (mode === "image") {
+		return !!get(customBackgroundImageAtom);
+	}
+	if (mode === "gradient") {
+		return !!(get(selectedGradientAtom) || get(useCustomGradientAtom));
+	}
+	return false;
+});
+
 export const customBackgroundOpacityAtom = atomWithStorage(
 	"customBackgroundOpacity",
 	0.8,
@@ -159,6 +194,7 @@ export const SettingsCustomBackgroundSettings = ({
 }) => {
 	const customBackgroundImage = useAtomValue(customBackgroundImageAtom);
 	const setCustomBackgroundImage = useSetAtom(customBackgroundImageAtom);
+	const setBackgroundMode = useSetAtom(backgroundModeAtom);
 	const [customBackgroundOpacity, setCustomBackgroundOpacity] = useAtom(
 		customBackgroundOpacityAtom,
 	);
@@ -176,9 +212,10 @@ export const SettingsCustomBackgroundSettings = ({
 
 	const onSelectBackgroundFile = useCallback(
 		(file: File) => {
+			setBackgroundMode("image");
 			setCustomBackgroundImage(file);
 		},
-		[setCustomBackgroundImage],
+		[setBackgroundMode, setCustomBackgroundImage],
 	);
 
 	return (

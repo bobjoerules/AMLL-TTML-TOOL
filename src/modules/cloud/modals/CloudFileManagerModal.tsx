@@ -16,6 +16,8 @@ import {
 } from "@radix-ui/themes";
 import {
 	ArrowClockwise16Regular,
+	ChevronDown16Regular,
+	ChevronUp16Regular,
 	Cloud24Filled,
 	Cloud24Regular,
 	DataUsage20Regular,
@@ -37,6 +39,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useFileOpener } from "$/hooks/useFileOpener";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
+import { openExternal } from "$/utils/openExternal";
 import {
 	allowConsecutiveBackgroundLinesAtom,
 	lyricTextNormalizationOptionsAtom,
@@ -75,6 +78,495 @@ const formatDate = (timestamp: number): string => {
 	});
 };
 
+export interface SongGroup {
+	key: string;
+	title: string;
+	artist: string;
+	album: string;
+	coverArt?: string | null;
+	latestUpdated: number;
+	versions: CloudTTMLMetadata[];
+	isPublic: boolean;
+	durationMs: number;
+	maxLines: number;
+}
+
+const SongGroupItem: FC<{
+	group: SongGroup;
+	loadingDocId: string | null;
+	deletingDocId: string | null;
+	handleOpenItem: (item: CloudTTMLMetadata) => Promise<void>;
+	handleDownloadRawTTML: (item: CloudTTMLMetadata) => Promise<void>;
+	handleDeleteItem: (item: CloudTTMLMetadata) => Promise<void>;
+}> = ({
+	group,
+	loadingDocId,
+	deletingDocId,
+	handleOpenItem,
+	handleDownloadRawTTML,
+	handleDeleteItem,
+}) => {
+	const { t } = useTranslation();
+	const [selectedVersionId, setSelectedVersionId] = useState<string>(
+		group.versions[0]?.id || "",
+	);
+	const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+	const activeVersion = useMemo(() => {
+		return (
+			group.versions.find((v) => v.id === selectedVersionId) ||
+			group.versions[0]
+		);
+	}, [group.versions, selectedVersionId]);
+
+	if (!activeVersion) return null;
+
+	const hasMultipleVersions = group.versions.length > 1;
+
+	return (
+		<Card
+			variant="surface"
+			style={{
+				width: "100%",
+				boxSizing: "border-box",
+				padding: "10px 14px",
+				border: "1px solid var(--gray-a4)",
+				borderRadius: "12px",
+				backgroundColor: "var(--color-surface)",
+				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
+			}}
+		>
+			<Flex direction="column" gap="2">
+				<Flex gap="3" align="center" style={{ width: "100%", minWidth: 0 }}>
+					{/* Cover Art / Icon */}
+					<Box
+						style={{
+							width: "48px",
+							height: "48px",
+							minWidth: "48px",
+							borderRadius: "10px",
+							overflow: "hidden",
+							backgroundColor: "var(--gray-a4)",
+							border: "1px solid var(--gray-a5)",
+							boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							flexShrink: 0,
+						}}
+					>
+						{activeVersion.coverArt || group.coverArt ? (
+							<img
+								src={activeVersion.coverArt || group.coverArt!}
+								alt={group.title}
+								loading="lazy"
+								style={{
+									width: "100%",
+									height: "100%",
+									objectFit: "cover",
+								}}
+							/>
+						) : (
+							<MusicNote2Filled
+								style={{
+									width: 24,
+									height: 24,
+									color: "var(--accent-9)",
+								}}
+							/>
+						)}
+					</Box>
+
+					{/* Song Info */}
+					<Flex
+						direction="column"
+						gap="1"
+						style={{ flex: 1, minWidth: 0 }}
+					>
+						{/* Title, Version Dropdown & Badges */}
+						<Flex
+							align="center"
+							gap="2"
+							wrap="wrap"
+							style={{ minWidth: 0, width: "100%" }}
+						>
+							<Text
+								weight="bold"
+								size="3"
+								title={group.title}
+								style={{
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									minWidth: 0,
+									flexShrink: 1,
+								}}
+							>
+								{group.title}
+							</Text>
+
+							{/* Multiple versions dropdown selector */}
+							{hasMultipleVersions && (
+								<Flex align="center" gap="1" style={{ flexShrink: 0 }}>
+									<Select.Root
+										value={activeVersion.id}
+										onValueChange={(val) => setSelectedVersionId(val)}
+										size="1"
+									>
+										<Select.Trigger
+											style={{
+												borderRadius: "6px",
+												fontWeight: 600,
+												fontSize: "12px",
+												height: "22px",
+												padding: "0 8px",
+											}}
+										/>
+										<Select.Content>
+											{group.versions.map((ver, idx) => (
+												<Select.Item key={ver.id} value={ver.id}>
+													v{group.versions.length - idx}
+													{idx === 0 ? " (Latest)" : ""} • {formatDate(ver.updatedAt || ver.createdAt)}
+												</Select.Item>
+											))}
+										</Select.Content>
+									</Select.Root>
+									<Tooltip
+										content={
+											isExpanded
+												? t("cloud.collapseVersions", "Collapse versions list")
+												: t("cloud.expandVersions", "Expand versions list")
+										}
+									>
+										<IconButton
+											size="1"
+											variant="ghost"
+											color="gray"
+											onClick={() => setIsExpanded(!isExpanded)}
+											style={{
+												cursor: "pointer",
+												height: "22px",
+												width: "22px",
+											}}
+											aria-label="Toggle version list"
+										>
+											{isExpanded ? (
+												<ChevronUp16Regular />
+											) : (
+												<ChevronDown16Regular />
+											)}
+										</IconButton>
+									</Tooltip>
+								</Flex>
+							)}
+
+							{activeVersion.publishedToCommunity ? (
+								<Badge
+									size="1"
+									color="green"
+									variant="surface"
+									style={{ fontWeight: 600, flexShrink: 0 }}
+								>
+									{t("cloud.publicBadge", "Public")}
+								</Badge>
+							) : (
+								<Badge
+									size="1"
+									color="gray"
+									variant="surface"
+									style={{ flexShrink: 0 }}
+								>
+									{t("cloud.privateBadge", "Private")}
+								</Badge>
+							)}
+							{activeVersion.durationMs > 0 && (
+								<Badge
+									size="1"
+									color="gray"
+									variant="surface"
+									style={{ flexShrink: 0 }}
+								>
+									{formatDuration(activeVersion.durationMs)}
+								</Badge>
+							)}
+						</Flex>
+
+						{/* Artist & Album */}
+						<Flex
+							align="center"
+							gap="2"
+							style={{ minWidth: 0, width: "100%" }}
+						>
+							<Text
+								size="2"
+								color="gray"
+								title={group.artist}
+								style={{
+									whiteSpace: "nowrap",
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									minWidth: 0,
+									flexShrink: 1,
+								}}
+							>
+								{group.artist ||
+									t("cloud.unknownArtist", "Unknown Artist")}
+							</Text>
+							{group.album && (
+								<>
+									<Text
+										size="1"
+										color="gray"
+										style={{ flexShrink: 0 }}
+									>
+										•
+									</Text>
+									<Badge
+										size="1"
+										color="gray"
+										variant="surface"
+										title={group.album}
+										style={{
+											maxWidth: "200px",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+											flexShrink: 1,
+										}}
+									>
+										{group.album}
+									</Badge>
+								</>
+							)}
+						</Flex>
+
+						{/* Timestamp */}
+						<Text size="1" color="gray">
+							{t("cloud.updated", "Updated")}{" "}
+							{formatDate(activeVersion.updatedAt || activeVersion.createdAt)}
+						</Text>
+					</Flex>
+
+					{/* Actions for Active Version */}
+					<Flex
+						gap="2"
+						align="center"
+						style={{ flexShrink: 0, marginLeft: "auto" }}
+					>
+						{/* Open in Editor */}
+						<Button
+							size="2"
+							variant="solid"
+							disabled={
+								loadingDocId === activeVersion.id ||
+								deletingDocId === activeVersion.id
+							}
+							onClick={() => handleOpenItem(activeVersion)}
+							style={{
+								borderRadius: "8px",
+								cursor: "pointer",
+							}}
+						>
+							{loadingDocId === activeVersion.id ? (
+								<Spinner size="1" />
+							) : (
+								<>
+									<Play16Regular />
+									{t("cloud.openInEditor", "Open")}
+								</>
+							)}
+						</Button>
+
+						{/* Download Raw TTML */}
+						<Tooltip
+							content={t(
+								"cloud.downloadTTML",
+								"Download .ttml file",
+							)}
+						>
+							<IconButton
+								size="2"
+								variant="surface"
+								color="gray"
+								disabled={
+									loadingDocId === activeVersion.id ||
+									deletingDocId === activeVersion.id
+								}
+								onClick={() => handleDownloadRawTTML(activeVersion)}
+								aria-label={t(
+									"cloud.downloadTTML",
+									"Download .ttml file",
+								)}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								<DocumentArrowDown16Regular />
+							</IconButton>
+						</Tooltip>
+
+						{/* Delete */}
+						<Tooltip
+							content={t(
+								"cloud.deleteTooltip",
+								"Delete from Cloud",
+							)}
+						>
+							<IconButton
+								size="2"
+								variant="soft"
+								color="red"
+								disabled={
+									loadingDocId === activeVersion.id ||
+									deletingDocId === activeVersion.id
+								}
+								onClick={() => handleDeleteItem(activeVersion)}
+								aria-label={t("cloud.delete", "Delete")}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								{deletingDocId === activeVersion.id ? (
+									<Spinner size="1" />
+								) : (
+									<Delete16Regular />
+								)}
+							</IconButton>
+						</Tooltip>
+					</Flex>
+				</Flex>
+
+				{/* Expanded Versions Dropdown List */}
+				{hasMultipleVersions && isExpanded && (
+					<Flex
+						direction="column"
+						gap="2"
+						style={{
+							marginTop: "8px",
+							paddingTop: "8px",
+							borderTop: "1px solid var(--gray-a4)",
+							paddingLeft: "12px",
+						}}
+					>
+						<Text size="1" color="gray" weight="bold">
+							{t("cloud.savedVersions", "All Saved Versions")} ({group.versions.length})
+						</Text>
+						{group.versions.map((ver, vIdx) => {
+							const isSelected = ver.id === activeVersion.id;
+							return (
+								<Flex
+									key={ver.id}
+									align="center"
+									justify="between"
+									gap="2"
+									style={{
+										padding: "6px 10px",
+										borderRadius: "8px",
+										backgroundColor: isSelected
+											? "var(--accent-a3)"
+											: "var(--gray-a2)",
+										border: isSelected
+											? "1px solid var(--accent-a6)"
+											: "1px solid var(--gray-a3)",
+									}}
+								>
+									<Flex align="center" gap="2" wrap="wrap" style={{ minWidth: 0, flex: 1 }}>
+										<Text size="1" weight="bold">
+											v{group.versions.length - vIdx}
+											{vIdx === 0 && (
+												<Text color="accent" size="1" style={{ marginLeft: "4px" }}>
+													({t("cloud.latest", "Latest")})
+												</Text>
+											)}
+										</Text>
+										{ver.publishedToCommunity ? (
+											<Badge size="1" color="green" variant="surface">
+												{t("cloud.publicBadge", "Public")}
+											</Badge>
+										) : (
+											<Badge size="1" color="gray" variant="surface">
+												{t("cloud.privateBadge", "Private")}
+											</Badge>
+										)}
+										{ver.durationMs > 0 && (
+											<Badge size="1" color="gray" variant="surface">
+												{formatDuration(ver.durationMs)}
+											</Badge>
+										)}
+										<Text size="1" color="gray">
+											{formatDate(ver.updatedAt || ver.createdAt)}
+										</Text>
+									</Flex>
+
+									<Flex gap="1" align="center" style={{ flexShrink: 0 }}>
+										<Button
+											size="1"
+											variant={isSelected ? "solid" : "soft"}
+											disabled={
+												loadingDocId === ver.id ||
+												deletingDocId === ver.id
+											}
+											onClick={() => handleOpenItem(ver)}
+											style={{ borderRadius: "6px", cursor: "pointer" }}
+										>
+											{loadingDocId === ver.id ? (
+												<Spinner size="1" />
+											) : (
+												<>
+													<Play16Regular />
+													{t("cloud.openInEditor", "Open")}
+												</>
+											)}
+										</Button>
+										<Tooltip content={t("cloud.downloadTTML", "Download .ttml file")}>
+											<IconButton
+												size="1"
+												variant="surface"
+												color="gray"
+												disabled={
+													loadingDocId === ver.id ||
+													deletingDocId === ver.id
+												}
+												onClick={() => handleDownloadRawTTML(ver)}
+												style={{ borderRadius: "6px", cursor: "pointer" }}
+											>
+												<DocumentArrowDown16Regular />
+											</IconButton>
+										</Tooltip>
+										<Tooltip content={t("cloud.deleteTooltip", "Delete from Cloud")}>
+											<IconButton
+												size="1"
+												variant="soft"
+												color="red"
+												disabled={
+													loadingDocId === ver.id ||
+													deletingDocId === ver.id
+												}
+												onClick={() => handleDeleteItem(ver)}
+												style={{ borderRadius: "6px", cursor: "pointer" }}
+											>
+												{deletingDocId === ver.id ? (
+													<Spinner size="1" />
+												) : (
+													<Delete16Regular />
+												)}
+											</IconButton>
+										</Tooltip>
+									</Flex>
+								</Flex>
+							);
+						})}
+					</Flex>
+				)}
+			</Flex>
+		</Card>
+	);
+};
+
 export const CloudFileManagerModal: FC = () => {
 	const { t } = useTranslation();
 	const [open, setOpen] = useAtom(cloudFileManagerOpenAtom);
@@ -98,7 +590,7 @@ export const CloudFileManagerModal: FC = () => {
 	);
 	const { openFile } = useFileOpener();
 
-	const cloudList = useAtomValue(cloudTTMLListAtom);
+	const [cloudList, setCloudList] = useAtom(cloudTTMLListAtom);
 	const isLoading = useAtomValue(cloudTTMLLoadingAtom);
 
 	const [searchQuery, setSearchQuery] = useState("");
@@ -170,38 +662,91 @@ export const CloudFileManagerModal: FC = () => {
 			setSaveAlbum(currentTrackInfo.album);
 			setPublishToCommunity(false);
 			if (user) {
+				// Instant local cache hydration if state is empty
+				if (cloudList.length === 0) {
+					try {
+						const cached = localStorage.getItem(`amll_cloud_ttmls_${user.uid}`);
+						if (cached) {
+							const parsed = JSON.parse(cached);
+							if (Array.isArray(parsed) && parsed.length > 0) {
+								setCloudList(parsed);
+							}
+						}
+					} catch {
+						// ignore
+					}
+				}
 				fetchUserTTMLList().catch(console.error);
 			}
 		}
-	}, [open, initialTab, user, currentTrackInfo]);
+	}, [open, initialTab, user]);
 
-	// Stats calculations
-	const totalLinesCount = useMemo(
-		() => cloudList.reduce((acc, item) => acc + (item.lineCount || 0), 0),
-		[cloudList],
-	);
+	// Group saved songs by title and artist to consolidate multiple versions
+	const songGroups = useMemo(() => {
+		const map = new Map<string, CloudTTMLMetadata[]>();
+		for (const item of cloudList) {
+			const key = `${(item.title || "Untitled").trim().toLowerCase()}:::${(item.artist || "").trim().toLowerCase()}`;
+			const existing = map.get(key);
+			if (existing) {
+				existing.push(item);
+			} else {
+				map.set(key, [item]);
+			}
+		}
+
+		const groups: SongGroup[] = [];
+		for (const [key, versions] of map.entries()) {
+			versions.sort(
+				(a, b) =>
+					(b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
+			);
+			const latest = versions[0];
+			const isPublic = versions.some((v) => v.publishedToCommunity);
+			const coverArt =
+				versions.find((v) => v.coverArt)?.coverArt || latest.coverArt;
+			const maxLines = Math.max(...versions.map((v) => v.lineCount || 0));
+
+			groups.push({
+				key,
+				title: latest.title || "Untitled",
+				artist: latest.artist || "",
+				album: latest.album || "",
+				coverArt,
+				latestUpdated: latest.updatedAt || latest.createdAt || 0,
+				versions,
+				isPublic,
+				durationMs: latest.durationMs || 0,
+				maxLines,
+			});
+		}
+
+		return groups;
+	}, [cloudList]);
+
+	// Stats calculations - each unique song is only counted once
+	const uniqueSongsCount = songGroups.length;
 	const publicCount = useMemo(
-		() => cloudList.filter((item) => item.publishedToCommunity).length,
-		[cloudList],
+		() => songGroups.filter((g) => g.isPublic).length,
+		[songGroups],
 	);
-	const privateCount = cloudList.length - publicCount;
+	const privateCount = uniqueSongsCount - publicCount;
 
-	const filteredList = useMemo(() => {
-		let result = [...cloudList];
+	const filteredSongGroups = useMemo(() => {
+		let result = [...songGroups];
 
 		if (filterTab === "public") {
-			result = result.filter((item) => Boolean(item.publishedToCommunity));
+			result = result.filter((g) => g.isPublic);
 		} else if (filterTab === "private") {
-			result = result.filter((item) => !item.publishedToCommunity);
+			result = result.filter((g) => !g.isPublic);
 		}
 
 		const q = searchQuery.toLowerCase().trim();
 		if (q) {
 			result = result.filter(
-				(item) =>
-					item.title.toLowerCase().includes(q) ||
-					item.artist.toLowerCase().includes(q) ||
-					item.album.toLowerCase().includes(q),
+				(g) =>
+					g.title.toLowerCase().includes(q) ||
+					g.artist.toLowerCase().includes(q) ||
+					g.album.toLowerCase().includes(q),
 			);
 		}
 
@@ -216,14 +761,14 @@ export const CloudFileManagerModal: FC = () => {
 					a.title.localeCompare(b.title),
 			);
 		} else if (sortBy === "lines-desc") {
-			result.sort((a, b) => (b.lineCount || 0) - (a.lineCount || 0));
+			result.sort((a, b) => b.maxLines - a.maxLines);
 		} else {
 			// recent
-			result.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+			result.sort((a, b) => b.latestUpdated - a.latestUpdated);
 		}
 
 		return result;
-	}, [cloudList, filterTab, searchQuery, sortBy]);
+	}, [songGroups, filterTab, searchQuery, sortBy]);
 
 	const handleSave = async () => {
 		if (!user) {
@@ -477,9 +1022,9 @@ export const CloudFileManagerModal: FC = () => {
 									color="purple"
 									onClick={() => {
 										const url = user?.uid
-											? `https://amll-ttml.web.app/#user=${user.uid}`
-											: "https://amll-ttml.web.app/#stats";
-										window.open(url, "_blank");
+											? `https://ttml.bobjoerules.com/#user=${user.uid}`
+											: "https://ttml.bobjoerules.com/#stats";
+										openExternal(url);
 									}}
 									style={{
 										height: "32px",
@@ -719,7 +1264,7 @@ export const CloudFileManagerModal: FC = () => {
 											<Text size="1" color="gray">
 												{t(
 													"cloud.publishToCommunityDesc",
-													"Opt-in to showcase this finished song in the public community library on amll-ttml.web.app/#finished.",
+													"Opt-in to showcase this finished song in the public community library on ttml.bobjoerules.com/#finished.",
 												)}
 											</Text>
 										</Flex>
@@ -784,20 +1329,8 @@ export const CloudFileManagerModal: FC = () => {
 								<Flex justify="between" align="center" wrap="wrap" gap="2">
 									<Flex align="center" gap="2">
 										<Text size="2" weight="bold">
-											{cloudList.length} {t("cloud.savedSongs", "Saved Songs")}
+											{uniqueSongsCount} {t("cloud.savedSongs", "Saved Songs")}
 										</Text>
-										<Badge
-											size="1"
-											color="sky"
-											variant="solid"
-											style={{
-												borderRadius: "10px",
-												padding: "1px 8px",
-												fontWeight: 600,
-											}}
-										>
-											{totalLinesCount} {t("cloud.linesSynced", "lines")}
-										</Badge>
 									</Flex>
 									<Flex align="center" gap="3">
 										<Flex align="center" gap="1">
@@ -910,7 +1443,7 @@ export const CloudFileManagerModal: FC = () => {
 								}}
 							>
 								<Tooltip
-									content={`${t("ttmlChecklist.all", "All")} (${cloudList.length})`}
+									content={`${t("ttmlChecklist.all", "All")} (${uniqueSongsCount})`}
 								>
 									<button
 										type="button"
@@ -1063,7 +1596,7 @@ export const CloudFileManagerModal: FC = () => {
 								paddingRight: "8px",
 							}}
 						>
-							{isLoading ? (
+							{isLoading && cloudList.length === 0 ? (
 								<Flex
 									justify="center"
 									align="center"
@@ -1071,7 +1604,7 @@ export const CloudFileManagerModal: FC = () => {
 								>
 									<Spinner size="3" />
 								</Flex>
-							) : filteredList.length === 0 ? (
+							) : filteredSongGroups.length === 0 ? (
 								<Flex
 									direction="column"
 									justify="center"
@@ -1118,278 +1651,16 @@ export const CloudFileManagerModal: FC = () => {
 								</Flex>
 							) : (
 								<Flex direction="column" gap="2" pb="2">
-									{filteredList.map((item) => (
-										<Card
-											key={item.id}
-											variant="surface"
-											style={{
-												width: "100%",
-												boxSizing: "border-box",
-												padding: "10px 14px",
-												border: "1px solid var(--gray-a4)",
-												borderRadius: "12px",
-												backgroundColor: "var(--color-surface)",
-												transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
-											}}
-										>
-											<Flex
-												gap="3"
-												align="center"
-												style={{ width: "100%", minWidth: 0 }}
-											>
-												{/* Cover Art / Icon */}
-												<Box
-													style={{
-														width: "48px",
-														height: "48px",
-														minWidth: "48px",
-														borderRadius: "10px",
-														overflow: "hidden",
-														backgroundColor: "var(--gray-a4)",
-														border: "1px solid var(--gray-a5)",
-														boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "center",
-														flexShrink: 0,
-													}}
-												>
-													{item.coverArt ? (
-														<img
-															src={item.coverArt}
-															alt={item.title}
-															loading="lazy"
-															style={{
-																width: "100%",
-																height: "100%",
-																objectFit: "cover",
-															}}
-														/>
-													) : (
-														<MusicNote2Filled
-															style={{
-																width: 24,
-																height: 24,
-																color: "var(--accent-9)",
-															}}
-														/>
-													)}
-												</Box>
-
-												{/* Song Info */}
-												<Flex
-													direction="column"
-													gap="1"
-													style={{ flex: 1, minWidth: 0 }}
-												>
-													{/* Title & Badges */}
-													<Flex
-														align="center"
-														gap="2"
-														style={{ minWidth: 0, width: "100%" }}
-													>
-														<Text
-															weight="bold"
-															size="3"
-															title={item.title}
-															style={{
-																whiteSpace: "nowrap",
-																overflow: "hidden",
-																textOverflow: "ellipsis",
-																minWidth: 0,
-																flexShrink: 1,
-															}}
-														>
-															{item.title}
-														</Text>
-														<Badge
-															size="1"
-															color="cyan"
-															variant="surface"
-															style={{ fontWeight: 600, flexShrink: 0 }}
-														>
-															{item.lineCount} {t("cloud.lines", "lines")}
-														</Badge>
-														{item.publishedToCommunity ? (
-															<Badge
-																size="1"
-																color="green"
-																variant="surface"
-																style={{ fontWeight: 600, flexShrink: 0 }}
-															>
-																{t("cloud.publicBadge", "Public")}
-															</Badge>
-														) : (
-															<Badge
-																size="1"
-																color="gray"
-																variant="surface"
-																style={{ flexShrink: 0 }}
-															>
-																{t("cloud.privateBadge", "Private")}
-															</Badge>
-														)}
-														{item.durationMs > 0 && (
-															<Badge
-																size="1"
-																color="gray"
-																variant="surface"
-																style={{ flexShrink: 0 }}
-															>
-																{formatDuration(item.durationMs)}
-															</Badge>
-														)}
-													</Flex>
-
-													{/* Artist & Album */}
-													<Flex
-														align="center"
-														gap="2"
-														style={{ minWidth: 0, width: "100%" }}
-													>
-														<Text
-															size="2"
-															color="gray"
-															title={item.artist}
-															style={{
-																whiteSpace: "nowrap",
-																overflow: "hidden",
-																textOverflow: "ellipsis",
-																minWidth: 0,
-																flexShrink: 1,
-															}}
-														>
-															{item.artist ||
-																t("cloud.unknownArtist", "Unknown Artist")}
-														</Text>
-														{item.album && (
-															<>
-																<Text
-																	size="1"
-																	color="gray"
-																	style={{ flexShrink: 0 }}
-																>
-																	•
-																</Text>
-																<Badge
-																	size="1"
-																	color="gray"
-																	variant="surface"
-																	title={item.album}
-																	style={{
-																		maxWidth: "200px",
-																		overflow: "hidden",
-																		textOverflow: "ellipsis",
-																		whiteSpace: "nowrap",
-																		flexShrink: 1,
-																	}}
-																>
-																	{item.album}
-																</Badge>
-															</>
-														)}
-													</Flex>
-
-													{/* Timestamp */}
-													<Text size="1" color="gray">
-														{t("cloud.updated", "Updated")}{" "}
-														{formatDate(item.updatedAt)}
-													</Text>
-												</Flex>
-
-												{/* Actions */}
-												<Flex
-													gap="2"
-													align="center"
-													style={{ flexShrink: 0, marginLeft: "auto" }}
-												>
-													{/* Open in Editor */}
-													<Button
-														size="2"
-														variant="solid"
-														disabled={
-															loadingDocId === item.id ||
-															deletingDocId === item.id
-														}
-														onClick={() => handleOpenItem(item)}
-														style={{
-															borderRadius: "8px",
-															cursor: "pointer",
-														}}
-													>
-														{loadingDocId === item.id ? (
-															<Spinner size="1" />
-														) : (
-															<>
-																<Play16Regular />
-																{t("cloud.openInEditor", "Open")}
-															</>
-														)}
-													</Button>
-
-													{/* Download Raw TTML */}
-													<Tooltip
-														content={t(
-															"cloud.downloadTTML",
-															"Download .ttml file",
-														)}
-													>
-														<IconButton
-															size="2"
-															variant="surface"
-															color="gray"
-															disabled={
-																loadingDocId === item.id ||
-																deletingDocId === item.id
-															}
-															onClick={() => handleDownloadRawTTML(item)}
-															aria-label={t(
-																"cloud.downloadTTML",
-																"Download .ttml file",
-															)}
-															style={{
-																borderRadius: "8px",
-																cursor: "pointer",
-																flexShrink: 0,
-															}}
-														>
-															<DocumentArrowDown16Regular />
-														</IconButton>
-													</Tooltip>
-
-													{/* Delete */}
-													<Tooltip
-														content={t(
-															"cloud.deleteTooltip",
-															"Delete from Cloud",
-														)}
-													>
-														<IconButton
-															size="2"
-															variant="soft"
-															color="red"
-															disabled={
-																loadingDocId === item.id ||
-																deletingDocId === item.id
-															}
-															onClick={() => handleDeleteItem(item)}
-															aria-label={t("cloud.delete", "Delete")}
-															style={{
-																borderRadius: "8px",
-																cursor: "pointer",
-																flexShrink: 0,
-															}}
-														>
-															{deletingDocId === item.id ? (
-																<Spinner size="1" />
-															) : (
-																<Delete16Regular />
-															)}
-														</IconButton>
-													</Tooltip>
-												</Flex>
-											</Flex>
-										</Card>
+									{filteredSongGroups.map((group) => (
+										<SongGroupItem
+											key={group.key}
+											group={group}
+											loadingDocId={loadingDocId}
+											deletingDocId={deletingDocId}
+											handleOpenItem={handleOpenItem}
+											handleDownloadRawTTML={handleDownloadRawTTML}
+											handleDeleteItem={handleDeleteItem}
+										/>
 									))}
 								</Flex>
 							)}

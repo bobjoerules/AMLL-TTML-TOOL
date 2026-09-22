@@ -53,6 +53,7 @@ import {
 
 import { error as logError } from "$/utils/logging.ts";
 import { prepareLyricLine } from "$/utils/lyric-prep";
+import { openExternal } from "$/utils/openExternal";
 import {
 	normalizeImportedLyricApostrophes,
 	normalizeImportedLyricCyrillicEs,
@@ -1106,7 +1107,7 @@ export const ImportFromText = () => {
 																key={guide.url}
 																variant={guide.featured ? "surface" : "soft"}
 																color={guide.featured ? "ruby" : "gray"}
-																onClick={() => window.open(guide.url, "_blank")}
+																onClick={() => openExternal(guide.url)}
 																style={{
 																	justifyContent: "start",
 																	textAlign: "left",
@@ -1155,10 +1156,7 @@ export const ImportFromText = () => {
 										<Button
 											variant="ghost"
 											onClick={() =>
-												window.open(
-													"https://lyrprep.spicylyrics.org/guide/",
-													"_blank",
-												)
+												openExternal("https://lyrprep.spicylyrics.org/guide/")
 											}
 										>
 											<Open16Regular />{" "}

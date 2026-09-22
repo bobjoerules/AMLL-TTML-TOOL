@@ -30,29 +30,64 @@
             box-sizing: border-box;
         }
 
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #0b0b0d;
+            color: #ededef;
+        }
+
         #root {
             width: 100vw;
             height: 100vh;
             max-width: 100vw;
             max-height: 100vh;
             overflow: hidden;
+            background-color: #0b0b0d;
         }
 
-        @media (prefers-color-scheme: dark) {
-            #loading-holder {
-                background-color: #101211;
-                color: #fff;
-            }
+        #loading-holder {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            background-color: #0b0b0d;
+            color: #ededef;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
+            gap: 8px;
         }
     </style>
+    <script>
+        (function() {
+            try {
+                var dm = localStorage.getItem("darkMode");
+                if (dm === '"light"') {
+                    document.documentElement.style.backgroundColor = '#fafafa';
+                    document.body.style.backgroundColor = '#fafafa';
+                    document.body.style.color = '#111';
+                    var el = document.getElementById('loading-holder');
+                    if (el) {
+                        el.style.backgroundColor = '#fafafa';
+                        el.style.color = '#111';
+                    }
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 
 <body>
     <div id="root">
-        <div id="loading-holder"
-            style="display: flex; flex-direction: column; height: 100vh; text-align: center; align-items: center;justify-content: center;">
+        <div id="loading-holder">
             <div>Loading AMLL TTML Tool...</div>
-            <div>Resource files are quite big, please be patient...</div>
+            <div style="opacity: 0.6; font-size: 12px;">Resource files are quite big, please be patient...</div>
         </div>
     </div>
     <script defer src="/src/main.tsx" type="module"></script>

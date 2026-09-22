@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
 	addChecklistEntry,
 	deleteChecklistEntry,
+	isChecklistEntryCompleted,
+	isChecklistEntryInProgress,
+	isChecklistEntryNotStarted,
 	isTTML100PercentCompleted,
 	linkUploadedTTMLToChecklist,
 	normalizeChecklistEntries,
@@ -144,6 +147,15 @@ describe("TTML checklist", () => {
 			album: "After Hours",
 			coverArt: "https://example.com/cover.jpg",
 		});
+		expect(res.entries[0].uploadedToDatabase).toBeUndefined();
+
+		const resNew = linkUploadedTTMLToChecklist([], {
+			title: "New Song",
+			artist: "New Artist",
+			docId: "doc-new",
+		});
+		expect(resNew.added).toBe(true);
+		expect(resNew.entries[0].uploadedToDatabase).toBeUndefined();
 	});
 
 	it("deduplicates entries with different apostrophes and merges rich fields", () => {
@@ -239,5 +251,58 @@ describe("TTML checklist", () => {
 
 		const explicitlySet = setChecklistEntryUploadedToDb(initial, "db-1", true);
 		expect(explicitlySet[0].uploadedToDatabase).toBe(true);
+	});
+
+	it("accurately classifies in progress vs not started vs completed entries", () => {
+		const notStartedEntry = {
+			id: "1",
+			song: "Song 1",
+			artist: "Artist",
+			notes: "",
+			completed: false,
+			createdAt: 100,
+		};
+		expect(isChecklistEntryNotStarted(notStartedEntry)).toBe(true);
+		expect(isChecklistEntryInProgress(notStartedEntry)).toBe(false);
+		expect(isChecklistEntryCompleted(notStartedEntry)).toBe(false);
+
+		const inProgressCloudEntry = {
+			id: "2",
+			song: "Song 2",
+			artist: "Artist",
+			cloudDocId: "cloud-doc-123",
+			notes: "",
+			completed: false,
+			createdAt: 200,
+		};
+		expect(isChecklistEntryNotStarted(inProgressCloudEntry)).toBe(false);
+		expect(isChecklistEntryInProgress(inProgressCloudEntry)).toBe(true);
+		expect(isChecklistEntryCompleted(inProgressCloudEntry)).toBe(false);
+
+		const inProgressManualEntry = {
+			id: "3",
+			song: "Song 3",
+			artist: "Artist",
+			status: "in-progress" as const,
+			notes: "",
+			completed: false,
+			createdAt: 300,
+		};
+		expect(isChecklistEntryNotStarted(inProgressManualEntry)).toBe(false);
+		expect(isChecklistEntryInProgress(inProgressManualEntry)).toBe(true);
+		expect(isChecklistEntryCompleted(inProgressManualEntry)).toBe(false);
+
+		const completedEntry = {
+			id: "4",
+			song: "Song 4",
+			artist: "Artist",
+			cloudDocId: "cloud-doc-456",
+			notes: "",
+			completed: true,
+			createdAt: 400,
+		};
+		expect(isChecklistEntryNotStarted(completedEntry)).toBe(false);
+		expect(isChecklistEntryInProgress(completedEntry)).toBe(false);
+		expect(isChecklistEntryCompleted(completedEntry)).toBe(true);
 	});
 });

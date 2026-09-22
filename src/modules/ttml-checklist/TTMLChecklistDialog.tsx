@@ -54,6 +54,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { ViewportList } from "react-viewport-list";
 import { useFileOpener } from "$/hooks/useFileOpener";
+import { openExternal } from "$/utils/openExternal";
 import { getProgressBadgeColor } from "$/components/TopMenu/HeaderFileInfo";
 import { extractSpotifyTrackId } from "$/modules/apple-ttml/api/client";
 import { audioCoverArtAtom } from "$/modules/audio/states";
@@ -89,6 +90,9 @@ import {
 	addChecklistEntry,
 	createChecklistEntry,
 	deleteChecklistEntry,
+	isChecklistEntryCompleted,
+	isChecklistEntryInProgress,
+	isChecklistEntryNotStarted,
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
 	toggleChecklistEntryFavorite,
@@ -128,6 +132,17 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	);
 	const sourceUrl = initial?.sourceUrl;
 	const [notes, setNotes] = useState(initial?.notes ?? "");
+	const [status, setStatus] = useState<
+		"not-started" | "in-progress" | "completed"
+	>(
+		initial?.completed
+			? "completed"
+			: initial?.status
+				? initial.status
+				: initial?.cloudDocId
+					? "in-progress"
+					: "not-started",
+	);
 	const [uploadedToDatabase, setUploadedToDatabase] = useState(
 		initial?.uploadedToDatabase ?? false,
 	);
@@ -354,6 +369,8 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								sourceUrl,
 								notes,
 								uploadedToDatabase,
+								completed: status === "completed",
+								status,
 							});
 						}
 					}}
@@ -729,24 +746,57 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 						size="2"
 					/>
 
-					<Flex justify="between" align="center" mt="2" wrap="wrap" gap="2">
-						<label
-							style={{
-								display: "inline-flex",
-								alignItems: "center",
-								gap: "8px",
-								cursor: "pointer",
-								userSelect: "none",
-							}}
-						>
-							<Checkbox
-								checked={uploadedToDatabase}
-								onCheckedChange={(checked) => setUploadedToDatabase(!!checked)}
-							/>
-							<Text size="2" color="gray">
-								{t("ttmlChecklist.uploadedToDatabase", "Uploaded to Database")}
-							</Text>
-						</label>
+					<Flex justify="between" align="center" mt="2" wrap="wrap" gap="3">
+						<Flex align="center" gap="3" wrap="wrap">
+							<Flex align="center" gap="2">
+								<Text size="2" color="gray">
+									{t("ttmlChecklist.statusLabel", "Status:")}
+								</Text>
+								<Select.Root
+									value={status}
+									onValueChange={(
+										val: "not-started" | "in-progress" | "completed",
+									) => setStatus(val)}
+									size="1"
+								>
+									<Select.Trigger style={{ borderRadius: "6px" }} />
+									<Select.Content>
+										<Select.Item value="not-started">
+											{t("ttmlChecklist.notStarted", "Not Started")}
+										</Select.Item>
+										<Select.Item value="in-progress">
+											{t("ttmlChecklist.pending", "In Progress")}
+										</Select.Item>
+										<Select.Item value="completed">
+											{t("ttmlChecklist.completed", "Completed")}
+										</Select.Item>
+									</Select.Content>
+								</Select.Root>
+							</Flex>
+
+							<label
+								style={{
+									display: "inline-flex",
+									alignItems: "center",
+									gap: "8px",
+									cursor: "pointer",
+									userSelect: "none",
+								}}
+							>
+								<Checkbox
+									checked={uploadedToDatabase}
+									onCheckedChange={(checked) =>
+										setUploadedToDatabase(!!checked)
+									}
+								/>
+								<Text size="2" color="gray">
+									{t(
+										"ttmlChecklist.uploadedToDatabase",
+										"Uploaded to Database",
+									)}
+								</Text>
+							</label>
+						</Flex>
 
 						<Flex justify="end" gap="2">
 							{onCancel && (
@@ -926,7 +976,7 @@ const ChecklistEntryCard = memo(
 									{t("ttmlChecklist.cloudLinked", "Cloud Linked")}
 								</Badge>
 							)}
-							{entry.completed && (
+							{entry.completed ? (
 								<Badge
 									size="1"
 									color="green"
@@ -934,6 +984,24 @@ const ChecklistEntryCard = memo(
 									style={{ flexShrink: 0 }}
 								>
 									{t("ttmlChecklist.completed", "Completed")}
+								</Badge>
+							) : isChecklistEntryInProgress(entry) ? (
+								<Badge
+									size="1"
+									color="amber"
+									variant="surface"
+									style={{ fontWeight: 600, flexShrink: 0 }}
+								>
+									{t("ttmlChecklist.pending", "In Progress")}
+								</Badge>
+							) : (
+								<Badge
+									size="1"
+									color="gray"
+									variant="surface"
+									style={{ fontWeight: 500, flexShrink: 0 }}
+								>
+									{t("ttmlChecklist.notStarted", "Not Started")}
 								</Badge>
 							)}
 							{entry.uploadedToDatabase && (
@@ -1053,27 +1121,29 @@ const ChecklistEntryCard = memo(
 							</Tooltip>
 						)}
 
-						{/* 1-Click Import Lyrics Page */}
-						<Tooltip
-							content={t(
-								"ttmlChecklist.importLyricsTooltip",
-								"Open lyrics import & review page for this song",
-							)}
-						>
-							<IconButton
-								size="2"
-								variant="soft"
-								onClick={() => onImportLyrics(entry)}
-								aria-label={t("ttmlChecklist.importLyrics", "Import Lyrics")}
-								style={{
-									borderRadius: "8px",
-									cursor: "pointer",
-									flexShrink: 0,
-								}}
+						{/* 1-Click Import Lyrics Page (hidden when saved to cloud) */}
+						{!entry.cloudDocId && (
+							<Tooltip
+								content={t(
+									"ttmlChecklist.importLyricsTooltip",
+									"Open lyrics import & review page for this song",
+								)}
 							>
-								<ArrowDownload16Regular />
-							</IconButton>
-						</Tooltip>
+								<IconButton
+									size="2"
+									variant="soft"
+									onClick={() => onImportLyrics(entry)}
+									aria-label={t("ttmlChecklist.importLyrics", "Import Lyrics")}
+									style={{
+										borderRadius: "8px",
+										cursor: "pointer",
+										flexShrink: 0,
+									}}
+								>
+									<ArrowDownload16Regular />
+								</IconButton>
+							</Tooltip>
+						)}
 
 						{/* 1-Click Apple Music TTML (when Spotify ID/link available) */}
 						{(entry.source === "spotify" ||
@@ -1259,7 +1329,7 @@ export const TTMLChecklistDialog = () => {
 	const checklistShowUploadedToDb = useAtomValue(checklistShowUploadedToDbAtom);
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [filterTab, setFilterTab] = useState<
-		"all" | "pending" | "completed" | "favorites" | "uploaded"
+		"all" | "pending" | "not-started" | "completed" | "favorites" | "uploaded"
 	>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 	const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -1289,10 +1359,18 @@ export const TTMLChecklistDialog = () => {
 	}, [entries, storedEntries.length, setStoredEntries]);
 
 	const totalCount = entries.length;
-	const completedCount = entries.filter((e) => e.completed).length;
+	const completedCount = entries.filter((e) =>
+		isChecklistEntryCompleted(e),
+	).length;
+	const inProgressCount = entries.filter((e) =>
+		isChecklistEntryInProgress(e),
+	).length;
+	const notStartedCount = entries.filter((e) =>
+		isChecklistEntryNotStarted(e),
+	).length;
 	const favoritesCount = entries.filter((e) => e.favorite).length;
 	const uploadedCount = entries.filter((e) => e.uploadedToDatabase).length;
-	const pendingCount = totalCount - completedCount;
+	const pendingCount = inProgressCount;
 	const progressPercent =
 		totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 	const progressColor = getProgressBadgeColor(progressPercent);
@@ -1300,9 +1378,11 @@ export const TTMLChecklistDialog = () => {
 	const filteredEntries = useMemo(() => {
 		let result = [...entries];
 		if (filterTab === "pending") {
-			result = result.filter((e) => !e.completed);
+			result = result.filter((e) => isChecklistEntryInProgress(e));
+		} else if (filterTab === "not-started") {
+			result = result.filter((e) => isChecklistEntryNotStarted(e));
 		} else if (filterTab === "completed") {
-			result = result.filter((e) => e.completed);
+			result = result.filter((e) => isChecklistEntryCompleted(e));
 		} else if (filterTab === "favorites") {
 			result = result.filter((e) => Boolean(e.favorite));
 		} else if (filterTab === "uploaded") {
@@ -1905,7 +1985,7 @@ export const TTMLChecklistDialog = () => {
 									variant="surface"
 									color="purple"
 									onClick={() =>
-										window.open("https://amll-ttml.web.app/#stats", "_blank")
+										openExternal("https://ttml.bobjoerules.com/#stats")
 									}
 									style={{
 										height: "32px",
@@ -2049,8 +2129,22 @@ export const TTMLChecklistDialog = () => {
 												}}
 											/>
 											<Text size="1" color="gray">
-												{pendingCount}{" "}
+												{inProgressCount}{" "}
 												{t("ttmlChecklist.pending", "In Progress")}
+											</Text>
+										</Flex>
+										<Flex align="center" gap="1">
+											<span
+												style={{
+													width: 6,
+													height: 6,
+													borderRadius: "50%",
+													backgroundColor: "var(--gray-9)",
+												}}
+											/>
+											<Text size="1" color="gray">
+												{notStartedCount}{" "}
+												{t("ttmlChecklist.notStarted", "Not Started")}
 											</Text>
 										</Flex>
 										<Flex align="center" gap="1">
@@ -2204,7 +2298,7 @@ export const TTMLChecklistDialog = () => {
 								</Tooltip>
 
 								<Tooltip
-									content={`${t("ttmlChecklist.pending", "In Progress")} (${pendingCount})`}
+									content={`${t("ttmlChecklist.pending", "In Progress")} (${inProgressCount})`}
 								>
 									<button
 										type="button"
@@ -2245,6 +2339,54 @@ export const TTMLChecklistDialog = () => {
 													borderRadius: "2px",
 													backgroundColor: "var(--amber-9)",
 													boxShadow: "0 0 6px var(--amber-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
+
+								<Tooltip
+									content={`${t("ttmlChecklist.notStarted", "Not Started")} (${notStartedCount})`}
+								>
+									<button
+										type="button"
+										onClick={() => setFilterTab("not-started")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "not-started"
+													? "var(--color-surface)"
+													: "transparent",
+											color:
+												filterTab === "not-started"
+													? "var(--gray-12)"
+													: "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "not-started"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<Circle16Regular style={{ width: 16, height: 16 }} />
+										{filterTab === "not-started" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--gray-9)",
+													boxShadow: "0 0 6px var(--gray-9)",
 												}}
 											/>
 										)}

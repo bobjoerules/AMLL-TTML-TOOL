@@ -472,14 +472,15 @@ pub fn run() {
 
                 // 4. Tools menu
                 let tools_menu = Submenu::new(app, "Tools", true)?;
-                let preview_panel_item = MenuItem::with_id(app, "menu-toggle-preview-panel", "Toggle Side Preview Panel", true, None::<&str>)?;
                 
+                let auto_segment_item = MenuItem::with_id(app, "menu-auto-segment", "Auto Segment", true, Some("CmdOrCtrl+K"))?;
+
                 let segment_menu = Submenu::new(app, "Segmentation", true)?;
-                let auto_segment_item = MenuItem::with_id(app, "menu-auto-segment", "Auto Segment", true, Some("CmdOrCtrl+L"))?;
+                let auto_segment_sub_item = MenuItem::with_id(app, "menu-auto-segment-sub", "Auto Segment", true, None::<&str>)?;
                 let ruby_segment_item = MenuItem::with_id(app, "menu-ruby-segment", "Ruby Segmentation", true, None::<&str>)?;
                 let adv_segment_item = MenuItem::with_id(app, "menu-advanced-segment", "Advanced Segmentation...", true, None::<&str>)?;
                 let learned_splits_item = MenuItem::with_id(app, "menu-learned-splits", "Learned Splits...", true, None::<&str>)?;
-                segment_menu.append(&auto_segment_item)?;
+                segment_menu.append(&auto_segment_sub_item)?;
                 segment_menu.append(&ruby_segment_item)?;
                 segment_menu.append(&adv_segment_item)?;
                 segment_menu.append(&learned_splits_item)?;
@@ -489,11 +490,10 @@ pub fn run() {
                 let time_shift_item = MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
                 let time_stretch_item = MenuItem::with_id(app, "menu-time-stretch", "Time Stretch...", true, None::<&str>)?;
                 let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, Some("CmdOrCtrl+Shift+C"))?;
-                let spotmatch_item = MenuItem::with_id(app, "menu-spotmatch", "SpotMatch (Alternate Spotify IDs)...", true, None::<&str>)?;
+                let spotmatch_item = MenuItem::with_id(app, "menu-spotmatch", "SpotMatch (Alternate Spotify IDs)...", true, Some("CmdOrCtrl+Shift+M"))?;
                 let latency_item = MenuItem::with_id(app, "menu-latency-test", "Latency Test...", true, None::<&str>)?;
 
-                tools_menu.append(&preview_panel_item)?;
-                tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
+                tools_menu.append(&auto_segment_item)?;
                 tools_menu.append(&segment_menu)?;
                 tools_menu.append(&sync_timestamps_item)?;
                 tools_menu.append(&auto_duet_item)?;
@@ -587,3 +587,6 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+
+

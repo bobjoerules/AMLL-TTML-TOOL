@@ -58,6 +58,7 @@ import {
 	openAccountSettingsAtom,
 	ttmlChecklistDialogAtom,
 } from "$/states/dialogs";
+import { hasCustomBackgroundAtom } from "$/modules/settings/modals/customBackground";
 import {
 	collapsedSectionIdsAtom,
 	lyricLinesAtom,
@@ -512,6 +513,7 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 	const [, setDetectionDialogOpen] = useAtom(
 		geniusHeaderDetectionDialogOpenAtom,
 	);
+	const hasCustomBackground = useAtomValue(hasCustomBackgroundAtom);
 
 	useEffect(() => {
 		if (dialogShown || geniusCategorizationEnabled) return;
@@ -619,7 +621,9 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 				height="100%"
 				ref={ref}
 				style={{
-					backgroundColor: "var(--editor-bg, transparent)",
+					backgroundColor: hasCustomBackground
+						? "transparent"
+						: "var(--editor-bg, transparent)",
 				}}
 			>
 				<Box
@@ -746,7 +750,9 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 								maxHeight: "100%",
 								overflowY: "auto",
 								overflowX: wrapLyricLines ? "hidden" : "auto",
-								backgroundColor: "var(--editor-bg, transparent)",
+								backgroundColor: hasCustomBackground
+									? "transparent"
+									: "var(--editor-bg, transparent)",
 							}}
 							ref={viewElRef}
 						>
