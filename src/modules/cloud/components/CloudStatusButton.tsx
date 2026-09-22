@@ -1,6 +1,6 @@
 import {
 	Cloud24Regular,
-	FolderOpen20Regular,
+	CloudDatabase20Regular,
 	Save20Regular,
 	Settings20Regular,
 } from "@fluentui/react-icons";
@@ -114,7 +114,7 @@ export const CloudStatusButton: FC = () => {
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item onSelect={() => handleOpenCloudManager("open")}>
 					<Flex align="center" gap="2">
-						<FolderOpen20Regular
+						<CloudDatabase20Regular
 							style={{ width: 15, height: 15, flexShrink: 0 }}
 						/>
 						{t("cloud.myCloudLibrary", "My Cloud Library...")}

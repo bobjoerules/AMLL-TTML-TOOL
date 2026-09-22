@@ -345,6 +345,24 @@ export const cmdAuditionSelectionAfter = registerCommand(
 	"Spectrogram",
 );
 
+// =========================================================================================
+//  工具
+// =========================================================================================
+
+export const cmdSpotMatch = registerCommand(
+	"spotMatch",
+	[CONTROL_KEY, "Shift", "KeyM"],
+	t("settingsDialog.keybindings.spotMatch"),
+	"Tools",
+);
+
+export const cmdTtmlChecklist = registerCommand(
+	"ttmlChecklist",
+	[CONTROL_KEY, "Shift", "KeyC"],
+	t("settingsDialog.keybindings.ttmlChecklist"),
+	"Tools",
+);
+
 if (import.meta.env.DEV) {
 	t("settingsDialog.keybindings.category.File");
 	t("settingsDialog.keybindings.category.Edit");
@@ -352,4 +370,5 @@ if (import.meta.env.DEV) {
 	t("settingsDialog.keybindings.category.Sync");
 	t("settingsDialog.keybindings.category.Audio");
 	t("settingsDialog.keybindings.category.Spectrogram");
+	t("settingsDialog.keybindings.category.Tools");
 }

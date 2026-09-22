@@ -32,6 +32,8 @@ import {
 	cmdSelectWordsOfMatchedSelection,
 	cmdSwitchEditMode,
 	cmdSwitchPreviewMode,
+	cmdSpotMatch,
+	cmdTtmlChecklist,
 	cmdSwitchSyncMode,
 	cmdSyncEnd,
 	cmdSyncNext,
@@ -103,3 +105,5 @@ export const keyVolumeDownAtom = cmdVolumeDown.atom;
 export const keyPlaybackRateUpAtom = cmdPlaybackRateUp.atom;
 export const keyPlaybackRateDownAtom = cmdPlaybackRateDown.atom;
 export const keyPlaybackRateResetAtom = cmdPlaybackRateReset.atom;
+export const keySpotMatchAtom = cmdSpotMatch.atom;
+export const keyTtmlChecklistAtom = cmdTtmlChecklist.atom;

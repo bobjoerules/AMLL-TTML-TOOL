@@ -117,7 +117,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 		id: "builtin-apple",
 		name: "Apple",
 		settings: {
-			accentColor: "red",
+			accentColor: "gray",
 			useCustomAccent: false,
 			backgroundMode: "none",
 			selectedGradient: "sunset",
@@ -133,7 +133,7 @@ const BUILTIN_PRESETS: AppearancePreset[] = [
 			advSecondaryText: "rgba(255, 255, 255, 0.6)",
 		},
 		lightSettings: {
-			accentColor: "red",
+			accentColor: "gray",
 			useCustomAccent: false,
 			backgroundMode: "gradient",
 			selectedGradient: "sunset",

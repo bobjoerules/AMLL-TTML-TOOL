@@ -1,4 +1,4 @@
-import { BookOpen24Regular, DismissRegular } from "@fluentui/react-icons";
+import { BookOpen20Regular, DismissRegular } from "@fluentui/react-icons";
 import {
 	Box,
 	Button,
@@ -6,6 +6,7 @@ import {
 	Dialog,
 	Flex,
 	Heading,
+	IconButton,
 	Progress,
 	Text,
 } from "@radix-ui/themes";
@@ -21,6 +22,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useFileOpener } from "$/hooks/useFileOpener";
+import { openExternal } from "$/utils/openExternal";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import { currentDurationAtom } from "$/modules/audio/states";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
@@ -60,43 +62,48 @@ import {
 	guideStepAtom,
 } from "./states";
 
-const DOCS_BASE = "https://docs.tx24.dev/guides/ttml.html";
+const GUIDE_DOCS: Record<string, string> = {
+	audio: "https://guides.spicylyrics.org/s/ttml/doc/1-import-the-song-iHfycCuOSU",
+	lyrics: "https://guides.spicylyrics.org/s/ttml/doc/2-import-the-lyrics-CK0YxRxPwp",
+	review: "https://guides.spicylyrics.org/s/ttml/doc/3-check-the-lyrics-ZHDMonddCz",
+	sync: "https://guides.spicylyrics.org/s/ttml/doc/4-sync-the-lyrics-MJsQ3M0dIS",
+	songwriters:
+		"https://guides.spicylyrics.org/s/ttml/doc/5-add-the-songwriters-cP7OWZhyKd",
+	export:
+		"https://guides.spicylyrics.org/s/ttml/doc/6-export-and-test-the-ttml-nzae0Py9JJ",
+	test: "https://guides.spicylyrics.org/s/ttml/doc/6-export-and-test-the-ttml-nzae0Py9JJ#h-run-a-local-test",
+};
+
+const DEFAULT_GUIDE_URL = "https://guides.spicylyrics.org/s/ttml";
 
 const GUIDE_COPY = {
 	audio: {
 		title: "Import the song",
 		text: "Choose the exact recording you are making lyrics for. The guide will continue once the audio finishes loading.",
-		anchor: "#1-import-the-song",
 	},
 	lyrics: {
 		title: "Import the lyrics",
 		text: "Choose a lyrics source below. Review the result in its import window and confirm the import.",
-		anchor: "#2-import-the-lyrics",
 	},
 	review: {
 		title: "Check lyrics and line types",
 		text: "Read every line against the recording. Double-click words to fix them; select lines to mark background or duet vocals. Remove empty lines, then confirm below.",
-		anchor: "#3-check-the-lyrics",
 	},
 	sync: {
 		title: "Sync every word",
 		text: "Enter Time mode, select the first word, press Space, then use F to start, G between words, and H at pauses or line endings. Every word must receive a valid time.",
-		anchor: "#4-sync-the-lyrics",
 	},
 	songwriters: {
 		title: "Add songwriters",
 		text: "Open metadata and use Fetch Songwriters from Genius, or add one Songwriter value per real name. The guide detects when at least one is saved.",
-		anchor: "#5-add-songwriters",
 	},
 	export: {
 		title: "Export the TTML",
 		text: "Open the checklist and resolve anything relevant. Then save the TTML; this step completes only after a file is actually written.",
-		anchor: "#6-export-and-test-the-ttml",
 	},
 	test: {
 		title: "Test locally",
 		text: "Upload the saved file in Spicy Lyrics and check parsing, formatting, and timing.",
-		anchor: "#test-locally",
 	},
 } as const;
 
@@ -252,7 +259,7 @@ export const BeginnerGuide = () => {
 			if (saved) setExported(true);
 		}
 		if (id === "test")
-			window.open(`${DOCS_BASE}#test-locally`, "_blank", "noopener,noreferrer");
+			void openExternal(GUIDE_DOCS.test || DEFAULT_GUIDE_URL);
 	}, [
 		lyrics,
 		pickAudio,
@@ -326,43 +333,37 @@ export const BeginnerGuide = () => {
 				{panelOpen && tucked && (
 					<motion.div
 						key="tucked-button"
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
+						initial={{ opacity: 0, x: 20 }}
+						animate={{ opacity: 1, x: 0 }}
+						exit={{ opacity: 0, x: 20 }}
 						transition={{ duration: 0.2 }}
 						style={{
 							position: "fixed",
 							right: 0,
 							top: "45%",
 							zIndex: 10000,
-							paddingLeft: "40px",
-							paddingTop: "10px",
-							paddingBottom: "10px",
-							transition:
-								"transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s",
-							transform: "translateX(60%)",
-							opacity: 0.7,
 							cursor: "pointer",
-						}}
-						onMouseEnter={(e) => {
-							e.currentTarget.style.transform = "translateX(0)";
-							e.currentTarget.style.opacity = "1";
-						}}
-						onMouseLeave={(e) => {
-							e.currentTarget.style.transform = "translateX(60%)";
-							e.currentTarget.style.opacity = "0.7";
 						}}
 					>
 						<Button
+							size="2"
+							variant="solid"
 							style={{
 								borderRadius: "var(--radius-3) 0 0 var(--radius-3)",
 								boxShadow: "var(--shadow-4)",
 								cursor: "pointer",
+								display: "inline-flex",
+								alignItems: "center",
+								gap: "6px",
+								paddingLeft: "12px",
+								paddingRight: "14px",
 							}}
 							onClick={() => setTucked(false)}
 						>
-							<BookOpen24Regular style={{ marginRight: "4px" }} />
-							{t("beginnerGuide.restore", "Show guide")}
+							<BookOpen20Regular
+								style={{ width: 18, height: 18, flexShrink: 0 }}
+							/>
+							<span>{t("beginnerGuide.restore", "Show guide")}</span>
 						</Button>
 					</motion.div>
 				)}
@@ -377,7 +378,7 @@ export const BeginnerGuide = () => {
 							position: "fixed",
 							left: position.x,
 							top: position.y,
-							width: 320,
+							width: 340,
 							zIndex: 10000,
 						}}
 					>
@@ -399,34 +400,44 @@ export const BeginnerGuide = () => {
 										cursor: "grab",
 										userSelect: "none",
 										touchAction: "none",
+										gap: "8px",
 									}}
 								>
-									<Text size="1" color="gray">
+									<Text size="1" color="gray" style={{ flexShrink: 0 }}>
 										{t("beginnerGuide.progress", "Step {current} of {total}", {
 											current: step + 1,
 											total: GUIDE_STEP_IDS.length,
 										})}
 									</Text>
-									<Flex gap="1">
+									<Flex
+										gap="2"
+										align="center"
+										style={{ flexShrink: 0 }}
+										onPointerDown={(e) => e.stopPropagation()}
+									>
 										<Button
 											size="1"
 											variant="ghost"
 											color="gray"
+											style={{ margin: 0 }}
 											onClick={() => setTucked(true)}
 										>
 											{t("beginnerGuide.tuck", "Tuck")}
 										</Button>
-										<Button
+										<IconButton
 											size="1"
 											variant="ghost"
 											color="gray"
+											style={{ margin: 0 }}
+											title={t("beginnerGuide.exit", "Exit guide")}
+											aria-label={t("beginnerGuide.exit", "Exit guide")}
 											onClick={() => {
 												setCompletion("dismissed");
 												setPanelOpen(false);
 											}}
 										>
-											<DismissRegular /> {t("beginnerGuide.exit", "Exit guide")}
-										</Button>
+											<DismissRegular />
+										</IconButton>
 									</Flex>
 								</Flex>
 								<Progress value={((step + 1) / GUIDE_STEP_IDS.length) * 100} />
@@ -508,94 +519,104 @@ export const BeginnerGuide = () => {
 												)}
 									</Text>
 								</Card>
-								<Flex gap="2" wrap="wrap">
-									{stepComplete ? (
-										<Button color="green" onClick={continueGuide}>
-											{t("beginnerGuide.continue", "Continue")}
-										</Button>
-									) : currentId === "lyrics" ? (
-										<>
-											<Button
-												onClick={() =>
-													geniusApiKey
-														? setImportGenius(true)
-														: setShowGeniusSetup(true)
-												}
-											>
-												{geniusApiKey
-													? "Genius"
-													: t("beginnerGuide.genius.setup", "Set up Genius")}
+								<Flex direction="column" gap="3">
+									<Flex gap="2" wrap="wrap" align="center">
+										{stepComplete ? (
+											<Button color="green" onClick={continueGuide}>
+												{t("beginnerGuide.continue", "Continue")}
 											</Button>
-											<Button
-												variant="soft"
-												onClick={() => setImportLrclib(true)}
-											>
-												LRCLIB
-											</Button>
-											<Button
-												variant="soft"
-												onClick={() => setImportText(true)}
-											>
-												{t("beginnerGuide.import.plain", "Plain text")}
-											</Button>
-											<Button
-												variant="soft"
-												onClick={() => setImportLyrically(true)}
-											>
-												Lyrically
-											</Button>
-										</>
-									) : (
-										<>
-											{currentId === "export" && (
+										) : currentId === "lyrics" ? (
+											<>
+												<Button
+													onClick={() =>
+														geniusApiKey
+															? setImportGenius(true)
+															: setShowGeniusSetup(true)
+													}
+												>
+													{geniusApiKey
+														? "Genius"
+														: t("beginnerGuide.genius.setup", "Set up Genius")}
+												</Button>
 												<Button
 													variant="soft"
-													onClick={() => setChecklist(true)}
+													onClick={() => setImportLrclib(true)}
 												>
-													{t("beginnerGuide.checklist", "Open checklist")}
+													LRCLIB
 												</Button>
-											)}
-											<Button onClick={() => void doAction()}>
-												{currentId === "review"
-													? t(
-															"beginnerGuide.review.confirm",
-															"I checked the lyrics",
-														)
-													: currentId === "test"
-														? t("beginnerGuide.test.open", "Open testing steps")
-														: currentId === "audio"
-															? t("beginnerGuide.audio.choose", "Choose audio")
-															: currentId === "sync"
-																? t("beginnerGuide.sync.open", "Open Time mode")
-																: currentId === "songwriters"
-																	? t(
-																			"beginnerGuide.songwriters.open",
-																			"Open metadata",
-																		)
-																	: t("beginnerGuide.export.save", "Save TTML")}
-											</Button>
-										</>
-									)}
-									<Button
-										variant="soft"
-										disabled={step === 0}
-										onClick={() => setStep(Math.max(0, step - 1))}
-									>
-										{t("common.back", "Back")}
-									</Button>
-									<Button
-										variant="ghost"
-										onClick={() =>
-											window.open(
-												`${DOCS_BASE}${copy.anchor}`,
-												"_blank",
-												"noopener,noreferrer",
-											)
-										}
-									>
-										<BookOpen24Regular />{" "}
-										{t("beginnerGuide.readMore", "Full guide")}
-									</Button>
+												<Button
+													variant="soft"
+													onClick={() => setImportText(true)}
+												>
+													{t("beginnerGuide.import.plain", "Plain text")}
+												</Button>
+												<Button
+													variant="soft"
+													onClick={() => setImportLyrically(true)}
+												>
+													Lyrically
+												</Button>
+											</>
+										) : (
+											<>
+												{currentId === "export" && (
+													<Button
+														variant="soft"
+														onClick={() => setChecklist(true)}
+													>
+														{t("beginnerGuide.checklist", "Open checklist")}
+													</Button>
+												)}
+												<Button onClick={() => void doAction()}>
+													{currentId === "review"
+														? t(
+																"beginnerGuide.review.confirm",
+																"I checked the lyrics",
+															)
+														: currentId === "test"
+															? t("beginnerGuide.test.open", "Open testing steps")
+															: currentId === "audio"
+																? t("beginnerGuide.audio.choose", "Choose audio")
+																: currentId === "sync"
+																	? t("beginnerGuide.sync.open", "Open Time mode")
+																	: currentId === "songwriters"
+																		? t(
+																				"beginnerGuide.songwriters.open",
+																				"Open metadata",
+																			)
+																		: t("beginnerGuide.export.save", "Save TTML")}
+												</Button>
+											</>
+										)}
+									</Flex>
+									<Flex justify="between" align="center">
+										<Button
+											variant="soft"
+											disabled={step === 0}
+											onClick={() => setStep(Math.max(0, step - 1))}
+										>
+											{t("common.back", "Back")}
+										</Button>
+										<Button
+											variant="soft"
+											color="gray"
+											style={{
+												display: "inline-flex",
+												alignItems: "center",
+												gap: "6px",
+											}}
+											onClick={() => {
+												const guideUrl =
+													GUIDE_DOCS[currentId] || DEFAULT_GUIDE_URL;
+												void openExternal(guideUrl);
+											}}
+										>
+											<BookOpen20Regular
+												style={{ width: 16, height: 16, flexShrink: 0 }}
+											/>
+											{t("beginnerGuide.readMore", "Full guide")}
+										</Button>
+									</Flex>
 								</Flex>
 								{currentId === "lyrics" && showGeniusSetup && !geniusApiKey && (
 									<Card variant="surface">
@@ -650,11 +671,7 @@ export const BeginnerGuide = () => {
 												<Button
 													variant="soft"
 													onClick={() =>
-														window.open(
-															"https://genius.com/api-clients",
-															"_blank",
-															"noopener,noreferrer",
-														)
+														openExternal("https://genius.com/api-clients")
 													}
 												>
 													{t(

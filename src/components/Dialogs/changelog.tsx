@@ -8,7 +8,7 @@ import {
 	ScrollArea,
 	Text,
 } from "@radix-ui/themes";
-import { open } from "@tauri-apps/plugin-shell";
+import { openExternal } from "$/utils/openExternal";
 import { useAtom } from "jotai";
 import { changelogDialogAtom } from "$/states/dialogs.ts";
 
@@ -16,13 +16,9 @@ export function ChangelogDialog() {
 	const [isOpen, setIsOpen] = useAtom(changelogDialogAtom);
 
 	const openGitHub = async () => {
-		const repoUrl =
-			"https://github.com/bobjoerules/AMLL-TTML-TOOL/commits/main";
-		if (import.meta.env.TAURI_ENV_PLATFORM) {
-			await open(repoUrl);
-		} else {
-			window.open(repoUrl, "_blank");
-		}
+		await openExternal(
+			"https://github.com/bobjoerules/AMLL-TTML-TOOL/commits/main",
+		);
 	};
 
 	return (
@@ -55,6 +51,35 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.9
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 22, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Cloud Library Song Grouping &amp; Version History:</b> Grouped Cloud TTML documents by song and artist with cover artwork, line count, audio duration, and version counters, introducing an interactive version dropdown to browse, restore, download, or delete past revisions.
+								</Text>
+								<Text size="2">
+									• <b>On-Demand Cloud Payload Subcollections &amp; Instant Caching:</b> Decoupled lightweight song metadata from heavy TTML file payloads by storing raw lyrics in on-demand subcollections, and added instant local storage caching for immediate library opening without download delays.
+								</Text>
+								<Text size="2">
+									• <b>Tools Menu Shortcuts &amp; Keyboard Bindings:</b> Rebound Auto Segment to <code>Cmd/Ctrl + K</code>, added dedicated shortcuts for SpotMatch (<code>Cmd/Ctrl + Shift + M</code>) and TTML Checklist (<code>Cmd/Ctrl + Shift + C</code>), and exposed keybinding configurations in Settings.
+								</Text>
+								<Text size="2">
+									• <b>TTML Checklist Workflow &amp; Classification:</b> Added dedicated tabs and counters for Not Started, In Progress, and Completed songs, an instant completion toggle, and separated raw cloud upload from auto-completion status.
+								</Text>
+								<Text size="2">
+									• <b>Dark Theme Window &amp; Startup Flash Prevention:</b> Configured native window theme to Dark and injected early theme initialization into the HTML root to eliminate white screen flashes on startup, with transparent lyric editor background when custom backgrounds or gradients are enabled.
+								</Text>
+								<Text size="2">
+									• <b>Universal External Link Handling:</b> Unified desktop and web URL opening across community dashboards, creator profiles, and guides via a cross-platform opener.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.8
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
@@ -72,6 +97,18 @@ export function ChangelogDialog() {
 								</Text>
 								<Text size="2">
 									• <b>Cloud Accounts &amp; Modern UI Polish:</b> Added user profile statistics, direct web dashboard navigation, aligned Cloud modal styling with the TTML Checklist aesthetics, and modernized app branding assets and app icons.
+								</Text>
+								<Text size="2">
+									• <b>Community Leaderboard &amp; Statistics Dashboard:</b> Launched public community statistics web dashboard (<code>ttml.bobjoerules.com/#stats</code>) tracking global uploads, top lyric creators, total timed lines, and user profile pages (<code>#user=UID</code>).
+								</Text>
+								<Text size="2">
+									• <b>TTML Video Generator (Beta):</b> Introduced experimental Python video generation tool for rendering syllable-timed TTML lyrics into animated preview videos.
+								</Text>
+								<Text size="2">
+									• <b>Auto Segment Timing &amp; Playhead Sync:</b> Added segment-aware syllable timing shortcuts and playhead synchronization during sync mode.
+								</Text>
+								<Text size="2">
+									• <b>Custom Appearance &amp; Font Selection:</b> Expanded background gradient presets, custom background image loading, and granular font customization options.
 								</Text>
 							</Flex>
 						</Box>

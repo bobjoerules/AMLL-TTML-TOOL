@@ -194,7 +194,7 @@ export const accentColorAtom = atomWithStorage<
 	| "lime"
 	| "mint"
 	| "sky"
->("accentColor", "red");
+>("accentColor", "gray");
 
 export const backgroundModeAtom = atomWithStorage<
 	"none" | "image" | "gradient"

@@ -680,6 +680,8 @@
 			"playbackRateDown": "回放 - 降低速度",
 			"playbackRateReset": "回放 - 重置速度",
 			"duplicatePaste": "Edit - Duplicate to current time",
+			"spotMatch": "工具 - SpotMatch（备用 Spotify ID）",
+			"ttmlChecklist": "工具 - TTML 清单",
 			"auditionSelectionBefore": "频谱图 - 试听选区 (前 500ms)",
 			"auditionSelection": "频谱图 - 试听选区",
 			"auditionSelectionAfter": "频谱图 - 试听选区 (后 500ms)",
@@ -689,7 +691,8 @@
 				"View": "视图",
 				"Sync": "同步",
 				"Audio": "音频",
-				"Spectrogram": "频谱图"
+				"Spectrogram": "频谱图",
+				"Tools": "工具"
 			},
 			"autoSegmentOptions": "Auto Segment",
 			"autoSegmentDoublePress": "Require double press",
@@ -1232,7 +1235,9 @@
 		"searchPlaceholder": "搜索歌曲、歌手、专辑或备注...",
 		"all": "全部",
 		"pending": "进行中",
+		"notStarted": "未开始",
 		"completed": "已完成",
+		"statusLabel": "状态",
 		"favorites": "收藏",
 		"favorite": "加入收藏",
 		"unfavorite": "取消收藏",

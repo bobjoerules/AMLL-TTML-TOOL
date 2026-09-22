@@ -1,12 +1,14 @@
 import {
 	collection,
 	deleteDoc,
+	deleteField,
 	doc,
 	getDoc,
 	getDocs,
 	orderBy,
 	query,
 	setDoc,
+	updateDoc,
 } from "firebase/firestore";
 import { globalStore } from "$/states/store";
 import {
@@ -187,7 +189,7 @@ export async function saveTTMLToCloud(
 	}
 
 	const isPublished = Boolean(input.publishToCommunity);
-	const data: Omit<CloudTTMLDocument, "id"> & {
+	const metadata: Omit<CloudTTMLMetadata, "id"> & {
 		coverArt?: string | null;
 		tags?: string[];
 		finished?: boolean;
@@ -196,7 +198,6 @@ export async function saveTTMLToCloud(
 		title: input.title || "Untitled",
 		artist: input.artist || "",
 		album: input.album || "",
-		rawTTML: input.rawTTML,
 		lineCount: input.lineCount,
 		durationMs: input.durationMs,
 		createdAt: now,
@@ -214,15 +215,34 @@ export async function saveTTMLToCloud(
 		publishedToCommunity: isPublished,
 	};
 
-	await setDoc(docRef, data, { merge: true });
+	// 1. Save lightweight metadata doc (without rawTTML) so library listings are fast
+	await setDoc(docRef, metadata, { merge: true });
+	// Remove legacy rawTTML field from the parent metadata doc if present
+	await updateDoc(docRef, { rawTTML: deleteField() }).catch(() => {});
+
+	// 2. Save individual rawTTML payload in subcollection so each song's content loads individually on demand
+	const payloadDocRef = doc(
+		db,
+		"users",
+		user.uid,
+		"ttmls",
+		docRef.id,
+		"payload",
+		"content",
+	);
+	await setDoc(payloadDocRef, {
+		rawTTML: input.rawTTML,
+		updatedAt: now,
+	});
 
 	// Mirror to or remove from finished_ttmls and public_ttmls collections
 	try {
 		const finishedDocRef = doc(collection(db, "finished_ttmls"), docRef.id);
 		const publicDocRef = doc(collection(db, "public_ttmls"), docRef.id);
 		if (isPublished) {
-			await setDoc(finishedDocRef, data, { merge: true });
-			await setDoc(publicDocRef, data, { merge: true }).catch(() => {});
+			const communityData = { ...metadata, rawTTML: input.rawTTML };
+			await setDoc(finishedDocRef, communityData, { merge: true });
+			await setDoc(publicDocRef, communityData, { merge: true }).catch(() => {});
 		} else {
 			await deleteDoc(finishedDocRef).catch(() => {});
 			await deleteDoc(publicDocRef).catch(() => {});
@@ -248,14 +268,14 @@ export async function saveTTMLToCloud(
 
 		const currentChecklist = globalStore.get(ttmlChecklistAtom);
 		const linkResult = linkUploadedTTMLToChecklist(currentChecklist, {
-			title: data.title,
-			artist: data.artist,
-			album: data.album,
-			coverArt: data.coverArt,
+			title: metadata.title,
+			artist: metadata.artist,
+			album: metadata.album,
+			coverArt: metadata.coverArt,
 			docId: docRef.id,
 			rawTTML: input.rawTTML,
 			audioUrl,
-			isCompleted: data.finished,
+			isCompleted: metadata.finished,
 		});
 		globalStore.set(ttmlChecklistAtom, linkResult.entries);
 		void saveChecklistToCloud(linkResult.entries, user.uid);
@@ -282,9 +302,23 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 		const q = query(collectionRef, orderBy("updatedAt", "desc"));
 		const snapshot = await getDocs(q);
 
-		const list: CloudTTMLMetadata[] = snapshot.docs.map((docSnap) => {
+		const list: CloudTTMLMetadata[] = [];
+		const legacyDocsToMigrate: Array<{
+			id: string;
+			rawTTML: string;
+			updatedAt: number;
+		}> = [];
+
+		for (const docSnap of snapshot.docs) {
 			const d = docSnap.data();
-			return {
+			if (d.rawTTML) {
+				legacyDocsToMigrate.push({
+					id: docSnap.id,
+					rawTTML: d.rawTTML,
+					updatedAt: d.updatedAt || 0,
+				});
+			}
+			list.push({
 				id: docSnap.id,
 				title: d.title || "Untitled",
 				artist: d.artist || "",
@@ -303,10 +337,48 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 				coverArt: d.coverArt || null,
 				publishedToCommunity: Boolean(d.publishedToCommunity || d.finished),
 				finished: Boolean(d.finished),
-			};
-		});
+			});
+		}
 
 		store.set(cloudTTMLListAtom, list);
+
+		// Cache in localStorage for instant rendering next time
+		try {
+			localStorage.setItem(
+				`amll_cloud_ttmls_${user.uid}`,
+				JSON.stringify(list),
+			);
+		} catch {
+			// ignore quota
+		}
+
+		// Asynchronously migrate any legacy docs that still contained heavy rawTTML in the parent doc
+		if (legacyDocsToMigrate.length > 0) {
+			(async () => {
+				for (const item of legacyDocsToMigrate) {
+					try {
+						const payloadRef = doc(
+							db,
+							"users",
+							user.uid,
+							"ttmls",
+							item.id,
+							"payload",
+							"content",
+						);
+						await setDoc(payloadRef, {
+							rawTTML: item.rawTTML,
+							updatedAt: item.updatedAt,
+						});
+						const parentRef = doc(db, "users", user.uid, "ttmls", item.id);
+						await updateDoc(parentRef, { rawTTML: deleteField() });
+					} catch {
+						// ignore migration failure
+					}
+				}
+			})();
+		}
+
 		return list;
 	} finally {
 		store.set(cloudTTMLLoadingAtom, false);
@@ -315,15 +387,17 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 
 export async function loadTTMLFromCloud(
 	docId: string,
+	authorUid?: string,
 ): Promise<CloudTTMLDocument> {
 	const auth = getFirebaseAuth();
 	const user = auth.currentUser;
-	if (!user) {
+	const targetUid = authorUid || user?.uid;
+	if (!targetUid) {
 		throw new Error("You must be signed in to load lyrics from the Cloud.");
 	}
 
 	const db = getFirebaseFirestore();
-	const docRef = doc(db, "users", user.uid, "ttmls", docId);
+	const docRef = doc(db, "users", targetUid, "ttmls", docId);
 	const docSnap = await getDoc(docRef);
 
 	if (!docSnap.exists()) {
@@ -331,17 +405,58 @@ export async function loadTTMLFromCloud(
 	}
 
 	const d = docSnap.data();
+	let rawTTML = d.rawTTML || "";
+
+	// If rawTTML is not in the parent metadata doc, load the individual song payload subdocument
+	if (!rawTTML) {
+		const payloadRef = doc(
+			db,
+			"users",
+			targetUid,
+			"ttmls",
+			docId,
+			"payload",
+			"content",
+		);
+		const payloadSnap = await getDoc(payloadRef);
+		if (payloadSnap.exists()) {
+			rawTTML = payloadSnap.data().rawTTML || "";
+		}
+	} else if (user && user.uid === targetUid) {
+		// Migrate legacy doc in background so future library lists don't download this song's rawTTML
+		(async () => {
+			try {
+				const payloadRef = doc(
+					db,
+					"users",
+					targetUid,
+					"ttmls",
+					docId,
+					"payload",
+					"content",
+				);
+				await setDoc(payloadRef, {
+					rawTTML,
+					updatedAt: d.updatedAt || Date.now(),
+				});
+				await updateDoc(docRef, { rawTTML: deleteField() });
+			} catch {
+				// ignore
+			}
+		})();
+	}
+
 	return {
 		id: docSnap.id,
 		title: d.title || "Untitled",
 		artist: d.artist || "",
 		album: d.album || "",
-		rawTTML: d.rawTTML || "",
+		rawTTML,
 		lineCount: d.lineCount || 0,
 		durationMs: d.durationMs || 0,
 		createdAt: d.createdAt || 0,
 		updatedAt: d.updatedAt || 0,
-		authorUid: d.authorUid || user.uid,
+		authorUid: d.authorUid || targetUid,
 		authorName: d.authorName,
 		hasAudio: !!d.hasAudio,
 		audioUrl: d.audioUrl || null,
@@ -436,6 +551,9 @@ export async function deleteTTMLFromCloud(docId: string): Promise<void> {
 	const db = getFirebaseFirestore();
 	const docRef = doc(db, "users", user.uid, "ttmls", docId);
 	await deleteDoc(docRef);
+	await deleteDoc(
+		doc(db, "users", user.uid, "ttmls", docId, "payload", "content"),
+	).catch(() => {});
 
 	// Also remove from public/finished collections if present
 	try {

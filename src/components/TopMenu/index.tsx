@@ -29,6 +29,8 @@ import {
 	keySelectAllAtom,
 	keySelectInvertedAtom,
 	keySelectWordsOfMatchedSelectionAtom,
+	keySpotMatchAtom,
+	keyTtmlChecklistAtom,
 	keyUndoAtom,
 } from "$/states/keybindings";
 import { showPreviewPanelAtom } from "$/states/main";
@@ -114,6 +116,12 @@ export const TopMenu: FC = () => {
 	useKeyBindingAtom(keyDeleteSelectionAtom, menu.onDeleteSelection, [
 		menu.onDeleteSelection,
 	]);
+	useKeyBindingAtom(keySpotMatchAtom, menu.onOpenSpotMatch, [
+		menu.onOpenSpotMatch,
+	]);
+	useKeyBindingAtom(keyTtmlChecklistAtom, menu.onOpenTTMLChecklist, [
+		menu.onOpenTTMLChecklist,
+	]);
 	useKeyBindingAtom(keyAutoSegmentAtom, onSingleAutoSegment, [
 		onSingleAutoSegment,
 	]);
@@ -165,6 +173,15 @@ export const TopMenu: FC = () => {
 				menuRef.current.onOpenTTMLChecklist();
 			} else if (
 				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "m" &&
+				e.shiftKey &&
+				!e.altKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onOpenSpotMatch();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
 				e.key.toLowerCase() === "n" &&
 				e.shiftKey &&
 				!e.altKey
@@ -190,6 +207,15 @@ export const TopMenu: FC = () => {
 				e.preventDefault();
 				e.stopPropagation();
 				menuRef.current.onOpenReplace();
+			} else if (
+				(e.metaKey || e.ctrlKey) &&
+				e.key.toLowerCase() === "k" &&
+				!e.shiftKey &&
+				!e.altKey
+			) {
+				e.preventDefault();
+				e.stopPropagation();
+				menuRef.current.onAutoSegment();
 			}
 		};
 		window.addEventListener("keydown", onKeyDown, { capture: true });
@@ -225,6 +251,7 @@ export const TopMenu: FC = () => {
 				"menu-select-all": () => menuRef.current.onSelectAll(),
 				"menu-quick-segment": () => menuRef.current.onQuickAutoSegment(),
 				"menu-auto-segment": () => menuRef.current.onAutoSegment(),
+				"menu-auto-segment-sub": () => menuRef.current.onAutoSegment(),
 				"menu-ruby-segment": () => menuRef.current.onRubySegment(),
 				"menu-advanced-segment": () =>
 					menuRef.current.onOpenAdvancedSegmentation(),

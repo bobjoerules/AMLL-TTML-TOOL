@@ -2,6 +2,7 @@ import {
 	ArrowClockwise24Regular,
 	Camera24Regular,
 	Cloud24Regular,
+	CloudDatabase20Regular,
 	Copy16Regular,
 	DocumentBulletList24Regular,
 	Edit24Regular,
@@ -11,6 +12,7 @@ import {
 	MusicNote224Regular,
 	Open16Regular,
 	Person16Regular,
+	Save20Regular,
 	ShieldCheckmarkRegular,
 	Timer24Regular,
 } from "@fluentui/react-icons";
@@ -29,7 +31,7 @@ import {
 	TextField,
 	Tooltip,
 } from "@radix-ui/themes";
-import { open } from "@tauri-apps/plugin-shell";
+import { openExternal } from "$/utils/openExternal";
 import { useAtomValue, useSetAtom } from "jotai";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -56,13 +58,6 @@ import { fetchUserTTMLList } from "$/modules/cloud/ttmlStorage";
 
 const MODERATOR_UIDS = new Set(["s41Sey8PJUSYHQUsS6aLLb7lsf02"]);
 
-const openExternal = async (url: string) => {
-	if (import.meta.env.TAURI_ENV_PLATFORM) {
-		await open(url);
-	} else {
-		window.open(url, "_blank");
-	}
-};
 
 export const SettingsAccountTab = memo(() => {
 	const { t } = useTranslation();
@@ -384,7 +379,7 @@ export const SettingsAccountTab = memo(() => {
 										type="button"
 										style={{ cursor: "pointer" }}
 										onClick={() =>
-											openExternal("https://amll-ttml.web.app/#stats")
+											openExternal("https://ttml.bobjoerules.com/#stats")
 										}
 									>
 										<Globe16Regular style={{ width: 14, height: 14 }} />
@@ -715,7 +710,7 @@ export const SettingsAccountTab = memo(() => {
 							style={{ cursor: "pointer" }}
 							onClick={() =>
 								openExternal(
-									`https://amll-ttml.web.app/#user=${encodeURIComponent(user.uid)}`,
+									`https://ttml.bobjoerules.com/#user=${encodeURIComponent(user.uid)}`,
 								)
 							}
 						>
@@ -727,7 +722,7 @@ export const SettingsAccountTab = memo(() => {
 							color="purple"
 							size="2"
 							style={{ cursor: "pointer" }}
-							onClick={() => openExternal("https://amll-ttml.web.app/#stats")}
+							onClick={() => openExternal("https://ttml.bobjoerules.com/#stats")}
 						>
 							{t("cloud.viewCommunityStats", "Community Leaderboard")}
 						</Button>
@@ -741,7 +736,7 @@ export const SettingsAccountTab = memo(() => {
 								style={{ cursor: "pointer" }}
 								onClick={() => {
 									navigator.clipboard.writeText(
-										`https://amll-ttml.web.app/#user=${encodeURIComponent(user.uid)}`,
+										`https://ttml.bobjoerules.com/#user=${encodeURIComponent(user.uid)}`,
 									);
 									toast.success(
 										t(
@@ -895,12 +890,18 @@ export const SettingsAccountTab = memo(() => {
 						Manage your online lyric backups, download existing projects, or
 						sync your current lyric document to your account.
 					</Text>
-					<Flex gap="3" mt="1">
+					<Flex gap="3" mt="1" wrap="wrap">
 						<Button variant="solid" onClick={() => handleOpenManager("open")}>
-							📂 Open Cloud Library
+							<Flex align="center" gap="2">
+								<CloudDatabase20Regular style={{ width: 16, height: 16 }} />
+								Open Cloud Library
+							</Flex>
 						</Button>
 						<Button variant="soft" onClick={() => handleOpenManager("save")}>
-							💾 Save Current Lyric to Cloud
+							<Flex align="center" gap="2">
+								<Save20Regular style={{ width: 16, height: 16 }} />
+								Save Current Lyric to Cloud
+							</Flex>
 						</Button>
 					</Flex>
 				</Flex>

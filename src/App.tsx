@@ -130,6 +130,7 @@ import {
 	customBackgroundImageInitAtom,
 	customBackgroundMaskAtom,
 	customBackgroundOpacityAtom,
+	hasCustomBackgroundAtom,
 } from "./modules/settings/modals/customBackground";
 import { showTouchSyncPanelAtom } from "./modules/settings/states/sync.ts";
 import { previewFullscreenAtom } from "./modules/settings/states/preview.ts";
@@ -355,7 +356,7 @@ function App() {
 	const customBackgroundBrightness = useAtomValue(
 		customBackgroundBrightnessAtom,
 	);
-	const accentColor = useAtomValue(accentColorAtom);
+	const [accentColor, setAccentColor] = useAtom(accentColorAtom);
 	const useCustomAccent = useAtomValue(useCustomAccentAtom);
 	const customAccentColor = useAtomValue(customAccentColorAtom);
 
@@ -416,7 +417,14 @@ function App() {
 		if (vSelection === "rgba(56, 189, 248, 0.3)") {
 			setVSelection("");
 		}
-	}, [vActiveLine, vSelection, setVActiveLine, setVSelection]);
+		const defaultThemeMigrated = localStorage.getItem("amll-theme-grayscale-v1");
+		if (!defaultThemeMigrated) {
+			localStorage.setItem("amll-theme-grayscale-v1", "true");
+			if (accentColor === "red") {
+				setAccentColor("gray");
+			}
+		}
+	}, [vActiveLine, vSelection, setVActiveLine, setVSelection, accentColor, setAccentColor]);
 
 	const boykisserMode = useAtomValue(boykisserModeAtom);
 	const [boykisserUnlocked, setBoykisserUnlocked] = useAtom(
@@ -502,9 +510,18 @@ function App() {
 			const match = fontStr.match(/"([^"]+)"/);
 			if (match) {
 				const fontName = match[1];
+				const SYSTEM_NAMES = [
+					"MiSans", "Inter", "system-ui", "SpicyLyrics", "Arial", "Helvetica",
+					"Helvetica Neue", "Verdana", "Tahoma", "Trebuchet MS", "Impact",
+					"Times New Roman", "Times", "Georgia", "Garamond", "Courier New",
+					"Courier", "Comic Sans MS", "Palatino", "Palatino Linotype", "Bookman",
+					"Bookman Old Style", "Apple System", "Segoe UI", "San Francisco",
+					"SF Pro", "SF Pro Display", "Avenir", "Avenir Next", "Futura",
+					"Optima", "Gill Sans", "Franklin Gothic", "Century Gothic", "Lucida Grande",
+				];
 				if (
 					!customNames.includes(fontName) &&
-					!["MiSans", "Inter", "system-ui", "SpicyLyrics"].includes(fontName)
+					!SYSTEM_NAMES.includes(fontName)
 				) {
 					const fontId = `google-font-${fontName.replace(/\s+/g, "-")}`;
 					if (!document.getElementById(fontId)) {
@@ -512,6 +529,9 @@ function App() {
 						link.id = fontId;
 						link.rel = "stylesheet";
 						link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, "+")}:ital,wght@0,400;0,700;1,400;1,700&display=swap`;
+						link.onerror = () => {
+							link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, "+")}&display=swap`;
+						};
 						document.head.appendChild(link);
 					}
 				}
@@ -525,6 +545,13 @@ function App() {
 		customEditorFontName,
 		customPreviewFontName,
 	]);
+
+	const backgroundMode = useAtomValue(backgroundModeAtom);
+	const selectedGradientId = useAtomValue(selectedGradientAtom);
+	const selectedGradient = backgroundGradients.find(
+		(g) => g.id === selectedGradientId,
+	);
+	const hasCustomBackground = useAtomValue(hasCustomBackgroundAtom);
 
 	const customThemeStyles = useCustomAccent
 		? generateRadixScale(customAccentColor, isDarkTheme)
@@ -676,7 +703,7 @@ function App() {
 			${shouldApplySidebarBg ? `--sidebar-bg: ${vSidebarBg} !important;` : ""}
 			${vSidebarActive ? `--sidebar-active: ${vSidebarActive} !important;` : ""}
 			${vMenuHover ? `--menu-hover: ${vMenuHover} !important;` : ""}
-			${shouldApplyEditorBg ? `--editor-bg: ${vEditorBg} !important;` : ""}
+			${hasCustomBackground && !shouldApplyEditorBg ? `--editor-bg: transparent !important;` : shouldApplyEditorBg ? `--editor-bg: ${vEditorBg} !important;` : ""}
 			${vActiveLine ? `--active-line-bg: ${vActiveLine} !important;` : ""}
 			${vLineHover ? `--line-hover-bg: ${vLineHover} !important;` : ""}
 			${vSelection ? `--selection-color: ${vSelection} !important;` : ""}
@@ -734,6 +761,7 @@ function App() {
 		`;
 	}, [
 		isDarkTheme,
+		hasCustomBackground,
 		customThemeStyles,
 		appFont,
 		glassmorphismBlur,
@@ -798,21 +826,7 @@ function App() {
 		root.style.setProperty("--toxi-font-family", resolvedToxiFont);
 	}, [appFont, editorFont, previewFont]);
 
-	const backgroundMode = useAtomValue(backgroundModeAtom);
-	const selectedGradientId = useAtomValue(selectedGradientAtom);
-	const selectedGradient = backgroundGradients.find(
-		(g) => g.id === selectedGradientId,
-	);
-
-	const [hasCustomBackground, setHasCustomBackground] = useState(false);
 	const effectiveTheme = isDarkTheme ? "dark" : "light";
-
-	useEffect(() => {
-		setHasCustomBackground(
-			backgroundMode !== "none" &&
-				!!(customBackgroundImage || selectedGradient),
-		);
-	}, [backgroundMode, customBackgroundImage, selectedGradient]);
 	const { checkUpdate, status, update } = useAppUpdate();
 	const hasNotifiedRef = useRef(false);
 	const setSettingsOpen = useSetAtom(settingsDialogAtom);
@@ -1220,7 +1234,7 @@ function App() {
 							style={{
 								backgroundImage:
 									backgroundMode === "image"
-										? `url(${customBackgroundImage})`
+										? `url("${customBackgroundImage}")`
 										: useCustomGradient
 											? generateGradient(
 													customGradientColors,
@@ -1280,7 +1294,9 @@ function App() {
 												overflow="hidden"
 												key="editor-content"
 												style={{
-													backgroundColor: "var(--editor-bg, transparent)",
+													backgroundColor: hasCustomBackground
+														? "transparent"
+														: "var(--editor-bg, transparent)",
 												}}
 											>
 												<Flex height="100%" overflow="hidden">

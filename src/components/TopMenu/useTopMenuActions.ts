@@ -1,4 +1,4 @@
-import { open } from "@tauri-apps/plugin-shell";
+import { openExternal } from "$/utils/openExternal";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { useSetImmerAtom, withImmer } from "jotai-immer";
 import { useCallback, useMemo } from "react";
@@ -49,6 +49,7 @@ import {
 	ttmlChecklistDialogAtom,
 } from "$/states/dialogs.ts";
 import {
+	keyAutoSegmentAtom,
 	keyDeleteSelectionAtom,
 	keyFindAtom,
 	keyNewFileAtom,
@@ -60,6 +61,8 @@ import {
 	keySelectAllAtom,
 	keySelectInvertedAtom,
 	keySelectWordsOfMatchedSelectionAtom,
+	keySpotMatchAtom,
+	keyTtmlChecklistAtom,
 	keyUndoAtom,
 } from "$/states/keybindings.ts";
 import {
@@ -122,6 +125,9 @@ export const useTopMenuActions = () => {
 	const findKey = useAtomValue(keyFindAtom);
 	const replaceKey = useAtomValue(keyReplaceAtom);
 	const deleteSelectionKey = useAtomValue(keyDeleteSelectionAtom);
+	const autoSegmentKey = useAtomValue(keyAutoSegmentAtom);
+	const spotMatchKey = useAtomValue(keySpotMatchAtom);
+	const ttmlChecklistKey = useAtomValue(keyTtmlChecklistAtom);
 	const runHistoryAction = useMemo(
 		() => createHistoryActionGate(requestAnimationFrame),
 		[],
@@ -409,11 +415,7 @@ export const useTopMenuActions = () => {
 	}, [setTTMLChecklistDialog]);
 
 	const onOpenStatsAndProfiles = useCallback(async () => {
-		if (import.meta.env.TAURI_ENV_PLATFORM) {
-			await open("https://amll-ttml.web.app/#stats");
-		} else {
-			window.open("https://amll-ttml.web.app/#stats", "_blank");
-		}
+		await openExternal("https://ttml.bobjoerules.com/#stats");
 	}, []);
 
 	const onOpenSpotMatch = useCallback(() => {
@@ -421,19 +423,11 @@ export const useTopMenuActions = () => {
 	}, [setSpotMatchDialog]);
 
 	const onOpenGitHub = useCallback(async () => {
-		if (import.meta.env.TAURI_ENV_PLATFORM) {
-			await open("https://github.com/bobjoerules/AMLL-TTML-TOOL");
-		} else {
-			window.open("https://github.com/bobjoerules/AMLL-TTML-TOOL");
-		}
+		await openExternal("https://github.com/bobjoerules/AMLL-TTML-TOOL");
 	}, []);
 
 	const onOpenWiki = useCallback(async () => {
-		if (import.meta.env.TAURI_ENV_PLATFORM) {
-			await open("https://guide.spicylyrics.org/");
-		} else {
-			window.open("https://guide.spicylyrics.org/");
-		}
+		await openExternal("https://guide.spicylyrics.org/");
 	}, []);
 
 	const onUndo = useCallback(() => {
@@ -739,8 +733,11 @@ export const useTopMenuActions = () => {
 		selectInvertedLinesKey,
 		selectWordsOfMatchedSelectionKey,
 		deleteSelectionKey,
+		autoSegmentKey,
 		findKey,
 		replaceKey,
+		spotMatchKey,
+		ttmlChecklistKey,
 		undoDisabled: !undoLyricLines.canUndo,
 		redoDisabled: !undoLyricLines.canRedo,
 		onNewFile,

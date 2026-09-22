@@ -24,19 +24,11 @@ import {
 	Progress,
 	Text,
 } from "@radix-ui/themes";
-import { open } from "@tauri-apps/plugin-shell";
+import { openExternal } from "$/utils/openExternal";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAppUpdate } from "$/utils/useAppUpdate";
 import { clearWebsiteCache, forceWebsiteRefresh } from "$/utils/pwa";
-
-const openExternal = async (url: string) => {
-	if (import.meta.env.TAURI_ENV_PLATFORM) {
-		await open(url);
-	} else {
-		window.open(url, "_blank");
-	}
-};
 
 export const SettingsAboutTab = () => {
 	const { t } = useTranslation();

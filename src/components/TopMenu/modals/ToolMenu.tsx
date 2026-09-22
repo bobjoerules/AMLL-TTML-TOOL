@@ -3,7 +3,8 @@ import { Toolbar } from "radix-ui";
 import type { CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useAtom } from "jotai";
-import { lyricLinesAtom, showPreviewPanelAtom } from "$/states/main";
+import { lyricLinesAtom } from "$/states/main";
+import { formatKeyBindings } from "$/utils/keybindings";
 import { pluginManager } from "$/modules/plugins/plugin-manager";
 import { useTopMenuActions } from "../useTopMenuActions";
 
@@ -17,7 +18,9 @@ const ToolMenuItems = () => {
 	const { t } = useTranslation();
 	const menu = useTopMenuActions();
 	const [lyricLines, setLyricLines] = useAtom(lyricLinesAtom);
-	const [showPreviewPanel, setShowPreviewPanel] = useAtom(showPreviewPanelAtom);
+
+	const getShortcut = (key: string[] | undefined) =>
+		key ? formatKeyBindings(key) : undefined;
 
 	const tools = pluginManager.getTools();
 
@@ -38,18 +41,21 @@ const ToolMenuItems = () => {
 
 	return (
 		<>
-			<DropdownMenu.Item onSelect={() => setShowPreviewPanel((prev) => !prev)}>
-				{showPreviewPanel
-					? t("topBar.menu.hidePreviewPanel", "Hide Side Preview Panel")
-					: t("topBar.menu.showPreviewPanel", "Show Side Preview Panel")}
+			<DropdownMenu.Item
+				onSelect={menu.onAutoSegment}
+				shortcut={getShortcut(menu.autoSegmentKey)}
+			>
+				{t("topBar.menu.autoSegment", "Auto Segment")}
 			</DropdownMenu.Item>
-			<DropdownMenu.Separator />
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger>
 					{t("topBar.menu.segmentationTools", "Segmentation Tools")}
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent>
-					<DropdownMenu.Item onSelect={menu.onAutoSegment}>
+					<DropdownMenu.Item
+						onSelect={menu.onAutoSegment}
+						shortcut={getShortcut(menu.autoSegmentKey)}
+					>
 						{t("topBar.menu.autoSegment", "Auto Segment")}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onSelect={menu.onRubySegment}>
@@ -77,13 +83,19 @@ const ToolMenuItems = () => {
 				{t("topBar.menu.timeStretch", "Time Stretch...")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
-			<DropdownMenu.Item onSelect={menu.onOpenTTMLChecklist}>
+			<DropdownMenu.Item
+				onSelect={menu.onOpenTTMLChecklist}
+				shortcut={getShortcut(menu.ttmlChecklistKey)}
+			>
 				{t("topBar.menu.ttmlChecklist", "TTML Checklist...")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenStatsAndProfiles}>
 				{t("topBar.menu.statsAndProfiles", "User Profiles & Stats...")}
 			</DropdownMenu.Item>
-			<DropdownMenu.Item onSelect={menu.onOpenSpotMatch}>
+			<DropdownMenu.Item
+				onSelect={menu.onOpenSpotMatch}
+				shortcut={getShortcut(menu.spotMatchKey)}
+			>
 				{t("topBar.menu.spotMatch", "SpotMatch (Alternate Spotify IDs)...")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenLatencyTest}>

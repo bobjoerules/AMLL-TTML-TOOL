@@ -1,6 +1,12 @@
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { type Auth, getAuth, onAuthStateChanged } from "firebase/auth";
-import { type Firestore, getFirestore } from "firebase/firestore";
+import {
+	type Firestore,
+	getFirestore,
+	initializeFirestore,
+	persistentLocalCache,
+	persistentMultipleTabManager,
+} from "firebase/firestore";
 import { globalStore } from "$/states/store";
 import {
 	authLoadingAtom,
@@ -56,7 +62,17 @@ export function initFirebase(config?: FirebaseProjectConfig): {
 		}
 
 		currentAuth = getAuth(currentApp);
-		currentDb = getFirestore(currentApp);
+		if (!currentDb) {
+			try {
+				currentDb = initializeFirestore(currentApp, {
+					localCache: persistentLocalCache({
+						tabManager: persistentMultipleTabManager(),
+					}),
+				});
+			} catch {
+				currentDb = getFirestore(currentApp);
+			}
+		}
 
 		if (authUnsubscribe) {
 			authUnsubscribe();

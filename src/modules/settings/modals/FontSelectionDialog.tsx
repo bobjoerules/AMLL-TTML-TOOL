@@ -194,11 +194,9 @@ export const GOOGLE_FONTS = [
 	"Averia Serif Libre",
 	"B612",
 	"Baloo 2",
-	"Bangla",
 	"Baskervville",
 	"Belleza",
 	"Bodoni Moda",
-	"Bottler",
 	"Calistoga",
 	"Castoro",
 	"Chakra Petch",
@@ -234,7 +232,7 @@ export const GOOGLE_FONTS = [
 	"Fondamento",
 	"Forum",
 	"Fraunces",
-	"Frederickathe Great",
+	"Fredericka the Great",
 	"Fresca",
 	"Frijole",
 	"Fugaz One",
@@ -287,8 +285,6 @@ export const GOOGLE_FONTS = [
 	"Handlee",
 	"Hanuman",
 	"Happy Monkey",
-	"Hasan Alquds",
-	"Hasti",
 	"Hepta Slab",
 	"Herr Von Muellerhoff",
 	"Hi Melody",
@@ -298,8 +294,6 @@ export const GOOGLE_FONTS = [
 	"Hind Vadodara",
 	"Holtwood One SC",
 	"Homemade Apple",
-	"Honeymoon",
-	"Horta",
 	"Hubballi",
 	"IBM Plex Sans",
 	"IBM Plex Serif",
@@ -319,33 +313,35 @@ export const GOOGLE_FONTS = [
 	"Inter Tight",
 ];
 
-const SYSTEM_FONTS = [
-	"Arial",
-	"Helvetica",
-	"Verdana",
-	"Tahoma",
-	"Trebuchet MS",
-	"Impact",
-	"Times New Roman",
-	"Georgia",
-	"Garamond",
-	"Courier New",
-	"Comic Sans MS",
-	"Palatino",
-	"Bookman",
-	"Avant Garde",
-	"Apple System",
-	"Segoe UI",
-	"San Francisco",
-	"Avenir",
-	"Futura",
-	"Optima",
-	"Gill Sans",
-	"Franklin Gothic",
-	"Century Gothic",
-	"Lucida Grande",
-	"Standard Symbols PS",
-	"Nimbus Sans L",
+export interface SystemFontDef {
+	label: string;
+	value: string;
+}
+
+const SYSTEM_FONTS: SystemFontDef[] = [
+	{ label: "Arial", value: "Arial, Helvetica, sans-serif" },
+	{ label: "Helvetica", value: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+	{ label: "Verdana", value: "Verdana, Geneva, sans-serif" },
+	{ label: "Tahoma", value: "Tahoma, Verdana, Segoe UI, sans-serif" },
+	{ label: "Trebuchet MS", value: '"Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", sans-serif' },
+	{ label: "Impact", value: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif' },
+	{ label: "Times New Roman", value: '"Times New Roman", Times, Georgia, serif' },
+	{ label: "Georgia", value: 'Georgia, Cambria, "Times New Roman", Times, serif' },
+	{ label: "Garamond", value: 'Garamond, "Baskerville", "Baskerville Old Face", serif' },
+	{ label: "Courier New", value: '"Courier New", Courier, monospace' },
+	{ label: "Comic Sans MS", value: '"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive, sans-serif' },
+	{ label: "Palatino", value: '"Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif' },
+	{ label: "Bookman", value: '"Bookman Old Style", Bookman, Georgia, serif' },
+	{ label: "Apple System", value: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+	{ label: "Segoe UI", value: '"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif' },
+	{ label: "San Francisco", value: 'system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", sans-serif' },
+	{ label: "Avenir", value: '"Avenir Next", Avenir, "Segoe UI", sans-serif' },
+	{ label: "Futura", value: 'Futura, "Century Gothic", "AppleGothic", sans-serif' },
+	{ label: "Optima", value: 'Optima, Candara, "Segoe UI", sans-serif' },
+	{ label: "Gill Sans", value: '"Gill Sans", "Gill Sans MT", Calibri, sans-serif' },
+	{ label: "Franklin Gothic", value: '"Franklin Gothic Medium", Arial, sans-serif' },
+	{ label: "Century Gothic", value: '"Century Gothic", AppleGothic, sans-serif' },
+	{ label: "Lucida Grande", value: '"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", sans-serif' },
 ];
 
 const DEFAULT_FONTS = [
@@ -448,7 +444,9 @@ export const FontSelectionDialog = () => {
 
 	const filteredSystemFonts = useMemo(() => {
 		const search = searchQuery.toLowerCase();
-		return SYSTEM_FONTS.filter((font) => font.toLowerCase().includes(search));
+		return SYSTEM_FONTS.filter((font) =>
+			font.label.toLowerCase().includes(search),
+		);
 	}, [searchQuery]);
 
 	const handleSelectFont = (fontFamily: string, isGoogleFont = true) => {
@@ -460,6 +458,9 @@ export const FontSelectionDialog = () => {
 				link.id = fontId;
 				link.rel = "stylesheet";
 				link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, "+")}:wght@300;400;500;600;700;800&display=swap`;
+				link.onerror = () => {
+					link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, "+")}&display=swap`;
+				};
 				document.head.appendChild(link);
 			}
 		}
@@ -580,7 +581,14 @@ export const FontSelectionDialog = () => {
 	};
 
 	const isFontSelected = (fontValue: string) => {
-		return currentFont === fontValue;
+		if (currentFont === fontValue) return true;
+		if (currentFont && fontValue) {
+			const cleanCurrent = currentFont.replace(/["']/g, "").trim().toLowerCase();
+			const cleanTarget = fontValue.replace(/["']/g, "").trim().toLowerCase();
+			if (cleanCurrent === cleanTarget) return true;
+			if (cleanCurrent.startsWith(cleanTarget + ",") || cleanTarget.startsWith(cleanCurrent + ",")) return true;
+		}
+		return false;
 	};
 
 	return (
@@ -591,7 +599,10 @@ export const FontSelectionDialog = () => {
 					width: "95vw",
 					height: "90vh",
 					maxHeight: 900,
-					padding: "32px",
+					padding: "24px 32px",
+					display: "flex",
+					flexDirection: "column",
+					boxSizing: "border-box",
 				}}
 			>
 				<VisuallyHidden>
@@ -599,10 +610,10 @@ export const FontSelectionDialog = () => {
 						Select a font from standard, system, or Google fonts library.
 					</Dialog.Description>
 				</VisuallyHidden>
-				<Flex justify="between" align="center" mb="5">
+				<Flex justify="between" align="center" mb="4" style={{ flexShrink: 0 }}>
 					<Flex align="center" gap="3">
 						<TextFont24Regular />
-						<Dialog.Title mb="0" style={{ fontSize: "32px" }}>
+						<Dialog.Title mb="0" style={{ fontSize: "28px" }}>
 							{t("settings.appearance.fontLibrary", "Font Library")}
 						</Dialog.Title>
 					</Flex>
@@ -610,15 +621,15 @@ export const FontSelectionDialog = () => {
 						<IconButton
 							variant="ghost"
 							color="gray"
-							style={{ cursor: "pointer" }}
+							style={{ cursor: "pointer", margin: 0 }}
 						>
 							<DismissRegular />
 						</IconButton>
 					</Dialog.Close>
 				</Flex>
 
-				<Flex direction="column" gap="4" height="calc(100% - 50px)">
-					<Flex direction="column" gap="2">
+				<Flex direction="column" gap="4" style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+					<Flex direction="column" gap="2" style={{ flexShrink: 0 }}>
 						<Text size="2" weight="bold" color="gray">
 							{t("settings.appearance.fontScope", "Customize Font For:")}
 						</Text>
@@ -642,11 +653,15 @@ export const FontSelectionDialog = () => {
 
 					<Card
 						variant="surface"
-						style={{ padding: "24px", backgroundColor: "var(--gray-2)" }}
+						style={{
+							padding: "16px 20px",
+							backgroundColor: "var(--gray-2)",
+							flexShrink: 0,
+						}}
 					>
-						<Grid columns="2" gap="6" width="100%">
-							<Flex direction="column" gap="3">
-								<Text size="4" weight="bold" mb="2">
+						<Grid columns="2" gap="5" width="100%">
+							<Flex direction="column" gap="2">
+								<Text size="3" weight="bold">
 									{t("settings.appearance.fontWeight", "Font Weight")}
 								</Text>
 								<SegmentedControl.Root
@@ -663,8 +678,8 @@ export const FontSelectionDialog = () => {
 									</SegmentedControl.Item>
 								</SegmentedControl.Root>
 							</Flex>
-							<Flex direction="column" gap="3">
-								<Text size="4" weight="bold" mb="2">
+							<Flex direction="column" gap="2">
+								<Text size="3" weight="bold">
 									{t("settings.appearance.fontStyle", "Font Style")}
 								</Text>
 								<SegmentedControl.Root
@@ -684,7 +699,7 @@ export const FontSelectionDialog = () => {
 						</Grid>
 					</Card>
 
-					<Flex gap="3" wrap="wrap" align="center">
+					<Flex gap="3" wrap="wrap" align="center" style={{ flexShrink: 0 }}>
 						<TextField.Root
 							placeholder={t("common.search", "Search fonts...")}
 							value={searchQuery}
@@ -718,7 +733,7 @@ export const FontSelectionDialog = () => {
 					{currentCustomName && (
 						<Card
 							variant="surface"
-							style={{ backgroundColor: "var(--accent-3)" }}
+							style={{ backgroundColor: "var(--accent-3)", flexShrink: 0 }}
 						>
 							<Flex align="center" justify="between">
 								<Flex direction="column">
@@ -766,7 +781,7 @@ export const FontSelectionDialog = () => {
 					<ScrollArea
 						type="always"
 						scrollbars="vertical"
-						style={{ flexGrow: 1 }}
+						style={{ flex: 1, minHeight: 0 }}
 					>
 						<Flex direction="column" gap="4" pr="4" pb="6">
 							<Box>
@@ -805,30 +820,28 @@ export const FontSelectionDialog = () => {
 									<Grid columns="repeat(auto-fill, minmax(280px, 1fr))" gap="3">
 										{filteredSystemFonts.map((font) => (
 											<Card
-												key={font}
+												key={font.label}
 												style={{
 													cursor: "pointer",
 													padding: "12px",
 													minHeight: "60px",
 													display: "flex",
 													alignItems: "center",
-													border:
-													isFontSelected(`"${font}", sans-serif`) ||
-													isFontSelected(font)
+													border: isFontSelected(font.value)
 														? "2px solid var(--accent-9)"
 														: "none",
 												}}
-												onClick={() => handleSelectFont(font, false)}
+												onClick={() => handleSelectFont(font.value, false)}
 											>
 												<Text
 													size="4"
 													style={{
-														fontFamily: `"${font}", sans-serif`,
+														fontFamily: font.value,
 														fontWeight: appFontWeight,
 														fontStyle: appFontStyle,
 													}}
 												>
-													{font}
+													{font.label}
 												</Text>
 											</Card>
 										))}
@@ -855,6 +868,16 @@ export const FontSelectionDialog = () => {
 													isFontSelected(`"${font}", sans-serif`) || isFontSelected(font)
 														? "2px solid var(--accent-9)"
 														: "none",
+											}}
+											onPointerEnter={() => {
+												const fontId = `google-font-${font.replace(/\s+/g, "-")}`;
+												if (!document.getElementById(fontId)) {
+													const link = document.createElement("link");
+													link.id = fontId;
+													link.rel = "stylesheet";
+													link.href = `https://fonts.googleapis.com/css2?family=${font.replace(/\s+/g, "+")}&display=swap`;
+													document.head.appendChild(link);
+												}
 											}}
 											onClick={() => handleSelectFont(font)}
 										>
@@ -883,7 +906,7 @@ export const FontSelectionDialog = () => {
 						</Flex>
 					</ScrollArea>
 
-					<Flex justify="end" pt="2">
+					<Flex justify="end" pt="2" style={{ flexShrink: 0 }}>
 						<Dialog.Close>
 							<Button variant="soft" color="gray">
 								{t("common.close", "Close")}
