@@ -55,6 +55,8 @@ import {
 	currentUserAtom,
 } from "$/modules/cloud/states";
 import { fetchUserTTMLList } from "$/modules/cloud/ttmlStorage";
+import { groupCloudTTMLs } from "$/modules/cloud/songGrouping";
+import { extractArtistTokens } from "$/modules/ttml-checklist/logic";
 
 const MODERATOR_UIDS = new Set(["s41Sey8PJUSYHQUsS6aLLb7lsf02"]);
 
@@ -140,36 +142,24 @@ export const SettingsAccountTab = memo(() => {
 		totalDurationMs,
 		uniqueArtistCount,
 	} = useMemo(() => {
-		const uniqueSongs = new Map<
-			string,
-			{ lines: number; duration: number }
-		>();
+		const groups = groupCloudTTMLs(cloudTTMLList);
 		const artists = new Set<string>();
-
-		for (const item of cloudTTMLList) {
-			const nameKey = (item.title || "").trim().toLowerCase() || item.id;
-			const lines = item.lineCount || 0;
-			const duration = item.durationMs || 0;
-			const artist = (item.artist || "").trim().toLowerCase();
-			if (artist) {
-				artists.add(artist);
-			}
-
-			const existing = uniqueSongs.get(nameKey);
-			if (existing === undefined || lines > existing.lines) {
-				uniqueSongs.set(nameKey, { lines, duration });
-			}
-		}
-
 		let totalLines = 0;
 		let totalDuration = 0;
-		for (const s of uniqueSongs.values()) {
-			totalLines += s.lines;
-			totalDuration += s.duration;
+
+		for (const g of groups) {
+			totalLines += g.maxLines;
+			totalDuration += g.durationMs;
+			const primary =
+				extractArtistTokens(g.artist).primary ||
+				(g.artist || "").trim().toLowerCase();
+			if (primary) {
+				artists.add(primary);
+			}
 		}
 
 		return {
-			uniqueSongCount: uniqueSongs.size,
+			uniqueSongCount: groups.length,
 			totalLinesCount: totalLines,
 			totalDurationMs: totalDuration,
 			uniqueArtistCount: artists.size,

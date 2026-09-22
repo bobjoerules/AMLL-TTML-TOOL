@@ -16,6 +16,8 @@ import {
 } from "@radix-ui/themes";
 import {
 	ArrowClockwise16Regular,
+	Checkmark16Filled,
+	Checkmark16Regular,
 	ChevronDown16Regular,
 	ChevronUp16Regular,
 	Cloud24Filled,
@@ -26,6 +28,7 @@ import {
 	DocumentArrowDown16Regular,
 	Folder16Regular,
 	Globe16Regular,
+	History16Regular,
 	List16Regular,
 	MusicNote2Filled,
 	Person16Regular,
@@ -40,6 +43,12 @@ import { toast } from "react-toastify";
 import { useFileOpener } from "$/hooks/useFileOpener";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
 import { openExternal } from "$/utils/openExternal";
+import { isTTML100PercentCompleted } from "$/modules/ttml-checklist/logic";
+import {
+	areCloudTTMLsSameSong,
+	groupCloudTTMLs,
+	type SongGroup,
+} from "../songGrouping";
 import {
 	allowConsecutiveBackgroundLinesAtom,
 	lyricTextNormalizationOptionsAtom,
@@ -58,6 +67,7 @@ import {
 	fetchUserTTMLList,
 	loadTTMLFromCloud,
 	saveTTMLToCloud,
+	updateTTMLFinishedInCloud,
 } from "../ttmlStorage";
 import type { CloudTTMLMetadata } from "../types";
 
@@ -78,33 +88,26 @@ const formatDate = (timestamp: number): string => {
 	});
 };
 
-export interface SongGroup {
-	key: string;
-	title: string;
-	artist: string;
-	album: string;
-	coverArt?: string | null;
-	latestUpdated: number;
-	versions: CloudTTMLMetadata[];
-	isPublic: boolean;
-	durationMs: number;
-	maxLines: number;
-}
+export type { SongGroup };
 
 const SongGroupItem: FC<{
 	group: SongGroup;
 	loadingDocId: string | null;
 	deletingDocId: string | null;
+	togglingDocId: string | null;
 	handleOpenItem: (item: CloudTTMLMetadata) => Promise<void>;
 	handleDownloadRawTTML: (item: CloudTTMLMetadata) => Promise<void>;
 	handleDeleteItem: (item: CloudTTMLMetadata) => Promise<void>;
+	handleToggleFinished: (item: CloudTTMLMetadata) => Promise<void>;
 }> = ({
 	group,
 	loadingDocId,
 	deletingDocId,
+	togglingDocId,
 	handleOpenItem,
 	handleDownloadRawTTML,
 	handleDeleteItem,
+	handleToggleFinished,
 }) => {
 	const { t } = useTranslation();
 	const [selectedVersionId, setSelectedVersionId] = useState<string>(
@@ -193,7 +196,7 @@ const SongGroupItem: FC<{
 							<Text
 								weight="bold"
 								size="3"
-								title={group.title}
+								title={activeVersion.title || group.title}
 								style={{
 									whiteSpace: "nowrap",
 									overflow: "hidden",
@@ -202,7 +205,7 @@ const SongGroupItem: FC<{
 									flexShrink: 1,
 								}}
 							>
-								{group.title}
+								{activeVersion.title || group.title}
 							</Text>
 
 							{/* Multiple versions dropdown selector */}
@@ -270,14 +273,26 @@ const SongGroupItem: FC<{
 									{t("cloud.publicBadge", "Public")}
 								</Badge>
 							) : (
-								<Badge
-									size="1"
-									color="gray"
-									variant="surface"
-									style={{ flexShrink: 0 }}
-								>
-									{t("cloud.privateBadge", "Private")}
-								</Badge>
+								<Flex align="center" gap="1" style={{ flexShrink: 0 }}>
+									<Badge
+										size="1"
+										color="gray"
+										variant="surface"
+										style={{ flexShrink: 0 }}
+									>
+										{t("cloud.privateBadge", "Private")}
+									</Badge>
+									{activeVersion.finished && (
+										<Badge
+											size="1"
+											color="green"
+											variant="surface"
+											style={{ fontWeight: 600, flexShrink: 0 }}
+										>
+											{t("cloud.completedBadge", "Completed")}
+										</Badge>
+									)}
+								</Flex>
 							)}
 							{activeVersion.durationMs > 0 && (
 								<Badge
@@ -300,7 +315,7 @@ const SongGroupItem: FC<{
 							<Text
 								size="2"
 								color="gray"
-								title={group.artist}
+								title={activeVersion.artist || group.artist}
 								style={{
 									whiteSpace: "nowrap",
 									overflow: "hidden",
@@ -309,10 +324,11 @@ const SongGroupItem: FC<{
 									flexShrink: 1,
 								}}
 							>
-								{group.artist ||
+								{activeVersion.artist ||
+									group.artist ||
 									t("cloud.unknownArtist", "Unknown Artist")}
 							</Text>
-							{group.album && (
+							{Boolean(activeVersion.album || group.album) && (
 								<>
 									<Text
 										size="1"
@@ -325,7 +341,7 @@ const SongGroupItem: FC<{
 										size="1"
 										color="gray"
 										variant="surface"
-										title={group.album}
+										title={activeVersion.album || group.album}
 										style={{
 											maxWidth: "200px",
 											overflow: "hidden",
@@ -334,7 +350,7 @@ const SongGroupItem: FC<{
 											flexShrink: 1,
 										}}
 									>
-										{group.album}
+										{activeVersion.album || group.album}
 									</Badge>
 								</>
 							)}
@@ -406,6 +422,47 @@ const SongGroupItem: FC<{
 								<DocumentArrowDown16Regular />
 							</IconButton>
 						</Tooltip>
+
+						{/* Toggle Completed */}
+						{!activeVersion.publishedToCommunity && (
+							<Tooltip
+								content={
+									activeVersion.finished
+										? t("cloud.markInProgressTooltip", "Mark as in-progress")
+										: t("cloud.markCompletedTooltip", "Mark as completed")
+								}
+							>
+								<IconButton
+									size="2"
+									variant={activeVersion.finished ? "solid" : "surface"}
+									color={activeVersion.finished ? "green" : "gray"}
+									disabled={
+										loadingDocId === activeVersion.id ||
+										deletingDocId === activeVersion.id ||
+										togglingDocId === activeVersion.id
+									}
+									onClick={() => handleToggleFinished(activeVersion)}
+									aria-label={
+										activeVersion.finished
+											? t("cloud.markInProgressTooltip", "Mark as in-progress")
+											: t("cloud.markCompletedTooltip", "Mark as completed")
+									}
+									style={{
+										borderRadius: "8px",
+										cursor: "pointer",
+										flexShrink: 0,
+									}}
+								>
+									{togglingDocId === activeVersion.id ? (
+										<Spinner size="1" />
+									) : activeVersion.finished ? (
+										<Checkmark16Filled />
+									) : (
+										<Checkmark16Regular />
+									)}
+								</IconButton>
+							</Tooltip>
+						)}
 
 						{/* Delete */}
 						<Tooltip
@@ -483,14 +540,31 @@ const SongGroupItem: FC<{
 												</Text>
 											)}
 										</Text>
+										{Boolean(ver.artist && ver.artist !== group.artist) && (
+											<Text size="1" color="gray" style={{ fontStyle: "italic" }}>
+												• {ver.artist}
+											</Text>
+										)}
 										{ver.publishedToCommunity ? (
 											<Badge size="1" color="green" variant="surface">
 												{t("cloud.publicBadge", "Public")}
 											</Badge>
 										) : (
-											<Badge size="1" color="gray" variant="surface">
-												{t("cloud.privateBadge", "Private")}
-											</Badge>
+											<Flex align="center" gap="1" style={{ flexShrink: 0 }}>
+												<Badge size="1" color="gray" variant="surface">
+													{t("cloud.privateBadge", "Private")}
+												</Badge>
+												{ver.finished && (
+													<Badge
+														size="1"
+														color="green"
+														variant="surface"
+														style={{ fontWeight: 600 }}
+													>
+														{t("cloud.completedBadge", "Completed")}
+													</Badge>
+												)}
+											</Flex>
 										)}
 										{ver.durationMs > 0 && (
 											<Badge size="1" color="gray" variant="surface">
@@ -537,6 +611,41 @@ const SongGroupItem: FC<{
 												<DocumentArrowDown16Regular />
 											</IconButton>
 										</Tooltip>
+										{!ver.publishedToCommunity && (
+											<Tooltip
+												content={
+													ver.finished
+														? t("cloud.markInProgressTooltip", "Mark as in-progress")
+														: t("cloud.markCompletedTooltip", "Mark as completed")
+												}
+											>
+												<IconButton
+													size="1"
+													variant={ver.finished ? "solid" : "surface"}
+													color={ver.finished ? "green" : "gray"}
+													disabled={
+														loadingDocId === ver.id ||
+														deletingDocId === ver.id ||
+														togglingDocId === ver.id
+													}
+													onClick={() => handleToggleFinished(ver)}
+													aria-label={
+														ver.finished
+															? t("cloud.markInProgressTooltip", "Mark as in-progress")
+															: t("cloud.markCompletedTooltip", "Mark as completed")
+													}
+													style={{ borderRadius: "6px", cursor: "pointer" }}
+												>
+													{togglingDocId === ver.id ? (
+														<Spinner size="1" />
+													) : ver.finished ? (
+														<Checkmark16Filled />
+													) : (
+														<Checkmark16Regular />
+													)}
+												</IconButton>
+											</Tooltip>
+										)}
 										<Tooltip content={t("cloud.deleteTooltip", "Delete from Cloud")}>
 											<IconButton
 												size="1"
@@ -596,9 +705,11 @@ export const CloudFileManagerModal: FC = () => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
 	const [publishToCommunity, setPublishToCommunity] = useState(false);
+	const [isSaveCompleted, setIsSaveCompleted] = useState(false);
 	const [, setUploadProgress] = useState<number | null>(null);
 	const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
 	const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
+	const [togglingDocId, setTogglingDocId] = useState<string | null>(null);
 
 	// Extract track info from metadata & file name
 	const currentTrackInfo = useMemo(() => {
@@ -654,6 +765,12 @@ export const CloudFileManagerModal: FC = () => {
 	const [saveArtist, setSaveArtist] = useState(currentTrackInfo.artist);
 	const [saveAlbum, setSaveAlbum] = useState(currentTrackInfo.album);
 
+	const [overwriteLatest, setOverwriteLatest] = useState<boolean>(false);
+
+	const isCurrentFullySynced = useMemo(() => {
+		return isTTML100PercentCompleted(lyricLines);
+	}, [lyricLines]);
+
 	useEffect(() => {
 		if (open) {
 			setActiveTab(initialTab === "save" ? "save" : "open");
@@ -661,6 +778,8 @@ export const CloudFileManagerModal: FC = () => {
 			setSaveArtist(currentTrackInfo.artist);
 			setSaveAlbum(currentTrackInfo.album);
 			setPublishToCommunity(false);
+			setIsSaveCompleted(isCurrentFullySynced);
+			setOverwriteLatest(false);
 			if (user) {
 				// Instant local cache hydration if state is empty
 				if (cloudList.length === 0) {
@@ -683,45 +802,27 @@ export const CloudFileManagerModal: FC = () => {
 
 	// Group saved songs by title and artist to consolidate multiple versions
 	const songGroups = useMemo(() => {
-		const map = new Map<string, CloudTTMLMetadata[]>();
-		for (const item of cloudList) {
-			const key = `${(item.title || "Untitled").trim().toLowerCase()}:::${(item.artist || "").trim().toLowerCase()}`;
-			const existing = map.get(key);
-			if (existing) {
-				existing.push(item);
-			} else {
-				map.set(key, [item]);
-			}
-		}
-
-		const groups: SongGroup[] = [];
-		for (const [key, versions] of map.entries()) {
-			versions.sort(
-				(a, b) =>
-					(b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
-			);
-			const latest = versions[0];
-			const isPublic = versions.some((v) => v.publishedToCommunity);
-			const coverArt =
-				versions.find((v) => v.coverArt)?.coverArt || latest.coverArt;
-			const maxLines = Math.max(...versions.map((v) => v.lineCount || 0));
-
-			groups.push({
-				key,
-				title: latest.title || "Untitled",
-				artist: latest.artist || "",
-				album: latest.album || "",
-				coverArt,
-				latestUpdated: latest.updatedAt || latest.createdAt || 0,
-				versions,
-				isPublic,
-				durationMs: latest.durationMs || 0,
-				maxLines,
-			});
-		}
-
-		return groups;
+		return groupCloudTTMLs(cloudList);
 	}, [cloudList]);
+
+	// Detect if current lyric matches an existing song in cloud library
+	const matchingExistingGroup = useMemo(() => {
+		if (!saveTitle) return null;
+		return songGroups.find((g) =>
+			areCloudTTMLsSameSong(
+				{
+					title: saveTitle,
+					artist: saveArtist,
+					album: saveAlbum,
+				} as CloudTTMLMetadata,
+				{
+					title: g.title,
+					artist: g.artist,
+					album: g.album,
+				} as CloudTTMLMetadata,
+			),
+		);
+	}, [songGroups, saveTitle, saveArtist, saveAlbum]);
 
 	// Stats calculations - each unique song is only counted once
 	const uniqueSongsCount = songGroups.length;
@@ -746,7 +847,13 @@ export const CloudFileManagerModal: FC = () => {
 				(g) =>
 					g.title.toLowerCase().includes(q) ||
 					g.artist.toLowerCase().includes(q) ||
-					g.album.toLowerCase().includes(q),
+					g.album.toLowerCase().includes(q) ||
+					g.versions.some(
+						(v) =>
+							(v.title && v.title.toLowerCase().includes(q)) ||
+							(v.artist && v.artist.toLowerCase().includes(q)) ||
+							(v.album && v.album.toLowerCase().includes(q)),
+					),
 			);
 		}
 
@@ -788,17 +895,29 @@ export const CloudFileManagerModal: FC = () => {
 				allowConsecutiveBackgroundLines,
 			});
 
+			const docIdToUse =
+				overwriteLatest && matchingExistingGroup
+					? matchingExistingGroup.versions[0].id
+					: undefined;
+
+			const shouldMarkCompleted =
+				isSaveCompleted ||
+				isCurrentFullySynced ||
+				isTTML100PercentCompleted(lyricLines);
+
 			await saveTTMLToCloud({
 				title: saveTitle || "Untitled",
 				artist: saveArtist,
 				album: saveAlbum,
 				rawTTML,
+				docId: docIdToUse,
 				lineCount: lyricLines.lyricLines.length,
 				durationMs: currentTrackInfo.durationMs,
 				includeAudio: false,
 				audioBlob: null,
 				audioFileName: null,
 				publishToCommunity,
+				isCompleted: shouldMarkCompleted,
 				onProgress: (pct) => setUploadProgress(pct),
 			});
 			toast.success(
@@ -888,6 +1007,28 @@ export const CloudFileManagerModal: FC = () => {
 			toast.error((err as Error)?.message || "Failed to delete cloud file");
 		} finally {
 			setDeletingDocId(null);
+		}
+	};
+
+	const handleToggleFinished = async (item: CloudTTMLMetadata) => {
+		try {
+			setTogglingDocId(item.id);
+			const newFinished = !item.finished;
+			await updateTTMLFinishedInCloud(item.id, newFinished);
+			toast.success(
+				newFinished
+					? t("cloud.markedCompletedSuccess", 'Marked "{title}" as completed.', {
+							title: item.title || "Untitled",
+						})
+					: t("cloud.markedInProgressSuccess", 'Marked "{title}" as in-progress.', {
+							title: item.title || "Untitled",
+						}),
+			);
+		} catch (err: unknown) {
+			console.error(err);
+			toast.error((err as Error)?.message || "Failed to update completion status");
+		} finally {
+			setTogglingDocId(null);
 		}
 	};
 
@@ -1010,35 +1151,37 @@ export const CloudFileManagerModal: FC = () => {
 							)}
 
 							{/* Stats & Profiles Web Button */}
-							<Tooltip
-								content={t(
-									"ttmlChecklist.statsAndProfiles",
-									"View Community Stats & Creator Profiles on Web",
-								)}
-							>
-								<Button
-									size="2"
-									variant="surface"
-									color="purple"
-									onClick={() => {
-										const url = user?.uid
-											? `https://ttml.bobjoerules.com/#user=${user.uid}`
-											: "https://ttml.bobjoerules.com/#stats";
-										openExternal(url);
-									}}
-									style={{
-										height: "32px",
-										borderRadius: "8px",
-										cursor: "pointer",
-										marginLeft: "4px",
-									}}
+							{activeTab === "open" && (
+								<Tooltip
+									content={t(
+										"ttmlChecklist.statsAndProfiles",
+										"View Community Stats & Creator Profiles on Web",
+									)}
 								>
-									<DataUsage20Regular
-										style={{ width: "16px", height: "16px" }}
-									/>
-									{t("ttmlChecklist.statsAndProfilesShort", "Stats")}
-								</Button>
-							</Tooltip>
+									<Button
+										size="2"
+										variant="surface"
+										color="purple"
+										onClick={() => {
+											const url = user?.uid
+												? `https://ttml.bobjoerules.com/#user=${user.uid}`
+												: "https://ttml.bobjoerules.com/#stats";
+											openExternal(url);
+										}}
+										style={{
+											height: "32px",
+											borderRadius: "8px",
+											cursor: "pointer",
+											marginLeft: "4px",
+										}}
+									>
+										<DataUsage20Regular
+											style={{ width: "16px", height: "16px" }}
+										/>
+										{t("ttmlChecklist.statsAndProfilesShort", "Stats")}
+									</Button>
+								</Tooltip>
+							)}
 
 							{/* Mode Switcher Button (Library vs Save) */}
 							{user && (
@@ -1231,6 +1374,134 @@ export const CloudFileManagerModal: FC = () => {
 									</Text>
 								</Flex>
 
+								{matchingExistingGroup && (
+									<Card
+										variant="surface"
+										style={{
+											background: "var(--accent-a3)",
+											padding: "12px 14px",
+											marginTop: 4,
+											borderRadius: "10px",
+											border: "1px solid var(--accent-a5)",
+										}}
+									>
+										<Flex align="center" justify="between" gap="2" wrap="wrap">
+											<Flex align="center" gap="2">
+												<History16Regular style={{ color: "var(--accent-9)" }} />
+												<Flex direction="column" gap="0">
+													<Flex align="center" gap="2">
+														<Text size="2" weight="bold">
+															{t(
+																"cloud.existingFound",
+																'Existing song in Cloud: "{title}"',
+																{
+																	title: matchingExistingGroup.title,
+																},
+															)}
+														</Text>
+														<Badge size="1" color="purple" variant="surface">
+															{matchingExistingGroup.versions.length}{" "}
+															{matchingExistingGroup.versions.length === 1
+																? t("cloud.versionSingular", "version")
+																: t("cloud.versionPlural", "versions")}
+														</Badge>
+													</Flex>
+													<Text size="1" color="gray">
+														{overwriteLatest
+															? t("cloud.willOverwrite", "Will overwrite v{ver}", {
+																	ver: matchingExistingGroup.versions.length,
+																})
+															: t(
+																	"cloud.willAddVersion",
+																	"Will save as new version v{ver}",
+																	{
+																		ver:
+																			matchingExistingGroup.versions
+																				.length + 1,
+																	},
+																)}
+													</Text>
+												</Flex>
+											</Flex>
+											<Button
+												size="1"
+												variant={overwriteLatest ? "solid" : "soft"}
+												color={overwriteLatest ? "amber" : "gray"}
+												onClick={() => setOverwriteLatest(!overwriteLatest)}
+												style={{ borderRadius: "6px", cursor: "pointer" }}
+											>
+												{overwriteLatest
+													? t(
+															"cloud.saveAsNewVersionBtn",
+															"Save as New Version",
+														)
+													: t(
+															"cloud.overwriteLatestBtn",
+															"Overwrite Latest",
+														)}
+											</Button>
+										</Flex>
+									</Card>
+								)}
+
+								<Card
+									variant="surface"
+									style={{
+										background: "var(--gray-a3)",
+										padding: "12px 14px",
+										marginTop: 4,
+										borderRadius: "10px",
+										border: "1px solid var(--gray-a4)",
+									}}
+								>
+									<Flex align="center" justify="between" gap="3">
+										<Flex direction="column" gap="1">
+											<Flex align="center" gap="2" wrap="wrap">
+												<Text size="2" weight="bold">
+													✅ {t("cloud.markAsCompleted", "Mark as Completed")}
+												</Text>
+												<Badge
+													color={
+														isSaveCompleted || isCurrentFullySynced
+															? "green"
+															: "gray"
+													}
+													size="1"
+													variant="surface"
+												>
+													{isSaveCompleted || isCurrentFullySynced
+														? t("cloud.completedBadge", "Completed")
+														: t("cloud.inProgressBadge", "In Progress")}
+												</Badge>
+												{isCurrentFullySynced && (
+													<Badge color="blue" size="1" variant="surface">
+														{t(
+															"cloud.autoDetectedBadge",
+															"Auto-detected (Fully Synced)",
+														)}
+													</Badge>
+												)}
+											</Flex>
+											<Text size="1" color="gray">
+												{isCurrentFullySynced
+													? t(
+															"cloud.markAsCompletedAutoDesc",
+															"All lines are fully synchronized. This song will be saved as Completed automatically.",
+														)
+													: t(
+															"cloud.markAsCompletedDesc",
+															"Mark this lyric file as completed. Automatically set when all lines are fully synced.",
+														)}
+											</Text>
+										</Flex>
+										<Switch
+											checked={isSaveCompleted || isCurrentFullySynced}
+											disabled={isCurrentFullySynced}
+											onCheckedChange={setIsSaveCompleted}
+										/>
+									</Flex>
+								</Card>
+
 								<Card
 									variant="surface"
 									style={{
@@ -1270,7 +1541,10 @@ export const CloudFileManagerModal: FC = () => {
 										</Flex>
 										<Switch
 											checked={publishToCommunity}
-											onCheckedChange={setPublishToCommunity}
+											onCheckedChange={(val) => {
+												setPublishToCommunity(val);
+												if (val) setIsSaveCompleted(true);
+											}}
 										/>
 									</Flex>
 								</Card>
@@ -1657,9 +1931,11 @@ export const CloudFileManagerModal: FC = () => {
 											group={group}
 											loadingDocId={loadingDocId}
 											deletingDocId={deletingDocId}
+											togglingDocId={togglingDocId}
 											handleOpenItem={handleOpenItem}
 											handleDownloadRawTTML={handleDownloadRawTTML}
 											handleDeleteItem={handleDeleteItem}
+											handleToggleFinished={handleToggleFinished}
 										/>
 									))}
 								</Flex>

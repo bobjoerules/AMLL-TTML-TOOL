@@ -188,6 +188,9 @@ importers:
       silabas:
         specifier: ^1.0.3
         version: 1.0.3
+      soundtouchjs:
+        specifier: ^0.3.0
+        version: 0.3.0
       syllabify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -4631,6 +4634,9 @@ packages:
   sort-keys@5.1.0:
     resolution: {integrity: sha512-aSbHV0DaBcr7u0PVHXzM6NbZNAtrr9sF6+Qfs9UUVG7Ll3jQ6hHi8F/xqIIcn2rvIVbr0v/2zyjSdwSV47AgLQ==}
     engines: {node: '>=12'}
+
+  soundtouchjs@0.3.0:
+    resolution: {integrity: sha512-P/+SwnIE4BLrMbYK8aB8+GfXRfLv3+BV8HFMrEqOuF0F9BsI3sKEN1T+kY/JqiVURcCQgr50BC8D/uVzE/GozQ==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -10047,6 +10053,8 @@ snapshots:
   sort-keys@5.1.0:
     dependencies:
       is-plain-obj: 4.1.0
+
+  soundtouchjs@0.3.0: {}
 
   source-map-js@1.2.1: {}
 

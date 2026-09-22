@@ -51,6 +51,29 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.10
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 22, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Web Audio Pitch Preservation with SoundTouch:</b> Integrated SoundTouch time-stretching directly into the Web Audio graph, preserving original musical pitch during playback rate changes without routing through HTMLAudioElement or experiencing audio dropouts.
+								</Text>
+								<Text size="2">
+									• <b>Smooth Playhead Scrubbing:</b> Eliminated audio dropouts, playback stalling, and playhead fighting when dragging the timeline scrubber during active playback through animation-frame seek throttling.
+								</Text>
+								<Text size="2">
+									• <b>Cloud Save Dialog Polish:</b> Streamlined the Cloud Save workflow by removing unnecessary stats navigation links from the save modal.
+								</Text>
+								<Text size="2">
+									• <b>Checklist &amp; Cloud Sync Reliability:</b> Improved checklist status detection, version history operations, and sync consistency.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.9
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
