@@ -68,6 +68,88 @@ describe("Website Finished TTML Deduplication", () => {
 		expect(wannaGrowOld?.lineCount).toBe(25);
 		expect(wannaGrowOld?.updatedAt).toBe(5000);
 	});
+
+	it("preserves rawTTML when merging newer metadata doc with existing rawTTML doc", async () => {
+		const { deduplicateAndMergeTTMLs } = await import("./firebase");
+		const docs: FinishedTTML[] = [
+			{
+				id: "doc-with-ttml",
+				title: "Song A",
+				artist: "Artist 1",
+				rawTTML: "<tt>sample ttml content</tt>",
+				createdAt: 1000,
+				updatedAt: 1000,
+				lineCount: 15,
+			},
+			{
+				id: "doc-metadata-only",
+				title: "Song A",
+				artist: "Artist 1",
+				rawTTML: "",
+				createdAt: 1000,
+				updatedAt: 2000, // newer version without rawTTML
+				lineCount: 15,
+			},
+		];
+
+		const merged = deduplicateAndMergeTTMLs(docs);
+		expect(merged).toHaveLength(1);
+		expect(merged[0].rawTTML).toBe("<tt>sample ttml content</tt>");
+		expect(merged[0].updatedAt).toBe(2000);
+	});
+});
+
+describe("Public Opt-in Filtering", () => {
+	it("excludes private finished uploads from being shown publicly", async () => {
+		const { isTTMLPubliclyOptedIn } = await import("./firebase");
+
+		// Private uploads that are finished/completed
+		expect(
+			isTTMLPubliclyOptedIn({
+				finished: true,
+				publishedToCommunity: false,
+				tags: ["finished"],
+			}),
+		).toBe(false);
+
+		expect(
+			isTTMLPubliclyOptedIn({
+				finished: true,
+				tags: ["finished"],
+			}),
+		).toBe(false);
+
+		expect(
+			isTTMLPubliclyOptedIn({
+				finished: false,
+				publishedToCommunity: false,
+			}),
+		).toBe(false);
+	});
+
+	it("includes uploads that have explicitly opted in to community", async () => {
+		const { isTTMLPubliclyOptedIn } = await import("./firebase");
+
+		expect(
+			isTTMLPubliclyOptedIn({
+				publishedToCommunity: true,
+				finished: true,
+				tags: ["finished", "community"],
+			}),
+		).toBe(true);
+
+		expect(
+			isTTMLPubliclyOptedIn({
+				publishedToCommunity: true,
+			}),
+		).toBe(true);
+
+		expect(
+			isTTMLPubliclyOptedIn({
+				tags: ["community"],
+			}),
+		).toBe(true);
+	});
 });
 
 describe("Website Moderator and Permissions", () => {

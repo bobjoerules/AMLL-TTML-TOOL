@@ -226,7 +226,7 @@ export const AudioControls: FC = memo(() => {
 				<Flex align="center" px="2" gapX="2">
 					<HoverCard.Root>
 						<HoverCard.Trigger>
-							<IconButton my="2" variant="soft" onClick={onLoadMusic}>
+							<IconButton my="2" variant="soft" onClick={onLoadMusic} title={t("audioPanel.openAudioFile", "Open Local Audio File")}>
 								<MusicNote2Filled />
 							</IconButton>
 						</HoverCard.Trigger>

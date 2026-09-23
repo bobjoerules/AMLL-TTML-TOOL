@@ -52,10 +52,14 @@ class MockKeyboardEvent {
 };
 (globalThis as any).KeyboardEvent = MockKeyboardEvent;
 
-Object.defineProperty(globalThis.navigator, "userAgent", {
-	value: "Macintosh",
-	configurable: true,
-});
+if (!globalThis.navigator) {
+	(globalThis as any).navigator = { userAgent: "Macintosh" };
+} else {
+	Object.defineProperty(globalThis.navigator, "userAgent", {
+		value: "Macintosh",
+		configurable: true,
+	});
+}
 
 const { registerKeyBindings } = await import("./keybindings");
 

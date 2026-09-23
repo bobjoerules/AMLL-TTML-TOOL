@@ -68,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                   className={`nav-link ${currentTab === 'stats' ? 'active' : ''}`}
                   onClick={() => onSelectTab('stats')}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                     <Award size={15} color="var(--accent-pink)" />
                     Stats & Profiles
                   </span>
@@ -79,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                   className={`nav-link ${currentTab === 'tinko' ? 'active' : ''}`}
                   onClick={() => onSelectTab('tinko')}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                     <Flame size={15} color="#ff416c" />
                     Tinko
                   </span>

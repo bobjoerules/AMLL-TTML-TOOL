@@ -17,6 +17,7 @@ import type { User } from 'firebase/auth';
 import {
   fetchFinishedTTMLs,
   downloadTTMLFile,
+  downloadAudioFile,
   removeFromFinishedList,
   updateSongCoverArt,
   compressImageToDataUrl,
@@ -31,6 +32,7 @@ export const FinishedTTMLsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadingAudioId, setDownloadingAudioId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingCoverId, setUploadingCoverId] = useState<string | null>(null);
   const [activeTrackForUpload, setActiveTrackForUpload] = useState<FinishedTTML | null>(null);
@@ -58,12 +60,30 @@ export const FinishedTTMLsPage: React.FC = () => {
     loadTTMLs();
   }, []);
 
-  const handleDownload = (item: FinishedTTML) => {
+  const handleDownload = async (item: FinishedTTML) => {
     setDownloadingId(item.id);
     try {
-      downloadTTMLFile(item);
+      await downloadTTMLFile(item);
+    } catch (e: any) {
+      console.error(e);
+      setFeedback({ type: 'error', message: e?.message || 'Failed to download TTML file.' });
+      setTimeout(() => setFeedback(null), 4000);
     } finally {
       setTimeout(() => setDownloadingId(null), 1000);
+    }
+  };
+
+  const handleDownloadAudio = async (item: FinishedTTML) => {
+    if (!item.downloadUrl) return;
+    setDownloadingAudioId(item.id);
+    try {
+      await downloadAudioFile(item);
+    } catch (e: any) {
+      console.error(e);
+      setFeedback({ type: 'error', message: e?.message || 'Failed to download audio file.' });
+      setTimeout(() => setFeedback(null), 4000);
+    } finally {
+      setTimeout(() => setDownloadingAudioId(null), 1000);
     }
   };
 
@@ -375,6 +395,23 @@ export const FinishedTTMLsPage: React.FC = () => {
                     <Download size={16} />
                     <span>{downloadingId === item.id ? 'Downloaded!' : 'Download TTML'}</span>
                   </button>
+
+                  {item.downloadUrl && (
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '10px 14px', fontSize: 14 }}
+                      onClick={() => handleDownloadAudio(item)}
+                      disabled={downloadingAudioId === item.id || deletingId === item.id}
+                      title="Download attached audio file"
+                      aria-label="Download attached audio file"
+                    >
+                      {downloadingAudioId === item.id ? (
+                        <Loader2 size={16} className="spin" />
+                      ) : (
+                        <Music size={16} />
+                      )}
+                    </button>
+                  )}
 
                   {user && (user.uid === item.authorUid || isUserModerator(user.uid)) && (
                     <button

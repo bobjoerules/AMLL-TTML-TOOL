@@ -624,3 +624,37 @@ export async function updateTTMLFinishedInCloud(
 
 	await fetchUserTTMLList();
 }
+
+export async function batchSaveTTMLsToCloud(
+	inputs: SaveCloudTTMLInput[],
+	onProgress?: (completed: number, total: number, currentItem: string) => void,
+): Promise<{
+	successful: number;
+	failed: number;
+	errors: Array<{ title: string; error: string }>;
+}> {
+	let successful = 0;
+	let failed = 0;
+	const errors: Array<{ title: string; error: string }> = [];
+
+	for (let i = 0; i < inputs.length; i++) {
+		const input = inputs[i];
+		const title = input.title || "Untitled";
+		onProgress?.(i, inputs.length, title);
+		try {
+			await saveTTMLToCloud(input);
+			successful++;
+		} catch (err: unknown) {
+			failed++;
+			const errorMsg = (err as Error)?.message || "Failed to save";
+			errors.push({ title, error: errorMsg });
+			console.error(`[BatchSave] Failed to save "${title}":`, err);
+		}
+	}
+
+	onProgress?.(inputs.length, inputs.length, "Done");
+	await fetchUserTTMLList();
+
+	return { successful, failed, errors };
+}
+

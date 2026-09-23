@@ -52,12 +52,6 @@ const ToolMenuItems = () => {
 					{t("topBar.menu.segmentationTools", "Segmentation Tools")}
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent>
-					<DropdownMenu.Item
-						onSelect={menu.onAutoSegment}
-						shortcut={getShortcut(menu.autoSegmentKey)}
-					>
-						{t("topBar.menu.autoSegment", "Auto Segment")}
-					</DropdownMenu.Item>
 					<DropdownMenu.Item onSelect={menu.onRubySegment}>
 						{t("topBar.menu.rubySegment", "Ruby Segmentation")}
 					</DropdownMenu.Item>

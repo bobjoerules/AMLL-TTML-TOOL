@@ -133,6 +133,8 @@ body {
   text-decoration: none;
   border: none;
   outline: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-primary {
@@ -191,6 +193,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  width: 100%;
 }
 
 .nav-brand {
@@ -202,6 +206,8 @@ body {
   color: white;
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-logo-icon {
@@ -213,6 +219,7 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: var(--glow-pink);
+  flex-shrink: 0;
 }
 
 .nav-links {
@@ -220,9 +227,13 @@ body {
   align-items: center;
   gap: 8px;
   list-style: none;
+  white-space: nowrap;
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 16px;
   color: var(--text-secondary);
   font-weight: 500;
@@ -233,6 +244,8 @@ body {
   transition: all 0.2s ease;
   border: 1px solid transparent;
   background: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-link:hover {
@@ -251,6 +264,13 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nav-desktop-action {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 .nav-mobile-toggle {
@@ -772,10 +792,30 @@ body {
 }
 
 /* Responsive Styles */
-@media (max-width: 768px) {
+@media (max-width: 1240px) and (min-width: 1025px) {
+  .nav-links {
+    gap: 4px;
+  }
+  .nav-link {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  .nav-actions {
+    gap: 6px;
+  }
+  .nav-desktop-action.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  .nav-user-name {
+    max-width: 80px;
+  }
+}
+
+@media (max-width: 1024px) {
   .nav-desktop-only,
-  .nav-desktop-action,
-  .nav-brand-title {
+  .nav-desktop-action {
     display: none !important;
   }
 
@@ -793,6 +833,12 @@ body {
     border-top: 1px solid var(--glass-border);
     margin-top: 12px;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-brand-title {
+    display: none !important;
   }
 
   .nav-mobile-links {
@@ -935,6 +981,8 @@ body {
   transition: all 0.2s ease;
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-user-profile-btn:hover {

@@ -14,6 +14,7 @@ import {
   collection,
   collectionGroup,
   getDocs,
+  getDoc,
   query,
   limit,
   doc,
@@ -144,18 +145,30 @@ export async function removeFromFinishedList(ttml: FinishedTTML, currentUserUid:
     deleteDoc(doc(db, "public_ttmls", ttml.id)).catch(() => {}),
   ]);
 
-  // 2. Safely toggle public status in author's cloud saves WITHOUT deleting the private file
+  // 2. Safely toggle public status in author's cloud saves WITHOUT deleting the private file or completion status
   if (ttml.authorUid) {
     try {
-      await updateDoc(doc(db, "users", ttml.authorUid, "ttmls", ttml.id), {
-        finished: false,
+      const userDocRef = doc(db, "users", ttml.authorUid, "ttmls", ttml.id);
+      const userDocSnap = await getDoc(userDocRef);
+      const existingTags: string[] = userDocSnap.exists() && Array.isArray(userDocSnap.data().tags)
+        ? userDocSnap.data().tags
+        : [];
+      const updatedTags = existingTags.filter((t) => t !== "community");
+      await updateDoc(userDocRef, {
         publishedToCommunity: false,
-        tags: [],
+        tags: updatedTags,
       });
     } catch {
       // User doc may not exist if it was directly in finished_ttmls
     }
   }
+}
+
+export function isTTMLPubliclyOptedIn(data: DocumentData): boolean {
+  return (
+    data.publishedToCommunity === true ||
+    (Array.isArray(data.tags) && data.tags.includes("community"))
+  );
 }
 
 function parseTTMLDoc(id: string, data: DocumentData, inferredAuthorUid?: string): FinishedTTML {
@@ -197,7 +210,7 @@ function parseTTMLDoc(id: string, data: DocumentData, inferredAuthorUid?: string
     coverArt: coverArt || undefined,
     lineCount: data.lineCount || (data.lines ? data.lines.length : 0) || (rawTTML.match(/<p\b/g)?.length || 0),
     durationMs: data.durationMs || 0,
-    tags: data.tags || (data.finished ? ["finished"] : ["community"]),
+    tags: data.tags || (data.publishedToCommunity ? ["community"] : (data.finished ? ["finished"] : [])),
     rawTTML,
     authorUid: data.authorUid || data.author_uid || data.userId || inferredAuthorUid || undefined,
     authorName: data.authorName || data.author_name || data.author || undefined,
@@ -205,6 +218,65 @@ function parseTTMLDoc(id: string, data: DocumentData, inferredAuthorUid?: string
     updatedAt,
     downloadUrl: data.downloadUrl || data.audioUrl,
   };
+}
+
+export function deduplicateAndMergeTTMLs(rawDocs: FinishedTTML[]): FinishedTTML[] {
+  // Deduplicate by song key so that ONLY THE NEWEST VERSION of each song is shown
+  const latestBySong = new Map<string, FinishedTTML>();
+
+  for (const item of rawDocs) {
+    const key = getSongKey(item.title, item.artist);
+    const existing = latestBySong.get(key);
+
+    if (!existing) {
+      latestBySong.set(key, { ...item });
+      continue;
+    }
+
+    const itemTime = item.updatedAt || item.createdAt || 0;
+    const existingTime = existing.updatedAt || existing.createdAt || 0;
+
+    if (itemTime > existingTime) {
+      const merged = { ...item };
+      // If newer doc doesn't have rawTTML, retain existing rawTTML
+      if (!merged.rawTTML && existing.rawTTML) {
+        merged.rawTTML = existing.rawTTML;
+      }
+      latestBySong.set(key, merged);
+    } else if (itemTime === existingTime) {
+      // Tie-breaker: keep the version with more lyrics or rich metadata
+      const hasBetterContent =
+        (item.lineCount || 0) > (existing.lineCount || 0) ||
+        (item.rawTTML?.length || 0) > (existing.rawTTML?.length || 0);
+
+      if (hasBetterContent) {
+        const merged = { ...item };
+        if (!merged.rawTTML && existing.rawTTML) {
+          merged.rawTTML = existing.rawTTML;
+        }
+        latestBySong.set(key, merged);
+      } else if (!existing.rawTTML && item.rawTTML) {
+        existing.rawTTML = item.rawTTML;
+      }
+    } else {
+      // existingTime > itemTime: ensure existing retains rawTTML if missing
+      if (!existing.rawTTML && item.rawTTML) {
+        existing.rawTTML = item.rawTTML;
+      }
+    }
+  }
+
+  // Include featured verified tracks if not already superseded by a live upload
+  for (const featured of FEATURED_FINISHED_TTMLS) {
+    const key = getSongKey(featured.title, featured.artist);
+    if (!latestBySong.has(key)) {
+      latestBySong.set(key, { ...featured });
+    }
+  }
+
+  return Array.from(latestBySong.values()).sort(
+    (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
+  );
 }
 
 export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
@@ -233,16 +305,12 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
       console.warn("Could not read public_ttmls collection:", e);
     }
 
-    // 3. Query collectionGroup "ttmls", but ONLY include documents where user opted in
+    // 3. Query collectionGroup "ttmls", but ONLY include documents where user explicitly opted in to community
     try {
       const snap = await getDocs(query(collectionGroup(db, "ttmls"), limit(100)));
       snap.forEach((docSnap) => {
         const data = docSnap.data();
-        const isOptedIn =
-          data.publishedToCommunity === true ||
-          data.finished === true ||
-          (Array.isArray(data.tags) && (data.tags.includes("finished") || data.tags.includes("community")));
-        if (isOptedIn) {
+        if (isTTMLPubliclyOptedIn(data)) {
           const authorUidFromPath = docSnap.ref.parent?.parent?.id;
           rawDocs.push(parseTTMLDoc(docSnap.id, data, authorUidFromPath));
         }
@@ -254,45 +322,7 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
     console.error("Error connecting to Firebase:", err);
   }
 
-  // Deduplicate by song key so that ONLY THE NEWEST VERSION of each song is shown
-  const latestBySong = new Map<string, FinishedTTML>();
-
-  for (const item of rawDocs) {
-    const key = getSongKey(item.title, item.artist);
-    const existing = latestBySong.get(key);
-
-    if (!existing) {
-      latestBySong.set(key, item);
-      continue;
-    }
-
-    const itemTime = item.updatedAt || item.createdAt || 0;
-    const existingTime = existing.updatedAt || existing.createdAt || 0;
-
-    if (itemTime > existingTime) {
-      latestBySong.set(key, item);
-    } else if (itemTime === existingTime) {
-      // Tie-breaker: keep the version with more lyrics or rich metadata
-      if (
-        (item.lineCount || 0) > (existing.lineCount || 0) ||
-        (item.rawTTML?.length || 0) > (existing.rawTTML?.length || 0)
-      ) {
-        latestBySong.set(key, item);
-      }
-    }
-  }
-
-  // Include featured verified tracks if not already superseded by a live upload
-  for (const featured of FEATURED_FINISHED_TTMLS) {
-    const key = getSongKey(featured.title, featured.artist);
-    if (!latestBySong.has(key)) {
-      latestBySong.set(key, featured);
-    }
-  }
-
-  return Array.from(latestBySong.values()).sort(
-    (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
-  );
+  return deduplicateAndMergeTTMLs(rawDocs);
 }
 
 // Built-in showcase finished TTMLs (empty by default; library loads live verified community uploads)
@@ -300,8 +330,22 @@ export const FEATURED_FINISHED_TTMLS: FinishedTTML[] = [];
 
 
 
-export function downloadTTMLFile(ttml: FinishedTTML) {
-  const content = ttml.rawTTML || `<?xml version="1.0" encoding="utf-8"?>
+export async function downloadTTMLFile(ttml: FinishedTTML): Promise<void> {
+  let content = ttml.rawTTML || "";
+  if (!content && db && ttml.authorUid && ttml.id) {
+    try {
+      const payloadRef = doc(db, "users", ttml.authorUid, "ttmls", ttml.id, "payload", "content");
+      const payloadSnap = await getDoc(payloadRef);
+      if (payloadSnap.exists()) {
+        content = payloadSnap.data().rawTTML || "";
+      }
+    } catch (e) {
+      console.warn("Could not fetch ttml payload for download:", e);
+    }
+  }
+
+  if (!content) {
+    content = `<?xml version="1.0" encoding="utf-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:itunes="http://music.apple.com/lyric-ttml-internal" itunes:timing="Word">
   <head>
     <metadata>
@@ -313,6 +357,7 @@ export function downloadTTMLFile(ttml: FinishedTTML) {
     <div></div>
   </body>
 </tt>`;
+  }
 
   const filename = `${ttml.artist} - ${ttml.title}.ttml`.replace(/[/\\?%*:|"<>]/g, '-');
   const blob = new Blob([content], { type: 'application/xml;charset=utf-8;' });
@@ -324,6 +369,23 @@ export function downloadTTMLFile(ttml: FinishedTTML) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+export async function downloadAudioFile(ttml: FinishedTTML): Promise<void> {
+  const url = ttml.downloadUrl;
+  if (!url) throw new Error("No audio download URL available for this song");
+  const filename = `${ttml.artist ? `${ttml.artist} - ` : ""}${ttml.title || "audio"}.mp3`.replace(/[/\\?%*:|"<>]/g, '-');
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch audio file (${resp.status})`);
+  const blob = await resp.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
 }
 
 /**
