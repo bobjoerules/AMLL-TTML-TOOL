@@ -51,6 +51,29 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.11
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 22, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Community TTML Opt-In Privacy:</b> Songs uploaded to the cloud without toggling public visibility will no longer appear on the website community library without lyrics. Cloud songs now strictly require public opt-in before appearing in community listings.
+								</Text>
+								<Text size="2">
+									• <b>On-Demand Payload Downloading:</b> Community TTML downloads now seamlessly fetch raw lyrics on-demand from dedicated subcollections when metadata-only records are indexed.
+								</Text>
+								<Text size="2">
+									• <b>Website Navbar &amp; Responsive Layout Polish:</b> Prevented navigation buttons and links from wrapping onto two lines on desktop viewports, and improved responsive tablet navigation drawer behavior.
+								</Text>
+								<Text size="2">
+									• <b>Cloud File Manager Segmented Controls:</b> Upgraded cloud file filter controls with modern segmented buttons and prevented long song titles or descriptions from wrapping the header.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.10
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

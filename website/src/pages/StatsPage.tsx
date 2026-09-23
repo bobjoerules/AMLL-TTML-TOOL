@@ -86,10 +86,12 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDownloadSong = (song: FinishedTTML) => {
+  const handleDownloadSong = async (song: FinishedTTML) => {
     setDownloadingId(song.id);
     try {
-      downloadTTMLFile(song);
+      await downloadTTMLFile(song);
+    } catch (err: any) {
+      console.error('Failed to download song TTML:', err);
     } finally {
       setTimeout(() => setDownloadingId(null), 1000);
     }

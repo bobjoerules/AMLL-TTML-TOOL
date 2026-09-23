@@ -3,10 +3,13 @@ import {
 	Box,
 	Button,
 	Card,
+	Checkbox,
 	Dialog,
 	Flex,
 	IconButton,
+	Progress,
 	ScrollArea,
+	SegmentedControl,
 	Select,
 	Spinner,
 	Switch,
@@ -16,13 +19,14 @@ import {
 } from "@radix-ui/themes";
 import {
 	ArrowClockwise16Regular,
+	ArrowDownload16Regular,
+	ArrowUpload16Regular,
 	Checkmark16Filled,
 	Checkmark16Regular,
 	ChevronDown16Regular,
 	ChevronUp16Regular,
 	Cloud24Filled,
 	Cloud24Regular,
-	DataUsage20Regular,
 	Delete16Regular,
 	Dismiss16Regular,
 	DocumentArrowDown16Regular,
@@ -40,10 +44,16 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { type FC, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { uid } from "uid";
 import { useFileOpener } from "$/hooks/useFileOpener";
+import { audioEngine } from "$/modules/audio/audio-engine";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
+import { parseLyric as parseTTML } from "$/modules/project/logic/ttml-parser";
 import { openExternal } from "$/utils/openExternal";
-import { isTTML100PercentCompleted } from "$/modules/ttml-checklist/logic";
+import { openFileWithDialog } from "$/utils/fileDialog";
+import { parseLrc } from "$/utils/parse-lrc";
+import { isTTML100PercentCompleted, addChecklistEntry } from "$/modules/ttml-checklist/logic";
+import { ttmlChecklistAtom } from "$/modules/ttml-checklist/states";
 import {
 	areCloudTTMLsSameSong,
 	groupCloudTTMLs,
@@ -63,7 +73,9 @@ import {
 	currentUserAtom,
 } from "../states";
 import {
+	batchSaveTTMLsToCloud,
 	deleteTTMLFromCloud,
+	downloadCloudAudio,
 	fetchUserTTMLList,
 	loadTTMLFromCloud,
 	saveTTMLToCloud,
@@ -95,8 +107,12 @@ const SongGroupItem: FC<{
 	loadingDocId: string | null;
 	deletingDocId: string | null;
 	togglingDocId: string | null;
+	downloadingAudioDocId: string | null;
+	selected?: boolean;
+	onToggleSelect?: (id: string) => void;
 	handleOpenItem: (item: CloudTTMLMetadata) => Promise<void>;
 	handleDownloadRawTTML: (item: CloudTTMLMetadata) => Promise<void>;
+	handleDownloadAudio: (item: CloudTTMLMetadata) => Promise<void>;
 	handleDeleteItem: (item: CloudTTMLMetadata) => Promise<void>;
 	handleToggleFinished: (item: CloudTTMLMetadata) => Promise<void>;
 }> = ({
@@ -104,8 +120,12 @@ const SongGroupItem: FC<{
 	loadingDocId,
 	deletingDocId,
 	togglingDocId,
+	downloadingAudioDocId,
+	selected,
+	onToggleSelect,
 	handleOpenItem,
 	handleDownloadRawTTML,
+	handleDownloadAudio,
 	handleDeleteItem,
 	handleToggleFinished,
 }) => {
@@ -133,14 +153,24 @@ const SongGroupItem: FC<{
 				width: "100%",
 				boxSizing: "border-box",
 				padding: "10px 14px",
-				border: "1px solid var(--gray-a4)",
+				border: selected ? "1px solid var(--accent-a8)" : "1px solid var(--gray-a4)",
 				borderRadius: "12px",
-				backgroundColor: "var(--color-surface)",
+				backgroundColor: selected ? "var(--accent-a2)" : "var(--color-surface)",
 				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
 			}}
 		>
 			<Flex direction="column" gap="2">
 				<Flex gap="3" align="center" style={{ width: "100%", minWidth: 0 }}>
+					{/* Selection Checkbox */}
+					{onToggleSelect && (
+						<Checkbox
+							checked={selected}
+							onCheckedChange={() => onToggleSelect(activeVersion.id)}
+							style={{ cursor: "pointer", flexShrink: 0 }}
+							aria-label={`Select ${group.title}`}
+						/>
+					)}
+
 					{/* Cover Art / Icon */}
 					<Box
 						style={{
@@ -423,6 +453,35 @@ const SongGroupItem: FC<{
 							</IconButton>
 						</Tooltip>
 
+						{/* Download Audio */}
+						{activeVersion.audioUrl && (
+							<Tooltip content={t("cloud.downloadAudio", "Download attached audio")}>
+								<IconButton
+									size="2"
+									variant="surface"
+									color="blue"
+									disabled={
+										loadingDocId === activeVersion.id ||
+										deletingDocId === activeVersion.id ||
+										downloadingAudioDocId === activeVersion.id
+									}
+									onClick={() => handleDownloadAudio(activeVersion)}
+									aria-label={t("cloud.downloadAudio", "Download attached audio")}
+									style={{
+										borderRadius: "8px",
+										cursor: "pointer",
+										flexShrink: 0,
+									}}
+								>
+									{downloadingAudioDocId === activeVersion.id ? (
+										<Spinner size="1" />
+									) : (
+										<MusicNote2Filled />
+									)}
+								</IconButton>
+							</Tooltip>
+						)}
+
 						{/* Toggle Completed */}
 						{!activeVersion.publishedToCommunity && (
 							<Tooltip
@@ -611,6 +670,29 @@ const SongGroupItem: FC<{
 												<DocumentArrowDown16Regular />
 											</IconButton>
 										</Tooltip>
+										{ver.audioUrl && (
+											<Tooltip content={t("cloud.downloadAudio", "Download attached audio")}>
+												<IconButton
+													size="1"
+													variant="surface"
+													color="blue"
+													disabled={
+														loadingDocId === ver.id ||
+														deletingDocId === ver.id ||
+														downloadingAudioDocId === ver.id
+													}
+													onClick={() => handleDownloadAudio(ver)}
+													style={{ borderRadius: "6px", cursor: "pointer" }}
+													aria-label={t("cloud.downloadAudio", "Download attached audio")}
+												>
+													{downloadingAudioDocId === ver.id ? (
+														<Spinner size="1" />
+													) : (
+														<MusicNote2Filled />
+													)}
+												</IconButton>
+											</Tooltip>
+										)}
 										{!ver.publishedToCommunity && (
 											<Tooltip
 												content={
@@ -680,7 +762,7 @@ export const CloudFileManagerModal: FC = () => {
 	const { t } = useTranslation();
 	const [open, setOpen] = useAtom(cloudFileManagerOpenAtom);
 	const initialTab = useAtomValue(cloudFileManagerInitialTabAtom);
-	const [activeTab, setActiveTab] = useState<"open" | "save">("open");
+	const [activeTab, setActiveTab] = useState<"open" | "save" | "batch">("open");
 	const [filterTab, setFilterTab] = useState<"all" | "public" | "private">(
 		"all",
 	);
@@ -702,12 +784,43 @@ export const CloudFileManagerModal: FC = () => {
 	const [cloudList, setCloudList] = useAtom(cloudTTMLListAtom);
 	const isLoading = useAtomValue(cloudTTMLLoadingAtom);
 
+	const [checklist, setChecklist] = useAtom(ttmlChecklistAtom);
+	const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+
+	// Batch Import State
+	interface BatchImportItem {
+		id: string;
+		file: File;
+		name: string;
+		title: string;
+		artist: string;
+		album: string;
+		lineCount: number;
+		durationMs: number;
+		rawTTML: string;
+		status: "ready" | "uploading" | "success" | "error";
+		error?: string;
+	}
+	const [batchItems, setBatchItems] = useState<BatchImportItem[]>([]);
+	const [isBatchImporting, setIsBatchImporting] = useState<boolean>(false);
+	const [batchImportProgress, setBatchImportProgress] = useState<{
+		current: number;
+		total: number;
+		title: string;
+	} | null>(null);
+	const [batchPublishToCommunity, setBatchPublishToCommunity] =
+		useState<boolean>(false);
+	const [batchAutoCompleted, setBatchAutoCompleted] = useState<boolean>(true);
+
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
 	const [publishToCommunity, setPublishToCommunity] = useState(false);
 	const [isSaveCompleted, setIsSaveCompleted] = useState(false);
 	const [, setUploadProgress] = useState<number | null>(null);
 	const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
+	const [downloadingAudioDocId, setDownloadingAudioDocId] = useState<
+		string | null
+	>(null);
 	const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
 	const [togglingDocId, setTogglingDocId] = useState<string | null>(null);
 
@@ -941,6 +1054,27 @@ export const CloudFileManagerModal: FC = () => {
 				type: "application/xml",
 			});
 			await openFile(file);
+
+			// Auto-load audio into audio-engine if present in the cloud document
+			if (doc.audioUrl) {
+				try {
+					const audioResp = await fetch(doc.audioUrl);
+					if (audioResp.ok) {
+						const audioBlob = await audioResp.blob();
+						await audioEngine.loadMusic(audioBlob);
+						toast.info(
+							t(
+								"cloud.audioAutoLoaded",
+								'Loaded attached audio for "{title}"',
+								{ title: doc.title || "Untitled" },
+							),
+						);
+					}
+				} catch (audioErr) {
+					console.warn("Failed to auto-load cloud audio:", audioErr);
+				}
+			}
+
 			toast.success(
 				t("cloud.openedSuccess", 'Loaded "{title}" from Cloud', {
 					title: doc.title || "Untitled",
@@ -952,6 +1086,306 @@ export const CloudFileManagerModal: FC = () => {
 			toast.error((err as Error)?.message || "Failed to open cloud file");
 		} finally {
 			setLoadingDocId(null);
+		}
+	};
+
+	const handleDownloadAudio = async (item: CloudTTMLMetadata) => {
+		if (!item.audioUrl) return;
+		try {
+			setDownloadingAudioDocId(item.id);
+			const blob = await downloadCloudAudio(
+				item.audioUrl,
+				item.audioStoragePath,
+			);
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			const cleanName = `${item.artist ? `${item.artist} - ` : ""}${item.title || "audio"}.mp3`.replace(/[/\\?%*:|"<>]/g, "-");
+			a.download = item.audioFileName || cleanName;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			toast.success(
+				t(
+					"cloud.downloadedAudioSuccess",
+					'Downloaded audio for "{title}"',
+					{ title: item.title || "Untitled" },
+				),
+			);
+		} catch (err: unknown) {
+			console.error(err);
+			toast.error((err as Error)?.message || "Failed to download audio");
+		} finally {
+			setDownloadingAudioDocId(null);
+		}
+	};
+
+	const handleToggleSelect = (id: string) => {
+		setSelectedDocIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	};
+
+	const handleSelectAll = () => {
+		if (selectedDocIds.size === filteredSongGroups.length) {
+			setSelectedDocIds(new Set());
+		} else {
+			const allIds = new Set<string>();
+			for (const g of filteredSongGroups) {
+				if (g.versions[0]?.id) allIds.add(g.versions[0].id);
+			}
+			setSelectedDocIds(allIds);
+		}
+	};
+
+	const handleBatchDownloadSelected = async () => {
+		const selectedItems = cloudList.filter((doc) => selectedDocIds.has(doc.id));
+		if (selectedItems.length === 0) return;
+		toast.info(
+			t("cloud.batchDownloading", "Downloading {{count}} TTML files...", {
+				count: selectedItems.length,
+			}),
+		);
+		for (const item of selectedItems) {
+			try {
+				await handleDownloadRawTTML(item);
+			} catch (err) {
+				console.error(err);
+			}
+		}
+	};
+
+	const handleBatchAddToChecklist = () => {
+		const selectedItems = cloudList.filter((doc) => selectedDocIds.has(doc.id));
+		if (selectedItems.length === 0) return;
+
+		let addedCount = 0;
+		for (const item of selectedItems) {
+			const exists = checklist.entries.some(
+				(e) =>
+					e.cloudDocId === item.id ||
+					(e.title.toLowerCase() === item.title.toLowerCase() &&
+						(e.artist || "").toLowerCase() === (item.artist || "").toLowerCase()),
+			);
+			if (!exists) {
+				addChecklistEntry(setChecklist, {
+					title: item.title || "Untitled",
+					artist: item.artist || "",
+					album: item.album || "",
+					durationMs: item.durationMs || 0,
+					targetWordCount: item.lineCount || 0,
+					coverUrl: item.coverArt || "",
+					cloudDocId: item.id,
+					notes: "Imported from TTML Cloud Library",
+				});
+				addedCount++;
+			}
+		}
+
+		toast.success(
+			t(
+				"cloud.batchAddedToChecklist",
+				"Added {{count}} songs to your TTML Checklist!",
+				{ count: addedCount },
+			),
+		);
+		setSelectedDocIds(new Set());
+	};
+
+	const processBatchFiles = async (files: FileList | File[]) => {
+		const newItems: BatchImportItem[] = [];
+		for (const file of Array.from(files)) {
+			const ext = file.name.split(".").pop()?.toLowerCase();
+			if (ext !== "ttml" && ext !== "lrc" && ext !== "xml") {
+				continue;
+			}
+			try {
+				const text = await file.text();
+				let title = "";
+				let artist = "";
+				let album = "";
+				let lineCount = 0;
+				let durationMs = 0;
+				let rawTTML = "";
+
+				if (ext === "lrc") {
+					const lrcLines = parseLrc(text);
+					lineCount = lrcLines.length;
+					durationMs =
+						lrcLines.length > 0 ? lrcLines[lrcLines.length - 1].endTime : 0;
+					const tiMatch = text.match(/\[ti:\s*([^\]]+)\]/i);
+					const arMatch = text.match(/\[ar:\s*([^\]]+)\]/i);
+					const alMatch = text.match(/\[al:\s*([^\]]+)\]/i);
+					if (tiMatch) title = tiMatch[1].trim();
+					if (arMatch) artist = arMatch[1].trim();
+					if (alMatch) album = alMatch[1].trim();
+
+					rawTTML = exportTTMLText(
+						{
+							lyricLines: lrcLines,
+							metadata: [
+								...(title ? [{ key: "title", value: [title] }] : []),
+								...(artist ? [{ key: "artist", value: [artist] }] : []),
+								...(album ? [{ key: "album", value: [album] }] : []),
+							],
+						},
+						normalizationOptions,
+						{ allowConsecutiveBackgroundLines },
+					);
+				} else {
+					rawTTML = text;
+					const parsed = parseTTML(text);
+					lineCount = parsed.lyricLines.length;
+					durationMs =
+						parsed.lyricLines.length > 0
+							? parsed.lyricLines[parsed.lyricLines.length - 1].endTime
+							: 0;
+
+					for (const meta of parsed.metadata) {
+						const k = meta.key.toLowerCase();
+						const v = meta.value.join(", ").trim();
+						if (!v) continue;
+						if (
+							k === "musicname" ||
+							k === "title" ||
+							k === "track" ||
+							k === "ti"
+						) {
+							if (!title) title = v;
+						} else if (k === "artists" || k === "artist" || k === "ar") {
+							if (!artist) artist = v;
+						} else if (k === "album" || k === "al") {
+							if (!album) album = v;
+						}
+					}
+				}
+
+				if (!title || !artist) {
+					const base = file.name.replace(/\.(ttml|lrc|xml)$/i, "").trim();
+					if (base.includes(" - ")) {
+						const parts = base.split(" - ");
+						if (!artist && parts[0]?.trim()) artist = parts[0].trim();
+						if (!title && parts.slice(1).join(" - ")?.trim())
+							title = parts.slice(1).join(" - ").trim();
+					} else if (!title) {
+						title = base;
+					}
+				}
+
+				newItems.push({
+					id: uid(),
+					file,
+					name: file.name,
+					title: title || file.name.replace(/\.[^/.]+$/, ""),
+					artist: artist || "",
+					album: album || "",
+					lineCount,
+					durationMs,
+					rawTTML,
+					status: "ready",
+				});
+			} catch (err) {
+				console.error("Failed to parse batch file:", file.name, err);
+				newItems.push({
+					id: uid(),
+					file,
+					name: file.name,
+					title: file.name,
+					artist: "",
+					album: "",
+					lineCount: 0,
+					durationMs: 0,
+					rawTTML: "",
+					status: "error",
+					error: (err as Error)?.message || "Failed to parse file",
+				});
+			}
+		}
+
+		setBatchItems((prev) => [...prev, ...newItems]);
+	};
+
+	const handleRunBatchImport = async () => {
+		if (!user) {
+			toast.error(
+				t("cloud.signInToSync", "Please sign in to save to the cloud."),
+			);
+			openAccountSettings();
+			return;
+		}
+
+		const readyItems = batchItems.filter(
+			(item) => item.status === "ready" && item.rawTTML,
+		);
+		if (readyItems.length === 0) {
+			toast.info(t("cloud.noReadyItems", "No files ready to upload."));
+			return;
+		}
+
+		setIsBatchImporting(true);
+		setBatchImportProgress({
+			current: 0,
+			total: readyItems.length,
+			title: readyItems[0].title,
+		});
+
+		try {
+			const inputs = readyItems.map((item) => ({
+				title: item.title,
+				artist: item.artist,
+				album: item.album,
+				rawTTML: item.rawTTML,
+				lineCount: item.lineCount,
+				durationMs: item.durationMs,
+				publishToCommunity: batchPublishToCommunity,
+				isCompleted: batchAutoCompleted,
+			}));
+
+			const res = await batchSaveTTMLsToCloud(inputs, (current, total, title) => {
+				setBatchImportProgress({ current, total, title });
+			});
+
+			setBatchItems((prev) =>
+				prev.map((item) => {
+					const errObj = res.errors.find((e) => e.title === item.title);
+					if (errObj) {
+						return { ...item, status: "error", error: errObj.error };
+					}
+					if (readyItems.some((r) => r.id === item.id)) {
+						return { ...item, status: "success" };
+					}
+					return item;
+				}),
+			);
+
+			if (res.successCount > 0) {
+				toast.success(
+					t(
+						"cloud.batchSuccessSummary",
+						"Successfully imported {{count}} songs to Cloud!",
+						{ count: res.successCount },
+					),
+				);
+			}
+			if (res.failCount > 0) {
+				toast.error(
+					t(
+						"cloud.batchFailSummary",
+						"{{count}} songs failed to upload. Check the list.",
+						{ count: res.failCount },
+					),
+				);
+			}
+		} catch (err: unknown) {
+			console.error(err);
+			toast.error((err as Error)?.message || "Batch upload failed");
+		} finally {
+			setIsBatchImporting(false);
+			setBatchImportProgress(null);
 		}
 	};
 
@@ -1048,9 +1482,9 @@ export const CloudFileManagerModal: FC = () => {
 			>
 				{/* Dialog Title / Header */}
 				<Dialog.Title style={{ flexShrink: 0 }}>
-					<Flex justify="between" align="center" gap="3" wrap="wrap">
+					<Flex justify="between" align="center" gap="3" wrap="nowrap" style={{ width: "100%" }}>
 						{/* Left: Cloud Icon Tile & Titles */}
-						<Flex align="center" gap="3">
+						<Flex align="center" gap="3" style={{ minWidth: 0, flex: 1 }}>
 							<Box
 								style={{
 									width: "36px",
@@ -1066,9 +1500,9 @@ export const CloudFileManagerModal: FC = () => {
 							>
 								<Cloud24Filled style={{ width: 20, height: 20 }} />
 							</Box>
-							<Flex direction="column" gap="0">
+							<Flex direction="column" gap="0" style={{ minWidth: 0, flex: 1 }}>
 								<Flex align="center" gap="2">
-									<Text size="5" weight="bold">
+									<Text size="5" weight="bold" style={{ whiteSpace: "nowrap" }}>
 										{t("cloud.fileManagerTitle", "TTML Cloud Storage")}
 									</Text>
 									{user ? (
@@ -1082,6 +1516,7 @@ export const CloudFileManagerModal: FC = () => {
 													justifyContent: "center",
 													color: "var(--green-9)",
 													cursor: "default",
+													flexShrink: 0,
 												}}
 											>
 												<Cloud24Regular style={{ width: 20, height: 20 }} />
@@ -1100,13 +1535,22 @@ export const CloudFileManagerModal: FC = () => {
 													"cloud.signInToSync",
 													"Sign in to sync",
 												)}
+												style={{ flexShrink: 0 }}
 											>
 												<Globe16Regular />
 											</IconButton>
 										</Tooltip>
 									)}
 								</Flex>
-								<Text size="1" color="gray">
+								<Text
+									size="1"
+									color="gray"
+									style={{
+										whiteSpace: "nowrap",
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+									}}
+								>
 									{t(
 										"cloud.description",
 										"Access your cloud-saved songs, sync lyrics, and manage community releases.",
@@ -1150,67 +1594,35 @@ export const CloudFileManagerModal: FC = () => {
 								</Tooltip>
 							)}
 
-							{/* Stats & Profiles Web Button */}
-							{activeTab === "open" && (
-								<Tooltip
-									content={t(
-										"ttmlChecklist.statsAndProfiles",
-										"View Community Stats & Creator Profiles on Web",
-									)}
-								>
-									<Button
-										size="2"
-										variant="surface"
-										color="purple"
-										onClick={() => {
-											const url = user?.uid
-												? `https://ttml.bobjoerules.com/#user=${user.uid}`
-												: "https://ttml.bobjoerules.com/#stats";
-											openExternal(url);
-										}}
-										style={{
-											height: "32px",
-											borderRadius: "8px",
-											cursor: "pointer",
-											marginLeft: "4px",
-										}}
-									>
-										<DataUsage20Regular
-											style={{ width: "16px", height: "16px" }}
-										/>
-										{t("ttmlChecklist.statsAndProfilesShort", "Stats")}
-									</Button>
-								</Tooltip>
-							)}
-
-							{/* Mode Switcher Button (Library vs Save) */}
+							{/* Tab Switcher: Library | Batch Import | Save Song */}
 							{user && (
-								<Button
+								<SegmentedControl.Root
 									size="2"
-									variant={activeTab === "save" ? "soft" : "solid"}
-									color={activeTab === "save" ? "gray" : undefined}
-									onClick={() =>
-										setActiveTab((prev) => (prev === "save" ? "open" : "save"))
+									value={activeTab}
+									onValueChange={(val) =>
+										setActiveTab(val as "open" | "save" | "batch")
 									}
-									style={{
-										height: "32px",
-										borderRadius: "8px",
-										cursor: "pointer",
-										marginLeft: "4px",
-									}}
+									style={{ flexShrink: 0 }}
 								>
-									{activeTab === "save" ? (
-										<>
-											<Folder16Regular />
-											{t("cloud.backToLibrary", "My Library")}
-										</>
-									) : (
-										<>
-											<Save16Regular />
-											{t("cloud.saveCurrentShort", "Save Song")}
-										</>
-									)}
-								</Button>
+									<SegmentedControl.Item value="open">
+										<Flex align="center" gap="1">
+											<Folder16Regular style={{ width: 14, height: 14 }} />
+											<span>{t("cloud.backToLibrary", "My Library")}</span>
+										</Flex>
+									</SegmentedControl.Item>
+									<SegmentedControl.Item value="batch">
+										<Flex align="center" gap="1">
+											<ArrowUpload16Regular style={{ width: 14, height: 14 }} />
+											<span>{t("cloud.batchImportTab", "Batch Import")}</span>
+										</Flex>
+									</SegmentedControl.Item>
+									<SegmentedControl.Item value="save">
+										<Flex align="center" gap="1">
+											<Save16Regular style={{ width: 14, height: 14 }} />
+											<span>{t("cloud.saveCurrentShort", "Save Song")}</span>
+										</Flex>
+									</SegmentedControl.Item>
+								</SegmentedControl.Root>
 							)}
 
 							{/* Close Button */}
@@ -1580,12 +1992,498 @@ export const CloudFileManagerModal: FC = () => {
 							</Flex>
 						</Card>
 					</Box>
+				) : activeTab === "batch" ? (
+					/* Batch Import View */
+					<Box
+						style={{
+							flex: 1,
+							minHeight: 0,
+							overflowY: "auto",
+							marginTop: "12px",
+						}}
+					>
+						<Card
+							variant="surface"
+							style={{
+								padding: "16px",
+								borderRadius: "12px",
+								border: "1px solid var(--gray-a4)",
+								background: "var(--gray-a2)",
+							}}
+						>
+							<Flex direction="column" gap="3">
+								{/* Header info */}
+								<Flex justify="between" align="center" wrap="wrap" gap="2">
+									<Flex direction="column" gap="0">
+										<Text size="3" weight="bold">
+											{t("cloud.batchImportTitle", "Batch Import TTML / LRC Files")}
+										</Text>
+										<Text size="1" color="gray">
+											{t(
+												"cloud.batchImportDesc",
+												"Select or drop multiple lyric files (.ttml, .lrc) to parse and save them to your Cloud storage all at once.",
+											)}
+										</Text>
+									</Flex>
+
+									<Flex align="center" gap="2">
+										{batchItems.length > 0 && (
+											<Button
+												size="2"
+												variant="soft"
+												color="gray"
+												disabled={isBatchImporting}
+												onClick={() => setBatchItems([])}
+												style={{ borderRadius: "8px", cursor: "pointer" }}
+											>
+												{t("common.clear", "Clear All")}
+											</Button>
+										)}
+										<Button
+											size="2"
+											variant="solid"
+											disabled={isBatchImporting}
+											onClick={() => {
+												const input = document.createElement("input");
+												input.type = "file";
+												input.multiple = true;
+												input.accept = ".ttml,.lrc,.xml";
+												input.onchange = (e) => {
+													const files = (e.target as HTMLInputElement).files;
+													if (files && files.length > 0) {
+														processBatchFiles(files);
+													}
+												};
+												input.click();
+											}}
+											style={{ borderRadius: "8px", cursor: "pointer" }}
+										>
+											<ArrowUpload16Regular />
+											{t("cloud.browseFiles", "Select Files")}
+										</Button>
+									</Flex>
+								</Flex>
+
+								{/* Drop Zone */}
+								<Box
+									onDragOver={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+									}}
+									onDrop={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+											processBatchFiles(e.dataTransfer.files);
+										}
+									}}
+									style={{
+										border: "2px dashed var(--gray-a6)",
+										borderRadius: "12px",
+										padding: batchItems.length > 0 ? "16px" : "36px 16px",
+										textAlign: "center",
+										backgroundColor: "var(--gray-a1)",
+										cursor: "pointer",
+										transition: "border-color 0.2s ease",
+									}}
+									onClick={() => {
+										const input = document.createElement("input");
+										input.type = "file";
+										input.multiple = true;
+										input.accept = ".ttml,.lrc,.xml";
+										input.onchange = (e) => {
+											const files = (e.target as HTMLInputElement).files;
+											if (files && files.length > 0) {
+												processBatchFiles(files);
+											}
+										};
+										input.click();
+									}}
+								>
+									<Flex direction="column" align="center" gap="2">
+										<Folder16Regular
+											style={{
+												width: 28,
+												height: 28,
+												color: "var(--accent-9)",
+											}}
+										/>
+										<Text size="2" weight="bold">
+											{t(
+												"cloud.dragAndDropFiles",
+												"Drag and drop .ttml or .lrc files here",
+											)}
+										</Text>
+										<Text size="1" color="gray">
+											{t(
+												"cloud.dragAndDropHint",
+												"or click to browse from your computer",
+											)}
+										</Text>
+									</Flex>
+								</Box>
+
+								{/* Batch Options */}
+								<Flex gap="3" wrap="wrap">
+									<Card
+										variant="surface"
+										style={{
+											flex: 1,
+											minWidth: 240,
+											background: "var(--gray-a3)",
+											padding: "10px 14px",
+											borderRadius: "10px",
+											border: "1px solid var(--gray-a4)",
+										}}
+									>
+										<Flex align="center" justify="between" gap="2">
+											<Flex direction="column">
+												<Text size="2" weight="bold">
+													{t("cloud.batchAutoComplete", "Mark as Completed")}
+												</Text>
+												<Text size="1" color="gray">
+													{t(
+														"cloud.batchAutoCompleteDesc",
+														"Mark imported songs as 100% finished",
+													)}
+												</Text>
+											</Flex>
+											<Switch
+												checked={batchAutoCompleted}
+												onCheckedChange={setBatchAutoCompleted}
+											/>
+										</Flex>
+									</Card>
+
+									<Card
+										variant="surface"
+										style={{
+											flex: 1,
+											minWidth: 240,
+											background: "var(--gray-a3)",
+											padding: "10px 14px",
+											borderRadius: "10px",
+											border: "1px solid var(--gray-a4)",
+										}}
+									>
+										<Flex align="center" justify="between" gap="2">
+											<Flex direction="column">
+												<Text size="2" weight="bold">
+													{t(
+														"cloud.batchPublishToCommunity",
+														"Publish to Website Library",
+													)}
+												</Text>
+												<Text size="1" color="gray">
+													{t(
+														"cloud.batchPublishDesc",
+														"Make public on ttml.bobjoerules.com/#finished",
+													)}
+												</Text>
+											</Flex>
+											<Switch
+												checked={batchPublishToCommunity}
+												onCheckedChange={setBatchPublishToCommunity}
+											/>
+										</Flex>
+									</Card>
+								</Flex>
+
+								{/* Progress Bar when uploading */}
+								{isBatchImporting && batchImportProgress && (
+									<Card
+										variant="surface"
+										style={{
+											padding: "12px 14px",
+											borderRadius: "10px",
+											border: "1px solid var(--accent-a6)",
+											backgroundColor: "var(--accent-a2)",
+										}}
+									>
+										<Flex direction="column" gap="2">
+											<Flex justify="between" align="center">
+												<Text size="2" weight="bold">
+													{t("cloud.uploadingBatchProgress", "Uploading to Cloud...")}{" "}
+													({batchImportProgress.current} / {batchImportProgress.total})
+												</Text>
+												<Text size="1" color="gray">
+													{Math.round(
+														(batchImportProgress.current /
+															batchImportProgress.total) *
+															100,
+													)}
+													%
+												</Text>
+											</Flex>
+											<Progress
+												value={
+													(batchImportProgress.current /
+														batchImportProgress.total) *
+													100
+												}
+											/>
+											<Text
+												size="1"
+												color="gray"
+												style={{ fontStyle: "italic" }}
+											>
+												{batchImportProgress.title}
+											</Text>
+										</Flex>
+									</Card>
+								)}
+
+								{/* File List Table */}
+								{batchItems.length > 0 && (
+									<Flex direction="column" gap="2">
+										<Flex justify="between" align="center">
+											<Text size="2" weight="bold">
+												{t("cloud.parsedSongsQueue", "Queue")} ({batchItems.length})
+											</Text>
+											<Text size="1" color="gray">
+												{
+													batchItems.filter((i) => i.status === "ready").length
+												}{" "}
+												ready •{" "}
+												{
+													batchItems.filter((i) => i.status === "success").length
+												}{" "}
+												uploaded
+											</Text>
+										</Flex>
+
+										<ScrollArea style={{ maxHeight: "240px", paddingRight: "6px" }}>
+											<Flex direction="column" gap="2">
+												{batchItems.map((item) => (
+													<Flex
+														key={item.id}
+														align="center"
+														justify="between"
+														gap="2"
+														style={{
+															padding: "8px 12px",
+															borderRadius: "8px",
+															backgroundColor:
+																item.status === "success"
+																	? "var(--green-a2)"
+																	: item.status === "error"
+																		? "var(--red-a2)"
+																		: "var(--color-surface)",
+															border:
+																item.status === "success"
+																	? "1px solid var(--green-a5)"
+																	: item.status === "error"
+																		? "1px solid var(--red-a5)"
+																		: "1px solid var(--gray-a4)",
+														}}
+													>
+														<Flex
+															align="center"
+															gap="2"
+															style={{ minWidth: 0, flex: 1 }}
+														>
+															<Badge size="1" color="gray" variant="surface">
+																{item.name.split(".").pop()?.toUpperCase()}
+															</Badge>
+															<Flex direction="column" style={{ minWidth: 0 }}>
+																<Text
+																	size="2"
+																	weight="bold"
+																	style={{
+																		whiteSpace: "nowrap",
+																		overflow: "hidden",
+																		textOverflow: "ellipsis",
+																	}}
+																>
+																	{item.title}
+																</Text>
+																<Text size="1" color="gray">
+																	{item.artist ||
+																		t("cloud.unknownArtist", "Unknown Artist")}{" "}
+																	{item.lineCount > 0
+																		? `• ${item.lineCount} lines`
+																		: ""}{" "}
+																	{item.durationMs > 0
+																		? `• ${formatDuration(item.durationMs)}`
+																		: ""}
+																</Text>
+															</Flex>
+														</Flex>
+
+														<Flex
+															align="center"
+															gap="2"
+															style={{ flexShrink: 0 }}
+														>
+															{item.status === "ready" && (
+																<Badge size="1" color="gray" variant="surface">
+																	{t("cloud.readyStatus", "Ready")}
+																</Badge>
+															)}
+															{item.status === "uploading" && (
+																<Flex align="center" gap="1">
+																	<Spinner size="1" />
+																	<Text size="1" color="blue">
+																		{t("cloud.uploading", "Uploading...")}
+																	</Text>
+																</Flex>
+															)}
+															{item.status === "success" && (
+																<Badge size="1" color="green" variant="surface">
+																	<Checkmark16Filled style={{ marginRight: 2 }} />
+																	{t("cloud.uploadedStatus", "Saved")}
+																</Badge>
+															)}
+															{item.status === "error" && (
+																<Tooltip
+																	content={item.error || "Upload failed"}
+																>
+																	<Badge size="1" color="red" variant="surface">
+																		{t("cloud.errorStatus", "Error")}
+																	</Badge>
+																</Tooltip>
+															)}
+															{!isBatchImporting && (
+																<IconButton
+																	size="1"
+																	variant="ghost"
+																	color="gray"
+																	onClick={() =>
+																		setBatchItems((prev) =>
+																			prev.filter((i) => i.id !== item.id),
+																		)
+																	}
+																	aria-label="Remove item"
+																>
+																	<Dismiss16Regular />
+																</IconButton>
+															)}
+														</Flex>
+													</Flex>
+												))}
+											</Flex>
+										</ScrollArea>
+									</Flex>
+								)}
+
+								{/* Action Bottom Bar */}
+								<Flex justify="end" gap="2" mt="2">
+									<Button
+										variant="soft"
+										color="gray"
+										onClick={() => setActiveTab("open")}
+										style={{ borderRadius: "8px", cursor: "pointer" }}
+									>
+										{t("cloud.backToLibrary", "Back to Library")}
+									</Button>
+									<Button
+										variant="solid"
+										disabled={
+											isBatchImporting ||
+											batchItems.filter(
+												(i) => i.status === "ready" && i.rawTTML,
+											).length === 0
+										}
+										onClick={handleRunBatchImport}
+										style={{ borderRadius: "8px", cursor: "pointer" }}
+									>
+										{isBatchImporting ? (
+											<Flex align="center" gap="2">
+												<Spinner size="1" />
+												<Text size="2">
+													{t("cloud.batchUploadingBtn", "Uploading...")}
+												</Text>
+											</Flex>
+										) : (
+											<>
+												<ArrowUpload16Regular />
+												{t(
+													"cloud.batchUploadBtn",
+													"Upload {{count}} Songs to Cloud",
+													{
+														count: batchItems.filter(
+															(i) => i.status === "ready" && i.rawTTML,
+														).length,
+													},
+												)}
+											</>
+										)}
+									</Button>
+								</Flex>
+							</Flex>
+						</Card>
+					</Box>
 				) : (
 					/* Library List View */
 					<Flex
 						direction="column"
 						style={{ flex: 1, minHeight: 0, marginTop: "8px" }}
 					>
+						{/* Multi-Selection Batch Actions Bar */}
+						{selectedDocIds.size > 0 && (
+							<Card
+								variant="surface"
+								style={{
+									padding: "8px 14px",
+									marginBottom: "10px",
+									borderRadius: "10px",
+									border: "1px solid var(--accent-a7)",
+									backgroundColor: "var(--accent-a3)",
+									flexShrink: 0,
+								}}
+							>
+								<Flex justify="between" align="center" wrap="wrap" gap="2">
+									<Flex align="center" gap="2">
+										<Badge size="2" color="indigo" variant="solid">
+											{selectedDocIds.size} {t("cloud.selected", "Selected")}
+										</Badge>
+										<Button
+											size="1"
+											variant="ghost"
+											color="gray"
+											onClick={handleSelectAll}
+											style={{ cursor: "pointer" }}
+										>
+											{selectedDocIds.size === filteredSongGroups.length
+												? t("cloud.deselectAll", "Deselect All")
+												: t("cloud.selectAll", "Select All")}
+										</Button>
+									</Flex>
+									<Flex align="center" gap="2">
+										<Button
+											size="1"
+											variant="surface"
+											color="gray"
+											onClick={handleBatchDownloadSelected}
+											style={{ borderRadius: "6px", cursor: "pointer" }}
+										>
+											<ArrowDownload16Regular />
+											{t("cloud.downloadSelected", "Download Selected")}
+										</Button>
+										<Button
+											size="1"
+											variant="solid"
+											color="purple"
+											onClick={handleBatchAddToChecklist}
+											style={{ borderRadius: "6px", cursor: "pointer" }}
+										>
+											<Checkmark16Filled />
+											{t("cloud.addToChecklist", "Add to Checklist")}
+										</Button>
+										<IconButton
+											size="1"
+											variant="ghost"
+											color="gray"
+											onClick={() => setSelectedDocIds(new Set())}
+											aria-label="Clear selection"
+										>
+											<Dismiss16Regular />
+										</IconButton>
+									</Flex>
+								</Flex>
+							</Card>
+						)}
+
 						{/* Summary Stats Banner (Checklist style) */}
 						{cloudList.length > 0 && (
 							<Card
@@ -1930,10 +2828,14 @@ export const CloudFileManagerModal: FC = () => {
 											key={group.key}
 											group={group}
 											loadingDocId={loadingDocId}
+											downloadingAudioDocId={downloadingAudioDocId}
 											deletingDocId={deletingDocId}
 											togglingDocId={togglingDocId}
+											selected={selectedDocIds.has(group.versions[0]?.id)}
+											onToggleSelect={handleToggleSelect}
 											handleOpenItem={handleOpenItem}
 											handleDownloadRawTTML={handleDownloadRawTTML}
+											handleDownloadAudio={handleDownloadAudio}
 											handleDeleteItem={handleDeleteItem}
 											handleToggleFinished={handleToggleFinished}
 										/>

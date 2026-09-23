@@ -57,8 +57,9 @@ import { useFileOpener } from "$/hooks/useFileOpener";
 import { openExternal } from "$/utils/openExternal";
 import { getProgressBadgeColor } from "$/components/TopMenu/HeaderFileInfo";
 import { extractSpotifyTrackId } from "$/modules/apple-ttml/api/client";
+import { audioEngine } from "$/modules/audio/audio-engine";
 import { audioCoverArtAtom } from "$/modules/audio/states";
-import { loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
+import { downloadCloudAudio, loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
 import {
 	GeniusApi,
 	GeniusResolver,
@@ -1503,6 +1504,29 @@ export const TTMLChecklistDialog = () => {
 					{ type: "application/xml" },
 				);
 				await openFile(file);
+
+				if (cloudDoc.audioUrl) {
+					try {
+						toast.info(
+							t("cloud.loadingAudio", 'Loading audio for "{title}"...', {
+								title: cloudDoc.title || "song",
+							}),
+						);
+						const audioBlob = await downloadCloudAudio(
+							cloudDoc.audioUrl,
+							cloudDoc.audioStoragePath,
+						);
+						const audioFileName =
+							cloudDoc.audioFileName || `${cloudDoc.title || "audio"}.mp3`;
+						const audioFile = new File([audioBlob], audioFileName, {
+							type: audioBlob.type || "audio/mpeg",
+						});
+						await audioEngine.loadMusic(audioFile);
+					} catch (audioErr) {
+						console.warn("Checklist cloud audio auto-load failed:", audioErr);
+					}
+				}
+
 				toast.success(
 					t("cloud.openedSuccess", 'Loaded "{title}" from Cloud', {
 						title: cloudDoc.title || "Untitled",

@@ -265,22 +265,30 @@ class AudioEngine extends EventTarget {
 
 		this._lastAudioActivityTime = Date.now();
 
-		// If raw data exists, and either musicBuffer is missing OR sample rate doesn't match new context
-		if (this._rawAudioData && this._rawAudioData.byteLength > 0) {
-			const needsDecode =
-				!this.musicBuffer || this.musicBuffer.sampleRate !== newCtx.sampleRate;
-			if (needsDecode) {
+		// If raw data is missing, attempt to recover from loadedAudioAtom
+		if (!this._rawAudioData || this._rawAudioData.byteLength === 0) {
+			const loadedBlob = globalStore.get(loadedAudioAtom);
+			if (loadedBlob && loadedBlob.size > 0) {
 				try {
-					this.musicBuffer = await newCtx.decodeAudioData(
-						this._rawAudioData.slice(0),
-					);
-					globalStore.set(audioBufferAtom, this.musicBuffer);
+					this._rawAudioData = await loadedBlob.arrayBuffer();
 				} catch (e) {
-					console.warn(
-						"[AudioEngine] Error re-decoding audio for new context:",
-						e,
-					);
+					console.warn("[AudioEngine] Error reading loadedAudioAtom blob:", e);
 				}
+			}
+		}
+
+		// Always decode a fresh AudioBuffer for the new AudioContext (crucial for macOS WebKit/CoreAudio)
+		if (this._rawAudioData && this._rawAudioData.byteLength > 0) {
+			try {
+				this.musicBuffer = await newCtx.decodeAudioData(
+					this._rawAudioData.slice(0),
+				);
+				globalStore.set(audioBufferAtom, this.musicBuffer);
+			} catch (e) {
+				console.warn(
+					"[AudioEngine] Error re-decoding audio for new context:",
+					e,
+				);
 			}
 		}
 
@@ -550,6 +558,14 @@ class AudioEngine extends EventTarget {
 	}
 
 	async resumeOrSeekMusic(offset = this.musicCurrentTime) {
+		// Immediately attempt synchronous resume to capture user activation token (critical for macOS/WebKit)
+		if (
+			this._ctx &&
+			(this._ctx.state === "suspended" || this._ctx.state === "interrupted")
+		) {
+			void this._ctx.resume().catch(() => {});
+		}
+
 		if (!this.musicBuffer) {
 			if (this._audioEl) {
 				await this.resumeContext();
@@ -648,6 +664,23 @@ class AudioEngine extends EventTarget {
 				err,
 			);
 			await this.recreateContext();
+			try {
+				if (this.musicBuffer) {
+					const source = this.ctx.createBufferSource();
+					source.buffer = this.musicBuffer;
+					source.playbackRate.value = this._musicPlayBackRate;
+					source.connect(this.eqEntryPoint);
+					this._activeSourceNode = source;
+					source.start(0, clampedOffset);
+					this._startTimeInContext = this.ctx.currentTime;
+					this._startOffsetInSeconds = clampedOffset;
+					this._pausedPosition = clampedOffset;
+					this._isPlaying = true;
+					this.dispatchEvent(new Event("music-resume"));
+				}
+			} catch (retryErr) {
+				console.error("[AudioEngine] Retry playback also failed:", retryErr);
+			}
 		}
 	}
 
