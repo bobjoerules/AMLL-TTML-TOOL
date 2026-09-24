@@ -1,6 +1,6 @@
 # AMLL TTML Tool Companion Website
 
-Official companion web application for **AMLL TTML Tool** and **Tinko**.
+Official companion web application for **AMLL TTML Tool** and **Liquid Player**.
 
 ## ✨ Features
 1. **Home Page**:
@@ -11,9 +11,9 @@ Official companion web application for **AMLL TTML Tool** and **Tinko**.
    - Live browser connecting to Firebase Firestore (`amll-ttml`) for public/finished TTML documents.
    - Display song cover art, title, artist, album, duration, line counts, and tag status.
    - 1-click **Download TTML** button for instant `.ttml` file downloads.
-3. **Dedicated Tinko Page**:
-   - Dedicated showcase for [Tinko](https://github.com/bobjoerules/tinko).
-   - Interactive fullscreen image lightbox for images in `images/tinko/` (`home-page.jpg`, `library-page.jpg`, `now-playing-fullscreen.jpg`, `now-playing-page.jpg`).
+3. **Dedicated Liquid Player Page**:
+   - Dedicated showcase for [Liquid Player](https://github.com/bobjoerules/Liquid-Player).
+   - Interactive fullscreen image lightbox for screenshots in `images/liquid-player/`.
    - Feature highlights and direct GitHub repository links.
 
 ## 🚀 Running Locally

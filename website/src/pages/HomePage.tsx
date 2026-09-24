@@ -18,7 +18,7 @@ import {
 import { GithubIcon } from '../components/GithubIcon';
 
 interface HomePageProps {
-  onNavigate: (tab: 'home' | 'finished' | 'tinko') => void;
+  onNavigate: (tab: 'home' | 'finished' | 'liquid') => void;
 }
 
 interface ScreenshotItem {
@@ -139,10 +139,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
           <button
             className="btn btn-secondary"
-            onClick={() => onNavigate('tinko')}
+            onClick={() => onNavigate('liquid')}
           >
             <Flame size={18} color="#ff416c" />
-            <span>Discover Tinko</span>
+            <span>Discover Liquid Player</span>
           </button>
         </div>
 
@@ -284,27 +284,27 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* Tinko Callout */}
+      {/* Liquid Player Callout */}
       <section className="glass-panel" style={{ padding: 48, marginTop: 40, border: '1px solid rgba(255, 65, 108, 0.25)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -50, right: -50, width: 250, height: 250, background: 'radial-gradient(circle, rgba(255, 65, 108, 0.2) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32 }}>
           <div style={{ maxWidth: 640 }}>
-            <span className="section-tag section-tag-tinko">Featured Companion App</span>
+            <span className="section-tag section-tag-liquid">Featured Companion App</span>
             <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', marginBottom: 12 }}>
-              Play Synced TTMLs in <span className="text-gradient-tinko">Tinko</span>
+              Play Synced TTMLs in <span className="text-gradient-liquid">Liquid Player</span>
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: 16, lineHeight: 1.6 }}>
-              Tinko is a gorgeous, feature-rich desktop music player built to render syllable-synced TTML lyrics created with AMLL TTML Tool in full glory.
+              Liquid Player is a gorgeous, feature-rich music player and synced lyrics companion built with SwiftUI to render syllable-timed TTML lyrics created with AMLL TTML Tool in full glory.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 14 }}>
-            <button className="btn btn-tinko" onClick={() => onNavigate('tinko')}>
+            <button className="btn btn-liquid" onClick={() => onNavigate('liquid')}>
               <Flame size={18} />
-              <span>Explore Tinko</span>
+              <span>Explore Liquid Player</span>
             </button>
             <a
-              href="https://github.com/bobjoerules/Tinko"
+              href="https://github.com/bobjoerules/Spicy-Player"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary"

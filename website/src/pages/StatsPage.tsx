@@ -28,7 +28,7 @@ import {
 
 interface StatsPageProps {
   initialUserUid?: string | null;
-  onNavigateTab?: (tab: 'home' | 'finished' | 'stats' | 'tinko') => void;
+  onNavigateTab?: (tab: 'home' | 'finished' | 'stats' | 'liquid') => void;
 }
 
 export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigateTab }) => {
