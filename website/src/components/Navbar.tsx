@@ -7,8 +7,8 @@ import { ProfileModal } from './ProfileModal';
 import { isUserModerator, subscribeToAuth } from '../utils/firebase';
 
 interface NavbarProps {
-  currentTab: 'home' | 'finished' | 'stats' | 'tinko';
-  onSelectTab: (tab: 'home' | 'finished' | 'stats' | 'tinko') => void;
+  currentTab: 'home' | 'finished' | 'stats' | 'liquid';
+  onSelectTab: (tab: 'home' | 'finished' | 'stats' | 'liquid') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
@@ -76,12 +76,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               </li>
               <li>
                 <button
-                  className={`nav-link ${currentTab === 'tinko' ? 'active' : ''}`}
-                  onClick={() => onSelectTab('tinko')}
+                  className={`nav-link ${currentTab === 'liquid' ? 'active' : ''}`}
+                  onClick={() => onSelectTab('liquid')}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                     <Flame size={15} color="#ff416c" />
-                    Tinko
+                    Liquid Player
                   </span>
                 </button>
               </li>
@@ -195,15 +195,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 </span>
               </button>
               <button
-                className={`nav-mobile-link ${currentTab === 'tinko' ? 'active' : ''}`}
+                className={`nav-mobile-link ${currentTab === 'liquid' ? 'active' : ''}`}
                 onClick={() => {
-                  onSelectTab('tinko');
+                  onSelectTab('liquid');
                   setMobileMenuOpen(false);
                 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   <Flame size={16} color="#ff416c" />
-                  Tinko
+                  Liquid Player
                 </span>
               </button>
             </div>

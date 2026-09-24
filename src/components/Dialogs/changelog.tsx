@@ -1105,7 +1105,7 @@ export function ChangelogDialog() {
 								<Text size="2">
 									<strong>Companion Website:</strong> Added the official
 									companion website featuring app showcases, community finished
-									TTML downloads via Firebase, and a dedicated Tinko hub.
+									TTML downloads via Firebase, and a dedicated Liquid Player hub.
 								</Text>
 							</Flex>
 						</Box>

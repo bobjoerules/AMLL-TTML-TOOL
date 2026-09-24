@@ -4,10 +4,10 @@ import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { FinishedTTMLsPage } from './pages/FinishedTTMLsPage';
 import { StatsPage } from './pages/StatsPage';
-import { TinkoPage } from './pages/TinkoPage';
+import { LiquidPlayerPage } from './pages/LiquidPlayerPage';
 
 export const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'stats' | 'tinko'>('home');
+  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'stats' | 'liquid'>('home');
 
   // Handle URL hash routing
   useEffect(() => {
@@ -17,8 +17,8 @@ export const App: React.FC = () => {
         setCurrentTab('stats');
       } else if (hash.includes('finished') || hash.includes('ttmls')) {
         setCurrentTab('finished');
-      } else if (hash.includes('tinko')) {
-        setCurrentTab('tinko');
+      } else if (hash.includes('liquid') || hash.includes('tinko')) {
+        setCurrentTab('liquid');
       } else {
         setCurrentTab('home');
       }
@@ -29,7 +29,7 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  const handleSelectTab = (tab: 'home' | 'finished' | 'stats' | 'tinko') => {
+  const handleSelectTab = (tab: 'home' | 'finished' | 'stats' | 'liquid') => {
     setCurrentTab(tab);
     window.location.hash = tab === 'home' ? '' : tab;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -47,7 +47,7 @@ export const App: React.FC = () => {
         {currentTab === 'home' && <HomePage onNavigate={handleSelectTab} />}
         {currentTab === 'finished' && <FinishedTTMLsPage />}
         {currentTab === 'stats' && <StatsPage onNavigateTab={handleSelectTab} />}
-        {currentTab === 'tinko' && <TinkoPage />}
+        {currentTab === 'liquid' && <LiquidPlayerPage />}
       </main>
 
       <Footer onSelectTab={handleSelectTab} />
