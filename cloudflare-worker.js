@@ -293,7 +293,7 @@ async function handleUserProfileEmbed(request, uid) {
           {
             type: 2,
             style: 5,
-            label: `View Profile (${totalUserSongs})`,
+            label: 'View Profile',
             url: `${SITE_ORIGIN}/user/${encodeURIComponent(uid)}`,
           },
           {
