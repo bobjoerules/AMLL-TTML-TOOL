@@ -57,21 +57,29 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
     loadStats();
   }, []);
 
-  // Synchronize hash with selected user
+  // Synchronize hash or pathname with selected user
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash;
+      const path = window.location.pathname;
       if (hash.startsWith('#user=')) {
         const uid = decodeURIComponent(hash.replace('#user=', ''));
         setSelectedUserUid(uid);
-      } else if (hash === '#stats') {
+      } else if (path.startsWith('/user/')) {
+        const uid = decodeURIComponent(path.replace('/user/', '').replace(/\/$/, ''));
+        setSelectedUserUid(uid);
+      } else if (hash === '#stats' || path === '/stats') {
         setSelectedUserUid(null);
       }
     };
 
     handleHash();
     window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+    window.addEventListener('popstate', handleHash);
+    return () => {
+      window.removeEventListener('hashchange', handleHash);
+      window.removeEventListener('popstate', handleHash);
+    };
   }, []);
 
   const handleSelectUser = (uid: string) => {
@@ -99,7 +107,10 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
 
   const handleCopyProfileLink = () => {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
+      const shareUrl = selectedUserUid
+        ? `${window.location.origin}/user/${encodeURIComponent(selectedUserUid)}`
+        : `${window.location.origin}/stats`;
+      navigator.clipboard.writeText(shareUrl);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
     }

@@ -9,24 +9,30 @@ import { LiquidPlayerPage } from './pages/LiquidPlayerPage';
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'stats' | 'liquid'>('home');
 
-  // Handle URL hash routing
+  // Handle URL hash and path routing
   useEffect(() => {
-    const handleHash = () => {
+    const handleRoute = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash.includes('stats') || hash.includes('user=')) {
+      const path = window.location.pathname.toLowerCase();
+
+      if (hash.includes('stats') || hash.includes('user=') || path.includes('/stats') || path.includes('/user/')) {
         setCurrentTab('stats');
-      } else if (hash.includes('finished') || hash.includes('ttmls')) {
+      } else if (hash.includes('finished') || hash.includes('ttmls') || path.includes('/finished')) {
         setCurrentTab('finished');
-      } else if (hash.includes('liquid') || hash.includes('tinko')) {
+      } else if (hash.includes('liquid') || hash.includes('tinko') || path.includes('/liquid')) {
         setCurrentTab('liquid');
       } else {
         setCurrentTab('home');
       }
     };
 
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+    handleRoute();
+    window.addEventListener('hashchange', handleRoute);
+    window.addEventListener('popstate', handleRoute);
+    return () => {
+      window.removeEventListener('hashchange', handleRoute);
+      window.removeEventListener('popstate', handleRoute);
+    };
   }, []);
 
   const handleSelectTab = (tab: 'home' | 'finished' | 'stats' | 'liquid') => {

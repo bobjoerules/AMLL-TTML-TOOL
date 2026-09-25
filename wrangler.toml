@@ -1,0 +1,11 @@
+name = "amll-ttml-discord-embeds"
+main = "cloudflare-worker.js"
+compatibility_date = "2024-09-01"
+
+# Uncomment and adjust routes if deploying via Wrangler CLI:
+# routes = [
+#   { pattern = "ttml.bobjoerules.com/stats*", zone_name = "bobjoerules.com" },
+#   { pattern = "ttml.bobjoerules.com/leaderboard*", zone_name = "bobjoerules.com" },
+#   { pattern = "ttml.bobjoerules.com/user/*", zone_name = "bobjoerules.com" },
+#   { pattern = "ttml.bobjoerules.com/u/*", zone_name = "bobjoerules.com" }
+# ]
