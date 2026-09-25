@@ -84,13 +84,13 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
 
   const handleSelectUser = (uid: string) => {
     setSelectedUserUid(uid);
-    window.location.hash = `user=${encodeURIComponent(uid)}`;
+    window.history.pushState(null, '', `/user/${encodeURIComponent(uid)}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToAll = () => {
     setSelectedUserUid(null);
-    window.location.hash = 'stats';
+    window.history.pushState(null, '', '/stats');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
