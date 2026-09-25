@@ -272,7 +272,7 @@ async function handleUserProfileEmbed(request, uid) {
           components: [
             {
               type: 10,
-              content: `**Latest Contribution**\n🎶 **${escapeDiscordText(latestSong.title)}** — ${escapeDiscordText(latestSong.artist)}\n*${latestSong.lines} lines synchronized*`,
+              content: `**Latest Contribution**\n**${escapeDiscordText(latestSong.title)}** — ${escapeDiscordText(latestSong.artist)}\n*${latestSong.lines} lines synchronized*`,
             },
           ],
           accessory: {
