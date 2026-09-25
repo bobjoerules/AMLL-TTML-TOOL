@@ -21,17 +21,32 @@ export const App: React.FC = () => {
     return 'home';
   });
 
-  // Handle URL hash and path routing
+  // Handle URL hash and path routing with automatic upgrade from legacy hashes to clean paths
   useEffect(() => {
     const handleRoute = () => {
-      const hash = window.location.hash.toLowerCase();
-      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash;
+      const lowerHash = hash.toLowerCase();
 
-      if (hash.includes('stats') || hash.includes('user=') || path.includes('/stats') || path.includes('/user/')) {
+      // Automatically upgrade legacy hash URLs (#stats, #user=...) to clean paths without reload
+      if (lowerHash.startsWith('#stats') || lowerHash.startsWith('#user=')) {
+        if (lowerHash.startsWith('#user=')) {
+          const uid = hash.replace(/^#user=/i, '');
+          window.history.replaceState(null, '', `/user/${uid}`);
+        } else {
+          window.history.replaceState(null, '', '/stats');
+        }
+      } else if (lowerHash.startsWith('#finished') || lowerHash.startsWith('#ttmls')) {
+        window.history.replaceState(null, '', '/finished');
+      } else if (lowerHash.startsWith('#liquid') || lowerHash.startsWith('#tinko')) {
+        window.history.replaceState(null, '', '/liquid');
+      }
+
+      const activePath = window.location.pathname.toLowerCase();
+      if (activePath.startsWith('/stats') || activePath.startsWith('/user/') || activePath.startsWith('/u/')) {
         setCurrentTab('stats');
-      } else if (hash.includes('finished') || hash.includes('ttmls') || path.includes('/finished')) {
+      } else if (activePath.startsWith('/finished')) {
         setCurrentTab('finished');
-      } else if (hash.includes('liquid') || hash.includes('tinko') || path.includes('/liquid')) {
+      } else if (activePath.startsWith('/liquid') || activePath.startsWith('/tinko')) {
         setCurrentTab('liquid');
       } else {
         setCurrentTab('home');
@@ -49,7 +64,8 @@ export const App: React.FC = () => {
 
   const handleSelectTab = (tab: 'home' | 'finished' | 'stats' | 'liquid') => {
     setCurrentTab(tab);
-    window.location.hash = tab === 'home' ? '' : tab;
+    const targetPath = tab === 'home' ? '/' : `/${tab}`;
+    window.history.pushState(null, '', targetPath);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
