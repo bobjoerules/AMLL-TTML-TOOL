@@ -24,7 +24,7 @@ export default {
     // 1. Leaderboard / Stats Route (/stats or /leaderboard)
     if (pathname === '/stats' || pathname === '/leaderboard') {
       if (!isBot) {
-        return Response.redirect(`${SITE_ORIGIN}/#stats`, 302);
+        return fetch(new Request(`${SITE_ORIGIN}/`, request));
       }
       return handleStatsEmbed(request);
     }
@@ -34,7 +34,7 @@ export default {
     if (userMatch) {
       const uid = decodeURIComponent(userMatch[1]);
       if (!isBot) {
-        return Response.redirect(`${SITE_ORIGIN}/#user=${encodeURIComponent(uid)}`, 302);
+        return fetch(new Request(`${SITE_ORIGIN}/`, request));
       }
       return handleUserProfileEmbed(request, uid);
     }
@@ -135,7 +135,7 @@ async function handleStatsEmbed(request) {
               type: 2,
               style: 5,
               label: 'Leaderboard',
-              url: `${SITE_ORIGIN}/#stats`,
+              url: `${SITE_ORIGIN}/stats`,
             },
           },
           { type: 14 },
@@ -146,7 +146,7 @@ async function handleStatsEmbed(request) {
                 type: 2,
                 style: 5,
                 label: 'View Full Rankings',
-                url: `${SITE_ORIGIN}/#stats`,
+                url: `${SITE_ORIGIN}/stats`,
               },
               {
                 type: 2,
@@ -279,7 +279,7 @@ async function handleUserProfileEmbed(request, uid) {
             type: 2,
             style: 5,
             label: 'View Song',
-            url: `${SITE_ORIGIN}/#user=${encodeURIComponent(uid)}`,
+            url: `${SITE_ORIGIN}/user/${encodeURIComponent(uid)}`,
           },
         }
       );
@@ -294,13 +294,13 @@ async function handleUserProfileEmbed(request, uid) {
             type: 2,
             style: 5,
             label: `View Profile (${totalUserSongs})`,
-            url: `${SITE_ORIGIN}/#user=${encodeURIComponent(uid)}`,
+            url: `${SITE_ORIGIN}/user/${encodeURIComponent(uid)}`,
           },
           {
             type: 2,
             style: 5,
             label: 'Leaderboard',
-            url: `${SITE_ORIGIN}/#stats`,
+            url: `${SITE_ORIGIN}/stats`,
           },
           {
             type: 2,
@@ -334,7 +334,7 @@ async function handleUserProfileEmbed(request, uid) {
     });
   } catch (err) {
     console.error('User embed error:', err);
-    return fallbackResponse('Creator Profile', `${SITE_ORIGIN}/#user=${encodeURIComponent(uid)}`);
+    return fallbackResponse('Creator Profile', `${SITE_ORIGIN}/user/${encodeURIComponent(uid)}`);
   }
 }
 

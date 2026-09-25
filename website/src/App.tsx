@@ -7,7 +7,19 @@ import { StatsPage } from './pages/StatsPage';
 import { LiquidPlayerPage } from './pages/LiquidPlayerPage';
 
 export const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'stats' | 'liquid'>('home');
+  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'stats' | 'liquid'>(() => {
+    if (typeof window === 'undefined') return 'home';
+    const hash = window.location.hash.toLowerCase();
+    const path = window.location.pathname.toLowerCase();
+    if (hash.includes('stats') || hash.includes('user=') || path.includes('/stats') || path.includes('/user/')) {
+      return 'stats';
+    } else if (hash.includes('finished') || hash.includes('ttmls') || path.includes('/finished')) {
+      return 'finished';
+    } else if (hash.includes('liquid') || hash.includes('tinko') || path.includes('/liquid')) {
+      return 'liquid';
+    }
+    return 'home';
+  });
 
   // Handle URL hash and path routing
   useEffect(() => {
