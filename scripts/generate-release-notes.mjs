@@ -26,6 +26,10 @@ const renderChildren = (children) => {
 		}
 
 		if (ts.isJsxExpression(child)) {
+			if (child.expression && ts.isStringLiteral(child.expression)) {
+				append(child.expression.text);
+				continue;
+			}
 			if (child.expression) return null;
 			continue;
 		}
@@ -60,7 +64,14 @@ const renderChildren = (children) => {
 		}
 	}
 
-	return output.replace(/[\t\r\n ]+/g, " ").trim();
+	return output
+		.replace(/&amp;/g, "&")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/[\t\r\n ]+/g, " ")
+		.trim();
 };
 
 const getElementChildren = (element) =>

@@ -52,9 +52,9 @@ describe("AppleTtmlApi ID extraction", () => {
 		expect(
 			isSpotifyTrackId("https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"),
 		).toBe(true);
-		expect(isSpotifyTrackId("open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT")).toBe(
-			true,
-		);
+		expect(
+			isSpotifyTrackId("open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT"),
+		).toBe(true);
 		expect(isSpotifyTrackId("spotify:track:4cOdK2wGLETKBW3PvgPWqT")).toBe(true);
 
 		// 21 and 23 char IDs

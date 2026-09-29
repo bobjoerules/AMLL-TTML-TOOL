@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Zawsze utrzymuj odtwarzane słowo w widoku",
+			"keepPlayingWordInViewDesc": "Automatycznie przewija edytor tekstu podczas odtwarzania, aby aktywny wiersz i słowo były widoczne."
 		},
 		"about": {
 			"update": "Aktualizacja",
@@ -473,7 +475,11 @@
 			"palette": "Paleta kolorów",
 			"paletteCustom": "Niestandardowa",
 			"gradientEditorDesc": "Wartość Pos 0.0 odpowiada najcichszej części, a 1.0 najgłośniejszej. Zaleca się używanie jaśniejszych kolorów dla większych wartości Pos.",
-			"addStop": "Dodaj punkt koloru"
+			"addStop": "Dodaj punkt koloru",
+			"followPlayhead": "Wyśrodkuj i podążaj za głowicą odtwarzania",
+			"followPlayheadDesc": "Automatycznie przewija spektrogram podczas odtwarzania, aby utrzymać głowicę na środku.",
+			"snapPlayheadToStart": "Przesuń na początek, gdy głowica opuści widok",
+			"snapPlayheadToStartDesc": "Gdy głowica opuści widoczny obszar podczas odtwarzania, automatycznie przesuwa widok spektrogramu z głowicą na początku."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Błąd przetwarzania audio"
-		}
+		},
+		"autoReloaded": "Automatycznie załadowano dźwięk \"{name}\" z komputera"
 	},
 	"audioPanel": {
 		"volume": "Głośność",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Pokaż tylko synchronizowany wiersz",
+		"onlyShowSyncLineDesc": "Podczas synchronizacji ukrywa inne wiersze i wyświetla tylko aktualnie synchronizowany wiersz na spektrogramie.",
+		"followPlayhead": "Podążaj za głowicą odtwarzania (wyśrodkowana)",
+		"followPlayheadDesc": "Automatycznie przewija spektrogram podczas odtwarzania, utrzymując głowicę na środku.",
+		"snapPlayheadToStart": "Przesuń głowicę na początek, gdy poza ekranem"
 	},
 	"pwa": {
 		"offlineReady": "Strona pomyślnie zapisana w pamięci podręcznej do użytku offline",

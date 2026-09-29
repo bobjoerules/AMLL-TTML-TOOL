@@ -35,7 +35,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ViewportList, type ViewportListRef } from "react-viewport-list";
 import { useFileOpener } from "$/hooks/useFileOpener";
-import { currentTimeAtom } from "$/modules/audio/states";
+import { audioPlayingAtom, currentTimeAtom } from "$/modules/audio/states";
 import {
 	cloudFileManagerInitialTabAtom,
 	cloudFileManagerOpenAtom,
@@ -52,6 +52,7 @@ import {
 	geniusHeaderDetectionDialogOpenAtom,
 	geniusHeaderDetectionDialogShownAtom,
 	wrapLyricLinesAtom,
+	keepPlayingWordInViewAtom,
 } from "$/modules/settings/states/index.ts";
 import {
 	importLyricsChooserDialogAtom,
@@ -541,6 +542,30 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 		lastScrolledIndexRef.current = scrollToIndex;
 		scrollToLineIndex(scrollToIndex);
 	}, [scrollToIndex, scrollToLineIndex]);
+
+	const keepPlayingWordInView = useAtomValue(keepPlayingWordInViewAtom);
+	const audioPlaying = useAtomValue(audioPlayingAtom);
+	const currentPlayingLineIndexRef = useRef<number>(-1);
+
+	useEffect(() => {
+		if (!keepPlayingWordInView || !audioPlaying) {
+			currentPlayingLineIndexRef.current = -1;
+			return;
+		}
+
+		const handleTimeUpdate = () => {
+			const currentTime = store.get(currentTimeAtom);
+			const lyrics = store.get(lyricLinesAtom).lyricLines;
+			const index = findCurrentLineIndex(lyrics, currentTime);
+			if (index !== -1 && index !== currentPlayingLineIndexRef.current) {
+				currentPlayingLineIndexRef.current = index;
+				scrollToLineIndex(index);
+			}
+		};
+
+		handleTimeUpdate();
+		return store.sub(currentTimeAtom, handleTimeUpdate);
+	}, [keepPlayingWordInView, audioPlaying, store, scrollToLineIndex]);
 
 	const handleLocate = useCallback(() => {
 		const currentTime = store.get(currentTimeAtom);

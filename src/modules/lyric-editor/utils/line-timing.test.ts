@@ -137,4 +137,44 @@ describe("line timing transfer", () => {
 		expect(lines[0].words[0].startTime).toBe(1_000);
 		expect(lines[2].words[1].startTime).toBe(1_310);
 	});
+
+	it("snaps multiple lines starting from 0:00 with the first line at playhead and remaining lines shifted accordingly", () => {
+		const lines = [
+			line("first line", 0, 2),
+			line("second line", 4_000, 2),
+			line("third line", 9_500, 2),
+		];
+		const selected = new Set([lines[0].id, lines[1].id, lines[2].id]);
+
+		expect(snapSelectedLineTimingsToTime(lines, selected, 25_000)).toBe(3);
+		expect(lines[0].startTime).toBe(25_000);
+		expect(lines[1].startTime).toBe(29_000);
+		expect(lines[2].startTime).toBe(34_500);
+	});
+
+	it("safeguards duration if line has zero or negative duration", () => {
+		const lines = [
+			{
+				id: "line-untimed-1",
+				text: "untimed 1",
+				startTime: 0,
+				endTime: 0,
+				words: [],
+			},
+			{
+				id: "line-untimed-2",
+				text: "untimed 2",
+				startTime: 2_000,
+				endTime: 2_000,
+				words: [],
+			},
+		];
+		const selected = new Set([lines[0].id, lines[1].id]);
+
+		expect(snapSelectedLineTimingsToTime(lines, selected, 10_000)).toBe(2);
+		expect(lines[0].startTime).toBe(10_000);
+		expect(lines[0].endTime).toBe(13_000); // 3000ms default duration
+		expect(lines[1].startTime).toBe(12_000);
+		expect(lines[1].endTime).toBe(15_000);
+	});
 });

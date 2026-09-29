@@ -73,6 +73,72 @@ describe("Spectrogram line filtering", () => {
 
 		expect(result).toHaveLength(3);
 	});
+
+	it("hides background vocal lines on spectrogram when bgLyricIgnoreSync is true", () => {
+		const mixedLines = [
+			{ id: "line-main", isBG: false, ignoreSync: false },
+			{ id: "line-bg", isBG: true, ignoreSync: false },
+		];
+
+		const isLineIgnored = (
+			line: (typeof mixedLines)[0],
+			mainIgnore: boolean,
+			bgIgnore: boolean,
+		) => {
+			if (line.ignoreSync) return true;
+			if (mainIgnore && !line.isBG) return true;
+			if (bgIgnore && line.isBG) return true;
+			return false;
+		};
+
+		const filtered = mixedLines.filter((l) => !isLineIgnored(l, false, true));
+		expect(filtered).toHaveLength(1);
+		expect(filtered[0].id).toBe("line-main");
+	});
+
+	it("hides main vocal lines on spectrogram when mainLyricIgnoreSync is true", () => {
+		const mixedLines = [
+			{ id: "line-main", isBG: false, ignoreSync: false },
+			{ id: "line-bg", isBG: true, ignoreSync: false },
+		];
+
+		const isLineIgnored = (
+			line: (typeof mixedLines)[0],
+			mainIgnore: boolean,
+			bgIgnore: boolean,
+		) => {
+			if (line.ignoreSync) return true;
+			if (mainIgnore && !line.isBG) return true;
+			if (bgIgnore && line.isBG) return true;
+			return false;
+		};
+
+		const filtered = mixedLines.filter((l) => !isLineIgnored(l, true, false));
+		expect(filtered).toHaveLength(1);
+		expect(filtered[0].id).toBe("line-bg");
+	});
+
+	it("hides lines with individual ignoreSync flag on spectrogram", () => {
+		const mixedLines = [
+			{ id: "line-1", isBG: false, ignoreSync: false },
+			{ id: "line-2", isBG: false, ignoreSync: true },
+		];
+
+		const isLineIgnored = (
+			line: (typeof mixedLines)[0],
+			mainIgnore: boolean,
+			bgIgnore: boolean,
+		) => {
+			if (line.ignoreSync) return true;
+			if (mainIgnore && !line.isBG) return true;
+			if (bgIgnore && line.isBG) return true;
+			return false;
+		};
+
+		const filtered = mixedLines.filter((l) => !isLineIgnored(l, false, false));
+		expect(filtered).toHaveLength(1);
+		expect(filtered[0].id).toBe("line-1");
+	});
 });
 
 describe("Spectrogram Follow Playhead Centering", () => {

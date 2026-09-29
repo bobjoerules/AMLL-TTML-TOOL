@@ -29,4 +29,13 @@ describe("generateReleaseNotes", () => {
 			),
 		).toBeNull();
 	});
+
+	it("handles JSX string literal whitespace and decodes entities", () => {
+		expect(
+			generateReleaseNotes(
+				`<Box><Heading>v0.7.3</Heading><Flex><Text>• <b>Test &amp; Verify:</b> Hello{" "}world</Text></Flex></Box>`,
+				"0.7.3",
+			),
+		).toBe("- **Test & Verify:** Hello world");
+	});
 });

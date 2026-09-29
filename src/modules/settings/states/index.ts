@@ -52,6 +52,10 @@ export const generateNameFromMetadataAtom = atomWithStorage(
 	"generateNameFromMetadata",
 	true,
 );
+export const keepPlayingWordInViewAtom = atomWithStorage(
+	"keepPlayingWordInView",
+	false,
+);
 
 export const autosaveEnabledAtom = atomWithStorage("autosaveEnabled", true);
 export const autosaveIntervalAtom = atomWithStorage("autosaveInterval", 10);
@@ -262,10 +266,7 @@ export const appFontAtom = atomWithStorage<string>(
 	'"MiSans", Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 );
 
-export const editorFontAtom = atomWithStorage<string>(
-	"editorFont",
-	"inherit",
-);
+export const editorFontAtom = atomWithStorage<string>("editorFont", "inherit");
 
 export const previewFontAtom = atomWithStorage<string>(
 	"previewFont",

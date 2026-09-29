@@ -3,7 +3,8 @@ import type { TTMLLyric } from "$/types/ttml";
 
 export const PRESENCE_BRIDGE_VERSION = 1;
 export const PRESENCE_META_NAME = "amll-discord-presence";
-export const DISCORD_LOGO_URL = "https://i.imgur.com/tuaWADI.png";
+export const DISCORD_LOGO_URL =
+	"https://raw.githubusercontent.com/bobjoerules/AMLL-TTML-TOOL/main/public/logo.png";
 export const DISCORD_PLAY_URL = "https://cdn.rcd.gg/PreMiD/resources/play.png";
 export const DISCORD_PAUSE_URL =
 	"https://cdn.rcd.gg/PreMiD/resources/pause.png";

@@ -1,16 +1,14 @@
 import {
 	CenterHorizontal24Regular,
-	ClockRegular,
+	EyeTrackingOff24Regular,
 	MusicNote2Filled,
-	SettingsFilled,
+	NextFrame24Regular,
 	Target24Regular,
 } from "@fluentui/react-icons";
 import {
 	Button,
 	Flex,
 	IconButton,
-	Popover,
-	Select,
 	Slider,
 	Switch,
 	Text,
@@ -54,7 +52,7 @@ import {
 	currentPaletteAtom,
 	spectrogramContainerWidthAtom,
 	spectrogramFftSizeAtom,
-	spectrogramFollowPlayheadAtom,
+	spectrogramPlayheadTrackingModeAtom,
 	spectrogramGainAtom,
 	spectrogramHeightAtom,
 	spectrogramHoverFrequencyAtom,
@@ -104,7 +102,7 @@ const getNoteFromFreq = (freq: number) => {
 	return `${noteName}${octave}`;
 };
 
-const SPEED_PRESETS = [0.5, 0.75, 0.8, 1, 2] as const;
+const SPEED_PRESETS = [0.5, 0.75, 0.8, 1] as const;
 
 export const AudioSpectrogram: FC = memo(() => {
 	const audioBuffer = useAtomValue(audioBufferAtom);
@@ -115,17 +113,15 @@ export const AudioSpectrogram: FC = memo(() => {
 
 	const [gain, setGain] = useAtom(spectrogramGainAtom);
 	const [dataHeight, setDataHeight] = useAtom(spectrogramHeightAtom);
-	const [fftSize, setFftSize] = useAtom(spectrogramFftSizeAtom);
+	const fftSize = useAtomValue(spectrogramFftSizeAtom);
 	const [playbackRate, setPlaybackRate] = useAtom(playbackRateAtom);
 	const [onlyShowSyncLine, setOnlyShowSyncLine] = useAtom(
 		spectrogramOnlyShowSyncLineAtom,
 	);
-	const [followPlayhead, setFollowPlayhead] = useAtom(
-		spectrogramFollowPlayheadAtom,
+	const [playheadTrackingMode, setPlayheadTrackingMode] = useAtom(
+		spectrogramPlayheadTrackingModeAtom,
 	);
 	const globalEnableInsert = useAtomValue(globalEnableInsertAtom);
-	const setDialogVisible = useSetAtom(timeShiftDialogAtom);
-	const setPreviewActive = useSetAtom(timeShiftPreviewActiveAtom);
 
 	useCommand(cmdDuplicatePaste, () => {
 		if (!globalEnableInsert) return;
@@ -501,20 +497,8 @@ export const AudioSpectrogram: FC = memo(() => {
 	};
 
 	useLayoutEffect(() => {
-		if (lastTileTimestamp === 0) {
-			return;
-		}
 		rulerRef.current?.draw(scrollLeft);
-		updateVisibleTilesRef.current();
-	}, [scrollLeft, lastTileTimestamp]);
-
-	useLayoutEffect(() => {
-		if (lastTileTimestamp === 0 && !audioBuffer) {
-			return;
-		}
-		rulerRef.current?.draw(scrollLeft);
-		updateVisibleTilesRef.current();
-	}, [scrollLeft, lastTileTimestamp, audioBuffer]);
+	}, [scrollLeft]);
 
 	useEffect(() => {
 		const container = scrollContainerRef.current;
@@ -820,99 +804,34 @@ export const AudioSpectrogram: FC = memo(() => {
 					</Tooltip>
 
 					<Tooltip
-						content={t(
-							"spectrogram.followPlayhead",
-							"Follow playhead (Keep in center)",
-						)}
+						content={
+							playheadTrackingMode === "follow"
+								? `${t("spectrogram.playheadTrackingMode", "Playhead Tracking")}: ${t("spectrogram.playheadTrackingFollow", "Follow")}`
+								: playheadTrackingMode === "snap"
+									? `${t("spectrogram.playheadTrackingMode", "Playhead Tracking")}: ${t("spectrogram.playheadTrackingSnap", "Snap")}`
+									: `${t("spectrogram.playheadTrackingMode", "Playhead Tracking")}: ${t("spectrogram.playheadTrackingOff", "Off")}`
+						}
 						side="left"
 					>
 						<IconButton
-							variant={followPlayhead ? "solid" : "outline"}
-							onClick={() => setFollowPlayhead((prev) => !prev)}
-						>
-							<CenterHorizontal24Regular />
-						</IconButton>
-					</Tooltip>
-
-					<Tooltip
-						content={t("timeShiftDialog.title", "Time Shift")}
-						side="left"
-					>
-						<IconButton
-							variant="ghost"
-							color="gray"
+							variant={playheadTrackingMode === "off" ? "outline" : "solid"}
 							onClick={() => {
-								setPreviewActive((prev) => !prev);
+								setPlayheadTrackingMode((prev) => {
+									if (prev === "off") return "snap";
+									if (prev === "snap") return "follow";
+									return "off";
+								});
 							}}
 						>
-							<ClockRegular />
+							{playheadTrackingMode === "follow" ? (
+								<CenterHorizontal24Regular />
+							) : playheadTrackingMode === "snap" ? (
+								<NextFrame24Regular />
+							) : (
+								<EyeTrackingOff24Regular />
+							)}
 						</IconButton>
 					</Tooltip>
-
-					<Popover.Root>
-						<Tooltip
-							content={t("spectrogram.settings", "Spectrogram Settings")}
-							side="left"
-						>
-							<Popover.Trigger>
-								<IconButton variant="ghost" color="gray">
-									<SettingsFilled />
-								</IconButton>
-							</Popover.Trigger>
-						</Tooltip>
-						<Popover.Content side="left" align="end" style={{ width: 240 }}>
-							<Flex direction="column" gap="3">
-								<Text size="2" weight="bold">
-									{t("spectrogram.settings", "Spectrogram Settings")}
-								</Text>
-
-								<Flex direction="column" gap="2">
-									<Text size="1" color="gray">
-										{t("spectrogram.fftSize", "FFT Size")} (
-										{t("spectrogram.resolution", "Resolution")})
-									</Text>
-									<Select.Root
-										value={fftSize.toString()}
-										onValueChange={(v) => setFftSize(Number.parseInt(v))}
-									>
-										<Select.Trigger />
-										<Select.Content>
-											<Select.Item value="512">
-												{t("spectrogram.fftSizeOption.512", "512 (Fast)")}
-											</Select.Item>
-											<Select.Item value="1024">
-												{t("spectrogram.fftSizeOption.1024", "1024 (Normal)")}
-											</Select.Item>
-											<Select.Item value="2048">
-												{t(
-													"spectrogram.fftSizeOption.2048",
-													"2048 (Better Freq)",
-												)}
-											</Select.Item>
-											<Select.Item value="4096">
-												{t("spectrogram.fftSizeOption.4096", "4096 (High Res)")}
-											</Select.Item>
-										</Select.Content>
-									</Select.Root>
-								</Flex>
-
-								<Flex align="center" gap="2">
-									<Text size="1" color="gray">
-										{t("spectrogram.height", "Height")}
-									</Text>
-									<Slider
-										size="1"
-										min={100}
-										max={800}
-										step={10}
-										value={[dataHeight]}
-										onValueChange={(v) => setDataHeight(v[0])}
-									/>
-									<Text size="1">{dataHeight}px</Text>
-								</Flex>
-							</Flex>
-						</Popover.Content>
-					</Popover.Root>
 				</div>
 			</div>
 		</div>
@@ -927,7 +846,7 @@ const PlayheadCursor: FC<{ zoom: number }> = memo(({ zoom }) => {
 		<div
 			className={styles.playheadCursor}
 			style={{
-				left: `${cursorPosition}px`,
+				transform: `translate3d(${cursorPosition}px, 0, 0)`,
 			}}
 		/>
 	);
@@ -946,16 +865,15 @@ const ScrubHandle: FC<{
 		zoom,
 	);
 	const handleLeftPosition = (currentTimeInMs / 1000) * zoom - scrollLeft;
+	const isVisible =
+		handleLeftPosition >= 0 && handleLeftPosition <= containerWidth;
 
 	return (
 		<div
 			className={styles.playheadScrubHandle}
 			style={{
-				left: `${handleLeftPosition}px`,
-				display:
-					handleLeftPosition < 0 || handleLeftPosition > containerWidth
-						? "none"
-						: "block",
+				transform: `translate3d(${handleLeftPosition}px, 0, 0) translateX(-50%)`,
+				display: isVisible ? "block" : "none",
 			}}
 			onMouseDown={handleScrubStart}
 		/>

@@ -3,7 +3,7 @@ import { useAtomValue } from "jotai/index";
 import { useCallback, useEffect, useRef } from "react";
 import { audioBufferAtom, currentTimeAtom } from "$/modules/audio/states";
 import {
-	spectrogramFollowPlayheadAtom,
+	spectrogramPlayheadTrackingModeAtom,
 	spectrogramScrollLeftAtom,
 	spectrogramZoomAtom,
 } from "$/modules/spectrogram/states";
@@ -16,7 +16,9 @@ export function useSpectrogramInteraction(
 ) {
 	const audioBuffer = useAtomValue(audioBufferAtom);
 	const currentTime = useAtomValue(currentTimeAtom);
-	const followPlayhead = useAtomValue(spectrogramFollowPlayheadAtom);
+	const playheadTrackingMode = useAtomValue(
+		spectrogramPlayheadTrackingModeAtom,
+	);
 	const [zoom, setZoom] = useAtom(spectrogramZoomAtom);
 	const [scrollLeft, setScrollLeft] = useAtom(spectrogramScrollLeftAtom);
 
@@ -143,25 +145,45 @@ export function useSpectrogramInteraction(
 	}, [audioBuffer, setScrollLeft]);
 
 	useEffect(() => {
-		if (!followPlayhead || !audioBuffer || containerWidth <= 0) return;
+		if (!audioBuffer || containerWidth <= 0) return;
 
 		const playheadX = (currentTime / 1000) * zoom;
 		const totalWidth = audioBuffer.duration * zoom;
 		const maxScrollLeft = Math.max(0, totalWidth - containerWidth);
-		const targetScroll = playheadX - containerWidth / 2;
-		const clampedScroll = Math.max(0, Math.min(targetScroll, maxScrollLeft));
 
-		if (animationFrameRef.current !== null) {
-			cancelAnimationFrame(animationFrameRef.current);
-			animationFrameRef.current = null;
+		if (playheadTrackingMode === "follow") {
+			const targetScroll = playheadX - containerWidth / 2;
+			const clampedScroll = Math.max(0, Math.min(targetScroll, maxScrollLeft));
+
+			if (animationFrameRef.current !== null) {
+				cancelAnimationFrame(animationFrameRef.current);
+				animationFrameRef.current = null;
+			}
+
+			currentScrollLeftRef.current = clampedScroll;
+			targetScrollLeftRef.current = clampedScroll;
+			setScrollLeft(clampedScroll);
+		} else if (playheadTrackingMode === "snap") {
+			const currentScroll = currentScrollLeftRef.current;
+			const isPastRight = playheadX >= currentScroll + containerWidth;
+			const isBeforeLeft = playheadX < currentScroll;
+
+			if (isPastRight || isBeforeLeft) {
+				const clampedScroll = Math.max(0, Math.min(playheadX, maxScrollLeft));
+
+				if (animationFrameRef.current !== null) {
+					cancelAnimationFrame(animationFrameRef.current);
+					animationFrameRef.current = null;
+				}
+
+				currentScrollLeftRef.current = clampedScroll;
+				targetScrollLeftRef.current = clampedScroll;
+				setScrollLeft(clampedScroll);
+			}
 		}
-
-		currentScrollLeftRef.current = clampedScroll;
-		targetScrollLeftRef.current = clampedScroll;
-		setScrollLeft(clampedScroll);
 	}, [
 		currentTime,
-		followPlayhead,
+		playheadTrackingMode,
 		zoom,
 		containerWidth,
 		audioBuffer,

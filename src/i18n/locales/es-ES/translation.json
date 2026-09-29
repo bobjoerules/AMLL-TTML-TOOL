@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Mantener siempre visible la palabra en reproducción",
+			"keepPlayingWordInViewDesc": "Desplaza automáticamente el editor de letras durante la reproducción para mantener visibles la línea y la palabra activa."
 		},
 		"about": {
 			"update": "Update",
@@ -473,7 +475,11 @@
 			"palette": "Color Palette",
 			"paletteCustom": "Custom",
 			"gradientEditorDesc": "A Pos value of 0.0 corresponds to the quietest part, and 1.0 corresponds to the loudest part. It is recommended to use brighter colors for larger Pos values.",
-			"addStop": "Add Color Stop"
+			"addStop": "Add Color Stop",
+			"followPlayhead": "Centrar y seguir el cabezal de reproducción",
+			"followPlayheadDesc": "Desplaza automáticamente el espectrograma durante la reproducción y búsqueda para mantener el cabezal en el centro.",
+			"snapPlayheadToStart": "Alinear al inicio cuando el cabezal salga de la vista",
+			"snapPlayheadToStartDesc": "Cuando el cabezal sale del área visible durante la reproducción, ajusta la vista del espectrograma con el cabezal al inicio."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Error processing audio"
-		}
+		},
+		"autoReloaded": "Audio \"{name}\" cargado automáticamente desde el equipo"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Mostrar solo la línea en sincronización",
+		"onlyShowSyncLineDesc": "Al sincronizar letras, oculta otras líneas y solo muestra la línea que se está sincronizando actualmente en la superposición del espectrograma.",
+		"followPlayhead": "Seguir cabezal de reproducción (mantener centrado)",
+		"followPlayheadDesc": "Desplaza automáticamente el espectrograma durante la reproducción y búsqueda para mantener el cabezal en el centro.",
+		"snapPlayheadToStart": "Alinear cabezal al inicio cuando esté fuera de pantalla"
 	},
 	"pwa": {
 		"offlineReady": "Site successfully cached for offline use",

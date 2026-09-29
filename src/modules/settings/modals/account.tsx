@@ -60,7 +60,6 @@ import { extractArtistTokens } from "$/modules/ttml-checklist/logic";
 
 const MODERATOR_UIDS = new Set(["s41Sey8PJUSYHQUsS6aLLb7lsf02"]);
 
-
 export const SettingsAccountTab = memo(() => {
 	const { t } = useTranslation();
 	const user = useAtomValue(currentUserAtom);
@@ -712,7 +711,9 @@ export const SettingsAccountTab = memo(() => {
 							color="purple"
 							size="2"
 							style={{ cursor: "pointer" }}
-							onClick={() => openExternal("https://ttml.bobjoerules.com/#stats")}
+							onClick={() =>
+								openExternal("https://ttml.bobjoerules.com/#stats")
+							}
 						>
 							{t("cloud.viewCommunityStats", "Community Leaderboard")}
 						</Button>

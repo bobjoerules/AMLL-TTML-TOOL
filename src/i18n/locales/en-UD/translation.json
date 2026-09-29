@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Always Keep Playing Word in View",
+			"keepPlayingWordInViewDesc": "Automatically scrolls the lyric editor during playback to keep the active line and playing word visible."
 		},
 		"about": {
 			"update": "Update",
@@ -473,7 +475,11 @@
 			"palette": "Color Palette",
 			"paletteCustom": "Custom",
 			"gradientEditorDesc": "A Pos value of 0.0 corresponds to the quietest part, and 1.0 corresponds to the loudest part. It is recommended to use brighter colors for larger Pos values.",
-			"addStop": "Add Color Stop"
+			"addStop": "Add Color Stop",
+			"followPlayhead": "Center and Follow Playhead",
+			"followPlayheadDesc": "Automatically scrolls the spectrogram during playback and seeking to keep the playhead in the middle of the frame.",
+			"snapPlayheadToStart": "Snap to Start when Playhead Exits View",
+			"snapPlayheadToStartDesc": "When the playhead moves past the visible area during playback, automatically snaps the spectrogram view with the playhead at the start."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Error processing audio"
-		}
+		},
+		"autoReloaded": "Automatically loaded audio \"{name}\" from computer"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Only show line being time synced",
+		"onlyShowSyncLineDesc": "When syncing lyrics, hides other lines and only displays the line currently being synchronized on the spectrogram overlay.",
+		"followPlayhead": "Follow Playhead (Keep Centered)",
+		"followPlayheadDesc": "Automatically scrolls the spectrogram during playback and seeking to keep the playhead in the middle of the frame.",
+		"snapPlayheadToStart": "Snap playhead to start when offscreen"
 	},
 	"pwa": {
 		"offlineReady": "Site successfully cached for offline use",

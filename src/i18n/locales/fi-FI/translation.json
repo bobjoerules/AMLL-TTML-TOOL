@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Pidä toistettava sana aina näkyvissä",
+			"keepPlayingWordInViewDesc": "Vierittää sanoituseditoria automaattisesti toiston aikana pitääkseen aktiivisen rivin ja sanan näkyvissä."
 		},
 		"about": {
 			"update": "Update",
@@ -473,7 +475,11 @@
 			"palette": "Color Palette",
 			"paletteCustom": "Custom",
 			"gradientEditorDesc": "A Pos value of 0.0 corresponds to the quietest part, and 1.0 corresponds to the loudest part. It is recommended to use brighter colors for larger Pos values.",
-			"addStop": "Add Color Stop"
+			"addStop": "Add Color Stop",
+			"followPlayhead": "Keskitä ja seuraa toistopäätä",
+			"followPlayheadDesc": "Vierittää spektrogrammia automaattisesti toiston ja haun aikana toistopään pitämiseksi keskellä.",
+			"snapPlayheadToStart": "Kohdista alkuun toistopään poistuessa näkymästä",
+			"snapPlayheadToStartDesc": "Kun toistopää liikkuu näkyvän alueen ulkopuolelle, siirtää spektrogrammin näkymän toistopää alkuun."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Error processing audio"
-		}
+		},
+		"autoReloaded": "Ääni \"{name}\" ladattiin automaattisesti tietokoneelta"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Näytä vain synkronoitava rivi",
+		"onlyShowSyncLineDesc": "Piilottaa muut rivit synkronoinnin aikana ja näyttää vain aktiivisen rivin spektrogrammissa.",
+		"followPlayhead": "Seuraa toistopäätä (pidä keskitettynä)",
+		"followPlayheadDesc": "Vierittää spektrogrammia toiston aikana pitääkseen toistopään keskellä.",
+		"snapPlayheadToStart": "Kohdista toistopää alkuun ruudun ulkopuolella"
 	},
 	"pwa": {
 		"offlineReady": "Site successfully cached for offline use",

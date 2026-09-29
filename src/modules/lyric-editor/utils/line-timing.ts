@@ -93,13 +93,21 @@ export function snapSelectedLineTimingsToTime(
 	const selectedLines = lines.filter((line) => selectedLineIds.has(line.id));
 	if (selectedLines.length === 0) return 0;
 
-	const offset = targetStartTime - selectedLines[0].startTime;
+	const baseStart = selectedLines[0].startTime;
+	const offset = targetStartTime - baseStart;
 	for (const line of selectedLines) {
-		line.startTime += offset;
-		line.endTime += offset;
-		for (const word of line.words) {
-			word.startTime += offset;
-			word.endTime += offset;
+		const origStart = line.startTime;
+		const duration = line.endTime > origStart ? line.endTime - origStart : 3000;
+		line.startTime = Math.max(0, origStart + offset);
+		line.endTime = line.startTime + duration;
+		if (line.words) {
+			for (const word of line.words) {
+				if (word.startTime > 0 || word.endTime > 0) {
+					const wDur = Math.max(0, word.endTime - word.startTime);
+					word.startTime = Math.max(0, word.startTime + offset);
+					word.endTime = word.startTime + wDur;
+				}
+			}
 		}
 	}
 	return selectedLines.length;

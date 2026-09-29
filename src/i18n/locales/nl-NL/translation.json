@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Helderheid",
 			"customBackgroundEnabled": "Achtergrond instellen",
-			"customBackgroundManage": "Instellingen"
+			"customBackgroundManage": "Instellingen",
+			"keepPlayingWordInView": "Huidig afspelend woord altijd in beeld houden",
+			"keepPlayingWordInViewDesc": "Scrolt de songteksteditor automatisch tijdens het afspelen om de actieve regel en het afspelende woord zichtbaar te houden."
 		},
 		"about": {
 			"update": "Vernieuwen",
@@ -473,7 +475,11 @@
 			"palette": "Kleur Palet",
 			"paletteCustom": "Aangepaste",
 			"gradientEditorDesc": "Een Pos waarde van 0,0 komt overeen met het rustigste gedeelte, en 1.0 komt overeen met het luidste gedeelte. Het wordt aanbevolen om helderdere kleuren te gebruiken voor grotere Pos waarden.",
-			"addStop": "Kleurstop toevoegen"
+			"addStop": "Kleurstop toevoegen",
+			"followPlayhead": "Afspeelkop centreren en volgen",
+			"followPlayheadDesc": "Scrolt het spectrogram automatisch tijdens afspelen en zoeken om de afspeelkop in het midden te houden.",
+			"snapPlayheadToStart": "Naar begin springen wanneer afspeelkop uit beeld verdwijnt",
+			"snapPlayheadToStartDesc": "Wanneer de afspeelkop buiten het zichtbare gebied beweegt, springt het spectrogram zodat de afspeelkop aan het begin staat."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Fout bij verwerken audio"
-		}
+		},
+		"autoReloaded": "Audio \"{name}\" automatisch geladen vanaf computer"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Alleen te synchroniseren regel tonen",
+		"onlyShowSyncLineDesc": "Verbergt andere regels tijdens het synchroniseren en toont alleen de huidige regel op het spectrogram.",
+		"followPlayhead": "Afspeelkop volgen (gecentreerd houden)",
+		"followPlayheadDesc": "Scrolt het spectrogram tijdens het afspelen om de afspeelkop in het midden te houden.",
+		"snapPlayheadToStart": "Afspeelkop naar begin laten springen buiten beeld"
 	},
 	"pwa": {
 		"offlineReady": "Site succesvol gecached voor offline gebruik",

@@ -42,6 +42,7 @@ export const preservesPitchAtom = atomWithStorage("preservesPitch", true);
 export const audioPlayingAtom = atom(false);
 export const loadedAudioAtom = atom(new Blob([]));
 export const loadedAudioFileNameAtom = atom<string | null>(null);
+export const loadedAudioPathAtom = atom<string | null>(null);
 /** Object URL for artwork embedded in the currently loaded audio file. */
 export const audioCoverArtAtom = atom<string | null>(null);
 export const currentTimeAtom = atom(0);

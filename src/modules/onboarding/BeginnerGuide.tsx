@@ -63,9 +63,12 @@ import {
 } from "./states";
 
 const GUIDE_DOCS: Record<string, string> = {
-	audio: "https://guides.spicylyrics.org/s/ttml/doc/1-import-the-song-iHfycCuOSU",
-	lyrics: "https://guides.spicylyrics.org/s/ttml/doc/2-import-the-lyrics-CK0YxRxPwp",
-	review: "https://guides.spicylyrics.org/s/ttml/doc/3-check-the-lyrics-ZHDMonddCz",
+	audio:
+		"https://guides.spicylyrics.org/s/ttml/doc/1-import-the-song-iHfycCuOSU",
+	lyrics:
+		"https://guides.spicylyrics.org/s/ttml/doc/2-import-the-lyrics-CK0YxRxPwp",
+	review:
+		"https://guides.spicylyrics.org/s/ttml/doc/3-check-the-lyrics-ZHDMonddCz",
 	sync: "https://guides.spicylyrics.org/s/ttml/doc/4-sync-the-lyrics-MJsQ3M0dIS",
 	songwriters:
 		"https://guides.spicylyrics.org/s/ttml/doc/5-add-the-songwriters-cP7OWZhyKd",
@@ -258,8 +261,7 @@ export const BeginnerGuide = () => {
 			});
 			if (saved) setExported(true);
 		}
-		if (id === "test")
-			void openExternal(GUIDE_DOCS.test || DEFAULT_GUIDE_URL);
+		if (id === "test") void openExternal(GUIDE_DOCS.test || DEFAULT_GUIDE_URL);
 	}, [
 		lyrics,
 		pickAudio,
@@ -574,17 +576,29 @@ export const BeginnerGuide = () => {
 																"I checked the lyrics",
 															)
 														: currentId === "test"
-															? t("beginnerGuide.test.open", "Open testing steps")
+															? t(
+																	"beginnerGuide.test.open",
+																	"Open testing steps",
+																)
 															: currentId === "audio"
-																? t("beginnerGuide.audio.choose", "Choose audio")
+																? t(
+																		"beginnerGuide.audio.choose",
+																		"Choose audio",
+																	)
 																: currentId === "sync"
-																	? t("beginnerGuide.sync.open", "Open Time mode")
+																	? t(
+																			"beginnerGuide.sync.open",
+																			"Open Time mode",
+																		)
 																	: currentId === "songwriters"
 																		? t(
 																				"beginnerGuide.songwriters.open",
 																				"Open metadata",
 																			)
-																		: t("beginnerGuide.export.save", "Save TTML")}
+																		: t(
+																				"beginnerGuide.export.save",
+																				"Save TTML",
+																			)}
 												</Button>
 											</>
 										)}

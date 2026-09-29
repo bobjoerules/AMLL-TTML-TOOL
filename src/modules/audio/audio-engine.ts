@@ -12,8 +12,11 @@ import {
 	equalizerGainsAtom,
 	loadedAudioAtom,
 	loadedAudioFileNameAtom,
+	loadedAudioPathAtom,
 } from "$/modules/audio/states/index.ts";
 import { AudioWorkerClient } from "$/modules/audio/workers/audio-worker-client";
+import { saveAudioToCache } from "$/modules/project/autosave/autosave";
+import { projectIdAtom } from "$/states/main.ts";
 import { globalStore } from "$/states/store.ts";
 import { log } from "$/utils/logging";
 
@@ -699,6 +702,9 @@ class AudioEngine extends EventTarget {
 		}
 		this._pausedPosition = this.musicCurrentTime;
 		this._isPlaying = false;
+		// Mark activity so the idle-too-long check in resumeContext() doesn't
+		// incorrectly recreate the AudioContext after a normal pause on macOS.
+		this._lastAudioActivityTime = Date.now();
 
 		if (this._activeSourceNode) {
 			try {
@@ -725,15 +731,15 @@ class AudioEngine extends EventTarget {
 	}
 
 	/**
-	 * 试听一个音频片段
+	 * Preview an audio snippet
 	 *
-	 * @param startTimeInSeconds 音频片段的开始时间
-	 * @param endTimeInSeconds 音频片段的结束时间
+	 * @param startTimeInSeconds Start time of the snippet in seconds
+	 * @param endTimeInSeconds End time of the snippet in seconds
 	 * @returns
 	 */
 	async auditionRange(startTimeInSeconds: number, endTimeInSeconds: number) {
 		if (!this.musicBuffer) {
-			console.warn("musicBuffer 为 null, 无法预览音频");
+			console.warn("musicBuffer is null, cannot preview audio");
 			return;
 		}
 
@@ -742,7 +748,7 @@ class AudioEngine extends EventTarget {
 				this.auditionSourceNode.stop(0);
 				this.auditionSourceNode.disconnect();
 			} catch (e) {
-				console.error("停止 AudioNode 失败:", e);
+				console.error("Failed to stop AudioNode:", e);
 			}
 			this.auditionSourceNode = null;
 		}
@@ -879,6 +885,7 @@ class AudioEngine extends EventTarget {
 				globalStore.set(audioBufferAtom, null);
 				globalStore.set(loadedAudioAtom, new Blob([]));
 				globalStore.set(loadedAudioFileNameAtom, null);
+				globalStore.set(loadedAudioPathAtom, null);
 				this.revokeAudioObjUrl();
 				audioEl.removeAttribute("src");
 				audioEl.load();
@@ -922,7 +929,18 @@ class AudioEngine extends EventTarget {
 					this.musicBuffer = await this.ctx.decodeAudioData(audioData.slice(0));
 					globalStore.set(audioBufferAtom, this.musicBuffer);
 					globalStore.set(loadedAudioAtom, src);
-					globalStore.set(loadedAudioFileNameAtom, (src as any).name || null);
+					const fileName = (src as any).name || null;
+					const filePath = (src as any).path || (src as any).filePath || null;
+					globalStore.set(loadedAudioFileNameAtom, fileName);
+					globalStore.set(loadedAudioPathAtom, filePath);
+
+					const currentProjectId = globalStore.get(projectIdAtom);
+					void saveAudioToCache({
+						projectId: currentProjectId,
+						fileName: fileName || "audio",
+						path: filePath,
+						blob: src,
+					});
 
 					this.setupAudioListeners();
 

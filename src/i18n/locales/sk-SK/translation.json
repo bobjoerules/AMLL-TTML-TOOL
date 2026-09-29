@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background applied",
-			"customBackgroundManage": "Manage"
+			"customBackgroundManage": "Manage",
+			"keepPlayingWordInView": "Vždy udržiavať prehrávané slovo v zobrazení",
+			"keepPlayingWordInViewDesc": "Počas prehrávania automaticky posúva editor textu, aby bol aktívny riadok a slovo stále viditeľné."
 		},
 		"about": {
 			"update": "Aktualizácia",
@@ -473,7 +475,11 @@
 			"palette": "Farebná paleta",
 			"paletteCustom": "Vlastná",
 			"gradientEditorDesc": "Hodnota Pos 0.0 zodpovedá najtichšej časti a 1.0 najhlasnejšej časti. Odporúča sa používať jasnejšie farby pre väčšie hodnoty Pos.",
-			"addStop": "Pridať farebný bod"
+			"addStop": "Pridať farebný bod",
+			"followPlayhead": "Vycentrovať a sledovať prehrávaciu hlavu",
+			"followPlayheadDesc": "Automaticky posúva spektrogram počas prehrávania, aby bola hlava v strede.",
+			"snapPlayheadToStart": "Zarovnať na začiatok pri opustení zobrazenia",
+			"snapPlayheadToStartDesc": "Keď prehrávacia hlava opustí viditeľnú oblasť, automaticky posunie spektrogram tak, aby bola hlava na začiatku."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Chyba pri spracovaní zvuku"
-		}
+		},
+		"autoReloaded": "Zvuk \"{name}\" bol automaticky načítaný z počítača"
 	},
 	"audioPanel": {
 		"volume": "Hlasitosť",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "高度"
+		"height": "高度",
+		"onlyShowSyncLine": "Zobraziť iba synchronizovaný riadok",
+		"onlyShowSyncLineDesc": "Počas synchronizácie skryje ostatné riadky a zobrazí iba aktuálne synchronizovaný riadok.",
+		"followPlayhead": "Sledovať prehrávaciu hlavu (v strede)",
+		"followPlayheadDesc": "Automaticky posúva spektrogram, aby zostala hlava v strede.",
+		"snapPlayheadToStart": "Zarovnať hlavu na začiatok mimo obrazovky"
 	},
 	"pwa": {
 		"offlineReady": "Stránka úspešne uložená do vyrovnávacej pamäte pre offline použitie",

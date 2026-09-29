@@ -3,7 +3,11 @@ import { newLyricWord, type LyricLine } from "$/types/ttml";
 import { maybeAutoSegmentLine } from "./auto-segment-sync";
 
 describe("maybeAutoSegmentLine", () => {
-	const createSingleWordLine = (text: string, startTime = 1000, endTime = 3000): LyricLine => ({
+	const createSingleWordLine = (
+		text: string,
+		startTime = 1000,
+		endTime = 3000,
+	): LyricLine => ({
 		id: "line-1",
 		startTime,
 		endTime,
@@ -31,8 +35,20 @@ describe("maybeAutoSegmentLine", () => {
 			startTime: 1000,
 			endTime: 3000,
 			words: [
-				{ ...newLyricWord(), id: "w1", word: "Never", startTime: 1000, endTime: 2000 },
-				{ ...newLyricWord(), id: "w2", word: "gonna", startTime: 2000, endTime: 3000 },
+				{
+					...newLyricWord(),
+					id: "w1",
+					word: "Never",
+					startTime: 1000,
+					endTime: 2000,
+				},
+				{
+					...newLyricWord(),
+					id: "w2",
+					word: "gonna",
+					startTime: 2000,
+					endTime: 3000,
+				},
 			],
 		};
 		const result = maybeAutoSegmentLine(line, { enabled: true, mode: "word" });
@@ -61,7 +77,10 @@ describe("maybeAutoSegmentLine", () => {
 
 	it("auto-segments timed English line by syllable when mode is 'syllable'", () => {
 		const line = createSingleWordLine("Never gonna", 1000, 3000);
-		const result = maybeAutoSegmentLine(line, { enabled: true, mode: "syllable" });
+		const result = maybeAutoSegmentLine(line, {
+			enabled: true,
+			mode: "syllable",
+		});
 
 		expect(result.words.length).toBeGreaterThan(2); // "Never gonna" has at least 4 syllables
 		expect(result.words[0].startTime).toBe(1000);

@@ -34,7 +34,10 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { currentTimeAtom } from "$/modules/audio/states/index.ts";
-import { LayoutMode } from "$/modules/settings/states/index.ts";
+import {
+	LayoutMode,
+	keepPlayingWordInViewAtom,
+} from "$/modules/settings/states/index.ts";
 import { instantHighlightFadeAtom } from "$/modules/settings/states/preview";
 import { splitWordDialogAtom } from "$/states/dialogs.ts";
 import {
@@ -874,6 +877,12 @@ const LyricSyncWordView: FC<{
 		enableSyncGlowAnimationRef.current = enableSyncGlowAnimation;
 	}, [enableSyncGlowAnimation]);
 
+	const keepPlayingWordInView = useAtomValue(keepPlayingWordInViewAtom);
+	const keepPlayingWordInViewRef = useRef(keepPlayingWordInView);
+	useEffect(() => {
+		keepPlayingWordInViewRef.current = keepPlayingWordInView;
+	}, [keepPlayingWordInView]);
+
 	// ── PERF FIX: Drive the active/animated classes imperatively via store.sub
 	// instead of subscribing to currentTimeAtom inside React (which causes ~60fps
 	// re-renders of every visible word).
@@ -891,6 +900,13 @@ const LyricSyncWordView: FC<{
 					} else {
 						el.classList.remove(styles.animated);
 					}
+				}
+				if (keepPlayingWordInViewRef.current) {
+					el.scrollIntoView({
+						behavior: "smooth",
+						block: "nearest",
+						inline: "nearest",
+					});
 				}
 			} else {
 				el.classList.remove(styles.active);

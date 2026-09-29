@@ -51,6 +51,7 @@ import {
 	normalizeCyrillicEsOnImportAtom,
 	allowConsecutiveBackgroundLinesAtom,
 	wrapLyricLinesAtom,
+	keepPlayingWordInViewAtom,
 } from "$/modules/settings/states";
 import {
 	autoSegmentOnLineSyncAtom,
@@ -98,6 +99,9 @@ export const SettingsCommonTab = ({
 	);
 	const [syncTimeOffset, setSyncTimeOffset] = useAtom(syncTimeOffsetAtom);
 	const [syncCommitOffset, setSyncCommitOffset] = useAtom(syncCommitOffsetAtom);
+	const [keepPlayingWordInView, setKeepPlayingWordInView] = useAtom(
+		keepPlayingWordInViewAtom,
+	);
 	const [autoSegmentOnLineSync, setAutoSegmentOnLineSync] = useAtom(
 		autoSegmentOnLineSyncAtom,
 	);
@@ -637,7 +641,10 @@ export const SettingsCommonTab = ({
 									direction="column"
 									gap="2"
 									pl="6"
-									style={{ borderTop: "1px solid var(--gray-a4)", paddingTop: "8px" }}
+									style={{
+										borderTop: "1px solid var(--gray-a4)",
+										paddingTop: "8px",
+									}}
 								>
 									<Flex align="center" justify="between" gap="4">
 										<Flex direction="column" gap="1">
@@ -784,6 +791,38 @@ export const SettingsCommonTab = ({
 										<Switch
 											checked={geniusCategorizationEnabled}
 											onCheckedChange={setGeniusCategorizationEnabled}
+										/>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
+					</Card>
+					<Heading size="4">
+						{t("settings.group.playbackScroll", "Playback & Navigation")}
+					</Heading>
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
+								<ContentView24Regular />
+								<Box flexGrow="1">
+									<Flex gap="2" align="center" justify="between">
+										<Flex direction="column" gap="1">
+											<Text>
+												{t(
+													"settings.common.keepPlayingWordInView",
+													"Always Keep Playing Word in View",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"settings.common.keepPlayingWordInViewDesc",
+													"Automatically scrolls the lyric editor during playback to keep the active line and playing word visible.",
+												)}
+											</Text>
+										</Flex>
+										<Switch
+											checked={keepPlayingWordInView}
+											onCheckedChange={setKeepPlayingWordInView}
 										/>
 									</Flex>
 								</Box>

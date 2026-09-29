@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Radius Blur",
 			"customBackgroundBrightness": "Kecerahan",
 			"customBackgroundEnabled": "Latar belakang telah diatur",
-			"customBackgroundManage": "Pengaturan"
+			"customBackgroundManage": "Pengaturan",
+			"keepPlayingWordInView": "Selalu tampilkan kata yang sedang diputar",
+			"keepPlayingWordInViewDesc": "Menggulir editor lirik secara otomatis selama pemutaran agar baris dan kata aktif tetap terlihat."
 		},
 		"about": {
 			"update": "Pembaruan Perangkat Lunak",
@@ -473,7 +475,11 @@
 			"palette": "Skema Warna",
 			"paletteCustom": "Kostum",
 			"gradientEditorDesc": "Pos 0.0 sesuai bagian paling sunyi, 1.0 sesuai bagian paling keras. Disarankan makin besar Pos, menggunakan warna yang lebih cerah.",
-			"addStop": "Tambah Warna"
+			"addStop": "Tambah Warna",
+			"followPlayhead": "Tengahkan dan ikuti penunjuk putar",
+			"followPlayheadDesc": "Menggulir spektrogram secara otomatis selama pemutaran dan pencarian agar penunjuk tetap di tengah.",
+			"snapPlayheadToStart": "Ratakan ke awal saat penunjuk keluar dari tampilan",
+			"snapPlayheadToStartDesc": "Saat penunjuk keluar dari area yang terlihat, spektrogram otomatis disesuaikan dengan penunjuk di awal."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Terjadi kesalahan saat memproses audio"
-		}
+		},
+		"autoReloaded": "Audio \"{name}\" otomatis dimuat dari komputer"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Hanya tampilkan baris yang disinkronkan",
+		"onlyShowSyncLineDesc": "Menyembunyikan baris lain saat sinkronisasi dan hanya menampilkan baris aktif di atas spektrogram.",
+		"followPlayhead": "Ikuti penunjuk putar (tetap di tengah)",
+		"followPlayheadDesc": "Menggulir spektrogram selama pemutaran agar penunjuk tetap di tengah.",
+		"snapPlayheadToStart": "Ratakan penunjuk ke awal saat di luar layar"
 	},
 	"pwa": {
 		"offlineReady": "Situs berhasil disimpan dalam cache offline, Anda bisa mengaksesnya tanpa internet nanti",

@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Bulanıklık Yarıçapı",
 			"customBackgroundBrightness": "Parlaklık",
 			"customBackgroundEnabled": "Arka Plan ayarlandı",
-			"customBackgroundManage": "Ayarlar"
+			"customBackgroundManage": "Ayarlar",
+			"keepPlayingWordInView": "Çalan kelimeyi her zaman görünümde tut",
+			"keepPlayingWordInViewDesc": "Oynatma sırasında aktif satırı ve çalan kelimeyi görünür tutmak için şarkı sözü düzenleyicisini otomatik olarak kaydırır."
 		},
 		"about": {
 			"update": "Güncelle",
@@ -473,7 +475,11 @@
 			"palette": "Renk Paleti",
 			"paletteCustom": "Özel",
 			"gradientEditorDesc": "0.0 Pos değeri en sessiz kısmı, 1.0 Pos değeri ise en yüksek sesli kısmı temsil eder. Pos değeri yükseldikçe daha parlak renkler kullanılması önerilir.",
-			"addStop": "Renk Noktası Ekle"
+			"addStop": "Renk Noktası Ekle",
+			"followPlayhead": "Oynatma başlığını ortala ve takip et",
+			"followPlayheadDesc": "Oynatma başlığını ortada tutmak için oynatma ve arama sırasında spektrogramı otomatik kaydırır.",
+			"snapPlayheadToStart": "Oynatma başlığı görünümden çıkınca başa hizala",
+			"snapPlayheadToStartDesc": "Oynatma başlığı görünür alanın dışına çıktığında spektrogramı başlık başta olacak şekilde otomatik kaydırır."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Sesi işlerken hata oluştu"
-		}
+		},
+		"autoReloaded": "\"{name}\" sesi bilgisayardan otomatik yüklendi"
 	},
 	"audioPanel": {
 		"volume": "Ses Düzeyi",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Görüntüleme Yüksekliği"
+		"height": "Görüntüleme Yüksekliği",
+		"onlyShowSyncLine": "Yalnızca senkronize edilen satırı göster",
+		"onlyShowSyncLineDesc": "Senkronizasyon sırasında diğer satırları gizler ve spektrogram üzerinde yalnızca geçerli satırı gösterir.",
+		"followPlayhead": "Oynatma başlığını takip et (ortada tut)",
+		"followPlayheadDesc": "Oynatma başlığını ortada tutmak için spektrogramı otomatik kaydırır.",
+		"snapPlayheadToStart": "Ekran dışındayken oynatma başlığını başa hizala"
 	},
 	"pwa": {
 		"offlineReady": "Site çevrimdışı kullanım için başarıyla kaydedildi",

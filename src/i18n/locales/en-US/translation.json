@@ -268,6 +268,8 @@
 			"compactBGInSyncDesc": "Automatically compress vertical space for background vocal lines during synchronization.",
 			"wrapLyricLines": "Wrap Long Lyric Lines",
 			"wrapLyricLinesDesc": "Wrap lyrics to the next line when they exceed the editor width instead of scrolling horizontally.",
+			"keepPlayingWordInView": "Always Keep Playing Word in View",
+			"keepPlayingWordInViewDesc": "Automatically scrolls the lyric editor during playback to keep the active line and playing word visible.",
 			"allowConsecutiveBackgroundLines": "Allow consecutive and standalone background vocals",
 			"allowConsecutiveBackgroundLinesDesc": "Export consecutive background vocals together and preserve standalone background vocals for Spicy Lyrics compatibility. Other players may not support this structure.",
 			"syncJudgeMode": "Sync Timestamp Judgment Mode",
@@ -529,7 +531,16 @@
 			"palette": "Color Palette",
 			"paletteCustom": "Custom",
 			"gradientEditorDesc": "A Pos value of 0.0 corresponds to the quietest part, and 1.0 corresponds to the loudest part. It is recommended to use brighter colors for larger Pos values.",
-			"addStop": "Add Color Stop"
+			"addStop": "Add Color Stop",
+			"playheadTracking": "Playhead Tracking",
+			"playheadTrackingOff": "Off",
+			"playheadTrackingSnap": "Snap",
+			"playheadTrackingFollow": "Follow",
+			"playheadTrackingOffDesc": "Spectrogram view will not automatically move with the playhead.",
+			"followPlayhead": "Center and Follow Playhead",
+			"followPlayheadDesc": "Automatically scrolls the spectrogram during playback and seeking to keep the playhead in the middle of the frame.",
+			"snapPlayheadToStart": "Snap to Start when Playhead Exits View",
+			"snapPlayheadToStartDesc": "When the playhead moves past the visible area during playback, automatically snaps the spectrogram view with the playhead at the start."
 		},
 		"discord": {
 			"previewSection": "Live Preview",
@@ -698,6 +709,8 @@
 			"switchEditMode": "Mode Switch - Switch to Edit Mode",
 			"switchSyncMode": "Mode Switch - Switch to Timing Mode",
 			"switchPreviewMode": "Mode Switch - Switch to Preview Mode",
+			"nextTab": "Mode Switch - Next Mode / Tab",
+			"prevTab": "Mode Switch - Previous Mode / Tab",
 			"moveNextWord": "Timing - Move to next word",
 			"movePrevWord": "Timing - Move to previous word",
 			"moveNextLine": "Timing - Move to next line start",
@@ -769,7 +782,8 @@
 		},
 		"error": {
 			"workerError": "Error processing audio"
-		}
+		},
+		"autoReloaded": "Automatically loaded audio \"{name}\" from computer"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1382,8 +1396,13 @@
 		"showUnselectedLines": "Show unselected lines",
 		"onlyShowSyncLine": "Only show line being time synced",
 		"onlyShowSyncLineDesc": "When syncing lyrics, hides other lines and only displays the line currently being synchronized on the spectrogram overlay.",
+		"playheadTrackingMode": "Playhead Tracking",
+		"playheadTrackingOff": "Off",
+		"playheadTrackingSnap": "Snap",
+		"playheadTrackingFollow": "Follow",
 		"followPlayhead": "Follow Playhead (Keep Centered)",
 		"followPlayheadDesc": "Automatically scrolls the spectrogram during playback and seeking to keep the playhead in the middle of the frame.",
+		"snapPlayheadToStart": "Snap playhead to start when offscreen",
 		"settings": "Spectrogram Settings",
 		"fftSize": "FFT Size",
 		"resolution": "FFT Resolution",

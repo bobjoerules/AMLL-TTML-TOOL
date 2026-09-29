@@ -47,12 +47,16 @@ import { toast } from "react-toastify";
 import { uid } from "uid";
 import { useFileOpener } from "$/hooks/useFileOpener";
 import { audioEngine } from "$/modules/audio/audio-engine";
+import { tryReloadAudioFromComputer } from "$/modules/audio/utils/autoReloadAudio";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
 import { parseLyric as parseTTML } from "$/modules/project/logic/ttml-parser";
 import { openExternal } from "$/utils/openExternal";
 import { openFileWithDialog } from "$/utils/fileDialog";
 import { parseLrc } from "$/utils/parse-lrc";
-import { isTTML100PercentCompleted, addChecklistEntry } from "$/modules/ttml-checklist/logic";
+import {
+	isTTML100PercentCompleted,
+	addChecklistEntry,
+} from "$/modules/ttml-checklist/logic";
 import { ttmlChecklistAtom } from "$/modules/ttml-checklist/states";
 import {
 	areCloudTTMLsSameSong,
@@ -153,7 +157,9 @@ const SongGroupItem: FC<{
 				width: "100%",
 				boxSizing: "border-box",
 				padding: "10px 14px",
-				border: selected ? "1px solid var(--accent-a8)" : "1px solid var(--gray-a4)",
+				border: selected
+					? "1px solid var(--accent-a8)"
+					: "1px solid var(--gray-a4)",
 				borderRadius: "12px",
 				backgroundColor: selected ? "var(--accent-a2)" : "var(--color-surface)",
 				transition: "all 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -211,11 +217,7 @@ const SongGroupItem: FC<{
 					</Box>
 
 					{/* Song Info */}
-					<Flex
-						direction="column"
-						gap="1"
-						style={{ flex: 1, minWidth: 0 }}
-					>
+					<Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
 						{/* Title, Version Dropdown & Badges */}
 						<Flex
 							align="center"
@@ -259,7 +261,8 @@ const SongGroupItem: FC<{
 											{group.versions.map((ver, idx) => (
 												<Select.Item key={ver.id} value={ver.id}>
 													v{group.versions.length - idx}
-													{idx === 0 ? " (Latest)" : ""} • {formatDate(ver.updatedAt || ver.createdAt)}
+													{idx === 0 ? " (Latest)" : ""} •{" "}
+													{formatDate(ver.updatedAt || ver.createdAt)}
 												</Select.Item>
 											))}
 										</Select.Content>
@@ -337,11 +340,7 @@ const SongGroupItem: FC<{
 						</Flex>
 
 						{/* Artist & Album */}
-						<Flex
-							align="center"
-							gap="2"
-							style={{ minWidth: 0, width: "100%" }}
-						>
+						<Flex align="center" gap="2" style={{ minWidth: 0, width: "100%" }}>
 							<Text
 								size="2"
 								color="gray"
@@ -360,11 +359,7 @@ const SongGroupItem: FC<{
 							</Text>
 							{Boolean(activeVersion.album || group.album) && (
 								<>
-									<Text
-										size="1"
-										color="gray"
-										style={{ flexShrink: 0 }}
-									>
+									<Text size="1" color="gray" style={{ flexShrink: 0 }}>
 										•
 									</Text>
 									<Badge
@@ -424,12 +419,7 @@ const SongGroupItem: FC<{
 						</Button>
 
 						{/* Download Raw TTML */}
-						<Tooltip
-							content={t(
-								"cloud.downloadTTML",
-								"Download .ttml file",
-							)}
-						>
+						<Tooltip content={t("cloud.downloadTTML", "Download .ttml file")}>
 							<IconButton
 								size="2"
 								variant="surface"
@@ -439,10 +429,7 @@ const SongGroupItem: FC<{
 									deletingDocId === activeVersion.id
 								}
 								onClick={() => handleDownloadRawTTML(activeVersion)}
-								aria-label={t(
-									"cloud.downloadTTML",
-									"Download .ttml file",
-								)}
+								aria-label={t("cloud.downloadTTML", "Download .ttml file")}
 								style={{
 									borderRadius: "8px",
 									cursor: "pointer",
@@ -455,7 +442,9 @@ const SongGroupItem: FC<{
 
 						{/* Download Audio */}
 						{activeVersion.audioUrl && (
-							<Tooltip content={t("cloud.downloadAudio", "Download attached audio")}>
+							<Tooltip
+								content={t("cloud.downloadAudio", "Download attached audio")}
+							>
 								<IconButton
 									size="2"
 									variant="surface"
@@ -466,7 +455,10 @@ const SongGroupItem: FC<{
 										downloadingAudioDocId === activeVersion.id
 									}
 									onClick={() => handleDownloadAudio(activeVersion)}
-									aria-label={t("cloud.downloadAudio", "Download attached audio")}
+									aria-label={t(
+										"cloud.downloadAudio",
+										"Download attached audio",
+									)}
 									style={{
 										borderRadius: "8px",
 										cursor: "pointer",
@@ -524,12 +516,7 @@ const SongGroupItem: FC<{
 						)}
 
 						{/* Delete */}
-						<Tooltip
-							content={t(
-								"cloud.deleteTooltip",
-								"Delete from Cloud",
-							)}
-						>
+						<Tooltip content={t("cloud.deleteTooltip", "Delete from Cloud")}>
 							<IconButton
 								size="2"
 								variant="soft"
@@ -569,7 +556,8 @@ const SongGroupItem: FC<{
 						}}
 					>
 						<Text size="1" color="gray" weight="bold">
-							{t("cloud.savedVersions", "All Saved Versions")} ({group.versions.length})
+							{t("cloud.savedVersions", "All Saved Versions")} (
+							{group.versions.length})
 						</Text>
 						{group.versions.map((ver, vIdx) => {
 							const isSelected = ver.id === activeVersion.id;
@@ -590,17 +578,30 @@ const SongGroupItem: FC<{
 											: "1px solid var(--gray-a3)",
 									}}
 								>
-									<Flex align="center" gap="2" wrap="wrap" style={{ minWidth: 0, flex: 1 }}>
+									<Flex
+										align="center"
+										gap="2"
+										wrap="wrap"
+										style={{ minWidth: 0, flex: 1 }}
+									>
 										<Text size="1" weight="bold">
 											v{group.versions.length - vIdx}
 											{vIdx === 0 && (
-												<Text color="accent" size="1" style={{ marginLeft: "4px" }}>
+												<Text
+													color="accent"
+													size="1"
+													style={{ marginLeft: "4px" }}
+												>
 													({t("cloud.latest", "Latest")})
 												</Text>
 											)}
 										</Text>
 										{Boolean(ver.artist && ver.artist !== group.artist) && (
-											<Text size="1" color="gray" style={{ fontStyle: "italic" }}>
+											<Text
+												size="1"
+												color="gray"
+												style={{ fontStyle: "italic" }}
+											>
 												• {ver.artist}
 											</Text>
 										)}
@@ -640,8 +641,7 @@ const SongGroupItem: FC<{
 											size="1"
 											variant={isSelected ? "solid" : "soft"}
 											disabled={
-												loadingDocId === ver.id ||
-												deletingDocId === ver.id
+												loadingDocId === ver.id || deletingDocId === ver.id
 											}
 											onClick={() => handleOpenItem(ver)}
 											style={{ borderRadius: "6px", cursor: "pointer" }}
@@ -655,14 +655,15 @@ const SongGroupItem: FC<{
 												</>
 											)}
 										</Button>
-										<Tooltip content={t("cloud.downloadTTML", "Download .ttml file")}>
+										<Tooltip
+											content={t("cloud.downloadTTML", "Download .ttml file")}
+										>
 											<IconButton
 												size="1"
 												variant="surface"
 												color="gray"
 												disabled={
-													loadingDocId === ver.id ||
-													deletingDocId === ver.id
+													loadingDocId === ver.id || deletingDocId === ver.id
 												}
 												onClick={() => handleDownloadRawTTML(ver)}
 												style={{ borderRadius: "6px", cursor: "pointer" }}
@@ -671,7 +672,12 @@ const SongGroupItem: FC<{
 											</IconButton>
 										</Tooltip>
 										{ver.audioUrl && (
-											<Tooltip content={t("cloud.downloadAudio", "Download attached audio")}>
+											<Tooltip
+												content={t(
+													"cloud.downloadAudio",
+													"Download attached audio",
+												)}
+											>
 												<IconButton
 													size="1"
 													variant="surface"
@@ -683,7 +689,10 @@ const SongGroupItem: FC<{
 													}
 													onClick={() => handleDownloadAudio(ver)}
 													style={{ borderRadius: "6px", cursor: "pointer" }}
-													aria-label={t("cloud.downloadAudio", "Download attached audio")}
+													aria-label={t(
+														"cloud.downloadAudio",
+														"Download attached audio",
+													)}
 												>
 													{downloadingAudioDocId === ver.id ? (
 														<Spinner size="1" />
@@ -697,8 +706,14 @@ const SongGroupItem: FC<{
 											<Tooltip
 												content={
 													ver.finished
-														? t("cloud.markInProgressTooltip", "Mark as in-progress")
-														: t("cloud.markCompletedTooltip", "Mark as completed")
+														? t(
+																"cloud.markInProgressTooltip",
+																"Mark as in-progress",
+															)
+														: t(
+																"cloud.markCompletedTooltip",
+																"Mark as completed",
+															)
 												}
 											>
 												<IconButton
@@ -713,8 +728,14 @@ const SongGroupItem: FC<{
 													onClick={() => handleToggleFinished(ver)}
 													aria-label={
 														ver.finished
-															? t("cloud.markInProgressTooltip", "Mark as in-progress")
-															: t("cloud.markCompletedTooltip", "Mark as completed")
+															? t(
+																	"cloud.markInProgressTooltip",
+																	"Mark as in-progress",
+																)
+															: t(
+																	"cloud.markCompletedTooltip",
+																	"Mark as completed",
+																)
 													}
 													style={{ borderRadius: "6px", cursor: "pointer" }}
 												>
@@ -728,14 +749,15 @@ const SongGroupItem: FC<{
 												</IconButton>
 											</Tooltip>
 										)}
-										<Tooltip content={t("cloud.deleteTooltip", "Delete from Cloud")}>
+										<Tooltip
+											content={t("cloud.deleteTooltip", "Delete from Cloud")}
+										>
 											<IconButton
 												size="1"
 												variant="soft"
 												color="red"
 												disabled={
-													loadingDocId === ver.id ||
-													deletingDocId === ver.id
+													loadingDocId === ver.id || deletingDocId === ver.id
 												}
 												onClick={() => handleDeleteItem(ver)}
 												style={{ borderRadius: "6px", cursor: "pointer" }}
@@ -1056,12 +1078,14 @@ export const CloudFileManagerModal: FC = () => {
 			await openFile(file);
 
 			// Auto-load audio into audio-engine if present in the cloud document
+			let audioLoaded = false;
 			if (doc.audioUrl) {
 				try {
 					const audioResp = await fetch(doc.audioUrl);
 					if (audioResp.ok) {
 						const audioBlob = await audioResp.blob();
 						await audioEngine.loadMusic(audioBlob);
+						audioLoaded = true;
 						toast.info(
 							t(
 								"cloud.audioAutoLoaded",
@@ -1073,6 +1097,15 @@ export const CloudFileManagerModal: FC = () => {
 				} catch (audioErr) {
 					console.warn("Failed to auto-load cloud audio:", audioErr);
 				}
+			}
+
+			// If audio wasn't loaded from cloud URL, try reloading audio from computer automatically
+			if (!audioLoaded) {
+				void tryReloadAudioFromComputer({
+					audioFileName: doc.audioFileName,
+					title: doc.title,
+					artist: doc.artist,
+				});
 			}
 
 			toast.success(
@@ -1100,18 +1133,20 @@ export const CloudFileManagerModal: FC = () => {
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement("a");
 			a.href = url;
-			const cleanName = `${item.artist ? `${item.artist} - ` : ""}${item.title || "audio"}.mp3`.replace(/[/\\?%*:|"<>]/g, "-");
+			const cleanName =
+				`${item.artist ? `${item.artist} - ` : ""}${item.title || "audio"}.mp3`.replace(
+					/[/\\?%*:|"<>]/g,
+					"-",
+				);
 			a.download = item.audioFileName || cleanName;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 			toast.success(
-				t(
-					"cloud.downloadedAudioSuccess",
-					'Downloaded audio for "{title}"',
-					{ title: item.title || "Untitled" },
-				),
+				t("cloud.downloadedAudioSuccess", 'Downloaded audio for "{title}"', {
+					title: item.title || "Untitled",
+				}),
 			);
 		} catch (err: unknown) {
 			console.error(err);
@@ -1169,7 +1204,8 @@ export const CloudFileManagerModal: FC = () => {
 				(e) =>
 					e.cloudDocId === item.id ||
 					(e.title.toLowerCase() === item.title.toLowerCase() &&
-						(e.artist || "").toLowerCase() === (item.artist || "").toLowerCase()),
+						(e.artist || "").toLowerCase() ===
+							(item.artist || "").toLowerCase()),
 			);
 			if (!exists) {
 				addChecklistEntry(setChecklist, {
@@ -1345,9 +1381,12 @@ export const CloudFileManagerModal: FC = () => {
 				isCompleted: batchAutoCompleted,
 			}));
 
-			const res = await batchSaveTTMLsToCloud(inputs, (current, total, title) => {
-				setBatchImportProgress({ current, total, title });
-			});
+			const res = await batchSaveTTMLsToCloud(
+				inputs,
+				(current, total, title) => {
+					setBatchImportProgress({ current, total, title });
+				},
+			);
 
 			setBatchItems((prev) =>
 				prev.map((item) => {
@@ -1451,16 +1490,26 @@ export const CloudFileManagerModal: FC = () => {
 			await updateTTMLFinishedInCloud(item.id, newFinished);
 			toast.success(
 				newFinished
-					? t("cloud.markedCompletedSuccess", 'Marked "{title}" as completed.', {
-							title: item.title || "Untitled",
-						})
-					: t("cloud.markedInProgressSuccess", 'Marked "{title}" as in-progress.', {
-							title: item.title || "Untitled",
-						}),
+					? t(
+							"cloud.markedCompletedSuccess",
+							'Marked "{title}" as completed.',
+							{
+								title: item.title || "Untitled",
+							},
+						)
+					: t(
+							"cloud.markedInProgressSuccess",
+							'Marked "{title}" as in-progress.',
+							{
+								title: item.title || "Untitled",
+							},
+						),
 			);
 		} catch (err: unknown) {
 			console.error(err);
-			toast.error((err as Error)?.message || "Failed to update completion status");
+			toast.error(
+				(err as Error)?.message || "Failed to update completion status",
+			);
 		} finally {
 			setTogglingDocId(null);
 		}
@@ -1482,7 +1531,13 @@ export const CloudFileManagerModal: FC = () => {
 			>
 				{/* Dialog Title / Header */}
 				<Dialog.Title style={{ flexShrink: 0 }}>
-					<Flex justify="between" align="center" gap="3" wrap="nowrap" style={{ width: "100%" }}>
+					<Flex
+						justify="between"
+						align="center"
+						gap="3"
+						wrap="nowrap"
+						style={{ width: "100%" }}
+					>
 						{/* Left: Cloud Icon Tile & Titles */}
 						<Flex align="center" gap="3" style={{ minWidth: 0, flex: 1 }}>
 							<Box
@@ -1531,10 +1586,7 @@ export const CloudFileManagerModal: FC = () => {
 												variant="ghost"
 												color="gray"
 												onClick={() => openAccountSettings()}
-												aria-label={t(
-													"cloud.signInToSync",
-													"Sign in to sync",
-												)}
+												aria-label={t("cloud.signInToSync", "Sign in to sync")}
 												style={{ flexShrink: 0 }}
 											>
 												<Globe16Regular />
@@ -1799,7 +1851,9 @@ export const CloudFileManagerModal: FC = () => {
 									>
 										<Flex align="center" justify="between" gap="2" wrap="wrap">
 											<Flex align="center" gap="2">
-												<History16Regular style={{ color: "var(--accent-9)" }} />
+												<History16Regular
+													style={{ color: "var(--accent-9)" }}
+												/>
 												<Flex direction="column" gap="0">
 													<Flex align="center" gap="2">
 														<Text size="2" weight="bold">
@@ -1820,16 +1874,19 @@ export const CloudFileManagerModal: FC = () => {
 													</Flex>
 													<Text size="1" color="gray">
 														{overwriteLatest
-															? t("cloud.willOverwrite", "Will overwrite v{ver}", {
-																	ver: matchingExistingGroup.versions.length,
-																})
+															? t(
+																	"cloud.willOverwrite",
+																	"Will overwrite v{ver}",
+																	{
+																		ver: matchingExistingGroup.versions.length,
+																	},
+																)
 															: t(
 																	"cloud.willAddVersion",
 																	"Will save as new version v{ver}",
 																	{
 																		ver:
-																			matchingExistingGroup.versions
-																				.length + 1,
+																			matchingExistingGroup.versions.length + 1,
 																	},
 																)}
 													</Text>
@@ -1847,10 +1904,7 @@ export const CloudFileManagerModal: FC = () => {
 															"cloud.saveAsNewVersionBtn",
 															"Save as New Version",
 														)
-													: t(
-															"cloud.overwriteLatestBtn",
-															"Overwrite Latest",
-														)}
+													: t("cloud.overwriteLatestBtn", "Overwrite Latest")}
 											</Button>
 										</Flex>
 									</Card>
@@ -2016,7 +2070,10 @@ export const CloudFileManagerModal: FC = () => {
 								<Flex justify="between" align="center" wrap="wrap" gap="2">
 									<Flex direction="column" gap="0">
 										<Text size="3" weight="bold">
-											{t("cloud.batchImportTitle", "Batch Import TTML / LRC Files")}
+											{t(
+												"cloud.batchImportTitle",
+												"Batch Import TTML / LRC Files",
+											)}
 										</Text>
 										<Text size="1" color="gray">
 											{t(
@@ -2073,7 +2130,10 @@ export const CloudFileManagerModal: FC = () => {
 									onDrop={(e) => {
 										e.preventDefault();
 										e.stopPropagation();
-										if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+										if (
+											e.dataTransfer.files &&
+											e.dataTransfer.files.length > 0
+										) {
 											processBatchFiles(e.dataTransfer.files);
 										}
 									}}
@@ -2203,8 +2263,12 @@ export const CloudFileManagerModal: FC = () => {
 										<Flex direction="column" gap="2">
 											<Flex justify="between" align="center">
 												<Text size="2" weight="bold">
-													{t("cloud.uploadingBatchProgress", "Uploading to Cloud...")}{" "}
-													({batchImportProgress.current} / {batchImportProgress.total})
+													{t(
+														"cloud.uploadingBatchProgress",
+														"Uploading to Cloud...",
+													)}{" "}
+													({batchImportProgress.current} /{" "}
+													{batchImportProgress.total})
 												</Text>
 												<Text size="1" color="gray">
 													{Math.round(
@@ -2238,21 +2302,23 @@ export const CloudFileManagerModal: FC = () => {
 									<Flex direction="column" gap="2">
 										<Flex justify="between" align="center">
 											<Text size="2" weight="bold">
-												{t("cloud.parsedSongsQueue", "Queue")} ({batchItems.length})
+												{t("cloud.parsedSongsQueue", "Queue")} (
+												{batchItems.length})
 											</Text>
 											<Text size="1" color="gray">
-												{
-													batchItems.filter((i) => i.status === "ready").length
-												}{" "}
+												{batchItems.filter((i) => i.status === "ready").length}{" "}
 												ready •{" "}
 												{
-													batchItems.filter((i) => i.status === "success").length
+													batchItems.filter((i) => i.status === "success")
+														.length
 												}{" "}
 												uploaded
 											</Text>
 										</Flex>
 
-										<ScrollArea style={{ maxHeight: "240px", paddingRight: "6px" }}>
+										<ScrollArea
+											style={{ maxHeight: "240px", paddingRight: "6px" }}
+										>
 											<Flex direction="column" gap="2">
 												{batchItems.map((item) => (
 													<Flex
@@ -2299,7 +2365,10 @@ export const CloudFileManagerModal: FC = () => {
 																</Text>
 																<Text size="1" color="gray">
 																	{item.artist ||
-																		t("cloud.unknownArtist", "Unknown Artist")}{" "}
+																		t(
+																			"cloud.unknownArtist",
+																			"Unknown Artist",
+																		)}{" "}
 																	{item.lineCount > 0
 																		? `• ${item.lineCount} lines`
 																		: ""}{" "}
@@ -2330,7 +2399,9 @@ export const CloudFileManagerModal: FC = () => {
 															)}
 															{item.status === "success" && (
 																<Badge size="1" color="green" variant="surface">
-																	<Checkmark16Filled style={{ marginRight: 2 }} />
+																	<Checkmark16Filled
+																		style={{ marginRight: 2 }}
+																	/>
 																	{t("cloud.uploadedStatus", "Saved")}
 																</Badge>
 															)}

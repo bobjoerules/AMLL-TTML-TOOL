@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Bwuw Wadius",
 			"customBackgroundBrightness": "Bwightnyess",
 			"customBackgroundEnabled": "Backgwound set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "ALWAYZ KEEP PLAYIN WURD IN VIEW",
+			"keepPlayingWordInViewDesc": "AUTOMATIKALLY SCROLLZ DA LYRICZ SO ACTIVE LINE N WURD CAN HAZ VISIBLE."
 		},
 		"about": {
 			"update": "Update",
@@ -473,7 +475,11 @@
 			"palette": "Cowow Pawette",
 			"paletteCustom": "Custom",
 			"gradientEditorDesc": "A Pos vawue of 0.0 cowwesponds to de quietest pawt, and 1.0 cowwesponds to de woudest pawt. It is wecommended to use bwightew cowows fow wawgew Pos vawues.",
-			"addStop": "Add Cowow Stop"
+			"addStop": "Add Cowow Stop",
+			"followPlayhead": "CENTUR AN FOLLOW DA PLAYHEAD",
+			"followPlayheadDesc": "AUTOMATIKALLY SCROLLZ DA SPEKTROGRAM SO PLAYHEAD STAYZ IN MIDDLE.",
+			"snapPlayheadToStart": "SNAP 2 START WEN PLAYHEAD GOEZ BYE-BYE",
+			"snapPlayheadToStartDesc": "WEN PLAYHEAD LEAVZ SCREEN, SNAPZ SPEKTROGRAM VIEW WIF PLAYHEAD AT START."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Ewwow pwocessing audio"
-		}
+		},
+		"autoReloaded": "AUTOMATIKALLY LOADED AUDIO \"{name}\" FROM UR COMPUTUR"
 	},
 	"audioPanel": {
 		"volume": "Vowume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Dispway Height"
+		"height": "Dispway Height",
+		"onlyShowSyncLine": "ONLY SHOW LINE BEIN SYNCED",
+		"onlyShowSyncLineDesc": "HIDEZ OTHER LINEZ AN SHOWZ ONLY DA SYNC LINE ON SPEKTROGRAM.",
+		"followPlayhead": "FOLLOW PLAYHEAD (KEEP CENTER)",
+		"followPlayheadDesc": "AUTOMATIKALLY SCROLLZ SPEKTROGRAM TO KEEP PLAYHEAD IN MIDDLE.",
+		"snapPlayheadToStart": "SNAP PLAYHEAD TO START WEN OFFSCREEN"
 	},
 	"pwa": {
 		"offlineReady": "Site successfuwwy cached fow offwinye use",

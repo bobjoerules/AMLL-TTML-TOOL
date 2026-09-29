@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Raggio di Sfocatura",
 			"customBackgroundBrightness": "Luminosità",
 			"customBackgroundEnabled": "Sfondo impostato",
-			"customBackgroundManage": "Impostazioni"
+			"customBackgroundManage": "Impostazioni",
+			"keepPlayingWordInView": "Mantieni sempre visibile la parola in riproduzione",
+			"keepPlayingWordInViewDesc": "Scorre automaticamente l'editor di testo durante la riproduzione per mantenere visibili la riga e la parola attive."
 		},
 		"about": {
 			"update": "Aggiorna",
@@ -473,7 +475,11 @@
 			"palette": "Tavolozza dei Colori",
 			"paletteCustom": "Personalizzato",
 			"gradientEditorDesc": "Un valore Pos pari a 0,0 corrisponde alla parte più silenziosa, mentre un valore pari a 1,0 corrisponde alla parte più rumorosa. Si consiglia di utilizzare colori più vivaci per i valori Pos più elevati.",
-			"addStop": "Aggiungi un Punto di Colore"
+			"addStop": "Aggiungi un Punto di Colore",
+			"followPlayhead": "Centra e segui la testina di riproduzione",
+			"followPlayheadDesc": "Scorre automaticamente lo spettrogramma durante la riproduzione per mantenere la testina al centro.",
+			"snapPlayheadToStart": "Allinea all'inizio quando la testina esce dalla vista",
+			"snapPlayheadToStartDesc": "Quando la testina supera l'area visibile durante la riproduzione, allinea la vista dello spettrogramma posizionandola all'inizio."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Errore nell'elaborazione dell'audio"
-		}
+		},
+		"autoReloaded": "Audio \"{name}\" caricato automaticamente dal computer"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Altezza Visualizzazione"
+		"height": "Altezza Visualizzazione",
+		"onlyShowSyncLine": "Mostra solo la riga in sincronizzazione",
+		"onlyShowSyncLineDesc": "Durante la sincronizzazione, nasconde le altre righe e mostra solo quella attiva sullo spettrogramma.",
+		"followPlayhead": "Segui la testina (mantieni centrata)",
+		"followPlayheadDesc": "Scorre automaticamente lo spettrogramma durante la riproduzione per mantenere la testina al centro.",
+		"snapPlayheadToStart": "Allinea la testina all'inizio quando è fuori schermo"
 	},
 	"pwa": {
 		"offlineReady": "Salvataggio del sito nella cache riuscita per l'utilizzo offline",

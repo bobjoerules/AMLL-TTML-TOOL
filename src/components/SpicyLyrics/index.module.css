@@ -49,7 +49,10 @@
 	background: #111;
 	font-family: var(
 		--preview-font-family,
-		"SpicyLyrics", "Noto Sans Georgian", "VazirmatnRegular", sans-serif
+		"SpicyLyrics",
+		"Noto Sans Georgian",
+		"VazirmatnRegular",
+		sans-serif
 	);
 }
 

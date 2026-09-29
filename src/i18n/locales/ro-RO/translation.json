@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Rază estompare",
 			"customBackgroundBrightness": "Luminozitate",
 			"customBackgroundEnabled": "Set de fundal",
-			"customBackgroundManage": "Setări"
+			"customBackgroundManage": "Setări",
+			"keepPlayingWordInView": "Păstrează întotdeauna cuvântul redat în vedere",
+			"keepPlayingWordInViewDesc": "Derulează automat editorul de versuri în timpul redării pentru a menține rândul și cuvântul activ vizibile."
 		},
 		"about": {
 			"update": "Actualizare",
@@ -473,7 +475,11 @@
 			"palette": "Paletă de culori",
 			"paletteCustom": "Personalizat",
 			"gradientEditorDesc": "O valoare Pos de 0.0 corespunde celei mai liniștite părți, iar 1.0 corespunde părții cele mai puternice. Se recomandă utilizarea unor culori mai bune pentru valorile Pos mai mari.",
-			"addStop": "Adaugă Oprire culoare"
+			"addStop": "Adaugă Oprire culoare",
+			"followPlayhead": "Centrează și urmărește capul de redare",
+			"followPlayheadDesc": "Derulează automat spectrograma în timpul redării pentru a menține capul de redare în centru.",
+			"snapPlayheadToStart": "Aliniază la început când capul de redare părăsește vizualizarea",
+			"snapPlayheadToStartDesc": "Când capul de redare iese din zona vizibilă, ajustează automat spectrograma cu capul la început."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Eroare la procesarea audio"
-		}
+		},
+		"autoReloaded": "Fișierul audio \"{name}\" a fost încărcat automat de pe computer"
 	},
 	"audioPanel": {
 		"volume": "Volum",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Afișează doar linia în curs de sincronizare",
+		"onlyShowSyncLineDesc": "Ascunde celelalte linii în timpul sincronizării și afișează doar linia activă pe spectrogramă.",
+		"followPlayhead": "Urmărește capul de redare (centrat)",
+		"followPlayheadDesc": "Derulează automat spectrograma pentru a menține capul de redare în centru.",
+		"snapPlayheadToStart": "Aliniază capul la început când e în afara ecranului"
 	},
 	"pwa": {
 		"offlineReady": "Site-ul a fost memorat cu succes pentru utilizare offline",

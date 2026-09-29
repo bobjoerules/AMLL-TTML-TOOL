@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Sempre manter a palavra em reprodução visível",
+			"keepPlayingWordInViewDesc": "Rola automaticamente o editor de letras durante a reprodução para manter a linha e a palavra ativas visíveis."
 		},
 		"about": {
 			"update": "Atualização",
@@ -473,7 +475,11 @@
 			"palette": "Paleta de cores",
 			"paletteCustom": "Personalizada",
 			"gradientEditorDesc": "Um valor de Pos de 0.0 corresponde à parte mais silenciosa, e 1.0 corresponde à parte mais alta. É recomendado usar cores mais brilhantes para valores de Pos maiores.",
-			"addStop": "Adicionar ponto de cor"
+			"addStop": "Adicionar ponto de cor",
+			"followPlayhead": "Centralizar e seguir o cursor de reprodução",
+			"followPlayheadDesc": "Rola automaticamente o espectrograma durante a reprodução para manter o cursor no centro.",
+			"snapPlayheadToStart": "Ajustar ao início quando o cursor sair da tela",
+			"snapPlayheadToStartDesc": "Quando o cursor sai da área visível durante a reprodução, ajusta o espectrograma posicionando o cursor no início."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Erro ao processar áudio"
-		}
+		},
+		"autoReloaded": "Áudio \"{name}\" carregado automaticamente do computador"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Mostrar apenas a linha em sincronização",
+		"onlyShowSyncLineDesc": "Ao sincronizar letras, oculta as outras linhas e exibe apenas a linha atual na sobreposição do espectrograma.",
+		"followPlayhead": "Seguir cursor de reprodução (centralizado)",
+		"followPlayheadDesc": "Rola automaticamente o espectrograma durante a reprodução para manter o cursor no centro.",
+		"snapPlayheadToStart": "Ajustar cursor ao início quando fora da tela"
 	},
 	"pwa": {
 		"offlineReady": "Site armazenado em cache com sucesso para uso offline",

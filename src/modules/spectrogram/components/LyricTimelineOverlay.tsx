@@ -1,5 +1,13 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { type FC, memo, useContext, useEffect, useMemo, useRef } from "react";
+import {
+	type FC,
+	memo,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+} from "react";
 import { currentTimeAtom } from "$/modules/audio/states/index.ts";
 import {
 	type ProcessedLyricLine,
@@ -26,7 +34,13 @@ import {
 	spectrogramOnlyShowSyncLineAtom,
 	spectrogramScrollLeftAtom,
 } from "$/modules/spectrogram/states/index.ts";
-import { selectedLinesAtom, toolModeAtom, ToolMode } from "$/states/main.ts";
+import {
+	bgLyricIgnoreSyncAtom,
+	mainLyricIgnoreSyncAtom,
+	selectedLinesAtom,
+	toolModeAtom,
+	ToolMode,
+} from "$/states/main.ts";
 import { globalStore } from "$/states/store.ts";
 import { LyricLineSegment } from "./LyricLineSegment";
 import styles from "./LyricTimelineOverlay.module.css";
@@ -42,11 +56,27 @@ const SNAP_THRESHOLD_PX = 7;
 export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 	({ clientWidth, hiddenLineIds }) => {
 		const processedLines = useAtomValue(processedLyricLinesAtom);
+		const bgLyricIgnoreSync = useAtomValue(bgLyricIgnoreSyncAtom);
+		const mainLyricIgnoreSync = useAtomValue(mainLyricIgnoreSyncAtom);
 		const [timelineDrag, setTimelineDrag] = useAtom(timelineDragAtom);
 		const setPreviewLine = useSetAtom(previewLineAtom);
 		const snapTargetsMs = useRef<number[]>([]);
 		const scrollLeft = useAtomValue(spectrogramScrollLeftAtom);
 		const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
+
+		const isLineIgnored = useCallback(
+			(line: ProcessedLyricLine) => {
+				if (line.ignoreSync) return true;
+				if (mainLyricIgnoreSync && !line.isBG) return true;
+				if (bgLyricIgnoreSync && line.isBG) return true;
+				return false;
+			},
+			[mainLyricIgnoreSync, bgLyricIgnoreSync],
+		);
+
+		const activeProcessedLines = useMemo(() => {
+			return processedLines.filter((line) => !isLineIgnored(line));
+		}, [processedLines, isLineIgnored]);
 
 		const spectrogramOnlyShowSyncLine = useAtomValue(
 			spectrogramOnlyShowSyncLineAtom,
@@ -184,7 +214,7 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 						segmentIndex === lineBeingDragged.segments.length - 1);
 
 				if (isBoundary) {
-					const otherLineBoundaries = processedLines
+					const otherLineBoundaries = activeProcessedLines
 						.filter((line) => line.id !== lineId)
 						.flatMap((line) => [line.startTime, line.endTime]);
 					targets.push(...otherLineBoundaries);
@@ -211,6 +241,7 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 			scrollLeft,
 			scrollContainerRef,
 			processedLines,
+			activeProcessedLines,
 		]);
 
 		const bufferPx = 500;
@@ -221,7 +252,7 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 		let closestLeft: ProcessedLyricLine | null = null;
 		let foundClosestRight = false;
 
-		for (const line of processedLines) {
+		for (const line of activeProcessedLines) {
 			if (line.startTime == null || line.endTime == null) continue;
 
 			const inBufferedView =
@@ -267,19 +298,19 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 
 		const lineStartTimes = useMemo(() => {
 			const set = new Set<number>();
-			for (const l of processedLines) {
+			for (const l of activeProcessedLines) {
 				if (l.startTime != null) set.add(l.startTime);
 			}
 			return set;
-		}, [processedLines]);
+		}, [activeProcessedLines]);
 
 		const lineEndTimes = useMemo(() => {
 			const set = new Set<number>();
-			for (const l of processedLines) {
+			for (const l of activeProcessedLines) {
 				if (l.endTime != null) set.add(l.endTime);
 			}
 			return set;
-		}, [processedLines]);
+		}, [activeProcessedLines]);
 
 		return (
 			<div className={styles.overlay}>
@@ -297,7 +328,7 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 				))}
 				{previewActive &&
 					previewOffset !== 0 &&
-					processedLines.map((line) => {
+					activeProcessedLines.map((line) => {
 						if (line.startTime == null || line.endTime == null) return null;
 
 						// Calculate visibility based on SHIFTED position

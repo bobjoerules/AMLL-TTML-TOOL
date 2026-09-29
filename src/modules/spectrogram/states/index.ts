@@ -32,9 +32,55 @@ export const spectrogramOnlyShowSyncLineAtom = atomWithStorage(
 	"settings_spectrogramOnlyShowSyncLine",
 	false,
 );
-export const spectrogramFollowPlayheadAtom = atomWithStorage(
-	"settings_spectrogramFollowPlayhead",
-	false,
+export type SpectrogramPlayheadTrackingMode = "off" | "snap" | "follow";
+
+const getInitialTrackingMode = (): SpectrogramPlayheadTrackingMode => {
+	try {
+		const saved = localStorage.getItem(
+			"settings_spectrogramPlayheadTrackingMode",
+		);
+		if (saved) {
+			const parsed = JSON.parse(saved);
+			if (parsed === "off" || parsed === "snap" || parsed === "follow") {
+				return parsed;
+			}
+		}
+		if (localStorage.getItem("settings_spectrogramFollowPlayhead") === "true") {
+			return "follow";
+		}
+		if (
+			localStorage.getItem("settings_spectrogramSnapPlayheadToStart") === "true"
+		) {
+			return "snap";
+		}
+	} catch {
+		// ignore
+	}
+	return "off";
+};
+
+export const spectrogramPlayheadTrackingModeAtom =
+	atomWithStorage<SpectrogramPlayheadTrackingMode>(
+		"settings_spectrogramPlayheadTrackingMode",
+		getInitialTrackingMode(),
+	);
+
+export const spectrogramFollowPlayheadAtom = atom(
+	(get) => get(spectrogramPlayheadTrackingModeAtom) === "follow",
+	(get, set, update: boolean | ((prev: boolean) => boolean)) => {
+		const current = get(spectrogramPlayheadTrackingModeAtom) === "follow";
+		const next = typeof update === "function" ? update(current) : update;
+		set(spectrogramPlayheadTrackingModeAtom, next ? "follow" : "off");
+	},
+);
+
+export const spectrogramSnapPlayheadToStartAtom = atom(
+	(get) => get(spectrogramPlayheadTrackingModeAtom) === "snap",
+	(get, set, update: boolean | ((prev: boolean) => boolean)) => {
+		const current = get(spectrogramPlayheadTrackingModeAtom) === "snap";
+		const next = typeof update === "function" ? update(current) : update;
+		set(spectrogramPlayheadTrackingModeAtom, next ? "snap" : "off");
+	},
 );
 
 const icyBluePalette = {

@@ -320,28 +320,78 @@ export interface SystemFontDef {
 
 const SYSTEM_FONTS: SystemFontDef[] = [
 	{ label: "Arial", value: "Arial, Helvetica, sans-serif" },
-	{ label: "Helvetica", value: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+	{
+		label: "Helvetica",
+		value: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+	},
 	{ label: "Verdana", value: "Verdana, Geneva, sans-serif" },
 	{ label: "Tahoma", value: "Tahoma, Verdana, Segoe UI, sans-serif" },
-	{ label: "Trebuchet MS", value: '"Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", sans-serif' },
-	{ label: "Impact", value: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif' },
-	{ label: "Times New Roman", value: '"Times New Roman", Times, Georgia, serif' },
-	{ label: "Georgia", value: 'Georgia, Cambria, "Times New Roman", Times, serif' },
-	{ label: "Garamond", value: 'Garamond, "Baskerville", "Baskerville Old Face", serif' },
+	{
+		label: "Trebuchet MS",
+		value: '"Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", sans-serif',
+	},
+	{
+		label: "Impact",
+		value: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif',
+	},
+	{
+		label: "Times New Roman",
+		value: '"Times New Roman", Times, Georgia, serif',
+	},
+	{
+		label: "Georgia",
+		value: 'Georgia, Cambria, "Times New Roman", Times, serif',
+	},
+	{
+		label: "Garamond",
+		value: 'Garamond, "Baskerville", "Baskerville Old Face", serif',
+	},
 	{ label: "Courier New", value: '"Courier New", Courier, monospace' },
-	{ label: "Comic Sans MS", value: '"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive, sans-serif' },
-	{ label: "Palatino", value: '"Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif' },
+	{
+		label: "Comic Sans MS",
+		value:
+			'"Comic Sans MS", "Chalkboard SE", "Comic Neue", cursive, sans-serif',
+	},
+	{
+		label: "Palatino",
+		value: '"Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif',
+	},
 	{ label: "Bookman", value: '"Bookman Old Style", Bookman, Georgia, serif' },
-	{ label: "Apple System", value: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-	{ label: "Segoe UI", value: '"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif' },
-	{ label: "San Francisco", value: 'system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", sans-serif' },
+	{
+		label: "Apple System",
+		value: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+	},
+	{
+		label: "Segoe UI",
+		value: '"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif',
+	},
+	{
+		label: "San Francisco",
+		value:
+			'system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", sans-serif',
+	},
 	{ label: "Avenir", value: '"Avenir Next", Avenir, "Segoe UI", sans-serif' },
-	{ label: "Futura", value: 'Futura, "Century Gothic", "AppleGothic", sans-serif' },
+	{
+		label: "Futura",
+		value: 'Futura, "Century Gothic", "AppleGothic", sans-serif',
+	},
 	{ label: "Optima", value: 'Optima, Candara, "Segoe UI", sans-serif' },
-	{ label: "Gill Sans", value: '"Gill Sans", "Gill Sans MT", Calibri, sans-serif' },
-	{ label: "Franklin Gothic", value: '"Franklin Gothic Medium", Arial, sans-serif' },
-	{ label: "Century Gothic", value: '"Century Gothic", AppleGothic, sans-serif' },
-	{ label: "Lucida Grande", value: '"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", sans-serif' },
+	{
+		label: "Gill Sans",
+		value: '"Gill Sans", "Gill Sans MT", Calibri, sans-serif',
+	},
+	{
+		label: "Franklin Gothic",
+		value: '"Franklin Gothic Medium", Arial, sans-serif',
+	},
+	{
+		label: "Century Gothic",
+		value: '"Century Gothic", AppleGothic, sans-serif',
+	},
+	{
+		label: "Lucida Grande",
+		value: '"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", sans-serif',
+	},
 ];
 
 const DEFAULT_FONTS = [
@@ -413,7 +463,10 @@ export const FontSelectionDialog = () => {
 		const stacks = [...DEFAULT_FONTS];
 		if (targetScope === "editor") {
 			stacks.unshift({
-				label: t("settings.appearance.inheritAppFont", "Inherit Application Font"),
+				label: t(
+					"settings.appearance.inheritAppFont",
+					"Inherit Application Font",
+				),
 				value: "inherit",
 			});
 		} else if (targetScope === "preview") {
@@ -499,10 +552,7 @@ export const FontSelectionDialog = () => {
 					"--preview-font-family",
 					val,
 				);
-				document.documentElement.style.setProperty(
-					"--toxi-font-family",
-					val,
-				);
+				document.documentElement.style.setProperty("--toxi-font-family", val);
 			}
 		}
 	};
@@ -520,7 +570,10 @@ export const FontSelectionDialog = () => {
 				setCustomEditorFontData(dataUrl);
 				setCustomEditorFontName(fontName);
 				setEditorFont(fontVal);
-				document.documentElement.style.setProperty("--editor-font-family", fontVal);
+				document.documentElement.style.setProperty(
+					"--editor-font-family",
+					fontVal,
+				);
 			} else if (targetScope === "preview") {
 				setCustomPreviewFontData(dataUrl);
 				setCustomPreviewFontName(fontName);
@@ -537,7 +590,10 @@ export const FontSelectionDialog = () => {
 				setCustomFontData(dataUrl);
 				setCustomFontName(fontName);
 				setAppFont(fontVal);
-				document.documentElement.style.setProperty("--default-font-family", fontVal);
+				document.documentElement.style.setProperty(
+					"--default-font-family",
+					fontVal,
+				);
 			}
 			toast.success(
 				t(
@@ -554,7 +610,10 @@ export const FontSelectionDialog = () => {
 			setCustomEditorFontData(null);
 			setCustomEditorFontName(null);
 			setEditorFont("inherit");
-			document.documentElement.style.setProperty("--editor-font-family", appFont);
+			document.documentElement.style.setProperty(
+				"--editor-font-family",
+				appFont,
+			);
 		} else if (targetScope === "preview") {
 			setCustomPreviewFontData(null);
 			setCustomPreviewFontName(null);
@@ -583,10 +642,17 @@ export const FontSelectionDialog = () => {
 	const isFontSelected = (fontValue: string) => {
 		if (currentFont === fontValue) return true;
 		if (currentFont && fontValue) {
-			const cleanCurrent = currentFont.replace(/["']/g, "").trim().toLowerCase();
+			const cleanCurrent = currentFont
+				.replace(/["']/g, "")
+				.trim()
+				.toLowerCase();
 			const cleanTarget = fontValue.replace(/["']/g, "").trim().toLowerCase();
 			if (cleanCurrent === cleanTarget) return true;
-			if (cleanCurrent.startsWith(cleanTarget + ",") || cleanTarget.startsWith(cleanCurrent + ",")) return true;
+			if (
+				cleanCurrent.startsWith(cleanTarget + ",") ||
+				cleanTarget.startsWith(cleanCurrent + ",")
+			)
+				return true;
 		}
 		return false;
 	};
@@ -628,7 +694,11 @@ export const FontSelectionDialog = () => {
 					</Dialog.Close>
 				</Flex>
 
-				<Flex direction="column" gap="4" style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+				<Flex
+					direction="column"
+					gap="4"
+					style={{ flex: 1, minHeight: 0, overflow: "hidden" }}
+				>
 					<Flex direction="column" gap="2" style={{ flexShrink: 0 }}>
 						<Text size="2" weight="bold" color="gray">
 							{t("settings.appearance.fontScope", "Customize Font For:")}
@@ -759,9 +829,14 @@ export const FontSelectionDialog = () => {
 										variant="solid"
 										size="1"
 										onClick={() =>
-											handleSelectFont(`"${currentCustomName}", sans-serif`, false)
+											handleSelectFont(
+												`"${currentCustomName}", sans-serif`,
+												false,
+											)
 										}
-										disabled={currentFont === `"${currentCustomName}", sans-serif`}
+										disabled={
+											currentFont === `"${currentCustomName}", sans-serif`
+										}
 									>
 										{t("common.apply", "Apply")}
 									</Button>
@@ -804,7 +879,15 @@ export const FontSelectionDialog = () => {
 											}}
 											onClick={() => handleSelectFont(font.value, false)}
 										>
-											<Text size="3" style={{ fontFamily: font.value === "inherit" || font.value === "default" ? undefined : font.value }}>
+											<Text
+												size="3"
+												style={{
+													fontFamily:
+														font.value === "inherit" || font.value === "default"
+															? undefined
+															: font.value,
+												}}
+											>
 												{font.label}
 											</Text>
 										</Card>
@@ -865,7 +948,8 @@ export const FontSelectionDialog = () => {
 												flexDirection: "column",
 												justifyContent: "center",
 												border:
-													isFontSelected(`"${font}", sans-serif`) || isFontSelected(font)
+													isFontSelected(`"${font}", sans-serif`) ||
+													isFontSelected(font)
 														? "2px solid var(--accent-9)"
 														: "none",
 											}}

@@ -216,7 +216,8 @@
 				"title": "Manage Quick Fix Exclusions",
 				"description": "Add words to ignore in quick fixes.",
 				"placeholder": "Enter word to ignore"
-			}
+			},
+			"doubleClickEdit": "双击编辑单词"
 		},
 		"experimentalFeatures": "Experimental Features",
 		"loading": "面板载入中..."
@@ -241,6 +242,8 @@
 			"compactBGInSyncDesc": "在同步过程中自动压缩背景歌词行的垂直空间。",
 			"wrapLyricLines": "长歌词自动换行",
 			"wrapLyricLinesDesc": "超出编辑器宽度时将歌词折行显示，而无需水平滚动。",
+			"keepPlayingWordInView": "始终保持正在播放的单词在视野内",
+			"keepPlayingWordInViewDesc": "在播放时自动滚动歌词编辑器，确保当前播放的行和单词始终在可视区域内。",
 			"allowConsecutiveBackgroundLines": "允许连续及独立的背景歌词",
 			"allowConsecutiveBackgroundLinesDesc": "将连续的背景歌词一起导出，并保留独立的背景歌词以兼容 Spicy Lyrics。其他播放器可能不支持此结构。",
 			"syncJudgeMode": "同步时间点判定模式",
@@ -298,7 +301,17 @@
 			"updateNow": "立即更新",
 			"downloading": "正在下载更新...",
 			"ready": "更新已就绪。重启应用程序使其生效。",
-			"restart": "重启"
+			"restart": "重启",
+			"websiteUpdate": "网页更新",
+			"websiteUpdateDescription": "若未弹出更新提示，可刷新网页获取最新版本。",
+			"forceRefresh": "强制刷新",
+			"clearWebsiteCache": "清除网页缓存数据",
+			"clearWebsiteCacheTitle": "确定清除网页缓存数据吗？",
+			"clearWebsiteCacheDescription": "这将删除离线网页文件并重新加载页面。您保存的项目和偏好设置不会被删除。",
+			"checklist": {
+				"showUploadedToDb": "在核对清单中显示“标记为已上传至数据库”",
+				"showUploadedToDbDesc": "在每个核对清单项目上显示一个按钮，用于跟踪该歌曲是否已上传至数据库。"
+			}
 		},
 		"appearance": {
 			"mode": {
@@ -369,7 +382,11 @@
 				"waveformProgress": "Waveform Progress",
 				"global": "Global Design System",
 				"masterResetNote": "This will reset all 20+ granular overrides.",
-				"resetMaster": "Master Reset Advanced Config"
+				"resetMaster": "Master Reset Advanced Config",
+				"legacySpaceLabels": "传统空格标签",
+				"legacySpaceLabelsDesc": "显示 Space xN 而不是紧凑的空格单元格。",
+				"legacyDarkTheme": "经典深色主题",
+				"legacyDarkThemeDesc": "使用在纯黑重设计之前的较浅深色调色板。"
 			},
 			"secondaryDesc": "Translations & Metadata.",
 			"layout": {
@@ -492,7 +509,16 @@
 			"palette": "调色板",
 			"paletteCustom": "自定义",
 			"gradientEditorDesc": "Pos 值为 0.0 对应最安静的部分，1.0 对应最响亮的部分。建议在更大的 Pos 值时使用更亮的颜色。",
-			"addStop": "添加色标"
+			"addStop": "添加色标",
+			"playheadTracking": "指针跟随模式",
+			"playheadTrackingOff": "关闭",
+			"playheadTrackingSnap": "靠左跳转",
+			"playheadTrackingFollow": "居中跟随",
+			"playheadTrackingOffDesc": "播放过程中频谱图不随播放指针自动移动。",
+			"followPlayhead": "跟随播放指针（居中显示）",
+			"followPlayheadDesc": "在播放和跳转时自动滚动频谱图，将播放指针始终保持在画面正中央。",
+			"snapPlayheadToStart": "指针离开视图时对齐到起始处",
+			"snapPlayheadToStartDesc": "播放过程中指针离开当前可视区域时，自动跳转频谱图视图使指针位于开头。"
 		},
 		"discord": {
 			"previewSection": "实时预览",
@@ -632,7 +658,11 @@
 		"orderCurrentFirst": "当前行在前",
 		"orderTargetFirst": "指定行在前",
 		"mergeConfirm": "确认合并",
-		"mergeSuccess": "已成功合并行并保留时间戳！"
+		"mergeSuccess": "已成功合并行并保留时间戳！",
+		"copyTimingsTo": "复制时间轴到…",
+		"cancelCopyTimings": "取消时间轴复制",
+		"snapSelectedLinesToPlayhead": "将选中行对齐至播放指针",
+		"replaceRomanization": "替换注音…"
 	},
 	"settingsDialog": {
 		"title": "偏好设置",
@@ -657,6 +687,8 @@
 			"switchEditMode": "切换模式 - 编辑模式",
 			"switchSyncMode": "切换模式 - 对齐模式",
 			"switchPreviewMode": "切换模式 - 预览模式",
+			"nextTab": "切换模式 - 下一个模式/标签页",
+			"prevTab": "切换模式 - 上一个模式/标签页",
 			"moveNextWord": "对齐 - 移动到下一个单词",
 			"movePrevWord": "对齐 - 移动到上一个单词",
 			"moveNextLine": "对齐 - 移动到下一行开始",
@@ -728,7 +760,8 @@
 		},
 		"error": {
 			"workerError": "处理音频时出错"
-		}
+		},
+		"autoReloaded": "已自动从本地计算机重新加载音频 \"{name}\""
 	},
 	"audioPanel": {
 		"volume": "音量",
@@ -832,7 +865,12 @@
 		"empty": "无",
 		"duplicateLinesHere": "在此处复制 {count} 条选定行",
 		"insertLine": "在此处插入新行",
-		"insertWord": "在此处插入单词…"
+		"insertWord": "在此处插入单词…",
+		"applyTimingsHere": "从此处开始应用 {count} 行时间轴",
+		"applyPartialTimingsHere": "从此处开始应用 {applied}/{total} 行时间轴",
+		"timingsApplied": "已将时间轴应用到 {count} 行。",
+		"partialTimingCopy": "在歌词结束前仅能应用 {applied}/{total} 行来源时间轴。",
+		"wordTimingMismatch": "{count} 行的单词数不同；仅复制了匹配的单词位置时间轴。"
 	},
 	"lyricWordView": {
 		"empty": "空白",
@@ -1317,22 +1355,27 @@
 	"spectrogram": {
 		"invalidEndTime": "不能选择此结束时间",
 		"noAudioLoaded": "请先加载一个音频文件来渲染频谱图哦",
-		"loadAudio": "Load audio file",
+		"loadAudio": "加载音频文件",
 		"showUnselectedLines": "显示未选中行",
 		"onlyShowSyncLine": "仅显示当前打轴行",
 		"onlyShowSyncLineDesc": "在进行打轴同步时，隐藏其他歌词行，频谱图时间轴覆盖层上仅显示当前正在同步的行。",
+		"playheadTrackingMode": "指针跟随模式",
+		"playheadTrackingOff": "关闭",
+		"playheadTrackingSnap": "靠左跳转",
+		"playheadTrackingFollow": "居中跟随",
 		"followPlayhead": "跟随播放指针（居中显示）",
 		"followPlayheadDesc": "在播放和跳转时自动滚动频谱图，将播放指针始终保持在画面正中央。",
-		"settings": "Spectrogram Settings",
+		"snapPlayheadToStart": "播放指针离开可视区时靠左对齐",
+		"settings": "频谱图设置",
 		"fftSize": "FFT Size",
-		"resolution": "FFT Resolution",
+		"resolution": "FFT 分辨率",
 		"fftSizeOption": {
 			"512": "512 (Fast)",
 			"1024": "1024 (Normal)",
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "显示高度"
 	},
 	"pwa": {
 		"offlineReady": "网站已成功离线缓存，后续可离线访问本网页",
@@ -1462,5 +1505,20 @@
 		"textFileDescription": "文本文件",
 		"includeOriginalId": "包含原曲 ID",
 		"includeOriginalIdTooltip": "在复制或导出的 ID 前添加被搜索的原曲 ID"
+	},
+	"replaceRomanizationDialog": {
+		"title": "替换注音",
+		"description": "新注音：",
+		"placeholder": "输入新注音",
+		"applyToAll": "应用到所有相同单词",
+		"caseSensitive": "区分大小写（精确匹配）"
+	},
+	"combineWordsDialog": {
+		"title": "合并单词",
+		"description": "确认所选单词的合并方式。",
+		"preview": "预览",
+		"applyToAll": "将此合并应用到所有相同的单词序列",
+		"ignoreCase": "忽略大小写",
+		"adjacentOnly": "全部应用仅对相邻选中的单词有效。"
 	}
 }

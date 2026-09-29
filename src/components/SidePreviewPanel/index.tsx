@@ -70,7 +70,12 @@ export const SidePreviewPanel = memo(() => {
 				</Select.Root>
 
 				<Flex align="center" gap="1">
-					<Tooltip content={t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}>
+					<Tooltip
+						content={t(
+							"ribbonBar.previewMode.bgFollowsDuet",
+							"BG Follows Duet",
+						)}
+					>
 						<button
 							type="button"
 							className={classNames(
@@ -78,8 +83,14 @@ export const SidePreviewPanel = memo(() => {
 								bgFollowsDuet && styles.toggleButtonActive,
 							)}
 							onClick={() => setBgFollowsDuet((v) => !v)}
-							title={t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}
-							aria-label={t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}
+							title={t(
+								"ribbonBar.previewMode.bgFollowsDuet",
+								"BG Follows Duet",
+							)}
+							aria-label={t(
+								"ribbonBar.previewMode.bgFollowsDuet",
+								"BG Follows Duet",
+							)}
 						>
 							<People16Regular />
 						</button>

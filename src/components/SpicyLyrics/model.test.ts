@@ -292,15 +292,32 @@ describe("buildSpicyLines", () => {
 		background.isBG = true;
 		background.isDuet = false;
 		background.words = [
-			{ ...newLyricWord(), startTime: 500, endTime: 2_000, word: "Duet harmony" },
+			{
+				...newLyricWord(),
+				startTime: 500,
+				endTime: 2_000,
+				word: "Duet harmony",
+			},
 		];
 
-		const linesWithFollow = buildSpicyLines([duetMain, background], false, false, false, true);
+		const linesWithFollow = buildSpicyLines(
+			[duetMain, background],
+			false,
+			false,
+			false,
+			true,
+		);
 		const bgWithFollow = linesWithFollow.find((l) => l.id === "bg-line");
 		expect(bgWithFollow?.isDuet).toBe(true);
 		expect(bgWithFollow?.agent).toBe("v2");
 
-		const linesWithoutFollow = buildSpicyLines([duetMain, background], false, false, false, false);
+		const linesWithoutFollow = buildSpicyLines(
+			[duetMain, background],
+			false,
+			false,
+			false,
+			false,
+		);
 		const bgWithoutFollow = linesWithoutFollow.find((l) => l.id === "bg-line");
 		expect(bgWithoutFollow?.isDuet).toBe(false);
 		expect(bgWithoutFollow?.agent).toBe("v1");
@@ -323,13 +340,23 @@ describe("buildSpicyLines", () => {
 		background.endTime = 2_000;
 		background.isBG = true;
 		background.words = [
-			{ ...newLyricWord(), startTime: 500, endTime: 2_000, word: "Solo harmony" },
+			{
+				...newLyricWord(),
+				startTime: 500,
+				endTime: 2_000,
+				word: "Solo harmony",
+			},
 		];
 
-		const lines = buildSpicyLines([soloMain, background], false, false, false, true);
+		const lines = buildSpicyLines(
+			[soloMain, background],
+			false,
+			false,
+			false,
+			true,
+		);
 		const bg = lines.find((l) => l.id === "bg-line");
 		expect(bg?.isDuet).toBe(false);
 		expect(bg?.agent).toBe("v1");
 	});
 });
-
