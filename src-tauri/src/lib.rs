@@ -5,7 +5,8 @@ use std::time::{Duration, Instant};
 use discord_rich_presence::{DiscordIpc, DiscordIpcClient, activity};
 
 const DISCORD_CLIENT_ID: &str = "1250551199862624349";
-const DISCORD_LOGO_URL: &str = "https://i.imgur.com/tuaWADI.png";
+const DISCORD_LOGO_URL: &str =
+    "https://raw.githubusercontent.com/bobjoerules/AMLL-TTML-TOOL/main/public/logo.png";
 const REPOSITORY_URL: &str = "https://github.com/bobjoerules/AMLL-TTML-TOOL";
 
 #[derive(serde::Deserialize)]
@@ -201,15 +202,23 @@ fn convert_audio_mp3_to_flac(input_data: Vec<u8>, filename: String) -> Result<Ve
                         let _ = fs::remove_file(&output_path);
                         Ok(converted_data)
                     }
-                    Err(e) => Err(format!("Failed to read converted file: {}", e))
+                    Err(e) => Err(format!("Failed to read converted file: {}", e)),
                 }
             } else {
                 let stderr_output = String::from_utf8_lossy(&result.stderr);
                 let stdout_output = String::from_utf8_lossy(&result.stdout);
-                if stderr_output.contains("not found") || stderr_output.is_empty() && stdout_output.is_empty() {
-                    Err("ffmpeg not found. Please install ffmpeg and ensure it's in your PATH.".to_string())
+                if stderr_output.contains("not found")
+                    || stderr_output.is_empty() && stdout_output.is_empty()
+                {
+                    Err(
+                        "ffmpeg not found. Please install ffmpeg and ensure it's in your PATH."
+                            .to_string(),
+                    )
                 } else {
-                    Err(format!("FFmpeg conversion failed: {}\nStdout: {}", stderr_output, stdout_output))
+                    Err(format!(
+                        "FFmpeg conversion failed: {}\nStdout: {}",
+                        stderr_output, stdout_output
+                    ))
                 }
             }
         }
@@ -217,7 +226,10 @@ fn convert_audio_mp3_to_flac(input_data: Vec<u8>, filename: String) -> Result<Ve
             let error_msg = if e.kind() == std::io::ErrorKind::NotFound {
                 "ffmpeg not found. Please install ffmpeg and ensure it's in your PATH.".to_string()
             } else {
-                format!("Failed to run ffmpeg: {}. Make sure ffmpeg is installed and in your PATH.", e)
+                format!(
+                    "Failed to run ffmpeg: {}. Make sure ffmpeg is installed and in your PATH.",
+                    e
+                )
             };
             Err(error_msg)
         }
@@ -284,19 +296,14 @@ fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
             .center()
             .effects(
                 tauri::window::EffectsBuilder::new()
-                    .effects([
-                        tauri::window::Effect::Tabbed,
-                        tauri::window::Effect::Mica,
-                    ])
+                    .effects([tauri::window::Effect::Tabbed, tauri::window::Effect::Mica])
                     .build(),
             );
     }
 
     #[cfg(target_os = "linux")]
     {
-        builder = builder
-            .title("")
-            .decorations(false);
+        builder = builder.title("").decorations(false);
     }
 
     let webview_window = builder.build().map_err(|e| e.to_string())?;
@@ -335,7 +342,8 @@ async fn fetch_url(url: String) -> Result<String, String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let resp = client.get(&url)
+    let resp = client
+        .get(&url)
         .send()
         .await
         .map_err(|e| format!("Network request failed: {e}"))?;
@@ -357,7 +365,8 @@ async fn fetch_apple_ttml(url: String) -> Result<String, String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let resp = client.get(&url)
+    let resp = client
+        .get(&url)
         .send()
         .await
         .map_err(|e| format!("Network request failed: {e}"))?;
@@ -396,9 +405,7 @@ pub fn run() {
 
         builder = builder.plugin(
             tauri_plugin_window_state::Builder::default()
-                .with_state_flags(
-                    StateFlags::SIZE | StateFlags::MAXIMIZED | StateFlags::FULLSCREEN,
-                )
+                .with_state_flags(StateFlags::SIZE | StateFlags::MAXIMIZED | StateFlags::FULLSCREEN)
                 .build(),
         );
     }
@@ -415,9 +422,9 @@ pub fn run() {
             }
             #[cfg(target_os = "macos")]
             {
-                use tauri::{Manager, Emitter};
+                use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
+                use tauri::{Emitter, Manager};
                 use tauri_plugin_decorum::WebviewWindowExt;
-                use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem};
 
                 let handle = app.handle();
 
@@ -425,22 +432,71 @@ pub fn run() {
                 let app_menu = Submenu::new(app, "AMLL TTML Tool", true)?;
                 app_menu.append(&PredefinedMenuItem::about(app, None, None)?)?;
                 app_menu.append(&PredefinedMenuItem::separator(app)?)?;
-                let account_item = MenuItem::with_id(app, "menu-cloud-auth", "Cloud Account...", true, None::<&str>)?;
+                let account_item = MenuItem::with_id(
+                    app,
+                    "menu-cloud-auth",
+                    "Cloud Account...",
+                    true,
+                    None::<&str>,
+                )?;
                 app_menu.append(&account_item)?;
-                let settings_item = MenuItem::with_id(app, "menu-settings", "Settings...", true, Some("CmdOrCtrl+,"))?;
+                let settings_item = MenuItem::with_id(
+                    app,
+                    "menu-settings",
+                    "Settings...",
+                    true,
+                    Some("CmdOrCtrl+,"),
+                )?;
                 app_menu.append(&settings_item)?;
                 app_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 app_menu.append(&PredefinedMenuItem::quit(app, None)?)?;
 
                 // 2. File menu
                 let file_menu = Submenu::new(app, "File", true)?;
-                let new_file_item = MenuItem::with_id(app, "menu-new-file", "New File", true, Some("CmdOrCtrl+N"))?;
-                let new_window_item = MenuItem::with_id(app, "menu-new-window", "New Window", true, Some("CmdOrCtrl+Shift+N"))?;
-                let open_file_item = MenuItem::with_id(app, "menu-open-file", "Open File...", true, Some("CmdOrCtrl+O"))?;
-                let open_cloud_item = MenuItem::with_id(app, "menu-cloud-open", "Open from Cloud...", true, Some("CmdOrCtrl+Shift+O"))?;
-                let save_file_item = MenuItem::with_id(app, "menu-save-file", "Save File", true, Some("CmdOrCtrl+S"))?;
-                let save_cloud_item = MenuItem::with_id(app, "menu-cloud-save", "Save to Cloud...", true, Some("CmdOrCtrl+Shift+S"))?;
-                let metadata_item = MenuItem::with_id(app, "menu-metadata", "Metadata Editor...", true, None::<&str>)?;
+                let new_file_item =
+                    MenuItem::with_id(app, "menu-new-file", "New File", true, Some("CmdOrCtrl+N"))?;
+                let new_window_item = MenuItem::with_id(
+                    app,
+                    "menu-new-window",
+                    "New Window",
+                    true,
+                    Some("CmdOrCtrl+Shift+N"),
+                )?;
+                let open_file_item = MenuItem::with_id(
+                    app,
+                    "menu-open-file",
+                    "Open File...",
+                    true,
+                    Some("CmdOrCtrl+O"),
+                )?;
+                let open_cloud_item = MenuItem::with_id(
+                    app,
+                    "menu-cloud-open",
+                    "Open from Cloud...",
+                    true,
+                    Some("CmdOrCtrl+Shift+O"),
+                )?;
+                let save_file_item = MenuItem::with_id(
+                    app,
+                    "menu-save-file",
+                    "Save File",
+                    true,
+                    Some("CmdOrCtrl+S"),
+                )?;
+                let save_cloud_item = MenuItem::with_id(
+                    app,
+                    "menu-cloud-save",
+                    "Save to Cloud...",
+                    true,
+                    Some("CmdOrCtrl+Shift+S"),
+                )?;
+                let metadata_item = MenuItem::with_id(
+                    app,
+                    "menu-metadata",
+                    "Metadata Editor...",
+                    true,
+                    None::<&str>,
+                )?;
                 file_menu.append(&new_file_item)?;
                 file_menu.append(&new_window_item)?;
                 file_menu.append(&open_file_item)?;
@@ -453,11 +509,26 @@ pub fn run() {
 
                 // 3. Edit menu
                 let edit_menu = Submenu::new(app, "Edit", true)?;
-                let undo_item = MenuItem::with_id(app, "menu-undo", "Undo", true, Some("CmdOrCtrl+Z"))?;
-                let redo_item = MenuItem::with_id(app, "menu-redo", "Redo", true, Some("CmdOrCtrl+Shift+Z"))?;
-                let find_item = MenuItem::with_id(app, "menu-find", "Find...", true, Some("CmdOrCtrl+F"))?;
-                let replace_item = MenuItem::with_id(app, "menu-replace", "Replace...", true, Some("CmdOrCtrl+H"))?;
-                let select_all_item = MenuItem::with_id(app, "menu-select-all", "Select All", true, Some("CmdOrCtrl+A"))?;
+                let undo_item =
+                    MenuItem::with_id(app, "menu-undo", "Undo", true, Some("CmdOrCtrl+Z"))?;
+                let redo_item =
+                    MenuItem::with_id(app, "menu-redo", "Redo", true, Some("CmdOrCtrl+Shift+Z"))?;
+                let find_item =
+                    MenuItem::with_id(app, "menu-find", "Find...", true, Some("CmdOrCtrl+F"))?;
+                let replace_item = MenuItem::with_id(
+                    app,
+                    "menu-replace",
+                    "Replace...",
+                    true,
+                    Some("CmdOrCtrl+H"),
+                )?;
+                let select_all_item = MenuItem::with_id(
+                    app,
+                    "menu-select-all",
+                    "Select All",
+                    true,
+                    Some("CmdOrCtrl+A"),
+                )?;
                 edit_menu.append(&undo_item)?;
                 edit_menu.append(&redo_item)?;
                 edit_menu.append(&PredefinedMenuItem::separator(app)?)?;
@@ -472,26 +543,100 @@ pub fn run() {
 
                 // 4. Tools menu
                 let tools_menu = Submenu::new(app, "Tools", true)?;
-                
-                let auto_segment_item = MenuItem::with_id(app, "menu-auto-segment", "Auto Segment", true, Some("CmdOrCtrl+K"))?;
+
+                let auto_segment_item = MenuItem::with_id(
+                    app,
+                    "menu-auto-segment",
+                    "Auto Segment",
+                    true,
+                    Some("CmdOrCtrl+K"),
+                )?;
 
                 let segment_menu = Submenu::new(app, "Segmentation", true)?;
-                let auto_segment_sub_item = MenuItem::with_id(app, "menu-auto-segment-sub", "Auto Segment", true, None::<&str>)?;
-                let ruby_segment_item = MenuItem::with_id(app, "menu-ruby-segment", "Ruby Segmentation", true, None::<&str>)?;
-                let adv_segment_item = MenuItem::with_id(app, "menu-advanced-segment", "Advanced Segmentation...", true, None::<&str>)?;
-                let learned_splits_item = MenuItem::with_id(app, "menu-learned-splits", "Learned Splits...", true, None::<&str>)?;
+                let auto_segment_sub_item = MenuItem::with_id(
+                    app,
+                    "menu-auto-segment-sub",
+                    "Auto Segment",
+                    true,
+                    None::<&str>,
+                )?;
+                let ruby_segment_item = MenuItem::with_id(
+                    app,
+                    "menu-ruby-segment",
+                    "Ruby Segmentation",
+                    true,
+                    None::<&str>,
+                )?;
+                let adv_segment_item = MenuItem::with_id(
+                    app,
+                    "menu-advanced-segment",
+                    "Advanced Segmentation...",
+                    true,
+                    None::<&str>,
+                )?;
+                let learned_splits_item = MenuItem::with_id(
+                    app,
+                    "menu-learned-splits",
+                    "Learned Splits...",
+                    true,
+                    None::<&str>,
+                )?;
                 segment_menu.append(&auto_segment_sub_item)?;
                 segment_menu.append(&ruby_segment_item)?;
                 segment_menu.append(&adv_segment_item)?;
                 segment_menu.append(&learned_splits_item)?;
 
-                let sync_timestamps_item = MenuItem::with_id(app, "menu-sync-line-timestamps", "Sync Line Timestamps", true, None::<&str>)?;
-                let auto_duet_item = MenuItem::with_id(app, "menu-auto-duet-singer", "Auto Duet Based on Singer", true, None::<&str>)?;
-                let time_shift_item = MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
-                let time_stretch_item = MenuItem::with_id(app, "menu-time-stretch", "Time Stretch...", true, None::<&str>)?;
-                let checklist_item = MenuItem::with_id(app, "menu-checklist", "TTML Checklist...", true, Some("CmdOrCtrl+Shift+C"))?;
-                let spotmatch_item = MenuItem::with_id(app, "menu-spotmatch", "SpotMatch (Alternate Spotify IDs)...", true, Some("CmdOrCtrl+Shift+M"))?;
-                let latency_item = MenuItem::with_id(app, "menu-latency-test", "Latency Test...", true, None::<&str>)?;
+                let sync_timestamps_item = MenuItem::with_id(
+                    app,
+                    "menu-sync-line-timestamps",
+                    "Sync Line Timestamps",
+                    true,
+                    None::<&str>,
+                )?;
+                let auto_duet_item = MenuItem::with_id(
+                    app,
+                    "menu-auto-duet-singer",
+                    "Auto Duet Based on Singer",
+                    true,
+                    None::<&str>,
+                )?;
+                let time_shift_item =
+                    MenuItem::with_id(app, "menu-time-shift", "Time Shift...", true, None::<&str>)?;
+                let time_stretch_item = MenuItem::with_id(
+                    app,
+                    "menu-time-stretch",
+                    "Time Stretch...",
+                    true,
+                    None::<&str>,
+                )?;
+                let checklist_item = MenuItem::with_id(
+                    app,
+                    "menu-checklist",
+                    "TTML Checklist...",
+                    true,
+                    Some("CmdOrCtrl+Shift+C"),
+                )?;
+                let grammar_check_item = MenuItem::with_id(
+                    app,
+                    "menu-grammar-check",
+                    "Grammar & Spelling Check...",
+                    true,
+                    None::<&str>,
+                )?;
+                let spotmatch_item = MenuItem::with_id(
+                    app,
+                    "menu-spotmatch",
+                    "SpotMatch (Alternate Spotify IDs)...",
+                    true,
+                    Some("CmdOrCtrl+Shift+M"),
+                )?;
+                let latency_item = MenuItem::with_id(
+                    app,
+                    "menu-latency-test",
+                    "Latency Test...",
+                    true,
+                    None::<&str>,
+                )?;
 
                 tools_menu.append(&auto_segment_item)?;
                 tools_menu.append(&segment_menu)?;
@@ -502,17 +647,34 @@ pub fn run() {
                 tools_menu.append(&time_stretch_item)?;
                 tools_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 tools_menu.append(&checklist_item)?;
+                tools_menu.append(&grammar_check_item)?;
                 tools_menu.append(&spotmatch_item)?;
                 tools_menu.append(&latency_item)?;
 
                 // 5. Help menu
                 let help_menu = Submenu::new(app, "Help", true)?;
-                let start_guide_item = MenuItem::with_id(app, "menu-start-guide", "Start Guide", true, None::<&str>)?;
-                let github_item = MenuItem::with_id(app, "menu-github", "GitHub", true, None::<&str>)?;
-                let wiki_item = MenuItem::with_id(app, "menu-wiki", "SpicyLyrics Guides", true, None::<&str>)?;
-                let whats_new_item = MenuItem::with_id(app, "menu-whats-new", "What's New", true, None::<&str>)?;
-                let changelog_item = MenuItem::with_id(app, "menu-changelog", "Changelog & Updates", true, None::<&str>)?;
-                let about_item = MenuItem::with_id(app, "menu-about", "About AMLL TTML Tool", true, None::<&str>)?;
+                let start_guide_item =
+                    MenuItem::with_id(app, "menu-start-guide", "Start Guide", true, None::<&str>)?;
+                let github_item =
+                    MenuItem::with_id(app, "menu-github", "GitHub", true, None::<&str>)?;
+                let wiki_item =
+                    MenuItem::with_id(app, "menu-wiki", "SpicyLyrics Guides", true, None::<&str>)?;
+                let whats_new_item =
+                    MenuItem::with_id(app, "menu-whats-new", "What's New", true, None::<&str>)?;
+                let changelog_item = MenuItem::with_id(
+                    app,
+                    "menu-changelog",
+                    "Changelog & Updates",
+                    true,
+                    None::<&str>,
+                )?;
+                let about_item = MenuItem::with_id(
+                    app,
+                    "menu-about",
+                    "About AMLL TTML Tool",
+                    true,
+                    None::<&str>,
+                )?;
 
                 help_menu.append(&start_guide_item)?;
                 help_menu.append(&github_item)?;
@@ -523,13 +685,10 @@ pub fn run() {
                 help_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 help_menu.append(&about_item)?;
 
-                let menu = Menu::with_items(app, &[
-                    &app_menu,
-                    &file_menu,
-                    &edit_menu,
-                    &tools_menu,
-                    &help_menu,
-                ])?;
+                let menu = Menu::with_items(
+                    app,
+                    &[&app_menu, &file_menu, &edit_menu, &tools_menu, &help_menu],
+                )?;
                 app.set_menu(menu)?;
 
                 let app_handle_clone = handle.clone();
@@ -587,6 +746,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-
-

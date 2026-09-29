@@ -31,7 +31,16 @@ import {
 	type ProjectVersion,
 } from "$/modules/project/autosave/autosave";
 import { confirmDialogAtom, historyRestoreDialogAtom } from "$/states/dialogs";
-import { newLyricLinesAtom, projectIdAtom } from "$/states/main";
+import {
+	newLyricLinesAtom,
+	projectIdAtom,
+	saveFileNameAtom,
+} from "$/states/main";
+import {
+	formatProjectFileName,
+	getSuggestedTtmlFileName,
+} from "$/modules/project/logic/metadata-filename";
+import { tryReloadAudioFromComputer } from "$/modules/audio/utils/autoReloadAudio";
 import { error as logError } from "$/utils/logging";
 
 export const HistoryRestoreDialog = () => {
@@ -44,6 +53,7 @@ export const HistoryRestoreDialog = () => {
 
 	const setNewLyrics = useSetAtom(newLyricLinesAtom);
 	const setProjectId = useSetAtom(projectIdAtom);
+	const setSaveFileName = useSetAtom(saveFileNameAtom);
 	const setConfirmDialog = useSetAtom(confirmDialogAtom);
 	const { t } = useTranslation();
 
@@ -99,8 +109,26 @@ export const HistoryRestoreDialog = () => {
 				if (latestLyric) {
 					setProjectId(project.id);
 					setNewLyrics(latestLyric);
+
+					const suggestedFile = getSuggestedTtmlFileName(latestLyric.metadata);
+					const rawName =
+						project.name &&
+						project.name !== "Untitled Project" &&
+						project.name !== "Legacy Snapshot" &&
+						!project.name.startsWith("Untitled (")
+							? project.name
+							: project.saveFileName || suggestedFile?.fileName || "lyric.ttml";
+					setSaveFileName(formatProjectFileName(rawName));
+
 					setIsOpen(false);
 					toast.success(t("common.success", "Restored successfully"));
+
+					void tryReloadAudioFromComputer({
+						projectId: project.id,
+						audioFileName: project.audioFileName,
+						audioPath: project.audioPath,
+						title: project.name,
+					});
 				} else {
 					toast.error(t("common.error", "Data corrupted or missing"));
 				}
@@ -119,8 +147,30 @@ export const HistoryRestoreDialog = () => {
 			onConfirm: () => {
 				setProjectId(version.projectId);
 				setNewLyrics(version.data);
+
+				const project = projects.find((p) => p.id === version.projectId);
+				const suggestedFile = getSuggestedTtmlFileName(version.data.metadata);
+				const rawName =
+					project?.name &&
+					project.name !== "Untitled Project" &&
+					project.name !== "Legacy Snapshot" &&
+					!project.name.startsWith("Untitled (")
+						? project.name
+						: version.saveFileName ||
+							project?.saveFileName ||
+							suggestedFile?.fileName ||
+							"lyric.ttml";
+				setSaveFileName(formatProjectFileName(rawName));
+
 				setIsOpen(false);
 				toast.success(t("common.success", "Restored successfully"));
+
+				void tryReloadAudioFromComputer({
+					projectId: version.projectId,
+					audioFileName: version.audioFileName || project?.audioFileName,
+					audioPath: version.audioPath || project?.audioPath,
+					title: project?.name,
+				});
 			},
 		});
 	};

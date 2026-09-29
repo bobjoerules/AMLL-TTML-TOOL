@@ -55,13 +55,9 @@ import {
 	type SyncLevelMode,
 } from "$/modules/settings/states/sync.ts";
 import { instantHighlightFadeAtom } from "$/modules/settings/states/preview";
-import {
-	keySyncEndAtom,
-	keySyncNextAtom,
-	keySyncStartAtom,
-} from "$/states/keybindings.ts";
 import { spectrogramOnlyShowSyncLineAtom } from "$/modules/spectrogram/states/index.ts";
 import { currentTimeAtom } from "$/modules/audio/states/index.ts";
+import { snapSelectedLineTimingsToTime } from "$/modules/lyric-editor/utils/line-timing.ts";
 
 import {
 	bgLyricIgnoreSyncAtom,
@@ -73,13 +69,11 @@ import {
 	selectedWordsAtom,
 	showPreviewPanelAtom,
 } from "$/states/main.ts";
-import { KeyBinding } from "../KeyBinding/index.tsx";
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
 import {
 	Clock24Regular,
 	List24Regular,
-	Keyboard24Regular,
 	Beaker24Regular,
 	TextT24Regular,
 	Settings24Regular,
@@ -292,33 +286,34 @@ export const LineTimingTools = () => {
 		}
 
 		editLyricLines((state) => {
-			for (const line of state.lyricLines) {
-				if (selLines.has(line.id)) {
-					const origStart = line.startTime;
-					const duration =
-						line.endTime > origStart ? line.endTime - origStart : 3000;
-					const offset = currentTime - origStart;
-					line.startTime = currentTime;
-					line.endTime = currentTime + duration;
-					if (line.words) {
-						for (const word of line.words) {
-							if (word.startTime > 0 || word.endTime > 0) {
-								const wDur = Math.max(0, word.endTime - word.startTime);
-								word.startTime = Math.max(0, word.startTime + offset);
-								word.endTime = word.startTime + wDur;
-							}
-						}
-					}
-				}
-				if (selWords.size > 0) {
+			if (selLines.size > 0) {
+				snapSelectedLineTimingsToTime(state.lyricLines, selLines, currentTime);
+			} else if (selWords.size > 0) {
+				let firstSelectedWord: (typeof state.lyricLines)[0]["words"][0] | null =
+					null;
+				for (const line of state.lyricLines) {
 					for (const word of line.words) {
 						if (selWords.has(word.id)) {
-							const wDur =
-								word.endTime > word.startTime
-									? word.endTime - word.startTime
-									: 500;
-							word.startTime = currentTime;
-							word.endTime = currentTime + wDur;
+							firstSelectedWord = word;
+							break;
+						}
+					}
+					if (firstSelectedWord) break;
+				}
+
+				if (firstSelectedWord) {
+					const baseWordStart = firstSelectedWord.startTime;
+					const wordOffset = currentTime - baseWordStart;
+					for (const line of state.lyricLines) {
+						for (const word of line.words) {
+							if (selWords.has(word.id)) {
+								const wDur =
+									word.endTime > word.startTime
+										? word.endTime - word.startTime
+										: 500;
+								word.startTime = Math.max(0, word.startTime + wordOffset);
+								word.endTime = word.startTime + wDur;
+							}
 						}
 					}
 				}
@@ -1033,42 +1028,6 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					</Flex>
 				</RibbonSection>
 			)}
-			<RibbonSection
-				isSidebar={isSidebar}
-				label={
-					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>
-						<Keyboard24Regular style={{ width: "12px", height: "12px" }} />
-						<span>
-							{t("ribbonBar.syncMode.keyBindingReference", "Important Hotkeys")}
-						</span>
-					</Flex>
-				}
-			>
-				<Flex gap="4">
-					<Grid
-						columns="max-content auto"
-						gap="4"
-						gapY="1"
-						flexGrow="1"
-						align="center"
-						justify="center"
-					>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.syncMode.startSync", "Mark Begin")}
-						</Text>
-						<KeyBinding kbdAtom={keySyncStartAtom} />
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.syncMode.continuousSync", "Commit")}
-						</Text>
-						<KeyBinding kbdAtom={keySyncNextAtom} />
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.syncMode.endSync", "Mark End")}
-						</Text>
-						<KeyBinding kbdAtom={keySyncEndAtom} />
-					</Grid>
-				</Flex>
-			</RibbonSection>
-
 			<RibbonSection
 				label={
 					<Flex align="center" gap="1" style={{ display: "inline-flex" }}>

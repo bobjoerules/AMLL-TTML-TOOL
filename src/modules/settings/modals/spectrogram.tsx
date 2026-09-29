@@ -3,13 +3,17 @@ import {
 	Button,
 	Card,
 	Flex,
+	SegmentedControl,
 	Select,
+	Slider,
 	Switch,
 	Text,
 	TextField,
 } from "@radix-ui/themes";
 import {
 	CenterHorizontal24Regular,
+	EyeTrackingOff24Regular,
+	NextFrame24Regular,
 	Target24Regular,
 } from "@fluentui/react-icons";
 import { useAtom } from "jotai";
@@ -19,8 +23,11 @@ import {
 	customPaletteStopsAtom,
 	predefinedPalettes,
 	selectedPaletteIdAtom,
-	spectrogramFollowPlayheadAtom,
+	spectrogramFftSizeAtom,
+	spectrogramHeightAtom,
 	spectrogramOnlyShowSyncLineAtom,
+	spectrogramPlayheadTrackingModeAtom,
+	type SpectrogramPlayheadTrackingMode,
 } from "$/modules/spectrogram/states";
 
 export const SettingsSpectrogramTab = () => {
@@ -33,9 +40,11 @@ export const SettingsSpectrogramTab = () => {
 	const [spectrogramOnlyShowSyncLine, setSpectrogramOnlyShowSyncLine] = useAtom(
 		spectrogramOnlyShowSyncLineAtom,
 	);
-	const [followPlayhead, setFollowPlayhead] = useAtom(
-		spectrogramFollowPlayheadAtom,
+	const [playheadTrackingMode, setPlayheadTrackingMode] = useAtom(
+		spectrogramPlayheadTrackingModeAtom,
 	);
+	const [fftSize, setFftSize] = useAtom(spectrogramFftSizeAtom);
+	const [dataHeight, setDataHeight] = useAtom(spectrogramHeightAtom);
 
 	useEffect(() => {
 		setLocalStops(globalStops);
@@ -120,33 +129,113 @@ export const SettingsSpectrogramTab = () => {
 			</Card>
 
 			<Card>
-				<Text as="label">
-					<Flex gap="3" align="center">
+				<Flex gap="3" align="center">
+					{playheadTrackingMode === "follow" ? (
 						<CenterHorizontal24Regular />
-						<Box flexGrow="1">
-							<Flex gap="2" align="center" justify="between">
-								<Flex direction="column" gap="1">
-									<Text>
-										{t(
-											"settings.spectrogram.followPlayhead",
-											"Center and Follow Playhead",
-										)}
-									</Text>
-									<Text size="1" color="gray">
-										{t(
-											"settings.spectrogram.followPlayheadDesc",
-											"Automatically scrolls the spectrogram during playback and seeking to keep the playhead in the middle of the frame.",
-										)}
-									</Text>
-								</Flex>
-								<Switch
-									checked={followPlayhead}
-									onCheckedChange={setFollowPlayhead}
-								/>
+					) : playheadTrackingMode === "snap" ? (
+						<NextFrame24Regular />
+					) : (
+						<EyeTrackingOff24Regular />
+					)}
+					<Box flexGrow="1">
+						<Flex gap="2" align="center" justify="between">
+							<Flex direction="column" gap="1">
+								<Text>
+									{t(
+										"settings.spectrogram.playheadTracking",
+										"Playhead Tracking",
+									)}
+								</Text>
+								<Text size="1" color="gray">
+									{playheadTrackingMode === "follow"
+										? t(
+												"settings.spectrogram.followPlayheadDesc",
+												"Automatically scrolls the spectrogram during playback and seeking to keep the playhead in the middle of the frame.",
+											)
+										: playheadTrackingMode === "snap"
+											? t(
+													"settings.spectrogram.snapPlayheadToStartDesc",
+													"When the playhead moves past the visible area during playback, automatically snaps the spectrogram view with the playhead at the start.",
+												)
+											: t(
+													"settings.spectrogram.playheadTrackingOffDesc",
+													"Spectrogram view will not automatically move with the playhead.",
+												)}
+								</Text>
 							</Flex>
-						</Box>
+							<SegmentedControl.Root
+								value={playheadTrackingMode}
+								onValueChange={(val) =>
+									setPlayheadTrackingMode(
+										val as SpectrogramPlayheadTrackingMode,
+									)
+								}
+							>
+								<SegmentedControl.Item value="off">
+									{t("settings.spectrogram.playheadTrackingOff", "Off")}
+								</SegmentedControl.Item>
+								<SegmentedControl.Item value="snap">
+									{t("settings.spectrogram.playheadTrackingSnap", "Snap")}
+								</SegmentedControl.Item>
+								<SegmentedControl.Item value="follow">
+									{t("settings.spectrogram.playheadTrackingFollow", "Follow")}
+								</SegmentedControl.Item>
+							</SegmentedControl.Root>
+						</Flex>
+					</Box>
+				</Flex>
+			</Card>
+
+			<Card>
+				<Flex direction="column" gap="2">
+					<Flex justify="between" align="center">
+						<Flex direction="column" gap="1">
+							<Text>{t("spectrogram.fftSize", "FFT Size")}</Text>
+							<Text size="1" color="gray">
+								{t("spectrogram.resolution", "FFT Resolution")}
+							</Text>
+						</Flex>
+						<Select.Root
+							value={fftSize.toString()}
+							onValueChange={(v) => setFftSize(Number.parseInt(v))}
+						>
+							<Select.Trigger />
+							<Select.Content>
+								<Select.Item value="512">
+									{t("spectrogram.fftSizeOption.512", "512 (Fast)")}
+								</Select.Item>
+								<Select.Item value="1024">
+									{t("spectrogram.fftSizeOption.1024", "1024 (Normal)")}
+								</Select.Item>
+								<Select.Item value="2048">
+									{t("spectrogram.fftSizeOption.2048", "2048 (Better Freq)")}
+								</Select.Item>
+								<Select.Item value="4096">
+									{t("spectrogram.fftSizeOption.4096", "4096 (High Res)")}
+								</Select.Item>
+							</Select.Content>
+						</Select.Root>
 					</Flex>
-				</Text>
+				</Flex>
+			</Card>
+
+			<Card>
+				<Flex direction="column" gap="2">
+					<Flex justify="between" align="center">
+						<Text>{t("spectrogram.height", "Display Height")}</Text>
+						<Text size="2" color="gray">
+							{dataHeight}px
+						</Text>
+					</Flex>
+					<Slider
+						size="1"
+						min={100}
+						max={800}
+						step={10}
+						value={[dataHeight]}
+						onValueChange={(v) => setDataHeight(v[0])}
+					/>
+				</Flex>
 			</Card>
 
 			<Text as="label">

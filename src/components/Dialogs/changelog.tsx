@@ -51,6 +51,64 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.12
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								September 28, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Tab Key Mode Switching:</b> Pressing <code>Tab</code> or{" "}
+									<code>Shift + Tab</code> now cycles smoothly between Edit,
+									Sync, and Preview modes. Focus-aware safeguards preserve
+									standard keyboard navigation inside input fields, textareas,
+									and modal dialogs.
+								</Text>
+								<Text size="2">
+									• <b>Playhead Tracking &amp; Snapping Off Indicator:</b> Added
+									a dedicated <code>EyeTrackingOff</code> icon when spectrogram
+									playhead tracking and snapping is disabled, making the
+									distinction between Follow, Snap, and Off states instantly
+									clear.
+								</Text>
+								<Text size="2">
+									• <b>Native macOS Tools Menu:</b> Relocated Grammar &amp;
+									Spelling Check to the Tools menu across both web and native
+									macOS application menu bars, alongside direct access to Cloud
+									File Manager and TTML Checklist.
+								</Text>
+								<Text size="2">
+									• <b>Multi-Line Relative Playhead Snapping:</b> Snapping
+									multiple selected lyric lines to the playhead now aligns the
+									first line to current playback time while precisely preserving
+									relative timing offsets across all subsequent lines.
+								</Text>
+								<Text size="2">
+									• <b>Discord Component Embeds &amp; Clean URLs:</b> Deployed
+									dynamic Cloudflare Worker embeds for user profiles and
+									community statistics with live contributor badges and clean
+									path routing, alongside raw GitHub asset URLs for Discord RPC.
+								</Text>
+								<Text size="2">
+									•{" "}
+									<b>
+										Website HTML5 History Navigation &amp; Liquid Player
+										Showcase:
+									</b>{" "}
+									Upgraded the companion website from hash routing to HTML5
+									History <code>pushState</code> navigation and introduced a
+									dedicated showcase page for Liquid Player.
+								</Text>
+								<Text size="2">
+									• <b>Autosave &amp; Audio File Association:</b> Improved
+									project autosave filename resolution and automatic audio
+									reload associations for seamless session restoration.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.11
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
@@ -58,16 +116,29 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Community TTML Opt-In Privacy:</b> Songs uploaded to the cloud without toggling public visibility will no longer appear on the website community library without lyrics. Cloud songs now strictly require public opt-in before appearing in community listings.
+									• <b>Community TTML Opt-In Privacy:</b> Songs uploaded to the
+									cloud without toggling public visibility will no longer appear
+									on the website community library without lyrics. Cloud songs
+									now strictly require public opt-in before appearing in
+									community listings.
 								</Text>
 								<Text size="2">
-									• <b>On-Demand Payload Downloading:</b> Community TTML downloads now seamlessly fetch raw lyrics on-demand from dedicated subcollections when metadata-only records are indexed.
+									• <b>On-Demand Payload Downloading:</b> Community TTML
+									downloads now seamlessly fetch raw lyrics on-demand from
+									dedicated subcollections when metadata-only records are
+									indexed.
 								</Text>
 								<Text size="2">
-									• <b>Website Navbar &amp; Responsive Layout Polish:</b> Prevented navigation buttons and links from wrapping onto two lines on desktop viewports, and improved responsive tablet navigation drawer behavior.
+									• <b>Website Navbar &amp; Responsive Layout Polish:</b>{" "}
+									Prevented navigation buttons and links from wrapping onto two
+									lines on desktop viewports, and improved responsive tablet
+									navigation drawer behavior.
 								</Text>
 								<Text size="2">
-									• <b>Cloud File Manager Segmented Controls:</b> Upgraded cloud file filter controls with modern segmented buttons and prevented long song titles or descriptions from wrapping the header.
+									• <b>Cloud File Manager Segmented Controls:</b> Upgraded cloud
+									file filter controls with modern segmented buttons and
+									prevented long song titles or descriptions from wrapping the
+									header.
 								</Text>
 							</Flex>
 						</Box>
@@ -81,16 +152,27 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Web Audio Pitch Preservation with SoundTouch:</b> Integrated SoundTouch time-stretching directly into the Web Audio graph, preserving original musical pitch during playback rate changes without routing through HTMLAudioElement or experiencing audio dropouts.
+									• <b>Web Audio Pitch Preservation with SoundTouch:</b>{" "}
+									Integrated SoundTouch time-stretching directly into the Web
+									Audio graph, preserving original musical pitch during playback
+									rate changes without routing through HTMLAudioElement or
+									experiencing audio dropouts.
 								</Text>
 								<Text size="2">
-									• <b>Smooth Playhead Scrubbing:</b> Eliminated audio dropouts, playback stalling, and playhead fighting when dragging the timeline scrubber during active playback through animation-frame seek throttling.
+									• <b>Smooth Playhead Scrubbing:</b> Eliminated audio dropouts,
+									playback stalling, and playhead fighting when dragging the
+									timeline scrubber during active playback through
+									animation-frame seek throttling.
 								</Text>
 								<Text size="2">
-									• <b>Cloud Save Dialog Polish:</b> Streamlined the Cloud Save workflow by removing unnecessary stats navigation links from the save modal.
+									• <b>Cloud Save Dialog Polish:</b> Streamlined the Cloud Save
+									workflow by removing unnecessary stats navigation links from
+									the save modal.
 								</Text>
 								<Text size="2">
-									• <b>Checklist &amp; Cloud Sync Reliability:</b> Improved checklist status detection, version history operations, and sync consistency.
+									• <b>Checklist &amp; Cloud Sync Reliability:</b> Improved
+									checklist status detection, version history operations, and
+									sync consistency.
 								</Text>
 							</Flex>
 						</Box>
@@ -104,22 +186,47 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Cloud Library Song Grouping &amp; Version History:</b> Grouped Cloud TTML documents by song and artist with cover artwork, line count, audio duration, and version counters, introducing an interactive version dropdown to browse, restore, download, or delete past revisions.
+									• <b>Cloud Library Song Grouping &amp; Version History:</b>{" "}
+									Grouped Cloud TTML documents by song and artist with cover
+									artwork, line count, audio duration, and version counters,
+									introducing an interactive version dropdown to browse,
+									restore, download, or delete past revisions.
 								</Text>
 								<Text size="2">
-									• <b>On-Demand Cloud Payload Subcollections &amp; Instant Caching:</b> Decoupled lightweight song metadata from heavy TTML file payloads by storing raw lyrics in on-demand subcollections, and added instant local storage caching for immediate library opening without download delays.
+									•{" "}
+									<b>
+										On-Demand Cloud Payload Subcollections &amp; Instant
+										Caching:
+									</b>{" "}
+									Decoupled lightweight song metadata from heavy TTML file
+									payloads by storing raw lyrics in on-demand subcollections,
+									and added instant local storage caching for immediate library
+									opening without download delays.
 								</Text>
 								<Text size="2">
-									• <b>Tools Menu Shortcuts &amp; Keyboard Bindings:</b> Rebound Auto Segment to <code>Cmd/Ctrl + K</code>, added dedicated shortcuts for SpotMatch (<code>Cmd/Ctrl + Shift + M</code>) and TTML Checklist (<code>Cmd/Ctrl + Shift + C</code>), and exposed keybinding configurations in Settings.
+									• <b>Tools Menu Shortcuts &amp; Keyboard Bindings:</b> Rebound
+									Auto Segment to <code>Cmd/Ctrl + K</code>, added dedicated
+									shortcuts for SpotMatch (<code>Cmd/Ctrl + Shift + M</code>)
+									and TTML Checklist (<code>Cmd/Ctrl + Shift + C</code>), and
+									exposed keybinding configurations in Settings.
 								</Text>
 								<Text size="2">
-									• <b>TTML Checklist Workflow &amp; Classification:</b> Added dedicated tabs and counters for Not Started, In Progress, and Completed songs, an instant completion toggle, and separated raw cloud upload from auto-completion status.
+									• <b>TTML Checklist Workflow &amp; Classification:</b> Added
+									dedicated tabs and counters for Not Started, In Progress, and
+									Completed songs, an instant completion toggle, and separated
+									raw cloud upload from auto-completion status.
 								</Text>
 								<Text size="2">
-									• <b>Dark Theme Window &amp; Startup Flash Prevention:</b> Configured native window theme to Dark and injected early theme initialization into the HTML root to eliminate white screen flashes on startup, with transparent lyric editor background when custom backgrounds or gradients are enabled.
+									• <b>Dark Theme Window &amp; Startup Flash Prevention:</b>{" "}
+									Configured native window theme to Dark and injected early
+									theme initialization into the HTML root to eliminate white
+									screen flashes on startup, with transparent lyric editor
+									background when custom backgrounds or gradients are enabled.
 								</Text>
 								<Text size="2">
-									• <b>Universal External Link Handling:</b> Unified desktop and web URL opening across community dashboards, creator profiles, and guides via a cross-platform opener.
+									• <b>Universal External Link Handling:</b> Unified desktop and
+									web URL opening across community dashboards, creator profiles,
+									and guides via a cross-platform opener.
 								</Text>
 							</Flex>
 						</Box>
@@ -133,28 +240,53 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Preserve Audio Pitch on Slow Playback:</b> Retained native audio pitch through Web Audio routing when slowing down audio playback with Preserve Pitch enabled, allowing accurate syllable synchronization at 0.75x and 0.5x speeds without dropping pitch octaves.
+									• <b>Preserve Audio Pitch on Slow Playback:</b> Retained
+									native audio pitch through Web Audio routing when slowing down
+									audio playback with Preserve Pitch enabled, allowing accurate
+									syllable synchronization at 0.75x and 0.5x speeds without
+									dropping pitch octaves.
 								</Text>
 								<Text size="2">
-									• <b>Direct Spotify Track ID &amp; Link Importer:</b> Enhanced Apple Music TTML importer to directly accept raw Spotify track IDs, protocol-less URLs (<code>open.spotify.com/track/...</code>), URIs (<code>spotify:track:...</code>), and links with query parameters, immediately switching to "Fetch TTML".
+									• <b>Direct Spotify Track ID &amp; Link Importer:</b> Enhanced
+									Apple Music TTML importer to directly accept raw Spotify track
+									IDs, protocol-less URLs (
+									<code>open.spotify.com/track/...</code>), URIs (
+									<code>spotify:track:...</code>), and links with query
+									parameters, immediately switching to "Fetch TTML".
 								</Text>
 								<Text size="2">
-									• <b>Missing Track Error Handling:</b> Added clear error reporting and toast alerts (<code>No song found for this Spotify ID</code>) when querying invalid or non-existent track IDs.
+									• <b>Missing Track Error Handling:</b> Added clear error
+									reporting and toast alerts (
+									<code>No song found for this Spotify ID</code>) when querying
+									invalid or non-existent track IDs.
 								</Text>
 								<Text size="2">
-									• <b>Cloud Accounts &amp; Modern UI Polish:</b> Added user profile statistics, direct web dashboard navigation, aligned Cloud modal styling with the TTML Checklist aesthetics, and modernized app branding assets and app icons.
+									• <b>Cloud Accounts &amp; Modern UI Polish:</b> Added user
+									profile statistics, direct web dashboard navigation, aligned
+									Cloud modal styling with the TTML Checklist aesthetics, and
+									modernized app branding assets and app icons.
 								</Text>
 								<Text size="2">
-									• <b>Community Leaderboard &amp; Statistics Dashboard:</b> Launched public community statistics web dashboard (<code>ttml.bobjoerules.com/#stats</code>) tracking global uploads, top lyric creators, total timed lines, and user profile pages (<code>#user=UID</code>).
+									• <b>Community Leaderboard &amp; Statistics Dashboard:</b>{" "}
+									Launched public community statistics web dashboard (
+									<code>ttml.bobjoerules.com/#stats</code>) tracking global
+									uploads, top lyric creators, total timed lines, and user
+									profile pages (<code>#user=UID</code>).
 								</Text>
 								<Text size="2">
-									• <b>TTML Video Generator (Beta):</b> Introduced experimental Python video generation tool for rendering syllable-timed TTML lyrics into animated preview videos.
+									• <b>TTML Video Generator (Beta):</b> Introduced experimental
+									Python video generation tool for rendering syllable-timed TTML
+									lyrics into animated preview videos.
 								</Text>
 								<Text size="2">
-									• <b>Auto Segment Timing &amp; Playhead Sync:</b> Added segment-aware syllable timing shortcuts and playhead synchronization during sync mode.
+									• <b>Auto Segment Timing &amp; Playhead Sync:</b> Added
+									segment-aware syllable timing shortcuts and playhead
+									synchronization during sync mode.
 								</Text>
 								<Text size="2">
-									• <b>Custom Appearance &amp; Font Selection:</b> Expanded background gradient presets, custom background image loading, and granular font customization options.
+									• <b>Custom Appearance &amp; Font Selection:</b> Expanded
+									background gradient presets, custom background image loading,
+									and granular font customization options.
 								</Text>
 							</Flex>
 						</Box>
@@ -173,14 +305,15 @@ export function ChangelogDialog() {
 									navigation, case sensitivity, whole-word matching, regular
 									expression support, multi-field scope filtering (lyrics,
 									translations, romanizations), single replacements, and batch
-									Replace All with full undo/redo integration (<code>Cmd/Ctrl + F</code> / <code>Cmd/Ctrl + H</code>).
+									Replace All with full undo/redo integration (
+									<code>Cmd/Ctrl + F</code> / <code>Cmd/Ctrl + H</code>).
 								</Text>
 								<Text size="2">
-									• <b>English Default Localization:</b> Set English (<code>en-US</code>)
-									as the universal default language across the app, root HTML
-									tag, TTML translation export attributes (<code>xml:lang="en"</code>), and
-									all component fallbacks, preventing unwanted translation
-									prompts and untranslated text.
+									• <b>English Default Localization:</b> Set English (
+									<code>en-US</code>) as the universal default language across
+									the app, root HTML tag, TTML translation export attributes (
+									<code>xml:lang="en"</code>), and all component fallbacks,
+									preventing unwanted translation prompts and untranslated text.
 								</Text>
 							</Flex>
 						</Box>
@@ -1105,7 +1238,8 @@ export function ChangelogDialog() {
 								<Text size="2">
 									<strong>Companion Website:</strong> Added the official
 									companion website featuring app showcases, community finished
-									TTML downloads via Firebase, and a dedicated Liquid Player hub.
+									TTML downloads via Firebase, and a dedicated Liquid Player
+									hub.
 								</Text>
 							</Flex>
 						</Box>

@@ -10,4 +10,3 @@ export const checklistShowUploadedToDbAtom = atomWithStorage<boolean>(
 	"checklistShowUploadedToDb",
 	false,
 );
-

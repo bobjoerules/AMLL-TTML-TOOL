@@ -25,6 +25,8 @@ import {
 	PanelRight24Filled,
 } from "@fluentui/react-icons";
 import {
+	keyNextTabAtom,
+	keyPrevTabAtom,
 	keySwitchEditModeAtom,
 	keySwitchPreviewModeAtom,
 	keySwitchSyncModeAtom,
@@ -73,9 +75,29 @@ export const TitleBar: FC = () => {
 		setToolMode(ToolMode.Preview);
 	}, [setToolMode]);
 
+	const onSwitchNextTab = useCallback(() => {
+		if (document.querySelector('[role="dialog"]')) return;
+		setToolMode((current) => {
+			if (current === ToolMode.Edit) return ToolMode.Sync;
+			if (current === ToolMode.Sync) return ToolMode.Preview;
+			return ToolMode.Edit;
+		});
+	}, [setToolMode]);
+
+	const onSwitchPrevTab = useCallback(() => {
+		if (document.querySelector('[role="dialog"]')) return;
+		setToolMode((current) => {
+			if (current === ToolMode.Edit) return ToolMode.Preview;
+			if (current === ToolMode.Preview) return ToolMode.Sync;
+			return ToolMode.Edit;
+		});
+	}, [setToolMode]);
+
 	useKeyBindingAtom(keySwitchEditModeAtom, onSwitchEditMode);
 	useKeyBindingAtom(keySwitchSyncModeAtom, onSwitchSyncMode);
 	useKeyBindingAtom(keySwitchPreviewModeAtom, onSwitchPreviewMode);
+	useKeyBindingAtom(keyNextTabAtom, onSwitchNextTab);
+	useKeyBindingAtom(keyPrevTabAtom, onSwitchPrevTab);
 
 	return (
 		<WindowControls

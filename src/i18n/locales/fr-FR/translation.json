@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Toujours garder le mot en lecture visible",
+			"keepPlayingWordInViewDesc": "Fait défiler automatiquement l'éditeur de paroles pendant la lecture pour que la ligne et le mot actifs restent visibles."
 		},
 		"about": {
 			"update": "Mise à jour",
@@ -473,7 +475,11 @@
 			"palette": "Palette de couleurs",
 			"paletteCustom": "Personnalisée",
 			"gradientEditorDesc": "Une valeur Pos de 0.0 correspond à la partie la plus silencieuse, et 1.0 à la partie la plus forte. Il est recommandé d'utiliser des couleurs plus vives pour les valeurs Pos plus grandes.",
-			"addStop": "Ajouter un point de couleur"
+			"addStop": "Ajouter un point de couleur",
+			"followPlayhead": "Centrer et suivre la tête de lecture",
+			"followPlayheadDesc": "Fait défiler automatiquement le spectrogramme pendant la lecture et la recherche pour maintenir la tête de lecture au centre.",
+			"snapPlayheadToStart": "Aligner au début lorsque la tête de lecture sort de l'écran",
+			"snapPlayheadToStartDesc": "Lorsque la tête de lecture dépasse la zone visible pendant la lecture, réaligne la vue du spectrogramme avec la tête au début."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Erreur lors du traitement de l'audio"
-		}
+		},
+		"autoReloaded": "Audio \"{name}\" chargé automatiquement depuis l'ordinateur"
 	},
 	"audioPanel": {
 		"volume": "Volume",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Afficher uniquement la ligne en cours de synchronisation",
+		"onlyShowSyncLineDesc": "Lors de la synchronisation des paroles, masque les autres lignes et n'affiche que la ligne en cours de synchronisation sur la superposition du spectrogramme.",
+		"followPlayhead": "Suivre la tête de lecture (garder centrée)",
+		"followPlayheadDesc": "Fait défiler automatiquement le spectrogramme pour maintenir la tête de lecture au centre.",
+		"snapPlayheadToStart": "Aligner la tête au début hors de l'écran"
 	},
 	"pwa": {
 		"offlineReady": "Site mis en cache avec succès pour une utilisation hors ligne",

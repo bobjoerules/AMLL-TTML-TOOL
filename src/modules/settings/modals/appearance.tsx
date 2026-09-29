@@ -2017,7 +2017,12 @@ export const SettingsAppearanceTab = () => {
 						</Heading>
 						<Grid columns="3" gap="3">
 							<Card>
-								<Flex direction="column" gap="3" justify="between" style={{ height: "100%" }}>
+								<Flex
+									direction="column"
+									gap="3"
+									justify="between"
+									style={{ height: "100%" }}
+								>
 									<Flex direction="column" gap="1">
 										<Text size="2" weight="bold">
 											{t("settings.appearance.fontScopeApp", "Application UI")}
@@ -2041,7 +2046,12 @@ export const SettingsAppearanceTab = () => {
 							</Card>
 
 							<Card>
-								<Flex direction="column" gap="3" justify="between" style={{ height: "100%" }}>
+								<Flex
+									direction="column"
+									gap="3"
+									justify="between"
+									style={{ height: "100%" }}
+								>
 									<Flex direction="column" gap="1">
 										<Text size="2" weight="bold">
 											{t("settings.appearance.fontScopeEditor", "Lyric Editor")}
@@ -2077,10 +2087,18 @@ export const SettingsAppearanceTab = () => {
 							</Card>
 
 							<Card>
-								<Flex direction="column" gap="3" justify="between" style={{ height: "100%" }}>
+								<Flex
+									direction="column"
+									gap="3"
+									justify="between"
+									style={{ height: "100%" }}
+								>
 									<Flex direction="column" gap="1">
 										<Text size="2" weight="bold">
-											{t("settings.appearance.fontScopePreview", "Lyrics Preview")}
+											{t(
+												"settings.appearance.fontScopePreview",
+												"Lyrics Preview",
+											)}
 										</Text>
 										<Text
 											size="1"

@@ -151,6 +151,20 @@ export const cmdSwitchPreviewMode = registerCommand(
 	"View",
 );
 
+export const cmdNextTab = registerCommand(
+	"nextTab",
+	["Tab"],
+	t("settingsDialog.keybindings.nextTab", "Mode Switch - Next Mode / Tab"),
+	"View",
+);
+
+export const cmdPrevTab = registerCommand(
+	"prevTab",
+	["Shift", "Tab"],
+	t("settingsDialog.keybindings.prevTab", "Mode Switch - Previous Mode / Tab"),
+	"View",
+);
+
 // =========================================================================================
 //  打轴操作
 // =========================================================================================

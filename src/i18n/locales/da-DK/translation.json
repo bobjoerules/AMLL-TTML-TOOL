@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Hold altid afspillende ord i syne",
+			"keepPlayingWordInViewDesc": "Ruller automatisk teksteditoren under afspilning for at holde den aktive linje og ord synlige."
 		},
 		"about": {
 			"update": "Opdatering",
@@ -473,7 +475,11 @@
 			"palette": "Farvepalet",
 			"paletteCustom": "Brugerdefineret",
 			"gradientEditorDesc": "En Pos-værdi på 0.0 svarer til den roligste del, og 1.0 svarer til den højeste del. Det anbefales at bruge lysere farver for større Pos-værdier.",
-			"addStop": "Tilføj farvepunkt"
+			"addStop": "Tilføj farvepunkt",
+			"followPlayhead": "Centrer og følg afspilningshovedet",
+			"followPlayheadDesc": "Ruller automatisk spektrogrammet under afspilning for at holde afspilningshovedet i midten.",
+			"snapPlayheadToStart": "Fastgør til start, når afspilningshovedet forlader visningen",
+			"snapPlayheadToStartDesc": "Når afspilningshovedet bevæger sig ud af det synlige område, rulles spektrogrammet automatisk med hovedet ved starten."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Fejl ved behandling af lyd"
-		}
+		},
+		"autoReloaded": "Lyd \"{name}\" blev automatisk indlæst fra computeren"
 	},
 	"audioPanel": {
 		"volume": "Lydstyrke",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Vis kun linje under synkronisering",
+		"onlyShowSyncLineDesc": "Skjuler andre linjer under synkronisering og viser kun den aktive linje.",
+		"followPlayhead": "Følg afspilningshoved (hold centreret)",
+		"followPlayheadDesc": "Ruller spektrogrammet under afspilning for at holde hovedet i midten.",
+		"snapPlayheadToStart": "Fastgør afspilningshoved til start uden for skærmen"
 	},
 	"pwa": {
 		"offlineReady": "Websted succesfuldt cachet til offline brug",

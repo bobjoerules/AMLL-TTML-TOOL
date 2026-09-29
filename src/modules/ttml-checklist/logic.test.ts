@@ -139,7 +139,9 @@ describe("TTML checklist", () => {
 				},
 			],
 		};
-		expect(isTTML100PercentCompleted(completeWithIgnoredLine as any)).toBe(true);
+		expect(isTTML100PercentCompleted(completeWithIgnoredLine as any)).toBe(
+			true,
+		);
 
 		// Line-synced lyric (no individual word timings, but valid line timings)
 		const lineSyncedComplete = {
@@ -448,7 +450,9 @@ describe("TTML checklist", () => {
 		expect(res.importedCount).toBe(1);
 		expect(res.entries).toHaveLength(3);
 
-		const cruelSummer = res.entries.find((e) => e.song.includes("Cruel Summer"));
+		const cruelSummer = res.entries.find((e) =>
+			e.song.includes("Cruel Summer"),
+		);
 		expect(cruelSummer).toBeDefined();
 		expect(cruelSummer?.completed).toBe(true);
 		expect(cruelSummer?.status).toBe("completed");

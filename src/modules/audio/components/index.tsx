@@ -12,9 +12,11 @@
 import {
 	ChevronDownFilled,
 	ChevronUpFilled,
+	ClockRegular,
 	MusicNote2Filled,
 	PauseFilled,
 	PlayFilled,
+	SettingsFilled,
 } from "@fluentui/react-icons";
 import {
 	Box,
@@ -25,15 +27,21 @@ import {
 	HoverCard,
 	IconButton,
 	Inset,
+	Separator,
 	Slider,
 	Switch,
 	Text,
 	Tooltip,
 } from "@radix-ui/themes";
-import { useAtom, useAtomValue, useStore } from "jotai";
+import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { type FC, memo, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import {
+	settingsDialogAtom,
+	settingsTabAtom,
+	timeShiftPreviewActiveAtom,
+} from "$/states/dialogs.ts";
 import { useFileOpener } from "$/hooks/useFileOpener";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import { AudioSlider } from "$/modules/audio/components/AudioSlider";
@@ -129,6 +137,11 @@ export const AudioControls: FC = memo(() => {
 	const currentDuration = useAtomValue(currentDurationAtom);
 	const [audioPlaying, setAudioPlaying] = useAtom(audioPlayingAtom);
 	const [volume, setVolume] = useAtom(volumeAtom);
+	const [timeShiftActive, setTimeShiftActive] = useAtom(
+		timeShiftPreviewActiveAtom,
+	);
+	const setSettingsOpen = useSetAtom(settingsDialogAtom);
+	const setSettingsTab = useSetAtom(settingsTabAtom);
 	const { openFile } = useFileOpener();
 	const { t } = useTranslation();
 
@@ -226,7 +239,12 @@ export const AudioControls: FC = memo(() => {
 				<Flex align="center" px="2" gapX="2">
 					<HoverCard.Root>
 						<HoverCard.Trigger>
-							<IconButton my="2" variant="soft" onClick={onLoadMusic} title={t("audioPanel.openAudioFile", "Open Local Audio File")}>
+							<IconButton
+								my="2"
+								variant="soft"
+								onClick={onLoadMusic}
+								title={t("audioPanel.openAudioFile", "Open Local Audio File")}
+							>
 								<MusicNote2Filled />
 							</IconButton>
 						</HoverCard.Trigger>
@@ -270,6 +288,37 @@ export const AudioControls: FC = memo(() => {
 										{preservesPitch ? "ON" : "OFF"}
 									</Text>
 								</Grid>
+								<Separator size="4" my="2" />
+								<Flex gap="2" width="100%">
+									<Button
+										size="1"
+										variant={timeShiftActive ? "solid" : "soft"}
+										color={timeShiftActive ? undefined : "gray"}
+										style={{ flex: 1, cursor: "pointer" }}
+										onClick={() => {
+											setTimeShiftActive((prev) => !prev);
+											if (!spectrogramVisible) setSpectrogramVisible(true);
+										}}
+										title={t("timeShiftDialog.title", "Time Shift")}
+									>
+										<ClockRegular />
+										{t("timeShiftDialog.title", "Time Shift")}
+									</Button>
+									<Button
+										size="1"
+										variant="soft"
+										color="gray"
+										style={{ flex: 1, cursor: "pointer" }}
+										onClick={() => {
+											setSettingsTab("audio");
+											setSettingsOpen(true);
+										}}
+										title={t("spectrogram.settings", "Spectrogram Settings")}
+									>
+										<SettingsFilled />
+										{t("spectrogram.settings", "Spectrogram Settings")}
+									</Button>
+								</Flex>
 								<Button
 									size="1"
 									variant="soft"

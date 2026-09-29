@@ -48,6 +48,7 @@ import {
 	timeStretchDialogAtom,
 	ttmlChecklistDialogAtom,
 } from "$/states/dialogs.ts";
+import { grammarCheckDialogAtom } from "$/modules/lyric-editor/modals/GrammarCheckDialog.tsx";
 import {
 	keyAutoSegmentAtom,
 	keyDeleteSelectionAtom,
@@ -106,6 +107,7 @@ export const useTopMenuActions = () => {
 	const setTimeShiftDialog = useSetAtom(timeShiftDialogAtom);
 	const setTimeStretchDialog = useSetAtom(timeStretchDialogAtom);
 	const setTTMLChecklistDialog = useSetAtom(ttmlChecklistDialogAtom);
+	const setGrammarCheckDialog = useSetAtom(grammarCheckDialogAtom);
 	const setSpotMatchDialog = useSetAtom(spotMatchDialogAtom);
 	const { openFile } = useFileOpener();
 	const setProjectId = useSetAtom(projectIdAtom);
@@ -413,6 +415,10 @@ export const useTopMenuActions = () => {
 	const onOpenTTMLChecklist = useCallback(() => {
 		setTTMLChecklistDialog(true);
 	}, [setTTMLChecklistDialog]);
+
+	const onOpenGrammarCheck = useCallback(() => {
+		setGrammarCheckDialog(true);
+	}, [setGrammarCheckDialog]);
 
 	const onOpenStatsAndProfiles = useCallback(async () => {
 		await openExternal("https://ttml.bobjoerules.com/#stats");
@@ -772,6 +778,7 @@ export const useTopMenuActions = () => {
 		onAutoDuetBySinger,
 		onOpenLatencyTest,
 		onOpenTTMLChecklist,
+		onOpenGrammarCheck,
 		onOpenStatsAndProfiles,
 		onOpenSpotMatch,
 		onOpenGitHub,

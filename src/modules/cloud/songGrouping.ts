@@ -245,7 +245,9 @@ export function groupCloudTTMLs(cloudList: CloudTTMLMetadata[]): SongGroup[] {
 		);
 		const latest = versions[0];
 		const isPublic = versions.some((v) => v.publishedToCommunity);
-		const isCompleted = versions.some((v) => v.finished || v.publishedToCommunity);
+		const isCompleted = versions.some(
+			(v) => v.finished || v.publishedToCommunity,
+		);
 		const coverArt =
 			versions.find((v) => v.coverArt)?.coverArt || latest.coverArt;
 		const maxLines = Math.max(...versions.map((v) => v.lineCount || 0));

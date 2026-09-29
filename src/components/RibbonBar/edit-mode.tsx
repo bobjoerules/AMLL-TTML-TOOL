@@ -44,10 +44,8 @@ import {
 	Notebook24Regular,
 	LayoutRowThree24Regular,
 	LayoutColumnThree24Regular,
-	Wrench24Regular,
 	Settings24Regular,
 	DocumentAdd16Regular,
-	DocumentCheckmark16Regular,
 	Sparkle16Regular,
 	Play16Regular,
 	Stop16Regular,
@@ -103,23 +101,6 @@ import { buildLineRomanization, getPhoneticSyllables } from "$/utils/phonetic";
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
 import { RibbonSyncProgressWidget } from "./sync-mode.tsx";
-
-const GrammarCheckButton = () => {
-	const { t } = useTranslation();
-	const store = useStore();
-	return (
-		<Button
-			onClick={() => {
-				store.set(grammarCheckDialogAtom, true);
-			}}
-		>
-			<Flex gap="1" align="center">
-				<DocumentCheckmark16Regular />
-				{t("ribbonBar.editMode.grammarCheck", "Grammar Check")}
-			</Flex>
-		</Button>
-	);
-};
 
 const MULTIPLE_VALUES = Symbol("multiple-values");
 
@@ -1766,21 +1747,7 @@ export const EditModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 					<AuxiliaryDisplayField />
 				</RibbonSection>
 			)}
-			{showAdvanced && (
-				<RibbonSection
-					label={
-						<Flex gap="1" align="center">
-							<Wrench24Regular />
-							{t("ribbonBar.editMode.tools", "Check")}
-						</Flex>
-					}
-					isSidebar={isSidebar}
-				>
-					<Flex gap="2" direction="column" align="center">
-						<GrammarCheckButton />
-					</Flex>
-				</RibbonSection>
-			)}
+
 			<RibbonSection
 				label={
 					<Flex gap="1" align="center">

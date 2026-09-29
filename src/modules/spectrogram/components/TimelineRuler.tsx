@@ -40,6 +40,21 @@ export const TimelineRuler = forwardRef<
 >(({ zoom, duration, containerWidth, onSeek }, ref) => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const lastScrollLeft = useRef(0);
+	const colorsRef = useRef({ textColor: "#888888", lineColor: "#444444" });
+
+	const updateColors = useCallback(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+		const styles = getComputedStyle(canvas);
+		colorsRef.current = {
+			textColor: styles.getPropertyValue("--gray-11").trim() || "#888888",
+			lineColor: styles.getPropertyValue("--gray-9").trim() || "#444444",
+		};
+	}, []);
+
+	useEffect(() => {
+		updateColors();
+	}, [updateColors, containerWidth]);
 
 	const drawRuler = useCallback(
 		(scrollLeft: number) => {
@@ -57,15 +72,11 @@ export const TimelineRuler = forwardRef<
 			const ctx = canvas.getContext("2d");
 			if (!ctx) return;
 
-			ctx.scale(dpr, dpr);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			ctx.clearRect(0, 0, containerWidth, RULER_HEIGHT);
 
-			const styles = getComputedStyle(canvas);
-			const textColor = styles.getPropertyValue("--gray-11").trim();
-			const lineColor = styles.getPropertyValue("--gray-9").trim();
-
-			ctx.fillStyle = textColor;
-			ctx.strokeStyle = lineColor;
+			ctx.fillStyle = colorsRef.current.textColor;
+			ctx.strokeStyle = colorsRef.current.lineColor;
 			ctx.textAlign = "center";
 
 			const { major, minor } = getTickInterval(zoom);

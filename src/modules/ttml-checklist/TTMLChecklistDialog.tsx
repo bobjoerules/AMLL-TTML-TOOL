@@ -59,7 +59,11 @@ import { getProgressBadgeColor } from "$/components/TopMenu/HeaderFileInfo";
 import { extractSpotifyTrackId } from "$/modules/apple-ttml/api/client";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import { audioCoverArtAtom } from "$/modules/audio/states";
-import { downloadCloudAudio, loadTTMLFromCloud } from "$/modules/cloud/ttmlStorage";
+import {
+	downloadCloudAudio,
+	loadTTMLFromCloud,
+} from "$/modules/cloud/ttmlStorage";
+import { tryReloadAudioFromComputer } from "$/modules/audio/utils/autoReloadAudio";
 import {
 	GeniusApi,
 	GeniusResolver,
@@ -1505,6 +1509,7 @@ export const TTMLChecklistDialog = () => {
 				);
 				await openFile(file);
 
+				let audioLoaded = false;
 				if (cloudDoc.audioUrl) {
 					try {
 						toast.info(
@@ -1522,9 +1527,18 @@ export const TTMLChecklistDialog = () => {
 							type: audioBlob.type || "audio/mpeg",
 						});
 						await audioEngine.loadMusic(audioFile);
+						audioLoaded = true;
 					} catch (audioErr) {
 						console.warn("Checklist cloud audio auto-load failed:", audioErr);
 					}
+				}
+
+				if (!audioLoaded) {
+					void tryReloadAudioFromComputer({
+						audioFileName: cloudDoc.audioFileName,
+						title: cloudDoc.title,
+						artist: cloudDoc.artist,
+					});
 				}
 
 				toast.success(

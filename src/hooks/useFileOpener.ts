@@ -1,5 +1,5 @@
 /**
- * @description 处理打开文件的逻辑
+ * @description Handles file opening logic
  */
 
 import {
@@ -133,6 +133,9 @@ export const useFileOpener = () => {
 										type: "audio/flac",
 									},
 								);
+								if ((file as any).path) {
+									(flacFile as any).path = (file as any).path;
+								}
 								await audioEngine.loadMusic(flacFile);
 								toast.success(
 									t("dialog.mp3Conversion.success", "Conversion successful"),
@@ -190,6 +193,9 @@ export const useFileOpener = () => {
 										type: "audio/flac",
 									},
 								);
+								if ((file as any).path) {
+									(flacFile as any).path = (file as any).path;
+								}
 								await audioEngine.loadMusic(flacFile);
 								toast.success(
 									t("dialog.mp3Conversion.success", "Conversion successful"),
@@ -293,9 +299,9 @@ export const useFileOpener = () => {
 
 	const openFile = useCallback(
 		/**
-		 * 打开文件
+		 * Open file
 		 * @param file
-		 * @param forceExt 可选参数，用于强制指定解析方式，不传入则从文件后缀名推断
+		 * @param forceExt Optional parameter to force parser format, otherwise inferred from file extension
 		 */
 		(file: File, forceExt?: string) => {
 			const run = () => performOpenFile(file, forceExt);

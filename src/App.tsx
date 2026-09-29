@@ -417,14 +417,23 @@ function App() {
 		if (vSelection === "rgba(56, 189, 248, 0.3)") {
 			setVSelection("");
 		}
-		const defaultThemeMigrated = localStorage.getItem("amll-theme-grayscale-v1");
+		const defaultThemeMigrated = localStorage.getItem(
+			"amll-theme-grayscale-v1",
+		);
 		if (!defaultThemeMigrated) {
 			localStorage.setItem("amll-theme-grayscale-v1", "true");
 			if (accentColor === "red") {
 				setAccentColor("gray");
 			}
 		}
-	}, [vActiveLine, vSelection, setVActiveLine, setVSelection, accentColor, setAccentColor]);
+	}, [
+		vActiveLine,
+		vSelection,
+		setVActiveLine,
+		setVSelection,
+		accentColor,
+		setAccentColor,
+	]);
 
 	const boykisserMode = useAtomValue(boykisserModeAtom);
 	const [boykisserUnlocked, setBoykisserUnlocked] = useAtom(
@@ -511,13 +520,41 @@ function App() {
 			if (match) {
 				const fontName = match[1];
 				const SYSTEM_NAMES = [
-					"MiSans", "Inter", "system-ui", "SpicyLyrics", "Arial", "Helvetica",
-					"Helvetica Neue", "Verdana", "Tahoma", "Trebuchet MS", "Impact",
-					"Times New Roman", "Times", "Georgia", "Garamond", "Courier New",
-					"Courier", "Comic Sans MS", "Palatino", "Palatino Linotype", "Bookman",
-					"Bookman Old Style", "Apple System", "Segoe UI", "San Francisco",
-					"SF Pro", "SF Pro Display", "Avenir", "Avenir Next", "Futura",
-					"Optima", "Gill Sans", "Franklin Gothic", "Century Gothic", "Lucida Grande",
+					"MiSans",
+					"Inter",
+					"system-ui",
+					"SpicyLyrics",
+					"Arial",
+					"Helvetica",
+					"Helvetica Neue",
+					"Verdana",
+					"Tahoma",
+					"Trebuchet MS",
+					"Impact",
+					"Times New Roman",
+					"Times",
+					"Georgia",
+					"Garamond",
+					"Courier New",
+					"Courier",
+					"Comic Sans MS",
+					"Palatino",
+					"Palatino Linotype",
+					"Bookman",
+					"Bookman Old Style",
+					"Apple System",
+					"Segoe UI",
+					"San Francisco",
+					"SF Pro",
+					"SF Pro Display",
+					"Avenir",
+					"Avenir Next",
+					"Futura",
+					"Optima",
+					"Gill Sans",
+					"Franklin Gothic",
+					"Century Gothic",
+					"Lucida Grande",
 				];
 				if (
 					!customNames.includes(fontName) &&

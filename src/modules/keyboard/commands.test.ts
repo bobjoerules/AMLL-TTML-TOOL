@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { getDefaultStore } from "jotai";
-import { keySpotMatchAtom, keyTtmlChecklistAtom } from "$/states/keybindings";
-import { cmdSpotMatch, cmdTtmlChecklist } from "./commands";
+import {
+	keyNextTabAtom,
+	keyPrevTabAtom,
+	keySpotMatchAtom,
+	keyTtmlChecklistAtom,
+} from "$/states/keybindings";
+import {
+	cmdNextTab,
+	cmdPrevTab,
+	cmdSpotMatch,
+	cmdTtmlChecklist,
+} from "./commands";
 import { getCommandById } from "./registry";
 
 describe("SpotMatch keybinding", () => {
@@ -41,5 +51,26 @@ describe("TTML Checklist keybinding", () => {
 		const keys = store.get(keyTtmlChecklistAtom);
 		expect(keys).toContain("Shift");
 		expect(keys).toContain("KeyC");
+	});
+});
+
+describe("Mode switch Tab keybindings", () => {
+	it("registers nextTab and prevTab commands", () => {
+		expect(cmdNextTab.id).toBe("nextTab");
+		expect(cmdNextTab.defaultKeys).toEqual(["Tab"]);
+		expect(cmdNextTab.category).toBe("View");
+
+		expect(cmdPrevTab.id).toBe("prevTab");
+		expect(cmdPrevTab.defaultKeys).toEqual(["Shift", "Tab"]);
+		expect(cmdPrevTab.category).toBe("View");
+
+		expect(getCommandById("nextTab")).toBeDefined();
+		expect(getCommandById("prevTab")).toBeDefined();
+	});
+
+	it("provides default keybinding atoms for Tab switching", () => {
+		const store = getDefaultStore();
+		expect(store.get(keyNextTabAtom)).toEqual(["Tab"]);
+		expect(store.get(keyPrevTabAtom)).toEqual(["Shift", "Tab"]);
 	});
 });

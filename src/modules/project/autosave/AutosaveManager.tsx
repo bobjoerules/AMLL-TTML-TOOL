@@ -7,10 +7,16 @@ import {
 	autosaveLimitAtom,
 } from "$/modules/settings/states";
 import {
+	loadedAudioAtom,
+	loadedAudioFileNameAtom,
+	loadedAudioPathAtom,
+} from "$/modules/audio/states";
+import {
 	isDirtyAtom,
 	lastSavedTimeAtom,
 	lyricLinesAtom,
 	projectIdAtom,
+	saveFileNameAtom,
 	SaveStatus,
 	saveStatusAtom,
 } from "$/states/main";
@@ -23,6 +29,10 @@ export const AutosaveManager = () => {
 	const limit = useAtomValue(autosaveLimitAtom);
 	const intervalMinutes = useAtomValue(autosaveIntervalAtom);
 	const projectId = useAtomValue(projectIdAtom);
+	const saveFileName = useAtomValue(saveFileNameAtom);
+	const loadedAudioFileName = useAtomValue(loadedAudioFileNameAtom);
+	const loadedAudioPath = useAtomValue(loadedAudioPathAtom);
+	const loadedAudio = useAtomValue(loadedAudioAtom);
 
 	const setSaveStatus = useSetAtom(saveStatusAtom);
 	const setLastSavedTime = useSetAtom(lastSavedTimeAtom);
@@ -52,6 +62,12 @@ export const AutosaveManager = () => {
 					lyricLines,
 					limit,
 					intervalMinutes * 60 * 1000,
+					{
+						saveFileName,
+						audioFileName: loadedAudioFileName,
+						audioPath: loadedAudioPath,
+						audioBlob: loadedAudio && loadedAudio.size > 0 ? loadedAudio : null,
+					},
 				)
 					.then(() => {
 						setSaveStatus(SaveStatus.Saved);
@@ -73,6 +89,10 @@ export const AutosaveManager = () => {
 		enabled,
 		limit,
 		projectId,
+		saveFileName,
+		loadedAudioFileName,
+		loadedAudioPath,
+		loadedAudio,
 		setSaveStatus,
 		setLastSavedTime,
 		intervalMinutes,

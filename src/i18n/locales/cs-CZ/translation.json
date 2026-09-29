@@ -274,7 +274,9 @@
 			"customBackgroundBlur": "Blur Radius",
 			"customBackgroundBrightness": "Brightness",
 			"customBackgroundEnabled": "Background set",
-			"customBackgroundManage": "Settings"
+			"customBackgroundManage": "Settings",
+			"keepPlayingWordInView": "Vždy udržovat přehrávané slovo v zobrazení",
+			"keepPlayingWordInViewDesc": "Během přehrávání automaticky posouvá editor textu, aby byl aktivní řádek a slovo stále viditelné."
 		},
 		"about": {
 			"update": "Aktualizace",
@@ -473,7 +475,11 @@
 			"palette": "Barevná paleta",
 			"paletteCustom": "Vlastní",
 			"gradientEditorDesc": "Hodnota Pos 0.0 odpovídá nejtišší části a 1.0 nejhlasitější části. Doporučuje se používat jasnější barvy pro větší hodnoty Pos.",
-			"addStop": "Přidat barevný bod"
+			"addStop": "Přidat barevný bod",
+			"followPlayhead": "Vystředit a sledovat přehrávací hlavu",
+			"followPlayheadDesc": "Automaticky posouvá spektrogram během přehrávání a posunu, aby byla hlava uprostřed rámu.",
+			"snapPlayheadToStart": "Zarovnat na začátek při opuštění zobrazení",
+			"snapPlayheadToStartDesc": "Když se přehrávací hlava dostane mimo viditelnou oblast, automaticky zarovná spektrogram s hlavou na začátku."
 		}
 	},
 	"timingOverview": {
@@ -659,7 +665,8 @@
 		},
 		"error": {
 			"workerError": "Chyba při zpracování zvuku"
-		}
+		},
+		"autoReloaded": "Zvuk \"{name}\" byl automaticky načten z počítače"
 	},
 	"audioPanel": {
 		"volume": "Hlasitost",
@@ -1184,7 +1191,12 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"onlyShowSyncLine": "Zobrazit pouze synchronizovaný řádek",
+		"onlyShowSyncLineDesc": "Během synchronizace skryje ostatní řádky a zobrazí pouze právě synchronizovaný řádek na spektrogramu.",
+		"followPlayhead": "Sledovat přehrávací hlavu (střed)",
+		"followPlayheadDesc": "Automaticky posouvá spektrogram, aby zůstala hlava uprostřed.",
+		"snapPlayheadToStart": "Zarovnat hlavu na začátek mimo obrazovku"
 	},
 	"pwa": {
 		"offlineReady": "Stránka úspěšně uložena do mezipaměti pro offline použití",

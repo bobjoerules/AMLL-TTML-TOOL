@@ -193,7 +193,9 @@ export async function saveTTMLToCloud(
 	let isCompleted = Boolean(input.isCompleted);
 	if (!isCompleted && !isPublished && input.rawTTML) {
 		try {
-			const { parseLyric } = await import("$/modules/project/logic/ttml-parser");
+			const { parseLyric } = await import(
+				"$/modules/project/logic/ttml-parser"
+			);
 			const { isTTML100PercentCompleted } = await import(
 				"$/modules/ttml-checklist/logic"
 			);
@@ -264,7 +266,9 @@ export async function saveTTMLToCloud(
 		if (isPublished) {
 			const communityData = { ...metadata, rawTTML: input.rawTTML };
 			await setDoc(finishedDocRef, communityData, { merge: true });
-			await setDoc(publicDocRef, communityData, { merge: true }).catch(() => {});
+			await setDoc(publicDocRef, communityData, { merge: true }).catch(
+				() => {},
+			);
 		} else {
 			await deleteDoc(finishedDocRef).catch(() => {});
 			await deleteDoc(publicDocRef).catch(() => {});
@@ -360,10 +364,10 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 				publishedToCommunity: Boolean(d.publishedToCommunity),
 				finished: Boolean(
 					d.finished ||
-					d.completed ||
-					d.publishedToCommunity ||
-					(Array.isArray(d.tags) &&
-						(d.tags.includes("finished") || d.tags.includes("completed"))),
+						d.completed ||
+						d.publishedToCommunity ||
+						(Array.isArray(d.tags) &&
+							(d.tags.includes("finished") || d.tags.includes("completed"))),
 				),
 			});
 		}
@@ -657,4 +661,3 @@ export async function batchSaveTTMLsToCloud(
 
 	return { successful, failed, errors };
 }
-

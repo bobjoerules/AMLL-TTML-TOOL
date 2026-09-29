@@ -17,11 +17,13 @@ import {
 	cmdMovePrevWordAndPlay,
 	cmdNewFile,
 	cmdNewWindow,
+	cmdNextTab,
 	cmdOpenFile,
 	cmdPlaybackRateDown,
 	cmdPlaybackRateReset,
 	cmdPlaybackRateUp,
 	cmdPlayPause,
+	cmdPrevTab,
 	cmdRedo,
 	cmdReplace,
 	cmdSaveFile,
@@ -79,6 +81,8 @@ export const keyToggleDuetAtom = cmdToggleDuet.atom;
 export const keySwitchEditModeAtom = cmdSwitchEditMode.atom;
 export const keySwitchSyncModeAtom = cmdSwitchSyncMode.atom;
 export const keySwitchPreviewModeAtom = cmdSwitchPreviewMode.atom;
+export const keyNextTabAtom = cmdNextTab.atom;
+export const keyPrevTabAtom = cmdPrevTab.atom;
 
 export const keyMoveNextWordAtom = cmdMoveNextWord.atom;
 export const keyMovePrevWordAtom = cmdMovePrevWord.atom;

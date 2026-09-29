@@ -152,15 +152,9 @@ export function getBaseSongTitle(title: string): string {
 		.replace(/[）］】」』〉》〕｝]/g, ")");
 
 	// 1. Remove parenthetical feature descriptions: (feat. ...), (with ...), etc.
-	t = t.replace(
-		/\s*\((?:feat\.?|ft\.?|featuring|with)\s+[^)]+\)/gi,
-		"",
-	);
+	t = t.replace(/\s*\((?:feat\.?|ft\.?|featuring|with)\s+[^)]+\)/gi, "");
 	// 2. Remove dash features: - feat. ... or - with ...
-	t = t.replace(
-		/\s*[-–—~〜]\s*(?:feat\.?|ft\.?|featuring|with)\s+.*$/gi,
-		"",
-	);
+	t = t.replace(/\s*[-–—~〜]\s*(?:feat\.?|ft\.?|featuring|with)\s+.*$/gi, "");
 	// 3. Remove trailing feat. ... / ft. ...
 	t = t.replace(/\s+(?:feat\.?|ft\.?|featuring|with)\s+.*$/gi, "");
 
@@ -201,7 +195,9 @@ export function extractArtistTokens(artist?: string): {
 
 	const cleanRaw = artist.trim().replace(/^[Tt]he\s+/, "");
 	const rawTokens = cleanRaw
-		.split(/[\/,;+&xX]|\s+(?:and|with|feat\.?|ft\.?|featuring|vs\.?|pres\.?)\s+/i)
+		.split(
+			/[\/,;+&xX]|\s+(?:and|with|feat\.?|ft\.?|featuring|vs\.?|pres\.?)\s+/i,
+		)
 		.map((t) => normalizeSongKey(t))
 		.filter((t) => t.length > 0);
 
@@ -267,7 +263,10 @@ export function areArtistsCompatible(
 	for (const tA of tokensA.all) {
 		if (tA.length >= 3) {
 			for (const tB of tokensB.all) {
-				if (tB.length >= 3 && (tA === tB || tA.includes(tB) || tB.includes(tA))) {
+				if (
+					tB.length >= 3 &&
+					(tA === tB || tA.includes(tB) || tB.includes(tA))
+				) {
 					return true;
 				}
 			}
@@ -423,8 +422,9 @@ export function deduplicateChecklistEntries(
 			cloudMap.set(entry.cloudDocId, index);
 		}
 		const spotId =
-			(entry.source === "spotify" && entry.sourceId ? String(entry.sourceId) : null) ||
-			extractSpotifyTrackId(entry.sourceUrl);
+			(entry.source === "spotify" && entry.sourceId
+				? String(entry.sourceId)
+				: null) || extractSpotifyTrackId(entry.sourceUrl);
 		if (spotId) {
 			spotifyMap.set(spotId, index);
 		}
@@ -464,8 +464,9 @@ export function deduplicateChecklistEntries(
 		// 2. Direct Spotify ID match
 		if (existingIndex === -1) {
 			const spotId =
-				(entry.source === "spotify" && entry.sourceId ? String(entry.sourceId) : null) ||
-				extractSpotifyTrackId(entry.sourceUrl);
+				(entry.source === "spotify" && entry.sourceId
+					? String(entry.sourceId)
+					: null) || extractSpotifyTrackId(entry.sourceUrl);
 			if (spotId && spotifyMap.has(spotId)) {
 				existingIndex = spotifyMap.get(spotId)!;
 			}
@@ -615,7 +616,7 @@ export function createChecklistEntry(
 		cloudDocId: input.cloudDocId?.trim() || undefined,
 		cloudAudioUrl: input.cloudAudioUrl?.trim() || undefined,
 		notes: input.notes?.trim() ?? "",
-		completed: input.completed ?? (input.status === "completed"),
+		completed: input.completed ?? input.status === "completed",
 		status: input.status,
 		...(input.uploadedToDatabase ? { uploadedToDatabase: true } : {}),
 		...(input.favorite ? { favorite: true } : {}),
@@ -902,7 +903,7 @@ export function setChecklistEntryCompleted(
 						...entry,
 						completed,
 						status: completed ? "completed" : undefined,
-				  }
+					}
 				: entry,
 		),
 	);

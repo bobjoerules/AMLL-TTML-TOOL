@@ -32,3 +32,11 @@ export const getSuggestedTtmlFileName = (
 		fileName: `${baseName}.ttml`,
 	};
 };
+
+export const formatProjectFileName = (name: string): string => {
+	const sanitized = name.replace(/[/\\?%*:|"<>]/g, "-").trim();
+	if (!sanitized) return "lyric.ttml";
+	return sanitized.toLowerCase().endsWith(".ttml")
+		? sanitized
+		: `${sanitized}.ttml`;
+};
