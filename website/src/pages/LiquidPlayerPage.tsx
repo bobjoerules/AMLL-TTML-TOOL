@@ -23,7 +23,25 @@ const LIQUID_PLAYER_GALLERY: LiquidPlayerGalleryItem[] = [
     id: 'now-playing-screen',
     title: 'Now Playing Screen',
     subtitle: 'Real-time Spotify playback sync, scrubbable seek bar, full remote controls, and syllable-synchronized lyrics.',
-    src: '/images/liquid-player/IMG_1455.PNG',
+    src: '/images/liquid-player/Now playing.PNG',
+  },
+  {
+    id: 'rainbow-lyrics',
+    title: 'Rainbow Lyric Colors',
+    subtitle: 'Dynamic multi-color gradient presets where each lyric line smoothly transitions through vibrant rainbow hues.',
+    src: '/images/liquid-player/Rainbow Lyric Color.PNG',
+  },
+  {
+    id: 'lyric-color-settings',
+    title: 'Lyric Color Settings',
+    subtitle: 'Comprehensive customization for custom color palettes, multi-voice agent assignments, and adaptive appearance.',
+    src: '/images/liquid-player/Lyric color settings.PNG',
+  },
+  {
+    id: 'library-screen',
+    title: 'Music Library',
+    subtitle: 'Instant access to recent playback history, saved tracks, and seamless lyrics discovery.',
+    src: '/images/liquid-player/Library.PNG',
   },
 ];
 
@@ -67,11 +85,11 @@ export const LiquidPlayerPage: React.FC = () => {
 
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'stretch',
-            flexWrap: 'wrap',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: 24,
+            maxWidth: 1200,
+            margin: '0 auto',
           }}
         >
           {LIQUID_PLAYER_GALLERY.map((item) => (
@@ -79,8 +97,6 @@ export const LiquidPlayerPage: React.FC = () => {
               key={item.id}
               className="glass-panel"
               style={{
-                width: '100%',
-                maxWidth: '420px',
                 padding: 20,
                 cursor: 'pointer',
                 overflow: 'hidden',

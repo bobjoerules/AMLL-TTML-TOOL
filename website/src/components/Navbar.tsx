@@ -40,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
             <img
               src="/logo.svg"
               alt="AMLL TTML Tool Logo"
-              style={{ width: 32, height: 32, objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(250, 45, 72, 0.4))' }}
+              style={{ width: 32, height: 32, objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.25))' }}
             />
             <span className="nav-brand-title">AMLL TTML Tool</span>
           </div>
