@@ -13,6 +13,7 @@ import {
 import {
 	CenterHorizontal24Regular,
 	EyeTrackingOff24Regular,
+	LayoutRowTwoSplitBottom24Regular,
 	NextFrame24Regular,
 	Target24Regular,
 } from "@fluentui/react-icons";
@@ -24,6 +25,7 @@ import {
 	predefinedPalettes,
 	selectedPaletteIdAtom,
 	spectrogramFftSizeAtom,
+	spectrogramFullWidthAtom,
 	spectrogramHeightAtom,
 	spectrogramOnlyShowSyncLineAtom,
 	spectrogramPlayheadTrackingModeAtom,
@@ -32,6 +34,9 @@ import {
 
 export const SettingsSpectrogramTab = () => {
 	const { t } = useTranslation();
+	const [spectrogramFullWidth, setSpectrogramFullWidth] = useAtom(
+		spectrogramFullWidthAtom,
+	);
 	const [selectedPaletteId, setSelectedPaletteId] = useAtom(
 		selectedPaletteIdAtom,
 	);
@@ -98,6 +103,36 @@ export const SettingsSpectrogramTab = () => {
 
 	return (
 		<Flex direction="column" gap="4">
+			<Card>
+				<Text as="label">
+					<Flex gap="3" align="center">
+						<LayoutRowTwoSplitBottom24Regular />
+						<Box flexGrow="1">
+							<Flex gap="2" align="center" justify="between">
+								<Flex direction="column" gap="1">
+									<Text>
+										{t(
+											"spectrogram.fullWidth",
+											"Full-Width Spectrogram & Timeline",
+										)}
+									</Text>
+									<Text size="1" color="gray">
+										{t(
+											"spectrogram.fullWidthDesc",
+											"Make preview panel not take up full height so the spectrogram uses the full window width.",
+										)}
+									</Text>
+								</Flex>
+								<Switch
+									checked={spectrogramFullWidth}
+									onCheckedChange={setSpectrogramFullWidth}
+								/>
+							</Flex>
+						</Box>
+					</Flex>
+				</Text>
+			</Card>
+
 			<Card>
 				<Text as="label">
 					<Flex gap="3" align="center">

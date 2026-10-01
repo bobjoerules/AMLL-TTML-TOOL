@@ -178,3 +178,8 @@ export const spectrogramSelectionAtom = atom<{
 	start: number;
 	end: number;
 } | null>(null);
+
+export const spectrogramFullWidthAtom = atomWithStorage<boolean>(
+	"settings_spectrogramFullWidth",
+	false,
+);

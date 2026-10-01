@@ -108,6 +108,7 @@ import {
 	MAX_UI_SCALE,
 	MIN_UI_SCALE,
 	uiScaleAtom,
+	spectrogramFullWidthAtom,
 } from "$/modules/settings/states/index.ts";
 import styles from "./App.module.css";
 import DarkThemeDetector from "./components/DarkThemeDetector";
@@ -140,6 +141,7 @@ import {
 	isDirtyAtom,
 	isGlobalFileDraggingAtom,
 	lyricLinesAtom,
+	projectIdentityAtom,
 	showPreviewPanelAtom,
 	ToolMode,
 	toolModeAtom,
@@ -338,6 +340,20 @@ function App() {
 	const isDarkTheme = useAtomValue(isDarkThemeAtom);
 	const legacyDarkTheme = useAtomValue(legacyDarkThemeAtom);
 	const toolMode = useAtomValue(toolModeAtom);
+	const projectIdentity = useAtomValue(projectIdentityAtom);
+
+	useEffect(() => {
+		if (
+			projectIdentity &&
+			!projectIdentity.isUntitled &&
+			projectIdentity.displayName
+		) {
+			document.title = `${projectIdentity.displayName} — AMLL TTML Tool`;
+		} else {
+			document.title =
+				"AMLL TTML Tool — Apple Music Syllable TTML Lyrics Editor";
+		}
+	}, [projectIdentity]);
 	const [previewFullscreen, setPreviewFullscreen] = useAtom(
 		previewFullscreenAtom,
 	);
@@ -409,6 +425,7 @@ function App() {
 	const vBackdropBlur = useAtomValue(advBackdropBlurAtom);
 	const appLayoutOrder = useAtomValue(appLayoutOrderAtom);
 	const vRibbonPosition = useAtomValue(vRibbonPositionAtom);
+	const spectrogramFullWidth = useAtomValue(spectrogramFullWidthAtom);
 
 	useEffect(() => {
 		if (vActiveLine === "rgba(56, 189, 248, 0.2)") {
@@ -1305,126 +1322,8 @@ function App() {
 					<DarkThemeDetector />
 					<Flex direction="column" height="100vh">
 						{!isPreviewFullscreen && <TitleBar key="titlebar" />}
-						<Flex direction="row" flexGrow="1" overflow="hidden" minHeight="0">
-							<Flex
-								direction="column"
-								flexGrow="1"
-								minWidth="0"
-								overflow="hidden"
-								height="100%"
-							>
-								{appLayoutOrder.map((id) => {
-									if (id === "titlebar") return null;
-									if (
-										id === "ribbonbar" &&
-										!isPreviewFullscreen &&
-										(vRibbonPosition === "top" || vRibbonPosition === "bottom")
-									) {
-										return (
-											<RibbonBar key="ribbonbar" position={vRibbonPosition} />
-										);
-									}
-									if (id === "editor") {
-										const editorContent = (
-											<Box
-												flexGrow="1"
-												overflow="hidden"
-												key="editor-content"
-												style={{
-													backgroundColor: hasCustomBackground
-														? "transparent"
-														: "var(--editor-bg, transparent)",
-												}}
-											>
-												<Flex height="100%" overflow="hidden">
-													<Box flexGrow="1" minWidth="0" overflow="hidden">
-														<AnimatePresence mode="wait">
-															{toolMode !== ToolMode.Preview && (
-																<SuspensePlaceHolder key={toolMode}>
-																	<motion.div
-																		layout="position"
-																		style={{
-																			height: "100%",
-																			maxHeight: "100%",
-																			overflowY: "hidden",
-																		}}
-																		initial={{ opacity: 0 }}
-																		animate={{ opacity: 1 }}
-																		exit={{ opacity: 0 }}
-																	>
-																		<LyricLinesView key={toolMode} />
-																	</motion.div>
-																</SuspensePlaceHolder>
-															)}
-															{toolMode === ToolMode.Preview && (
-																<SuspensePlaceHolder key="preview-switcher">
-																	<Box
-																		height="100%"
-																		key="preview-switcher"
-																		p="0"
-																		asChild
-																	>
-																		<motion.div
-																			layout="position"
-																			initial={{ opacity: 0 }}
-																			animate={{ opacity: 1 }}
-																			exit={{ opacity: 0 }}
-																		>
-																			<PreviewModeSwitcher />
-																		</motion.div>
-																	</Box>
-																</SuspensePlaceHolder>
-															)}
-														</AnimatePresence>
-													</Box>
-												</Flex>
-											</Box>
-										);
-
-										if (
-											!isPreviewFullscreen &&
-											(vRibbonPosition === "left" ||
-												vRibbonPosition === "right")
-										) {
-											return (
-												<Flex
-													direction="row"
-													flexGrow="1"
-													overflow="hidden"
-													key="editor-row"
-												>
-													{vRibbonPosition === "left" && (
-														<RibbonBar isSidebar position="left" />
-													)}
-													{editorContent}
-													{vRibbonPosition === "right" && (
-														<RibbonBar isSidebar position="right" />
-													)}
-												</Flex>
-											);
-										}
-										return editorContent;
-									}
-									if (id === "audio-controls") {
-										return (
-											<Box
-												flexShrink="0"
-												key="audio-controls"
-												style={{
-													display: isPreviewFullscreen ? "none" : undefined,
-												}}
-											>
-												<AudioControls />
-											</Box>
-										);
-									}
-									return null;
-								})}
-								{showTouchSyncPanel && toolMode === ToolMode.Sync && (
-									<TouchSyncPanel />
-								)}
-							</Flex>
-							{previewPanelVisible && (
+						{(() => {
+							const sidePreviewPanelElement = previewPanelVisible ? (
 								<ResizablePanel>
 									<SuspensePlaceHolder key="preview-panel">
 										<motion.div
@@ -1438,8 +1337,185 @@ function App() {
 										</motion.div>
 									</SuspensePlaceHolder>
 								</ResizablePanel>
-							)}
-						</Flex>
+							) : null;
+
+							const renderLayoutItem = (id: string) => {
+								if (id === "titlebar") return null;
+								if (
+									id === "ribbonbar" &&
+									!isPreviewFullscreen &&
+									(vRibbonPosition === "top" || vRibbonPosition === "bottom")
+								) {
+									return (
+										<RibbonBar key="ribbonbar" position={vRibbonPosition} />
+									);
+								}
+								if (id === "editor") {
+									const editorContent = (
+										<Box
+											flexGrow="1"
+											minWidth="0"
+											overflow="hidden"
+											key="editor-content"
+											style={{
+												backgroundColor: hasCustomBackground
+													? "transparent"
+													: "var(--editor-bg, transparent)",
+											}}
+										>
+											<Flex height="100%" overflow="hidden">
+												<Box flexGrow="1" minWidth="0" overflow="hidden">
+													<AnimatePresence mode="wait">
+														{toolMode !== ToolMode.Preview && (
+															<SuspensePlaceHolder key={toolMode}>
+																<motion.div
+																	layout="position"
+																	style={{
+																		height: "100%",
+																		maxHeight: "100%",
+																		overflowY: "hidden",
+																	}}
+																	initial={{ opacity: 0 }}
+																	animate={{ opacity: 1 }}
+																	exit={{ opacity: 0 }}
+																>
+																	<LyricLinesView key={toolMode} />
+																</motion.div>
+															</SuspensePlaceHolder>
+														)}
+														{toolMode === ToolMode.Preview && (
+															<SuspensePlaceHolder key="preview-switcher">
+																<Box
+																	height="100%"
+																	key="preview-switcher"
+																	p="0"
+																	asChild
+																>
+																	<motion.div
+																		layout="position"
+																		initial={{ opacity: 0 }}
+																		animate={{ opacity: 1 }}
+																		exit={{ opacity: 0 }}
+																	>
+																		<PreviewModeSwitcher />
+																	</motion.div>
+																</Box>
+															</SuspensePlaceHolder>
+														)}
+													</AnimatePresence>
+												</Box>
+											</Flex>
+										</Box>
+									);
+
+									const renderedEditor =
+										!isPreviewFullscreen &&
+										(vRibbonPosition === "left" ||
+											vRibbonPosition === "right") ? (
+											<Flex
+												direction="row"
+												flexGrow="1"
+												minWidth="0"
+												overflow="hidden"
+												key="editor-row"
+											>
+												{vRibbonPosition === "left" && (
+													<RibbonBar isSidebar position="left" />
+												)}
+												{editorContent}
+												{vRibbonPosition === "right" && (
+													<RibbonBar isSidebar position="right" />
+												)}
+											</Flex>
+										) : (
+											editorContent
+										);
+
+									return renderedEditor;
+								}
+								if (id === "audio-controls") {
+									return (
+										<Box
+											flexShrink="0"
+											key="audio-controls"
+											style={{
+												display: isPreviewFullscreen ? "none" : undefined,
+											}}
+										>
+											<AudioControls />
+										</Box>
+									);
+								}
+								return null;
+							};
+
+							if (spectrogramFullWidth) {
+								const isAudioTop =
+									appLayoutOrder.indexOf("audio-controls") <
+									appLayoutOrder.indexOf("editor");
+
+								const middleRow = (
+									<Flex
+										direction="row"
+										flexGrow="1"
+										overflow="hidden"
+										minHeight="0"
+									>
+										<Flex
+											direction="column"
+											flexGrow="1"
+											minWidth="0"
+											overflow="hidden"
+											height="100%"
+										>
+											{appLayoutOrder
+												.filter((id) => id !== "audio-controls")
+												.map((id) => renderLayoutItem(id))}
+											{showTouchSyncPanel && toolMode === ToolMode.Sync && (
+												<TouchSyncPanel />
+											)}
+										</Flex>
+										{sidePreviewPanelElement}
+									</Flex>
+								);
+
+								return (
+									<Flex
+										direction="column"
+										flexGrow="1"
+										overflow="hidden"
+										minHeight="0"
+									>
+										{isAudioTop && renderLayoutItem("audio-controls")}
+										{middleRow}
+										{!isAudioTop && renderLayoutItem("audio-controls")}
+									</Flex>
+								);
+							}
+
+							return (
+								<Flex
+									direction="row"
+									flexGrow="1"
+									overflow="hidden"
+									minHeight="0"
+								>
+									<Flex
+										direction="column"
+										flexGrow="1"
+										minWidth="0"
+										overflow="hidden"
+										height="100%"
+									>
+										{appLayoutOrder.map((id) => renderLayoutItem(id))}
+										{showTouchSyncPanel && toolMode === ToolMode.Sync && (
+											<TouchSyncPanel />
+										)}
+									</Flex>
+									{sidePreviewPanelElement}
+								</Flex>
+							);
+						})()}
 					</Flex>
 					<Suspense fallback={null}>
 						<Dialogs />

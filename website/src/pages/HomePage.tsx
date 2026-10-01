@@ -141,7 +141,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="btn btn-secondary"
             onClick={() => onNavigate('liquid')}
           >
-            <Flame size={18} color="#ff416c" />
+            <Flame size={18} color="#e4e4e7" />
             <span>Discover Liquid Player</span>
           </button>
         </div>
@@ -233,7 +233,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(244, 63, 94, 0.12)', color: '#fb7185' }}>
+            <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#f4f4f5' }}>
               <Layers size={24} />
             </div>
             <h3 className="feature-title">Apple Music & Spicy Visuals</h3>
@@ -253,7 +253,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(217, 70, 239, 0.12)', color: '#e879f9' }}>
+            <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#d4d4d8' }}>
               <Cloud size={24} />
             </div>
             <h3 className="feature-title">Cloud Storage & Collaboration</h3>
@@ -263,7 +263,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#f472b6' }}>
+            <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#e4e4e7' }}>
               <Radio size={24} />
             </div>
             <h3 className="feature-title">Discord Rich Presence</h3>

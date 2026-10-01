@@ -479,10 +479,26 @@ class AudioEngine extends EventTarget {
 	}
 	set musicPlayBackRate(v: number) {
 		if (this._musicPlayBackRate === v) return;
+		const currentPos = this.musicCurrentTime;
+		const wasPitchShifter = this._pitchShifter !== null;
+		const needsPitchShifter = this._preservesPitch && Math.abs(v - 1) > 0.001;
+
 		this._musicPlayBackRate = v;
+
 		if (this._isPlaying && this.musicBuffer) {
-			const currentPos = this.musicCurrentTime;
-			void this.resumeOrSeekMusic(currentPos);
+			this._startOffsetInSeconds = currentPos;
+			this._startTimeInContext = this.ctx.currentTime;
+
+			if (wasPitchShifter !== needsPitchShifter) {
+				void this.resumeOrSeekMusic(currentPos);
+			} else if (needsPitchShifter && this._pitchShifter) {
+				this._pitchShifter.tempo = v;
+			} else if (this._activeSourceNode) {
+				this._activeSourceNode.playbackRate.setValueAtTime(
+					v,
+					this.ctx.currentTime,
+				);
+			}
 		}
 		if (this._audioEl) {
 			this._audioEl.playbackRate = v;
@@ -509,9 +525,18 @@ class AudioEngine extends EventTarget {
 	}
 	set preservesPitch(v: boolean) {
 		if (this._preservesPitch === v) return;
+		const currentPos = this.musicCurrentTime;
+		const wasPitchShifter = this._pitchShifter !== null;
+		const needsPitchShifter =
+			v && Math.abs(this._musicPlayBackRate - 1) > 0.001;
 		this._preservesPitch = v;
-		if (this._isPlaying && this.musicBuffer) {
-			const currentPos = this.musicCurrentTime;
+		if (
+			this._isPlaying &&
+			this.musicBuffer &&
+			wasPitchShifter !== needsPitchShifter
+		) {
+			this._startOffsetInSeconds = currentPos;
+			this._startTimeInContext = this.ctx.currentTime;
 			void this.resumeOrSeekMusic(currentPos);
 		}
 		if (this._audioEl) {

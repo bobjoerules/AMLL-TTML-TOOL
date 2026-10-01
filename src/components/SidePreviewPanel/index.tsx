@@ -9,12 +9,14 @@ import {
 	MusicNote216Regular,
 	Timer16Regular,
 	People16Regular,
+	LayoutRowTwoSplitBottom16Regular,
 } from "@fluentui/react-icons";
 import {
 	PreviewModeType,
 	previewModeTypeAtom,
 	bgFollowsDuetAtom,
 } from "$/modules/settings/states/preview";
+import { spectrogramFullWidthAtom } from "$/modules/spectrogram/states";
 import { showPreviewPanelAtom } from "$/states/main";
 import { PreviewModeSwitcher } from "$/components/PreviewModeSwitcher";
 import styles from "./index.module.css";
@@ -24,6 +26,9 @@ export const SidePreviewPanel = memo(() => {
 	const setShowPreviewPanel = useSetAtom(showPreviewPanelAtom);
 	const [previewModeType, setPreviewModeType] = useAtom(previewModeTypeAtom);
 	const [bgFollowsDuet, setBgFollowsDuet] = useAtom(bgFollowsDuetAtom);
+	const [spectrogramFullWidth, setSpectrogramFullWidth] = useAtom(
+		spectrogramFullWidthAtom,
+	);
 
 	return (
 		<div className={styles.sidePreviewContainer}>
@@ -93,6 +98,22 @@ export const SidePreviewPanel = memo(() => {
 							)}
 						>
 							<People16Regular />
+						</button>
+					</Tooltip>
+
+					<Tooltip
+						content={t("spectrogram.fullWidth", "Full Width Spectrogram")}
+					>
+						<button
+							type="button"
+							className={classNames(
+								styles.toggleButton,
+								spectrogramFullWidth && styles.toggleButtonActive,
+							)}
+							onClick={() => setSpectrogramFullWidth((v) => !v)}
+							aria-label={t("spectrogram.fullWidth", "Full Width Spectrogram")}
+						>
+							<LayoutRowTwoSplitBottom16Regular />
 						</button>
 					</Tooltip>
 

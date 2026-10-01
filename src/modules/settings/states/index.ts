@@ -489,6 +489,8 @@ export const vRibbonPositionAtom = atomWithStorage<
 	"top" | "bottom" | "left" | "right"
 >("vRibbonPosition", "top");
 
+export { spectrogramFullWidthAtom } from "$/modules/spectrogram/states";
+
 export interface AppearancePreset {
 	id: string;
 	name: string;

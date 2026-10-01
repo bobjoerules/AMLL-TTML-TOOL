@@ -506,6 +506,8 @@ export const useTopMenuActions = () => {
 			...prev,
 			open: true,
 			replaceMode: false,
+			focusTarget: "find",
+			focusTrigger: Date.now(),
 		}));
 	}, [setFindReplaceState]);
 
@@ -514,6 +516,8 @@ export const useTopMenuActions = () => {
 			...prev,
 			open: true,
 			replaceMode: true,
+			focusTarget: prev.query ? "replace" : "find",
+			focusTrigger: Date.now(),
 		}));
 	}, [setFindReplaceState]);
 
