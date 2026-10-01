@@ -1,6 +1,7 @@
 import React from 'react';
-import { Music, Heart, ExternalLink, Flame } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { GithubIcon } from './GithubIcon';
+import { LiquidPlayerIcon } from './LiquidPlayerIcon';
 
 interface FooterProps {
   onSelectTab: (tab: 'home' | 'finished' | 'stats' | 'liquid') => void;
@@ -58,13 +59,13 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
             Repository
           </a>
           <a
-            href="https://github.com/bobjoerules/Spicy-Player"
+            href="https://github.com/bobjoerules/Liquid-Player"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            <Flame size={14} color="#ff416c" />
+            <LiquidPlayerIcon size={14} />
             Liquid Player Repo
           </a>
         </div>
