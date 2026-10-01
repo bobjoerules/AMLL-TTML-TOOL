@@ -16,6 +16,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { GithubIcon } from '../components/GithubIcon';
+import { LiquidPlayerIcon } from '../components/LiquidPlayerIcon';
 
 interface HomePageProps {
   onNavigate: (tab: 'home' | 'finished' | 'liquid') => void;
@@ -141,7 +142,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="btn btn-secondary"
             onClick={() => onNavigate('liquid')}
           >
-            <Flame size={18} color="#e4e4e7" />
+            <LiquidPlayerIcon size={18} />
             <span>Discover Liquid Player</span>
           </button>
         </div>
@@ -285,8 +286,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Liquid Player Callout */}
-      <section className="glass-panel" style={{ padding: 48, marginTop: 40, border: '1px solid rgba(255, 65, 108, 0.25)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -50, right: -50, width: 250, height: 250, background: 'radial-gradient(circle, rgba(255, 65, 108, 0.2) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+      <section className="glass-panel" style={{ padding: 48, marginTop: 40, border: '1px solid rgba(255, 255, 255, 0.12)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -50, right: -50, width: 250, height: 250, background: 'radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32 }}>
           <div style={{ maxWidth: 640 }}>
@@ -300,11 +301,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
           <div style={{ display: 'flex', gap: 14 }}>
             <button className="btn btn-liquid" onClick={() => onNavigate('liquid')}>
-              <Flame size={18} />
+              <LiquidPlayerIcon size={18} invert />
               <span>Explore Liquid Player</span>
             </button>
             <a
-              href="https://github.com/bobjoerules/Spicy-Player"
+              href="https://github.com/bobjoerules/Liquid-Player"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary"

@@ -10,6 +10,7 @@ import {
   Laptop
 } from 'lucide-react';
 import { GithubIcon } from '../components/GithubIcon';
+import { LiquidPlayerIcon } from '../components/LiquidPlayerIcon';
 
 interface LiquidPlayerGalleryItem {
   id: string;
@@ -53,7 +54,7 @@ export const LiquidPlayerPage: React.FC = () => {
       {/* Hero Header */}
       <div className="section-header">
         <span className="section-tag section-tag-liquid">
-          <Flame size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+          <LiquidPlayerIcon size={14} style={{ marginRight: 6 }} />
           Interactive Music & Synced Lyrics
         </span>
         <h1 className="section-title">
@@ -65,7 +66,7 @@ export const LiquidPlayerPage: React.FC = () => {
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 28, flexWrap: 'wrap' }}>
           <a
-            href="https://github.com/bobjoerules/Spicy-Player"
+            href="https://github.com/bobjoerules/Liquid-Player"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-liquid"

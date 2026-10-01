@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield, Menu, X, Award } from 'lucide-react';
+import { Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield, Menu, X, Award } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import { GithubIcon } from './GithubIcon';
+import { LiquidPlayerIcon } from './LiquidPlayerIcon';
 import { AuthModal } from './AuthModal';
 import { ProfileModal } from './ProfileModal';
 import { isUserModerator, subscribeToAuth } from '../utils/firebase';
@@ -69,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                   onClick={() => onSelectTab('stats')}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-                    <Award size={15} color="var(--accent-pink)" />
+                    <Award size={15} color="#e4e4e7" />
                     Stats & Profiles
                   </span>
                 </button>
@@ -80,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                   onClick={() => onSelectTab('liquid')}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-                    <Flame size={15} color="#e4e4e7" />
+                    <LiquidPlayerIcon size={15} />
                     Liquid Player
                   </span>
                 </button>
@@ -190,7 +191,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <Award size={16} color="var(--accent-pink)" />
+                  <Award size={16} color="#e4e4e7" />
                   Stats & Profiles
                 </span>
               </button>
@@ -202,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <Flame size={16} color="#e4e4e7" />
+                  <LiquidPlayerIcon size={16} />
                   Liquid Player
                 </span>
               </button>
