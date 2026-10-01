@@ -92,6 +92,7 @@ import {
 	type AppearancePreset,
 	appLayoutOrderAtom,
 	vRibbonPositionAtom,
+	spectrogramFullWidthAtom,
 	legacyDarkThemeAtom,
 	highlightActiveWordAtom,
 	enableSyncGlowAnimationAtom,
@@ -615,6 +616,9 @@ export const SettingsAppearanceTab = () => {
 	const [presets, setPresets] = useAtom(appearancePresetsAtom);
 	const [layoutOrder, setLayoutOrder] = useAtom(appLayoutOrderAtom);
 	const [vRibbonPos, setVRibbonPos] = useAtom(vRibbonPositionAtom);
+	const [spectrogramFullWidth, setSpectrogramFullWidth] = useAtom(
+		spectrogramFullWidthAtom,
+	);
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
 	const [highlightActiveWord, setHighlightActiveWord] = useAtom(
 		highlightActiveWordAtom,
@@ -687,6 +691,7 @@ export const SettingsAppearanceTab = () => {
 				vBackdrop,
 				layoutOrder,
 				vRibbonPos,
+				spectrogramFullWidth,
 				legacyDarkTheme,
 				darkMode,
 			},
@@ -766,6 +771,8 @@ export const SettingsAppearanceTab = () => {
 		if (s.layoutOrder !== undefined && Array.isArray(s.layoutOrder))
 			setLayoutOrder(s.layoutOrder);
 		if (s.vRibbonPos !== undefined) setVRibbonPos(s.vRibbonPos);
+		if (s.spectrogramFullWidth !== undefined)
+			setSpectrogramFullWidth(!!s.spectrogramFullWidth);
 	};
 
 	const handleLoadPreset = (p: AppearancePreset, overrideMode?: DarkMode) => {
@@ -2692,6 +2699,27 @@ export const SettingsAppearanceTab = () => {
 											)}
 										</Text>
 									)}
+								</Flex>
+
+								<Flex align="center" justify="between" mt="3">
+									<Flex direction="column" gap="1">
+										<Text size="2" weight="bold">
+											{t(
+												"settings.appearance.layout.fullWidthSpectrogram",
+												"Full Width Spectrogram",
+											)}
+										</Text>
+										<Text size="1" color="gray">
+											{t(
+												"settings.appearance.layout.fullWidthSpectrogramDesc",
+												"Spectrogram spans the full bottom width, docking the preview panel above it.",
+											)}
+										</Text>
+									</Flex>
+									<Switch
+										checked={spectrogramFullWidth}
+										onCheckedChange={setSpectrogramFullWidth}
+									/>
 								</Flex>
 							</Flex>
 						</Card>

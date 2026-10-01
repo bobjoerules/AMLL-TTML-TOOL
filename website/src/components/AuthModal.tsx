@@ -67,7 +67,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
         <div className="auth-header">
           <div className="auth-icon-wrap">
-            <Lock size={24} color="#fa2d48" />
+            <Lock size={24} color="#e4e4e7" />
           </div>
           <h3>{isSignUp ? 'Create App Account' : 'Firebase Sign In'}</h3>
           <p className="auth-subtitle">

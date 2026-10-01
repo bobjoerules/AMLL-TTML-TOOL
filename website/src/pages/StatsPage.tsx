@@ -149,13 +149,27 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
     );
   }, [profiles, searchQuery]);
 
+  // Dynamic document title & SEO description for selected creator profile
+  useEffect(() => {
+    if (selectedProfile) {
+      document.title = `${selectedProfile.displayName} — Creator Profile | AMLL TTML Tool`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute(
+          'content',
+          `View sync stats and community TTML lyrics created by ${selectedProfile.displayName} on AMLL TTML Tool. ${selectedProfile.totalSongs} songs and ${selectedProfile.totalLines.toLocaleString()} lines timed.`
+        );
+      }
+    }
+  }, [selectedProfile]);
+
   return (
     <div className="container" style={{ padding: '40px 20px 80px', minHeight: '80vh' }}>
       {/* Page Header */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 999, background: 'rgba(250, 45, 72, 0.1)', color: 'var(--accent-pink)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 999, background: 'rgba(255, 255, 255, 0.08)', color: 'var(--accent-pink)', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
               <Award size={14} />
               <span>Community Hub & Creator Ranks</span>
             </div>
@@ -212,7 +226,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
               justifyContent: 'space-between',
               gap: 24,
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'linear-gradient(135deg, rgba(250, 45, 72, 0.08) 0%, rgba(20, 20, 26, 0.7) 100%)',
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(20, 20, 26, 0.7) 100%)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
@@ -225,8 +239,8 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
                     height: 80,
                     borderRadius: '50%',
                     objectFit: 'cover',
-                    border: '3px solid var(--accent-pink)',
-                    boxShadow: '0 0 20px rgba(250, 45, 72, 0.35)',
+                    border: '3px solid rgba(255, 255, 255, 0.35)',
+                    boxShadow: '0 0 20px rgba(255, 255, 255, 0.15)',
                   }}
                 />
               ) : (
@@ -235,14 +249,14 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
                     width: 80,
                     height: 80,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #fa2d48 0%, #a855f7 100%)',
+                    background: 'linear-gradient(135deg, #e4e4e7 0%, #71717a 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 32,
                     fontWeight: 700,
-                    color: '#fff',
-                    boxShadow: '0 0 20px rgba(250, 45, 72, 0.35)',
+                    color: '#09090b',
+                    boxShadow: '0 0 20px rgba(255, 255, 255, 0.15)',
                   }}
                 >
                   {selectedProfile.displayName.charAt(0).toUpperCase()}
@@ -299,7 +313,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
             </div>
 
             <div className="glass-panel" style={{ padding: '20px 24px', borderRadius: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a855f7', marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a1a1aa', marginBottom: 6 }}>
                 <FileText size={18} />
                 <span style={{ fontSize: 13, fontWeight: 600 }}>Lines Synced</span>
               </div>
@@ -442,7 +456,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
               </div>
 
               <div className="glass-panel" style={{ padding: '22px 24px', borderRadius: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a855f7', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#a1a1aa', marginBottom: 8 }}>
                   <Users size={18} />
                   <span style={{ fontSize: 13, fontWeight: 600 }}>Active Creators</span>
                 </div>

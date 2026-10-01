@@ -51,6 +51,50 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.13
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 1, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Full-Width Spectrogram &amp; Docked Preview:</b> Added a
+									layout setting allowing the audio controls and spectrogram to
+									span the full width across the bottom of the window, docking
+									the side preview panel directly above it from the titlebar
+									down to the audio bar.
+								</Text>
+								<Text size="2">
+									• <b>Side Preview Panel Quick Toggle:</b> Added a dedicated
+									quick-toggle button in the Side Preview Panel header toolbar
+									to switch seamlessly between the classic full-height preview
+									and full-width spectrogram layouts.
+								</Text>
+								<Text size="2">
+									• <b>Playback Rate Keybinding Fix:</b> Fixed <code>[</code>{" "}
+									and <code>]</code> keyboard shortcuts so they adjust playback
+									speed without accidentally seeking or jumping playback time.
+								</Text>
+								<Text size="2">
+									• <b>Find &amp; Replace Input Focus Fix:</b> Resolved an issue
+									where typing in the Find field while the Replace field was
+									visible would prematurely jump focus to the Replace input.
+								</Text>
+								<Text size="2">
+									• <b>SEO, Sitemaps &amp; Search Indexing:</b> Added complete
+									search engine metadata, Open Graph tags, sitemaps, and
+									robots.txt for both the web app and website.
+								</Text>
+								<Text size="2">
+									• <b>Grayscale Website Redesign:</b> Updated website styling
+									to a sleek grayscale theme with refined navigation and
+									consistent design accents.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.12
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

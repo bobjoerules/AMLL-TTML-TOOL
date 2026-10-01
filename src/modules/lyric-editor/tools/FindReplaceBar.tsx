@@ -106,10 +106,30 @@ export const FindReplaceBar: FC = () => {
 		}
 	}, [state.open, activeIndex, matches.length, highlightMatch]);
 
+	const wasOpenRef = useRef(false);
+	const lastFocusTriggerRef = useRef<number | undefined>(undefined);
+
 	useEffect(() => {
-		if (state.open) {
+		if (!state.open) {
+			wasOpenRef.current = false;
+			return;
+		}
+
+		const justOpened = !wasOpenRef.current;
+		wasOpenRef.current = true;
+
+		const isNewTrigger =
+			state.focusTrigger !== undefined &&
+			state.focusTrigger !== lastFocusTriggerRef.current;
+		lastFocusTriggerRef.current = state.focusTrigger;
+
+		if (justOpened || isNewTrigger) {
 			requestAnimationFrame(() => {
-				if (state.replaceMode && replaceInputRef.current && state.query) {
+				const shouldFocusReplace =
+					state.focusTarget === "replace" ||
+					(!state.focusTarget && state.replaceMode && state.query);
+
+				if (shouldFocusReplace && replaceInputRef.current) {
 					replaceInputRef.current.focus();
 					replaceInputRef.current.select();
 				} else if (findInputRef.current) {
@@ -118,7 +138,7 @@ export const FindReplaceBar: FC = () => {
 				}
 			});
 		}
-	}, [state.open, state.replaceMode, state.query]);
+	}, [state.open, state.focusTrigger, state.focusTarget]);
 
 	const handleClose = useCallback(() => {
 		setState((prev) => ({ ...prev, open: false }));
@@ -236,7 +256,16 @@ export const FindReplaceBar: FC = () => {
 						placeholder={t("findReplace.findPlaceholder", "Find...")}
 						style={{ width: "100%" }}
 						onKeyDown={(e) => {
-							if (e.key === "Enter") {
+							if (
+								e.key === "Tab" &&
+								!e.shiftKey &&
+								state.replaceMode &&
+								replaceInputRef.current
+							) {
+								e.preventDefault();
+								replaceInputRef.current.focus();
+								replaceInputRef.current.select();
+							} else if (e.key === "Enter") {
 								e.preventDefault();
 								if (e.shiftKey) {
 									goToPrev();
@@ -375,7 +404,11 @@ export const FindReplaceBar: FC = () => {
 							placeholder={t("findReplace.replacePlaceholder", "Replace...")}
 							style={{ width: "100%" }}
 							onKeyDown={(e) => {
-								if (e.key === "Enter") {
+								if (e.key === "Tab" && e.shiftKey && findInputRef.current) {
+									e.preventDefault();
+									findInputRef.current.focus();
+									findInputRef.current.select();
+								} else if (e.key === "Enter") {
 									e.preventDefault();
 									if (e.shiftKey || e.altKey) {
 										handleReplaceAll();

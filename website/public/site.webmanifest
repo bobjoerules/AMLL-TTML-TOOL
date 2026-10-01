@@ -1,0 +1,21 @@
+{
+  "name": "AMLL TTML Tool Community Hub",
+  "short_name": "AMLL Hub",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0b0d",
+  "theme_color": "#08080a",
+  "description": "Browse community Apple Music syllable TTML lyrics, check creator stats, and discover Liquid Player."
+}

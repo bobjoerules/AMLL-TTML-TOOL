@@ -24,6 +24,8 @@ export interface FindReplaceState {
 	useRegex: boolean;
 	scope: "all" | "lyrics" | "translations" | "romanizations";
 	activeMatchIndex: number;
+	focusTarget?: "find" | "replace";
+	focusTrigger?: number;
 }
 
 export const findReplaceStateAtom = atom<FindReplaceState>({

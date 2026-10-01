@@ -170,7 +170,7 @@ export const LiquidPlayerPage: React.FC = () => {
 
         <div className="features-grid">
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(255, 65, 108, 0.12)', color: '#ff416c' }}>
+            <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#f4f4f5' }}>
               <Sparkles size={24} />
             </div>
             <h3 className="feature-title">Syllable-Level Physics Animations</h3>
@@ -180,7 +180,7 @@ export const LiquidPlayerPage: React.FC = () => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(255, 75, 43, 0.12)', color: '#ff4b2b' }}>
+            <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#d4d4d8' }}>
               <Music2 size={24} />
             </div>
             <h3 className="feature-title">Live Spotify Playback Sync</h3>
@@ -190,7 +190,7 @@ export const LiquidPlayerPage: React.FC = () => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(236, 72, 153, 0.12)', color: '#ec4899' }}>
+            <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#e4e4e7' }}>
               <Layers size={24} />
             </div>
             <h3 className="feature-title">Duet-Aware & Multi-Language</h3>
@@ -200,7 +200,7 @@ export const LiquidPlayerPage: React.FC = () => {
           </div>
 
           <div className="glass-panel feature-card">
-            <div className="feature-icon" style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#a855f7' }}>
+            <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#a1a1aa' }}>
               <Laptop size={24} />
             </div>
             <h3 className="feature-title">iOS & macOS Catalyst Support</h3>

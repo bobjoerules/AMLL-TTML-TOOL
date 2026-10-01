@@ -426,7 +426,9 @@
 					"left": "Left",
 					"right": "Right"
 				},
-				"sidebarWarning": "Note: Sidebar mode is experimental and may look different."
+				"sidebarWarning": "Note: Sidebar mode is experimental and may look different.",
+				"fullWidthSpectrogram": "Full-Width Spectrogram",
+				"fullWidthSpectrogramDesc": "Make preview panel not take up full height so the spectrogram uses the full window width."
 			},
 			"fontImportSuccess": "Font imported successfully!",
 			"fontLibrary": "Font Library",
@@ -1412,7 +1414,9 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "Display Height"
+		"height": "Display Height",
+		"fullWidth": "Full-Width Spectrogram & Timeline",
+		"fullWidthDesc": "Make preview panel not take up full height so the spectrogram uses the full window width."
 	},
 	"pwa": {
 		"offlineReady": "Site successfully cached for offline use",

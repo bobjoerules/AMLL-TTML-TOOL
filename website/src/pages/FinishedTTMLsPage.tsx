@@ -432,7 +432,7 @@ export const FinishedTTMLsPage: React.FC = () => {
                       {deletingId === item.id ? (
                         <Loader2 size={16} className="spin" />
                       ) : (
-                        <Trash2 size={16} color="#fa2d48" />
+                        <Trash2 size={16} color="#a1a1aa" />
                       )}
                     </button>
                   )}

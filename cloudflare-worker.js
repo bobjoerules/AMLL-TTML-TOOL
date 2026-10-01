@@ -22,11 +22,16 @@ export default {
 		const url = new URL(request.url);
 		const userAgent = request.headers.get("User-Agent") || "";
 		const isBot =
-			/Discordbot|Twitterbot|facebookexternalhit|Slackbot|LinkedInBot|TelegramBot/i.test(
+			/Discordbot|Twitterbot|facebookexternalhit|Slackbot|LinkedInBot|TelegramBot|WhatsApp|Googlebot|bingbot|yandex|baiduspider|DuckDuckBot|Applebot|Sogou|Exabot|facebot|ia_archiver/i.test(
 				userAgent,
 			);
 
 		const pathname = url.pathname.replace(/\/+$/, "") || "/";
+
+		// 0. Dynamic Sitemap Route (/sitemap.xml)
+		if (pathname === "/sitemap.xml") {
+			return handleDynamicSitemap(request);
+		}
 
 		// 1. Leaderboard / Stats Route (/stats or /leaderboard)
 		if (pathname === "/stats" || pathname === "/leaderboard") {
@@ -248,7 +253,7 @@ async function handleSongEmbed(_request, songId) {
 		const payload = {
 			component: {
 				type: 17,
-				accent_color: 16395592, // #FA2D48
+				accent_color: 0,
 				spoiler: false,
 				components: [
 					{
@@ -296,11 +301,53 @@ async function handleSongEmbed(_request, songId) {
 			},
 		};
 
+		const jsonLd = {
+			"@context": "https://schema.org",
+			"@type": "MusicRecording",
+			name: song.title,
+			byArtist: {
+				"@type": "MusicGroup",
+				name: song.artist,
+			},
+			...(song.album ? { inAlbum: { "@type": "MusicAlbum", name: song.album } } : {}),
+			url: `${SITE_ORIGIN}/song/${encodeURIComponent(song.id)}`,
+			image: song.coverArt || DEFAULT_ICON,
+			...(song.durationMs ? { duration: `PT${Math.round(song.durationMs / 1000)}S` } : {}),
+			recordingOf: {
+				"@type": "MusicComposition",
+				name: song.title,
+				lyricist: {
+					"@type": "Person",
+					name: song.authorName,
+				},
+			},
+		};
+
+		const bodyContent = `
+<header>
+  <nav><a href="${SITE_ORIGIN}/">← AMLL TTML Community Hub</a> | <a href="${SITE_ORIGIN}/finished">Browse Lyrics</a></nav>
+  <h1>${escapeHtml(song.title)} — ${escapeHtml(song.artist)}</h1>
+  ${song.album ? `<p><strong>Album:</strong> ${escapeHtml(song.album)}</p>` : ""}
+</header>
+<main>
+  <p><strong>Synchronization:</strong> ${song.lineCount} timed lines of Apple Music style syllable TTML lyrics.</p>
+  <p><strong>Synchronized by:</strong> <a href="${SITE_ORIGIN}/user/${encodeURIComponent(song.authorUid)}">${escapeHtml(song.authorName)}</a></p>
+  <div style="margin: 24px 0;">
+    <a href="${SITE_ORIGIN}/api/songs/${encodeURIComponent(song.id)}/ttml" style="display: inline-block; padding: 10px 20px; background: #27272a; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">Download TTML Lyrics</a>
+    <a href="${SITE_ORIGIN}/finished" style="display: inline-block; margin-left: 12px; padding: 10px 20px; background: #18181b; color: #fff; text-decoration: none; border-radius: 8px;">View in Library</a>
+    <a href="${EDITOR_ORIGIN}/" style="display: inline-block; margin-left: 12px; padding: 10px 20px; background: #3f3f46; color: #fff; text-decoration: none; border-radius: 8px;">Open Web Editor</a>
+  </div>
+</main>`;
+
 		return renderHtmlResponse({
 			title: `${song.title} — ${song.artist} | AMLL TTML Lyrics`,
 			description: `${song.title} by ${song.artist} — ${song.lineCount} timed lyric lines synchronized by ${song.authorName} on AMLL TTML Tool.`,
 			url: `${SITE_ORIGIN}/song/${encodeURIComponent(song.id)}`,
-			themeColor: "#FA2D48",
+			imageUrl: song.coverArt || DEFAULT_ICON,
+			ogType: "music.song",
+			themeColor: "#18181b",
+			jsonLd,
+			bodyContent,
 			payload,
 		});
 	} catch (err) {
@@ -450,11 +497,36 @@ async function handleStatsEmbed(_request) {
 			},
 		};
 
+		const jsonLd = {
+			"@context": "https://schema.org",
+			"@type": "CollectionPage",
+			name: "Community Leaderboard — AMLL TTML Tool",
+			description: `${songs.length} songs synced across ${creators.length} contributors. View top lyric timing creators.`,
+			url: `${SITE_ORIGIN}/stats`,
+		};
+
+		const bodyContent = `
+<header>
+  <nav><a href="${SITE_ORIGIN}/">← AMLL TTML Community Hub</a> | <a href="${SITE_ORIGIN}/finished">Browse Lyrics</a></nav>
+  <h1>Community Leaderboard & Statistics — AMLL TTML Tool</h1>
+  <p>Live community statistics: <strong>${songs.length}</strong> songs and <strong>${totalLines.toLocaleString()}</strong> lines timed by <strong>${creators.length}</strong> contributors.</p>
+</header>
+<main>
+  <h2>Top Contributors</h2>
+  <ol>
+    ${creators.slice(0, 25).map((c) => `<li><strong><a href="${SITE_ORIGIN}/user/${encodeURIComponent(c.uid)}">${escapeHtml(c.name)}</a></strong> — ${c.songs} songs (${c.lines.toLocaleString()} lines)</li>`).join("\n")}
+  </ol>
+</main>`;
+
 		return renderHtmlResponse({
 			title: "Community Leaderboard — AMLL TTML Tool",
 			description: `${songs.length} songs synced across ${creators.length} contributors. View top lyric timing creators.`,
 			url: `${SITE_ORIGIN}/stats`,
-			themeColor: "#FA2D48",
+			imageUrl: DEFAULT_ICON,
+			ogType: "website",
+			themeColor: "#18181b",
+			jsonLd,
+			bodyContent,
 			payload,
 		});
 	} catch (err) {
@@ -620,11 +692,44 @@ async function handleUserProfileEmbed(_request, uid) {
 			},
 		};
 
+		const jsonLd = {
+			"@context": "https://schema.org",
+			"@type": "ProfilePage",
+			mainEntity: {
+				"@type": "Person",
+				name: displayName,
+				url: `${SITE_ORIGIN}/user/${encodeURIComponent(uid)}`,
+				...(photoURL ? { image: photoURL } : {}),
+				interactionStatistic: [
+					{
+						"@type": "InteractionCounter",
+						interactionType: "https://schema.org/WriteAction",
+						userInteractionCount: totalUserSongs,
+					},
+				],
+			},
+		};
+
+		const bodyContent = `
+<header>
+  <nav><a href="${SITE_ORIGIN}/">← AMLL TTML Community Hub</a> | <a href="${SITE_ORIGIN}/stats">Leaderboard</a></nav>
+  <h1>${escapeHtml(displayName)} — Creator Profile</h1>
+  <p>Rank: <strong>${rankStr}</strong> | Timed: <strong>${totalUserSongs}</strong> songs (<strong>${totalUserLines.toLocaleString()}</strong> lines)</p>
+</header>
+<main>
+  ${latestSong ? `<h2>Latest Contribution</h2><p><strong>${escapeHtml(latestSong.title)}</strong> — ${escapeHtml(latestSong.artist)} (${latestSong.lines} lines)</p>` : ""}
+  <p><a href="${SITE_ORIGIN}/user/${encodeURIComponent(uid)}">View All Contributed Songs on AMLL TTML Tool</a></p>
+</main>`;
+
 		return renderHtmlResponse({
 			title: `${displayName} — Creator Profile`,
 			description: `${displayName} has synchronized ${totalUserSongs} songs and ${totalUserLines.toLocaleString()} lines on AMLL TTML Tool.`,
 			url: `${SITE_ORIGIN}/user/${encodeURIComponent(uid)}`,
+			imageUrl: photoURL || DEFAULT_ICON,
+			ogType: "profile",
 			themeColor: "#18A058",
+			jsonLd,
+			bodyContent,
 			payload,
 		});
 	} catch (err) {
@@ -637,30 +742,55 @@ async function handleUserProfileEmbed(_request, uid) {
 }
 
 /**
- * Renders HTML containing Open Graph fallback meta tags and the Discord Component Embed JSON script
+ * Renders HTML containing Open Graph fallback meta tags, Twitter cards, Schema.org JSON-LD,
+ * semantic fallback HTML for search engines, and the Discord Component Embed JSON script
  */
-function renderHtmlResponse({ title, description, url, themeColor, payload }) {
+function renderHtmlResponse({
+	title,
+	description,
+	url,
+	imageUrl,
+	ogType,
+	themeColor,
+	jsonLd,
+	bodyContent,
+	payload,
+}) {
+	const effectiveImage = imageUrl || DEFAULT_ICON;
 	const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}" />
-  
-  <!-- Open Graph Fallback (Required by Discord) -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="${escapeHtml(url)}" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="AMLL TTML Tool" />
+  <meta property="og:type" content="${escapeHtml(ogType || "website")}" />
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:url" content="${escapeHtml(url)}" />
-  <meta name="theme-color" content="${themeColor || "#000000"}" />
+  <meta property="og:image" content="${escapeHtml(effectiveImage)}" />
+  <meta name="theme-color" content="${themeColor || "#18A058"}" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description)}" />
+  <meta name="twitter:image" content="${escapeHtml(effectiveImage)}" />
+
+  ${jsonLd ? `<!-- Structured Data (Schema.org) -->\n  <script type="application/ld+json">\n${JSON.stringify(jsonLd, null, 2)}\n  </script>` : ""}
 
   <!-- Discord Component Embed Payload -->
   <script id="discord:component-embed" type="application/json">
 ${JSON.stringify(payload, null, 2)}
   </script>
 </head>
-<body>
-  <p>${escapeHtml(description)}</p>
-  <a href="${escapeHtml(url)}">Click here to continue</a>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #111; background-color: #fafafa;">
+  ${bodyContent || `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><p><a href="${escapeHtml(url)}">Click here to view in AMLL TTML Community Hub</a></p>`}
 </body>
 </html>`;
 
@@ -670,6 +800,100 @@ ${JSON.stringify(payload, null, 2)}
 			"Cache-Control": "public, max-age=60, s-maxage=60",
 		},
 	});
+}
+
+/**
+ * Dynamically generates an XML sitemap of all public songs and creator profiles
+ */
+async function handleDynamicSitemap(_request) {
+	try {
+		const songs = await fetchAllPublicSongs({ includeRaw: false });
+		const coreUrls = [
+			{ loc: `${SITE_ORIGIN}/`, priority: "1.0", changefreq: "daily" },
+			{ loc: `${SITE_ORIGIN}/finished`, priority: "0.9", changefreq: "daily" },
+			{ loc: `${SITE_ORIGIN}/stats`, priority: "0.8", changefreq: "daily" },
+			{ loc: `${SITE_ORIGIN}/liquid`, priority: "0.8", changefreq: "weekly" },
+		];
+
+		const songUrls = [];
+		const userSet = new Set();
+
+		for (const song of songs) {
+			if (song.id) {
+				const lastMod = new Date(song.updatedAt || song.createdAt || Date.now())
+					.toISOString()
+					.split("T")[0];
+				songUrls.push({
+					loc: `${SITE_ORIGIN}/song/${encodeURIComponent(song.id)}`,
+					lastmod: lastMod,
+					priority: "0.7",
+					changefreq: "weekly",
+				});
+			}
+			if (song.authorUid && song.authorUid !== "community") {
+				userSet.add(song.authorUid);
+			}
+		}
+
+		const userUrls = Array.from(userSet).map((uid) => ({
+			loc: `${SITE_ORIGIN}/user/${encodeURIComponent(uid)}`,
+			priority: "0.6",
+			changefreq: "weekly",
+		}));
+
+		const allUrls = [...coreUrls, ...songUrls, ...userUrls];
+
+		const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allUrls
+	.map(
+		(u) => `  <url>
+    <loc>${escapeHtml(u.loc)}</loc>${u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : ""}
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`,
+	)
+	.join("\n")}
+</urlset>`;
+
+		return new Response(xml, {
+			headers: {
+				"Content-Type": "application/xml; charset=utf-8",
+				"Cache-Control": "public, max-age=3600, s-maxage=3600",
+			},
+		});
+	} catch (err) {
+		console.error("Dynamic sitemap generation error:", err);
+		const fallbackXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${SITE_ORIGIN}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${SITE_ORIGIN}/finished</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${SITE_ORIGIN}/stats</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${SITE_ORIGIN}/liquid</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>`;
+		return new Response(fallbackXml, {
+			headers: {
+				"Content-Type": "application/xml; charset=utf-8",
+				"Cache-Control": "public, max-age=3600, s-maxage=3600",
+			},
+		});
+	}
 }
 
 function fallbackResponse(title, url) {

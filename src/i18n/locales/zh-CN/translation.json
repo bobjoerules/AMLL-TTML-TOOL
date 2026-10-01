@@ -404,7 +404,9 @@
 					"left": "Left",
 					"right": "Right"
 				},
-				"sidebarWarning": "Note: Sidebar mode is experimental and may look different."
+				"sidebarWarning": "Note: Sidebar mode is experimental and may look different.",
+				"fullWidthSpectrogram": "频谱图全宽显示",
+				"fullWidthSpectrogramDesc": "使侧边预览面板不占用整屏高度，让频谱图横跨窗口全宽。"
 			},
 			"fontImportSuccess": "字体导入成功！",
 			"fontLibrary": "字体库",
@@ -1375,7 +1377,9 @@
 			"2048": "2048 (Better Freq)",
 			"4096": "4096 (High Res)"
 		},
-		"height": "显示高度"
+		"height": "显示高度",
+		"fullWidth": "频谱图全宽显示",
+		"fullWidthDesc": "使侧边预览面板不占用整屏高度，让频谱图横跨窗口全宽。"
 	},
 	"pwa": {
 		"offlineReady": "网站已成功离线缓存，后续可离线访问本网页",

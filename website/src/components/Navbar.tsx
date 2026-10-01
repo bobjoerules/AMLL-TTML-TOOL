@@ -80,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                   onClick={() => onSelectTab('liquid')}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-                    <Flame size={15} color="#ff416c" />
+                    <Flame size={15} color="#e4e4e7" />
                     Liquid Player
                   </span>
                 </button>
@@ -94,9 +94,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary btn-sm nav-desktop-action"
-              style={{ borderColor: 'rgba(250, 45, 72, 0.4)', background: 'rgba(250, 45, 72, 0.1)' }}
+              style={{ borderColor: 'rgba(255, 255, 255, 0.2)', background: 'rgba(255, 255, 255, 0.06)' }}
             >
-              <Globe size={15} color="var(--accent-pink)" />
+              <Globe size={15} color="#f4f4f5" />
               <span>Open in Browser</span>
               <ExternalLink size={12} style={{ opacity: 0.7 }} />
             </a>
@@ -145,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 className="btn btn-secondary btn-sm nav-login-btn"
                 onClick={() => setAuthModalOpen(true)}
               >
-                <LogIn size={15} color="#fa2d48" />
+                <LogIn size={15} color="#e4e4e7" />
                 <span>Sign In</span>
               </button>
             )}
@@ -202,7 +202,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <Flame size={16} color="#ff416c" />
+                  <Flame size={16} color="#e4e4e7" />
                   Liquid Player
                 </span>
               </button>
@@ -218,7 +218,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 className="btn btn-secondary btn-sm nav-mobile-action-btn"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <Globe size={15} color="var(--accent-pink)" />
+                <Globe size={15} color="#f4f4f5" />
                 <span>Open in Browser</span>
                 <ExternalLink size={12} style={{ opacity: 0.7 }} />
               </a>
