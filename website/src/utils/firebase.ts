@@ -289,7 +289,10 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
     try {
       const snap = await getDocs(query(collection(db, "finished_ttmls"), limit(100)));
       snap.forEach((docSnap) => {
-        rawDocs.push(parseTTMLDoc(docSnap.id, docSnap.data()));
+        const data = docSnap.data();
+        if (isTTMLPubliclyOptedIn(data)) {
+          rawDocs.push(parseTTMLDoc(docSnap.id, data));
+        }
       });
     } catch (e) {
       console.warn("Could not read finished_ttmls collection:", e);
@@ -299,7 +302,10 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
     try {
       const snap = await getDocs(query(collection(db, "public_ttmls"), limit(100)));
       snap.forEach((docSnap) => {
-        rawDocs.push(parseTTMLDoc(docSnap.id, docSnap.data()));
+        const data = docSnap.data();
+        if (isTTMLPubliclyOptedIn(data)) {
+          rawDocs.push(parseTTMLDoc(docSnap.id, data));
+        }
       });
     } catch (e) {
       console.warn("Could not read public_ttmls collection:", e);
