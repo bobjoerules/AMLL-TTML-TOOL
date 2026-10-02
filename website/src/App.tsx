@@ -13,7 +13,7 @@ export const App: React.FC = () => {
     const path = window.location.pathname.toLowerCase();
     if (hash.includes('stats') || hash.includes('user=') || path.includes('/stats') || path.includes('/user/')) {
       return 'stats';
-    } else if (hash.includes('finished') || hash.includes('ttmls') || path.includes('/finished')) {
+    } else if (hash.includes('finished') || hash.includes('ttmls') || path.includes('/finished') || path.includes('/song/') || path.includes('/track/') || path.includes('/s/')) {
       return 'finished';
     } else if (hash.includes('liquid') || hash.includes('tinko') || path.includes('/liquid')) {
       return 'liquid';
@@ -44,7 +44,7 @@ export const App: React.FC = () => {
       const activePath = window.location.pathname.toLowerCase();
       if (activePath.startsWith('/stats') || activePath.startsWith('/user/') || activePath.startsWith('/u/')) {
         setCurrentTab('stats');
-      } else if (activePath.startsWith('/finished')) {
+      } else if (activePath.startsWith('/finished') || activePath.startsWith('/song/') || activePath.startsWith('/track/') || activePath.startsWith('/s/')) {
         setCurrentTab('finished');
       } else if (activePath.startsWith('/liquid') || activePath.startsWith('/tinko')) {
         setCurrentTab('liquid');
