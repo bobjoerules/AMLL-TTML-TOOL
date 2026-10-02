@@ -125,7 +125,8 @@ function parseFirestoreSongDoc(doc, { includeRaw = false } = {}) {
 		(doc.updateTime ? new Date(doc.updateTime).getTime() : createdAt);
 
 	const isPublishedExplicit = f.publishedToCommunity?.booleanValue;
-	const publishedToCommunity = isPublishedExplicit !== false;
+	const publishedToCommunity =
+		isPublishedExplicit === true || tags.includes("community");
 
 	const song = {
 		id,
@@ -157,11 +158,77 @@ function parseFirestoreSongDoc(doc, { includeRaw = false } = {}) {
 	return song;
 }
 
+/**
+ * Normalizes title / artist for robust song deduplication
+ */
+function normalizeSongKey(str) {
+	return (str || "")
+		.toLowerCase()
+		.normalize("NFKD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[’'`´"]/g, "")
+		.replace(/&/g, "and")
+		.replace(/[\s\-_.,/\\()[\]{}!?:;+*]/g, "");
+}
+
+function getSongKey(title, artist) {
+	return `${normalizeSongKey(title)}:::${normalizeSongKey(artist)}`;
+}
+
+/**
+ * Deduplicates songs by title and artist, retaining the latest / richest version
+ */
+function deduplicateAndMergeSongs(songs) {
+	const latestBySong = new Map();
+
+	for (const item of songs) {
+		const key = getSongKey(item.title, item.artist);
+		const existing = latestBySong.get(key);
+
+		if (!existing) {
+			latestBySong.set(key, { ...item });
+			continue;
+		}
+
+		const itemTime = item.updatedAt || item.createdAt || 0;
+		const existingTime = existing.updatedAt || existing.createdAt || 0;
+
+		if (itemTime > existingTime) {
+			const merged = { ...item };
+			if (!merged.rawTTML && existing.rawTTML) {
+				merged.rawTTML = existing.rawTTML;
+			}
+			latestBySong.set(key, merged);
+		} else if (itemTime === existingTime) {
+			const hasBetterContent =
+				(item.lineCount || 0) > (existing.lineCount || 0) ||
+				(item.rawTTML?.length || 0) > (existing.rawTTML?.length || 0);
+
+			if (hasBetterContent) {
+				const merged = { ...item };
+				if (!merged.rawTTML && existing.rawTTML) {
+					merged.rawTTML = existing.rawTTML;
+				}
+				latestBySong.set(key, merged);
+			} else if (!existing.rawTTML && item.rawTTML) {
+				existing.rawTTML = item.rawTTML;
+			}
+		} else {
+			if (!existing.rawTTML && item.rawTTML) {
+				existing.rawTTML = item.rawTTML;
+			}
+		}
+	}
+
+	return Array.from(latestBySong.values()).sort(
+		(a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
+	);
+}
 
 /**
  * Fetches all public song documents from finished_ttmls and public_ttmls collections
  */
-async function fetchAllPublicSongs({ includeRaw = false } = {}) {
+async function fetchAllPublicSongs({ includeRaw = false, dedupe = true } = {}) {
 	const [finishedRes, publicRes] = await Promise.all([
 		fetch(`${FIRESTORE_BASE}/finished_ttmls?pageSize=300`, {
 			cf: { cacheTtl: 60, cacheEverything: true },
@@ -175,20 +242,26 @@ async function fetchAllPublicSongs({ includeRaw = false } = {}) {
 			.catch(() => null),
 	]);
 
-	const docsMap = new Map();
+	const docsById = new Map();
 	for (const doc of finishedRes?.documents || []) {
-		if (doc?.name) docsMap.set(doc.name, doc);
+		const id = doc?.name ? doc.name.split("/").pop() : "";
+		if (id) docsById.set(id, doc);
 	}
 	for (const doc of publicRes?.documents || []) {
-		if (doc?.name && !docsMap.has(doc.name)) {
-			docsMap.set(doc.name, doc);
+		const id = doc?.name ? doc.name.split("/").pop() : "";
+		if (id && !docsById.has(id)) {
+			docsById.set(id, doc);
 		}
 	}
 
-	const rawDocs = Array.from(docsMap.values());
-	return rawDocs
+	const rawSongs = Array.from(docsById.values())
 		.map((d) => parseFirestoreSongDoc(d, { includeRaw }))
 		.filter((s) => s.publishedToCommunity);
+
+	if (dedupe) {
+		return deduplicateAndMergeSongs(rawSongs);
+	}
+	return rawSongs;
 }
 
 /**
