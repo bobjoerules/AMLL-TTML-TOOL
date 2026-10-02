@@ -226,28 +226,52 @@ function deduplicateAndMergeSongs(songs) {
 }
 
 /**
+ * Fetches all documents from a Firestore collection, handling pagination
+ */
+async function fetchAllDocumentsInCollection(collectionName) {
+	const allDocs = [];
+	let pageToken = "";
+	const maxPages = 10;
+	let pages = 0;
+
+	while (pages < maxPages) {
+		pages++;
+		const url = `${FIRESTORE_BASE}/${collectionName}?pageSize=300${
+			pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""
+		}`;
+		const res = await fetch(url, {
+			cf: { cacheTtl: 60, cacheEverything: true },
+		})
+			.then((r) => (r.ok ? r.json() : null))
+			.catch(() => null);
+
+		if (res?.documents?.length) {
+			allDocs.push(...res.documents);
+		}
+		if (res?.nextPageToken) {
+			pageToken = res.nextPageToken;
+		} else {
+			break;
+		}
+	}
+	return allDocs;
+}
+
+/**
  * Fetches all public song documents from finished_ttmls and public_ttmls collections
  */
 async function fetchAllPublicSongs({ includeRaw = false, dedupe = true } = {}) {
-	const [finishedRes, publicRes] = await Promise.all([
-		fetch(`${FIRESTORE_BASE}/finished_ttmls?pageSize=300`, {
-			cf: { cacheTtl: 60, cacheEverything: true },
-		})
-			.then((r) => (r.ok ? r.json() : null))
-			.catch(() => null),
-		fetch(`${FIRESTORE_BASE}/public_ttmls?pageSize=300`, {
-			cf: { cacheTtl: 60, cacheEverything: true },
-		})
-			.then((r) => (r.ok ? r.json() : null))
-			.catch(() => null),
+	const [finishedDocs, publicDocs] = await Promise.all([
+		fetchAllDocumentsInCollection("finished_ttmls"),
+		fetchAllDocumentsInCollection("public_ttmls"),
 	]);
 
 	const docsById = new Map();
-	for (const doc of finishedRes?.documents || []) {
+	for (const doc of finishedDocs) {
 		const id = doc?.name ? doc.name.split("/").pop() : "";
 		if (id) docsById.set(id, doc);
 	}
-	for (const doc of publicRes?.documents || []) {
+	for (const doc of publicDocs) {
 		const id = doc?.name ? doc.name.split("/").pop() : "";
 		if (id && !docsById.has(id)) {
 			docsById.set(id, doc);
