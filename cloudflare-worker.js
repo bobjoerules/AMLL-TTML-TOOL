@@ -61,6 +61,13 @@ export default {
 			return handleSongEmbed(request, songId);
 		}
 
+		// 4. Direct TTML Download API (/api/songs/:id/ttml)
+		const apiMatch = pathname.match(/^\/api\/songs\/([^/]+)\/ttml$/);
+		if (apiMatch) {
+			const songId = decodeURIComponent(apiMatch[1]);
+			return handleSongDownload(songId);
+		}
+
 		// Default pass-through to origin or static website
 		return fetch(request);
 	},
@@ -235,6 +242,64 @@ async function fetchPublicSongById(id) {
 	return song;
 }
 
+/**
+ * Fetches user profile map keyed by UID from Firestore
+ */
+async function fetchUserMap() {
+	try {
+		const resp = await fetch(`${FIRESTORE_BASE}/users?pageSize=300`, {
+			cf: { cacheTtl: 60, cacheEverything: true },
+		});
+		if (!resp.ok) return new Map();
+		const data = await resp.json();
+		const map = new Map();
+		for (const doc of data?.documents || []) {
+			const uid = doc?.name ? doc.name.split("/").pop() : "";
+			if (!uid) continue;
+			const f = doc.fields || {};
+			map.set(uid, {
+				uid,
+				displayName: f.displayName?.stringValue || null,
+				photoURL: f.photoURL?.stringValue || null,
+			});
+		}
+		return map;
+	} catch (err) {
+		console.error("fetchUserMap error:", err);
+		return new Map();
+	}
+}
+
+/**
+ * Handles raw TTML download requests
+ */
+async function handleSongDownload(songId) {
+	try {
+		const song = await fetchPublicSongById(songId);
+		if (!song || !song.rawTTML) {
+			return new Response("TTML lyrics not found", {
+				status: 404,
+				headers: { "Content-Type": "text/plain; charset=utf-8" },
+			});
+		}
+		const fileName = `${song.artist} - ${song.title}.ttml`.replace(/[\\/:*?"<>|]/g, "_");
+		return new Response(song.rawTTML, {
+			headers: {
+				"Content-Type": "application/xml; charset=utf-8",
+				"Content-Disposition": `attachment; filename="${encodeURIComponent(fileName)}"`,
+				"Access-Control-Allow-Origin": "*",
+				"Cache-Control": "public, max-age=3600, s-maxage=3600",
+			},
+		});
+	} catch (err) {
+		console.error("Song download error:", err);
+		return new Response("Failed to fetch song TTML", {
+			status: 500,
+			headers: { "Content-Type": "text/plain; charset=utf-8" },
+		});
+	}
+}
+
 
 /* ==========================================================================
    Discord Component Embed Handlers
@@ -253,7 +318,7 @@ async function handleSongEmbed(_request, songId) {
 		const payload = {
 			component: {
 				type: 17,
-				accent_color: 0,
+				accent_color: 16395592, // #FA2D48
 				spoiler: false,
 				components: [
 					{
@@ -333,9 +398,9 @@ async function handleSongEmbed(_request, songId) {
   <p><strong>Synchronization:</strong> ${song.lineCount} timed lines of Apple Music style syllable TTML lyrics.</p>
   <p><strong>Synchronized by:</strong> <a href="${SITE_ORIGIN}/user/${encodeURIComponent(song.authorUid)}">${escapeHtml(song.authorName)}</a></p>
   <div style="margin: 24px 0;">
-    <a href="${SITE_ORIGIN}/api/songs/${encodeURIComponent(song.id)}/ttml" style="display: inline-block; padding: 10px 20px; background: #27272a; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">Download TTML Lyrics</a>
-    <a href="${SITE_ORIGIN}/finished" style="display: inline-block; margin-left: 12px; padding: 10px 20px; background: #18181b; color: #fff; text-decoration: none; border-radius: 8px;">View in Library</a>
-    <a href="${EDITOR_ORIGIN}/" style="display: inline-block; margin-left: 12px; padding: 10px 20px; background: #3f3f46; color: #fff; text-decoration: none; border-radius: 8px;">Open Web Editor</a>
+    <a href="${SITE_ORIGIN}/api/songs/${encodeURIComponent(song.id)}/ttml" style="display: inline-block; padding: 10px 20px; background: #fa2d48; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">Download TTML Lyrics</a>
+    <a href="${SITE_ORIGIN}/finished" style="display: inline-block; margin-left: 12px; padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 8px;">View in Library</a>
+    <a href="${EDITOR_ORIGIN}/" style="display: inline-block; margin-left: 12px; padding: 10px 20px; background: #18a058; color: #fff; text-decoration: none; border-radius: 8px;">Open Web Editor</a>
   </div>
 </main>`;
 
@@ -345,7 +410,7 @@ async function handleSongEmbed(_request, songId) {
 			url: `${SITE_ORIGIN}/song/${encodeURIComponent(song.id)}`,
 			imageUrl: song.coverArt || DEFAULT_ICON,
 			ogType: "music.song",
-			themeColor: "#18181b",
+			themeColor: "#FA2D48",
 			jsonLd,
 			bodyContent,
 			payload,
@@ -417,14 +482,14 @@ async function handleStatsEmbed(_request) {
 			(a, b) => b.songs - a.songs || b.lines - a.lines,
 		);
 		const topCreators = creators.slice(0, 3);
+		const medals = ["🥇", "🥈", "🥉"];
 
 		let leaderboardText = topCreators
 			.map(
 				(c, i) =>
-					`**#${i + 1}** **${escapeDiscordText(c.name)}** — ${c.songs} songs (${c.lines.toLocaleString()} lines)`,
+					`${medals[i]} **${escapeDiscordText(c.name)}** — ${c.songs} songs (${c.lines.toLocaleString()} lines)`,
 			)
 			.join("\n");
-
 		if (!leaderboardText) {
 			leaderboardText =
 				"Community contributions are growing! Be the first to appear on the leaderboard.";
@@ -524,7 +589,7 @@ async function handleStatsEmbed(_request) {
 			url: `${SITE_ORIGIN}/stats`,
 			imageUrl: DEFAULT_ICON,
 			ogType: "website",
-			themeColor: "#18181b",
+			themeColor: "#FA2D48",
 			jsonLd,
 			bodyContent,
 			payload,
