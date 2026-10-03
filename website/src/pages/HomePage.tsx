@@ -301,7 +301,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
           <div style={{ display: 'flex', gap: 14 }}>
             <button className="btn btn-liquid" onClick={() => onNavigate('liquid')}>
-              <LiquidPlayerIcon size={18} invert />
+              <LiquidPlayerIcon size={18} />
               <span>Explore Liquid Player</span>
             </button>
             <a

@@ -27,7 +27,6 @@ export const LiquidPlayerIcon: React.FC<LiquidPlayerIconProps> = ({
         display: 'inline-block',
         verticalAlign: 'middle',
         flexShrink: 0,
-        filter: invert ? 'invert(1)' : undefined,
         ...style,
       }}
     />
