@@ -53,6 +53,17 @@ export const LiquidPlayerPage: React.FC = () => {
     <div className="container" style={{ padding: '60px 24px 100px' }}>
       {/* Hero Header */}
       <div className="section-header">
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+          <img
+            src="/liquid-logo.png"
+            alt="Liquid Player App Icon"
+            style={{
+              width: 84,
+              height: 84,
+              filter: 'drop-shadow(0 12px 32px rgba(0, 0, 0, 0.5))',
+            }}
+          />
+        </div>
         <span className="section-tag section-tag-liquid">
           <LiquidPlayerIcon size={14} style={{ marginRight: 6 }} />
           Interactive Music & Synced Lyrics
