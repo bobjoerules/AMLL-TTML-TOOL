@@ -151,6 +151,16 @@ export const cmdSwitchPreviewMode = registerCommand(
 	"View",
 );
 
+export const cmdPreviewFullscreen = registerCommand(
+	"previewFullscreen",
+	["KeyF"],
+	t(
+		"settingsDialog.keybindings.previewFullscreen",
+		"Preview - Toggle Fullscreen",
+	),
+	"View",
+);
+
 export const cmdNextTab = registerCommand(
 	"nextTab",
 	["Tab"],

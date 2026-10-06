@@ -51,6 +51,64 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.14
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 6, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Kuwo Music Provider &amp; Provider Selection:</b> Added
+									Kuwo Music integration alongside JOOX and QQ Music for
+									fast, high-availability track lookup and direct audio downloads,
+									with selectable provider filtering in the search dialog.
+								</Text>
+								<Text size="2">
+									• <b>Auto-Downloader 30ms Audio Timing Alignment:</b> Automatically
+									compensates for streaming CDN leading silence trimming by offsetting
+									auto-downloaded tracks by 0.03 seconds, ensuring audio starts in
+									exact sync with TTML lyric timestamps while preserving untouched local files.
+								</Text>
+								<Text size="2">
+									• <b>Audio Downloader Beta Indicators:</b> Added <code>[Beta]</code> tags
+									to all audio download progress notifications, download dialog headers,
+									and import toggles across the app.
+								</Text>
+								<Text size="2">
+									• <b>Download Percentage Status:</b> Added real-time progress percentage
+									tracking during in-app audio track downloads.
+								</Text>
+								<Text size="2">
+									• <b>Binary Streaming &amp; IPC Reliability:</b> Optimized Tauri native
+									binary fetching with array buffer conversion, eliminating CORS bottlenecks
+									and download interruptions.
+								</Text>
+								<Text size="2">
+									• <b>Multi-Voice Duet Alignment:</b> Added support for multi-voice
+									singing (odd voices v1, v3, v5 aligned left; even voices v2, v4
+									aligned right) across AMLL and Spicy Lyrics preview modes.
+								</Text>
+								<Text size="2">
+									• <b>English Syllabification Engine Enhancements:</b> Fixed syllable
+									boundaries for compound words with consonant codas (e.g. blindfold,
+									headlights, soundtrack) by repairing phonotactically impossible onsets,
+									and improved language detection accuracy for English lyrics.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Audio Auto-Loading:</b> TTML Checklist now seamlessly
+									loads attached cloud audio, searches local matches, or triggers
+									the online audio downloader when opening songs.
+								</Text>
+								<Text size="2">
+									• <b>Cloud &amp; Leaderboard Improvements:</b> Added Firestore collection
+									pagination for accurate leaderboard statistics, deduplicated profile counts,
+									and fixed direct cloud storage download routes.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.13
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

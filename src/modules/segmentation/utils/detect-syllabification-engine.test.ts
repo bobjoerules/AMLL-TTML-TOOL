@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { LyricLine } from "$/types/ttml";
 import {
 	detectSyllabificationEngine,
+	detectSyllabificationEngineFromText,
 	matchesSavedSyllabificationEngine,
 } from "./detect-syllabification-engine";
 
@@ -56,5 +57,27 @@ describe("detectSyllabificationEngine", () => {
 			false,
 		);
 		expect(matchesSavedSyllabificationEngine([], "prosodic")).toBe(false);
+	});
+
+	it("detects engine directly from raw text string", () => {
+		expect(
+			detectSyllabificationEngineFromText("これは日本語の歌詞です"),
+		).toBe("japanese");
+		expect(
+			detectSyllabificationEngineFromText(
+				"This is a simple English lyric with enough text to detect its language.",
+			),
+		).toBe("prosodic");
+		expect(
+			detectSyllabificationEngineFromText(
+				"[Intro: Travis Scott]\nYeah, yeah\nOoh, ooh\nBaby let it go",
+			),
+		).toBe("prosodic");
+		expect(
+			detectSyllabificationEngineFromText(
+				"Eu não quero mais você aqui comigo agora meu amor",
+			),
+		).toBe("hyphenation-pt");
+		expect(detectSyllabificationEngineFromText("")).toBeUndefined();
 	});
 });

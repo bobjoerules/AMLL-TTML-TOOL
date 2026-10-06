@@ -16,6 +16,35 @@ import {
 } from "$/modules/audio/states/index.ts";
 import { AudioWorkerClient } from "$/modules/audio/workers/audio-worker-client";
 import { saveAudioToCache } from "$/modules/project/autosave/autosave";
+
+export const AUTO_DOWNLOAD_AUDIO_OFFSET_SECONDS = 0.03;
+
+/**
+ * Automatically prepends silence to an AudioBuffer.
+ * Used for auto-downloaded tracks whose pre-roll silence was trimmed by CDN ingestion.
+ */
+export function padAudioBufferStart(
+	ctx: AudioContext,
+	buffer: AudioBuffer,
+	seconds: number,
+): AudioBuffer {
+	if (seconds <= 0) return buffer;
+	const sampleRate = buffer.sampleRate;
+	const padSamples = Math.round(seconds * sampleRate);
+	if (padSamples <= 0) return buffer;
+	const newLength = buffer.length + padSamples;
+	const newBuffer = ctx.createBuffer(
+		buffer.numberOfChannels,
+		newLength,
+		sampleRate,
+	);
+	for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+		const oldData = buffer.getChannelData(channel);
+		const newData = newBuffer.getChannelData(channel);
+		newData.set(oldData, padSamples);
+	}
+	return newBuffer;
+}
 import { projectIdAtom } from "$/states/main.ts";
 import { globalStore } from "$/states/store.ts";
 import { log } from "$/utils/logging";
@@ -218,6 +247,11 @@ class AudioEngine extends EventTarget {
 	private _rawAudioData: ArrayBuffer | null = null;
 	private _needsFreshContext = false;
 	private _lastAudioActivityTime = Date.now();
+	private _isAutoDownloaded = false;
+
+	public get isAutoDownloaded() {
+		return this._isAutoDownloaded;
+	}
 
 	public markNeedsFreshContext() {
 		this._needsFreshContext = true;
@@ -283,9 +317,17 @@ class AudioEngine extends EventTarget {
 		// Always decode a fresh AudioBuffer for the new AudioContext (crucial for macOS WebKit/CoreAudio)
 		if (this._rawAudioData && this._rawAudioData.byteLength > 0) {
 			try {
-				this.musicBuffer = await newCtx.decodeAudioData(
+				let decoded = await newCtx.decodeAudioData(
 					this._rawAudioData.slice(0),
 				);
+				if (this._isAutoDownloaded) {
+					decoded = padAudioBufferStart(
+						newCtx,
+						decoded,
+						AUTO_DOWNLOAD_AUDIO_OFFSET_SECONDS,
+					);
+				}
+				this.musicBuffer = decoded;
 				globalStore.set(audioBufferAtom, this.musicBuffer);
 			} catch (e) {
 				console.warn(
@@ -885,7 +927,30 @@ class AudioEngine extends EventTarget {
 		globalStore.set(audioCoverArtAtom, coverUrl);
 	}
 
-	async loadMusic(src: Blob, isRetry = false): Promise<HTMLAudioElement> {
+	unloadMusic() {
+		this.coverArtRequest++;
+		this.setEmbeddedCoverArt(null);
+		this.pauseMusic();
+		this.musicBuffer = null;
+		this._rawAudioData = null;
+		this._isAutoDownloaded = false;
+		globalStore.set(audioBufferAtom, null);
+		globalStore.set(loadedAudioAtom, new Blob([]));
+		globalStore.set(loadedAudioFileNameAtom, null);
+		globalStore.set(loadedAudioPathAtom, null);
+		this.revokeAudioObjUrl();
+		if (this._audioEl) {
+			this._audioEl.removeAttribute("src");
+			this._audioEl.load();
+		}
+		this.dispatchEvent(new Event("music-unload"));
+	}
+
+	async loadMusic(
+		src: Blob,
+		isRetry = false,
+		isAutoDownloaded?: boolean,
+	): Promise<HTMLAudioElement> {
 		const audioEl = this.audioEl;
 
 		if (!isRetry) {
@@ -904,17 +969,7 @@ class AudioEngine extends EventTarget {
 					// Audio playback is still valid when a format has no readable tags.
 				});
 			if (this.musicBuffer || this._audioEl?.src) {
-				this.pauseMusic();
-				this.musicBuffer = null;
-				this._rawAudioData = null;
-				globalStore.set(audioBufferAtom, null);
-				globalStore.set(loadedAudioAtom, new Blob([]));
-				globalStore.set(loadedAudioFileNameAtom, null);
-				globalStore.set(loadedAudioPathAtom, null);
-				this.revokeAudioObjUrl();
-				audioEl.removeAttribute("src");
-				audioEl.load();
-				this.dispatchEvent(new Event("music-unload"));
+				this.unloadMusic();
 			}
 			this.dispatchEvent(new Event("music-loading"));
 		}
@@ -923,7 +978,10 @@ class AudioEngine extends EventTarget {
 			audioEl.onloadedmetadata = null;
 			audioEl.onerror = null;
 
+			let settled = false;
+
 			const handleError = (errorMsg: string, errorCode?: number) => {
+				if (settled) return;
 				console.warn(
 					`[AudioEngine] Load error. Retry: ${isRetry}. Code: ${errorCode}. Msg: ${errorMsg}`,
 				);
@@ -934,8 +992,12 @@ class AudioEngine extends EventTarget {
 						errorCode === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED);
 
 				if (canRetry) {
+					settled = true;
+					clearTimeout(safetyTimer);
 					this.performTranscodeFallback(src, resolve, reject);
 				} else {
+					settled = true;
+					clearTimeout(safetyTimer);
 					this.dispatchEvent(new Event("music-load-error"));
 					reject(new Error(`Audio load error: ${errorMsg}`));
 				}
@@ -947,11 +1009,28 @@ class AudioEngine extends EventTarget {
 				handleError(msg, error?.code);
 			};
 
-			audioEl.onloadedmetadata = async () => {
+			const finishLoad = async () => {
+				if (settled) return;
+				settled = true;
+				clearTimeout(safetyTimer);
+
 				try {
 					const audioData = await src.arrayBuffer();
 					this._rawAudioData = audioData;
-					this.musicBuffer = await this.ctx.decodeAudioData(audioData.slice(0));
+					let decoded = await this.ctx.decodeAudioData(audioData.slice(0));
+					const autoFlag =
+						isAutoDownloaded ??
+						(src as any).isAutoDownloaded ??
+						false;
+					this._isAutoDownloaded = Boolean(autoFlag);
+					if (this._isAutoDownloaded) {
+						decoded = padAudioBufferStart(
+							this.ctx,
+							decoded,
+							AUTO_DOWNLOAD_AUDIO_OFFSET_SECONDS,
+						);
+					}
+					this.musicBuffer = decoded;
 					globalStore.set(audioBufferAtom, this.musicBuffer);
 					globalStore.set(loadedAudioAtom, src);
 					const fileName = (src as any).name || null;
@@ -965,6 +1044,7 @@ class AudioEngine extends EventTarget {
 						fileName: fileName || "audio",
 						path: filePath,
 						blob: src,
+						isAutoDownloaded: this._isAutoDownloaded,
 					});
 
 					this.setupAudioListeners();
@@ -985,6 +1065,18 @@ class AudioEngine extends EventTarget {
 				}
 			};
 
+			// WebKit off-DOM audio elements sometimes defer onloadedmetadata; proceed with Web Audio directly if deferred
+			const safetyTimer = setTimeout(() => {
+				if (!settled) {
+					console.info("[AudioEngine] onloadedmetadata deferred, proceeding with Web Audio decode...");
+					void finishLoad();
+				}
+			}, 3000);
+
+			audioEl.onloadedmetadata = () => {
+				void finishLoad();
+			};
+
 			this.revokeAudioObjUrl();
 			if (
 				(src as any).path &&
@@ -995,6 +1087,11 @@ class AudioEngine extends EventTarget {
 			} else {
 				this._audioObjUrl = URL.createObjectURL(src);
 				audioEl.src = this._audioObjUrl;
+			}
+			try {
+				audioEl.load();
+			} catch {
+				// ignore
 			}
 		});
 	}
@@ -1007,8 +1104,10 @@ class AudioEngine extends EventTarget {
 		console.log("[AudioEngine] Attempting transcoding fallback...");
 		try {
 			const wavBlob = await this.workerClient.transcodeToWav(src);
-
-			const el = await this.loadMusic(wavBlob, true);
+			if (this._isAutoDownloaded || (src as any).isAutoDownloaded) {
+				(wavBlob as any).isAutoDownloaded = true;
+			}
+			const el = await this.loadMusic(wavBlob, true, this._isAutoDownloaded);
 			resolve(el);
 		} catch (error) {
 			console.error("[AudioEngine] Transcoding fallback failed:", error);

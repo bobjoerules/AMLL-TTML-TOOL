@@ -7,7 +7,7 @@ import {
 	stringifyQrc,
 	stringifyYrc,
 } from "@applemusic-like-lyrics/lyric";
-import { DropdownMenu } from "@radix-ui/themes";
+import { Badge, DropdownMenu, Flex } from "@radix-ui/themes";
 import { useSetAtom, useStore } from "jotai";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -24,6 +24,8 @@ import {
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
 	importFromTextDialogAtom,
+	jooxAudioSearchDialogAtom,
+	jooxImportLyricsDialogAtom,
 	lyricallyImportLyricsDialogAtom,
 } from "$/states/dialogs.ts";
 import { lyricLinesAtom, saveFileNameAtom } from "$/states/main.ts";
@@ -39,6 +41,8 @@ export const ImportExportLyric = () => {
 	const setGeniusImportLyricsDialog = useSetAtom(geniusImportLyricsDialogAtom);
 	const setLyricallyImportDialog = useSetAtom(lyricallyImportLyricsDialogAtom);
 	const setAppleTtmlImportDialog = useSetAtom(appleTtmlImportDialogAtom);
+	const setJooxImportLyricsDialog = useSetAtom(jooxImportLyricsDialogAtom);
+	const setJooxAudioSearch = useSetAtom(jooxAudioSearchDialogAtom);
 	const { openFile } = useFileOpener();
 	const { t } = useTranslation();
 
@@ -199,6 +203,28 @@ export const ImportExportLyric = () => {
 
 					<DropdownMenu.Item onClick={() => setGeniusImportLyricsDialog(true)}>
 						{t("topBar.menu.importLyric.fromGenius", "Import from Genius…")}
+					</DropdownMenu.Item>
+					<DropdownMenu.Item onClick={() => setJooxImportLyricsDialog(true)}>
+						{t("topBar.menu.importLyric.fromJoox", "Import from JOOX Music…")}
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						onClick={() => {
+							const lyricState = store.get(lyricLinesAtom);
+							const title = lyricState.metadata.find((m) => m.key === "title")?.value[0];
+							const artist = lyricState.metadata.find((m) => m.key === "artist")?.value[0];
+							setJooxAudioSearch({
+								open: true,
+								title: title || "",
+								artist: artist || "",
+							});
+						}}
+					>
+						<Flex align="center" justify="between" style={{ width: "100%", gap: "8px" }}>
+							<span>{t("topBar.menu.importAudio.fromJoox", "Download audio…")}</span>
+							<Badge color="orange" size="1" variant="soft">
+								Beta
+							</Badge>
+						</Flex>
 					</DropdownMenu.Item>
 
 					<DropdownMenu.Item onClick={() => onImportLyric("lrc")}>

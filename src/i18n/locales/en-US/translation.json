@@ -40,6 +40,10 @@
 			"appleTtml": {
 				"title": "Apple Music TTML",
 				"description": "Import pre-existing word-timed Apple Music TTML lyrics directly using a Spotify track link or ID."
+			},
+			"joox": {
+				"title": "JOOX Music",
+				"description": "Search and import lyrics with high-quality music audio downloads directly into the app."
 			}
 		}
 	},
@@ -272,6 +276,10 @@
 			"keepPlayingWordInViewDesc": "Automatically scrolls the lyric editor during playback to keep the active line and playing word visible.",
 			"allowConsecutiveBackgroundLines": "Allow consecutive and standalone background vocals",
 			"allowConsecutiveBackgroundLinesDesc": "Export consecutive background vocals together and preserve standalone background vocals for Spicy Lyrics compatibility. Other players may not support this structure.",
+			"autoLoadCloudAudio": "Load audio when opening cloud saves",
+			"autoLoadCloudAudioDesc": "Automatically load attached audio or match local audio files when loading from cloud saves.",
+			"downloadAudioOnLyricImport": "Download audio when importing lyrics",
+			"downloadAudioOnLyricImportDesc": "Automatically search and download matching audio tracks into the app when importing lyrics.",
 			"syncJudgeMode": "Sync Timestamp Judgment Mode",
 			"syncJudgeModeDesc": "Set how timestamps are judged when syncing. Default is 'First key down'.",
 			"syncJudgeModeOptions": {
@@ -454,7 +462,8 @@
 			"timing": "Syncing",
 			"timingHighlight": "Visual Timing Cue (Sync)",
 			"playback": "Playback",
-			"autosave": "Auto Save"
+			"autosave": "Auto Save",
+			"cloud": "Cloud Saves"
 		},
 		"assistant": {
 			"quickFixes": "Quick Fixes (Grammar)",
@@ -624,11 +633,15 @@
 				"fromLRCLIB": "Import from LRCLIB...",
 				"fromLyrically": "Import from Lyrically...",
 				"fromGenius": "Import from Genius…",
+				"fromJoox": "Import from JOOX Music…",
 				"fromLyRiC": "Import from LyRiC file…",
 				"fromESLyRiC": "Import from ESLyRiC file…",
 				"fromQRC": "Import from QRC file…",
 				"fromYRC": "Import from YRC file…",
 				"fromLrcfySylb": "Import from Lyricify Syllable file…"
+			},
+			"importAudio": {
+				"fromJoox": "Download audio from JOOX…"
 			},
 			"exportLyric": {
 				"export": "Export lyrics",
@@ -711,6 +724,7 @@
 			"switchEditMode": "Mode Switch - Switch to Edit Mode",
 			"switchSyncMode": "Mode Switch - Switch to Timing Mode",
 			"switchPreviewMode": "Mode Switch - Switch to Preview Mode",
+			"previewFullscreen": "Preview - Toggle Fullscreen",
 			"nextTab": "Mode Switch - Next Mode / Tab",
 			"prevTab": "Mode Switch - Previous Mode / Tab",
 			"moveNextWord": "Timing - Move to next word",
@@ -871,6 +885,39 @@
 		"notFound": "No results found, please try different keywords",
 		"noResult": "Enter keywords to start searching",
 		"title": "Import Lyric from LRCLIB"
+	},
+	"joox": {
+		"title": "Import Lyrics & Audio from JOOX",
+		"previewTitle": "JOOX — Lyrics & Audio Preview",
+		"searchAudioTitle": "Select Audio from JOOX",
+		"searchAudioDesc": "Pick the exact recording for \"{title}\" to load into the app.",
+		"searchPlaceholder": "Search song title, artist, or paste Spotify link…",
+		"searchPlaceholderWithLink": "Song title, artist, or paste Spotify link…",
+		"searchBtn": "Search",
+		"searching": "Searching JOOX music library…",
+		"downloadAudio": "Download audio into app",
+		"downloadingAudio": "[Beta] Downloading audio for \"{title}\"...",
+		"downloadingAudioProgress": "[Beta] Downloading audio for \"{title}\"… {percent}%",
+		"audioLoaded": "[Beta] Loaded audio for \"{title}\"",
+		"audioNotFound": "Could not find matching audio for \"{title}\" on JOOX",
+		"audioFailed": "Could not download audio: {error}",
+		"audioQuality": "Audio Quality",
+		"useAudio": "Use Audio",
+		"downloading": "Downloading…",
+		"preview": "Preview",
+		"stopPreview": "Stop",
+		"noPreviewAvailable": "No audio preview available for this track.",
+		"previewPlayFailed": "Failed to play preview stream.",
+		"noTracksFound": "No tracks found on JOOX.",
+		"noTracksFoundTip": "Try refining keywords (e.g. title only, or alternate artist spelling).",
+		"enterKeywords": "Enter keywords above to search the JOOX catalog."
+	},
+	"audioSearch": {
+		"dialogTitle": "Select Audio Track",
+		"dialogDesc": "Pick the exact recording for \"{title}\" to load into the app.",
+		"searching": "Searching music catalogs…",
+		"noTracksFound": "No tracks found.",
+		"noTracksFoundTip": "Try switching the source (QQ Music / JOOX) or refining keywords."
 	},
 	"lyricEditor": {
 		"locate": "Locate",
@@ -1428,7 +1475,10 @@
 		"openedSuccessWithAudio": "Loaded \"{title}\" and audio from Cloud",
 		"savedSuccess": "Lyrics saved to Cloud successfully!",
 		"savedWithAudioSuccess": "Lyrics and audio saved to Cloud successfully!",
+		"loadingAudio": "Loading audio for \"{title}\"...",
+		"loadingAudioProgress": "Loading audio for \"{title}\"… {percent}%",
 		"downloadingAudio": "Downloading attached audio...",
+		"downloadingAudioProgress": "Downloading audio for \"{title}\"… {percent}%",
 		"audioDownloadFailed": "Loaded TTML, but could not download attached audio.",
 		"deletedSuccess": "Deleted \"{title}\" from Cloud.",
 		"confirmDelete": "Are you sure you want to delete \"{title}\" from your Cloud library?",

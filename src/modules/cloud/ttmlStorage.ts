@@ -8,8 +8,8 @@ import {
 	orderBy,
 	query,
 	setDoc,
-	updateDoc,
 } from "firebase/firestore";
+import { binaryToBlob } from "$/utils/binaryBlob";
 import { globalStore } from "$/states/store";
 import {
 	getActiveFirebaseConfig,
@@ -429,8 +429,38 @@ export async function loadTTMLFromCloud(
 	}
 
 	const db = getFirebaseFirestore();
-	const docRef = doc(db, "users", targetUid, "ttmls", docId);
-	const docSnap = await getDoc(docRef);
+	let docRef = doc(db, "users", targetUid, "ttmls", docId);
+	let docSnap = await getDoc(docRef);
+
+	// Fallback 1: If targetUid was the current user or passed authorUid but doc was not found,
+	// check if it exists in finished_ttmls or public_ttmls
+	if (!docSnap.exists()) {
+		try {
+			const finishedSnap = await getDoc(doc(db, "finished_ttmls", docId));
+			if (finishedSnap.exists()) {
+				docSnap = finishedSnap;
+			} else {
+				const publicSnap = await getDoc(doc(db, "public_ttmls", docId));
+				if (publicSnap.exists()) {
+					docSnap = publicSnap;
+				}
+			}
+		} catch {
+			// ignore
+		}
+	}
+
+	// Fallback 2: If authorUid was provided and failed, or vice versa, check current user's library
+	if (!docSnap.exists() && user?.uid && targetUid !== user.uid) {
+		try {
+			const userSnap = await getDoc(doc(db, "users", user.uid, "ttmls", docId));
+			if (userSnap.exists()) {
+				docSnap = userSnap;
+			}
+		} catch {
+			// ignore
+		}
+	}
 
 	if (!docSnap.exists()) {
 		throw new Error("The requested cloud TTML document was not found.");
@@ -441,10 +471,11 @@ export async function loadTTMLFromCloud(
 
 	// If rawTTML is not in the parent metadata doc, load the individual song payload subdocument
 	if (!rawTTML) {
+		const ownerUid = d.authorUid || targetUid;
 		const payloadRef = doc(
 			db,
 			"users",
-			targetUid,
+			ownerUid,
 			"ttmls",
 			docId,
 			"payload",
@@ -454,28 +485,30 @@ export async function loadTTMLFromCloud(
 		if (payloadSnap.exists()) {
 			rawTTML = payloadSnap.data().rawTTML || "";
 		}
-	} else if (user && user.uid === targetUid) {
-		// Migrate legacy doc in background so future library lists don't download this song's rawTTML
-		(async () => {
-			try {
-				const payloadRef = doc(
-					db,
-					"users",
-					targetUid,
-					"ttmls",
-					docId,
-					"payload",
-					"content",
-				);
-				await setDoc(payloadRef, {
-					rawTTML,
-					updatedAt: d.updatedAt || Date.now(),
-				});
-				await updateDoc(docRef, { rawTTML: deleteField() });
-			} catch {
-				// ignore
+	}
+
+	// Fallback 3: If still no rawTTML, check finished_ttmls or public_ttmls
+	if (!rawTTML) {
+		try {
+			const finishedSnap = await getDoc(doc(db, "finished_ttmls", docId));
+			if (finishedSnap.exists()) {
+				rawTTML = finishedSnap.data().rawTTML || "";
 			}
-		})();
+		} catch {}
+	}
+	if (!rawTTML) {
+		try {
+			const publicSnap = await getDoc(doc(db, "public_ttmls", docId));
+			if (publicSnap.exists()) {
+				rawTTML = publicSnap.data().rawTTML || "";
+			}
+		} catch {}
+	}
+
+	if (!rawTTML || !rawTTML.trim()) {
+		throw new Error(
+			"Cloud TTML lyrics content is empty or could not be loaded from Cloud.",
+		);
 	}
 
 	return {
@@ -499,61 +532,132 @@ export async function loadTTMLFromCloud(
 }
 
 export async function downloadCloudAudio(
-	audioUrl: string,
+	audioUrl?: string | null,
 	storagePath?: string | null,
 ): Promise<Blob> {
-	const { app } = initFirebase();
-	if (!app) {
-		throw new Error("Firebase app is not initialized.");
-	}
+	const isTauri =
+		typeof window !== "undefined" &&
+		(!!(window as unknown as { __TAURI__?: unknown }).__TAURI__ ||
+			!!(window as unknown as { __TAURI_INTERNALS__?: unknown })
+				.__TAURI_INTERNALS__ ||
+			!!import.meta.env.TAURI_ENV_PLATFORM);
 
-	const { getStorage, ref, getBlob } = await import("firebase/storage");
-	const storage = getStorage(app);
-
-	// 1. If we have a relative storage path (e.g. users/<uid>/audio/<file>)
-	let relPath = storagePath;
-	if (!relPath && audioUrl) {
-		if (audioUrl.includes("/o/")) {
-			const encoded = audioUrl.split("/o/")[1].split("?")[0];
-			relPath = decodeURIComponent(encoded);
-		} else if (audioUrl.startsWith("users/")) {
-			relPath = audioUrl;
-		}
-	}
-
-	if (relPath) {
+	// 1. On desktop (Tauri), use native fetch_binary first (bypasses browser COEP/CORS completely)
+	if (isTauri && audioUrl && audioUrl.startsWith("http")) {
 		try {
-			const storageRef = ref(storage, relPath);
-			const blob = await getBlob(storageRef);
-			return blob;
-		} catch (relErr) {
-			console.warn("getBlob with relative path failed:", relErr);
+			const { invoke } = await import("@tauri-apps/api/core");
+			const raw = await invoke<unknown>("fetch_binary", { url: audioUrl });
+			const blob = binaryToBlob(raw, "audio/mpeg");
+			if (blob && blob.size > 0) {
+				return blob;
+			}
+		} catch (tauriErr) {
+			console.warn("Tauri fetch_binary failed, trying browser fallbacks:", tauriErr);
 		}
 	}
 
-	// 2. If it's a full URL, try ref(storage, audioUrl)
-	if (
-		audioUrl &&
-		(audioUrl.startsWith("http") || audioUrl.startsWith("gs://"))
-	) {
+	// 2. Direct HTTP fetch (works on web browser or localhost)
+	if (audioUrl && audioUrl.startsWith("http")) {
 		try {
-			const storageRef = ref(storage, audioUrl);
-			const blob = await getBlob(storageRef);
-			return blob;
-		} catch (urlErr) {
-			console.warn(
-				"ref(storage, audioUrl) failed, trying fetch fallback:",
-				urlErr,
-			);
+			const res = await fetch(audioUrl, { signal: AbortSignal.timeout(30000) });
+			if (res.ok) {
+				const blob = await res.blob();
+				if (blob.size > 0) {
+					return blob.type && blob.type.startsWith("audio/")
+						? blob
+						: new Blob([blob], { type: "audio/mpeg" });
+				}
+			}
+		} catch (fetchErr) {
+			console.warn("Direct fetch for cloud audio failed, trying storage SDK:", fetchErr);
 		}
 	}
 
-	// 3. Fallback to HTTP fetch
-	const res = await fetch(audioUrl);
-	if (!res.ok) {
-		throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+	// 3. Firebase Storage SDK getBlob / getDownloadURL
+	try {
+		const { app } = initFirebase();
+		if (app) {
+			const { getStorage, ref, getBlob, getDownloadURL } = await import("firebase/storage");
+			const storage = getStorage(app);
+
+			let relPath = storagePath;
+			if (!relPath && audioUrl) {
+				if (audioUrl.includes("/o/")) {
+					const encoded = audioUrl.split("/o/")[1].split("?")[0];
+					relPath = decodeURIComponent(encoded);
+				} else if (audioUrl.startsWith("users/")) {
+					relPath = audioUrl;
+				}
+			}
+
+			if (relPath) {
+				try {
+					const storageRef = ref(storage, relPath);
+					// If in Tauri and direct SDK blob fetch might fail, get download URL and use fetch_binary
+					if (isTauri) {
+						try {
+							const downloadUrl = await getDownloadURL(storageRef);
+							const { invoke } = await import("@tauri-apps/api/core");
+							const raw = await invoke<unknown>("fetch_binary", { url: downloadUrl });
+							const blob = binaryToBlob(raw, "audio/mpeg");
+							if (blob && blob.size > 0) {
+								return blob;
+							}
+						} catch {}
+					}
+
+					const blob = await Promise.race([
+						getBlob(storageRef),
+						new Promise<never>((_, reject) =>
+							setTimeout(
+								() => reject(new Error("Cloud audio download timed out (storage path)")),
+								15000,
+							),
+						),
+					]);
+					if (blob.size > 0) {
+						return blob.type && blob.type.startsWith("audio/")
+							? blob
+							: new Blob([blob], { type: "audio/mpeg" });
+					}
+				} catch (relErr) {
+					console.warn("getBlob with relative path failed:", relErr);
+				}
+			}
+
+			if (
+				audioUrl &&
+				(audioUrl.startsWith("http") || audioUrl.startsWith("gs://"))
+			) {
+				try {
+					const storageRef = ref(storage, audioUrl);
+					const blob = await Promise.race([
+						getBlob(storageRef),
+						new Promise<never>((_, reject) =>
+							setTimeout(
+								() => reject(new Error("Cloud audio download timed out (storage URL)")),
+								15000,
+							),
+						),
+					]);
+					if (blob.size > 0) {
+						return blob.type && blob.type.startsWith("audio/")
+							? blob
+							: new Blob([blob], { type: "audio/mpeg" });
+					}
+				} catch (urlErr) {
+					console.warn(
+						"ref(storage, audioUrl) failed:",
+						urlErr,
+					);
+				}
+			}
+		}
+	} catch (sdkErr) {
+		console.warn("Firebase Storage SDK initialization failed:", sdkErr);
 	}
-	return await res.blob();
+
+	throw new Error("Failed to download cloud audio from any available source");
 }
 
 export async function deleteTTMLFromCloud(docId: string): Promise<void> {

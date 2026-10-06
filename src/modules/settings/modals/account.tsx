@@ -27,12 +27,14 @@ import {
 	Grid,
 	Heading,
 	Separator,
+	Switch,
 	Text,
 	TextField,
 	Tooltip,
 } from "@radix-ui/themes";
 import { openExternal } from "$/utils/openExternal";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { autoLoadCloudAudioAtom } from "$/modules/settings/states";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -67,6 +69,9 @@ export const SettingsAccountTab = memo(() => {
 	const cloudTTMLList = useAtomValue(cloudTTMLListAtom);
 	const setFileManagerOpen = useSetAtom(cloudFileManagerOpenAtom);
 	const setFileManagerTab = useSetAtom(cloudFileManagerInitialTabAtom);
+	const [autoLoadCloudAudio, setAutoLoadCloudAudio] = useAtom(
+		autoLoadCloudAudioAtom,
+	);
 
 	const [isSignUp, setIsSignUp] = useState<boolean>(false);
 	const [email, setEmail] = useState<string>("");
@@ -895,6 +900,36 @@ export const SettingsAccountTab = memo(() => {
 							</Flex>
 						</Button>
 					</Flex>
+
+					<Separator my="2" size="4" />
+
+					<Text as="label">
+						<Flex direction="column" gap="1">
+							<Flex align="center" justify="between" gap="4">
+								<Flex align="center" gap="2">
+									<Text size="2" weight="medium">
+										{t(
+											"settings.common.autoLoadCloudAudio",
+											"Load audio when opening cloud saves",
+										)}
+									</Text>
+									<Badge color="orange" size="1" variant="soft">
+										Beta
+									</Badge>
+								</Flex>
+								<Switch
+									checked={autoLoadCloudAudio}
+									onCheckedChange={setAutoLoadCloudAudio}
+								/>
+							</Flex>
+							<Text size="1" color="gray">
+								{t(
+									"settings.common.autoLoadCloudAudioDesc",
+									"Automatically load attached audio or match local audio files when loading from cloud saves.",
+								)}
+							</Text>
+						</Flex>
+					</Text>
 				</Flex>
 			</Card>
 		</Flex>

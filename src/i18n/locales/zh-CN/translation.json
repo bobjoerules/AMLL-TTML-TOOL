@@ -246,6 +246,10 @@
 			"keepPlayingWordInViewDesc": "在播放时自动滚动歌词编辑器，确保当前播放的行和单词始终在可视区域内。",
 			"allowConsecutiveBackgroundLines": "允许连续及独立的背景歌词",
 			"allowConsecutiveBackgroundLinesDesc": "将连续的背景歌词一起导出，并保留独立的背景歌词以兼容 Spicy Lyrics。其他播放器可能不支持此结构。",
+			"autoLoadCloudAudio": "从云端打开时自动加载音频",
+			"autoLoadCloudAudioDesc": "从云端保存恢复项目时，自动下载关联的云端音频或匹配本地音频文件。",
+			"downloadAudioOnLyricImport": "导入歌词时自动下载音频",
+			"downloadAudioOnLyricImportDesc": "导入歌词时，自动搜索并下载匹配的音频曲目到应用中。",
 			"syncJudgeMode": "同步时间点判定模式",
 			"syncJudgeModeDesc": "设置同步时如何判定时间戳。默认为“按下按键的第一时刻”。",
 			"syncJudgeModeOptions": {
@@ -432,7 +436,8 @@
 			"timing": "同步",
 			"timingHighlight": "视觉对齐提示 (同步)",
 			"playback": "播放",
-			"autosave": "自动保存"
+			"autosave": "自动保存",
+			"cloud": "云端保存"
 		},
 		"assistant": {
 			"quickFixes": "快速修复 (语法)",
@@ -602,11 +607,15 @@
 				"fromLRCLIB": "从 LRCLIB 导入...",
 				"fromLyrically": "从 Lyrically 导入...",
 				"fromGenius": "从 Genius 导入...",
+				"fromJoox": "从 JOOX 音乐导入...",
 				"fromLyRiC": "从 LyRiC 文件导入...",
 				"fromESLyRiC": "从 ESLyRiC 文件导入...",
 				"fromQRC": "从 QRC 文件导入...",
 				"fromYRC": "从 YRC 文件导入...",
 				"fromLrcfySylb": "从 Lyricify Syllable 文件导入..."
+			},
+			"importAudio": {
+				"fromJoox": "从 JOOX 下载音频…"
 			},
 			"exportLyric": {
 				"export": "导出歌词",
@@ -689,6 +698,7 @@
 			"switchEditMode": "切换模式 - 编辑模式",
 			"switchSyncMode": "切换模式 - 对齐模式",
 			"switchPreviewMode": "切换模式 - 预览模式",
+			"previewFullscreen": "预览 - 切换全屏",
 			"nextTab": "切换模式 - 下一个模式/标签页",
 			"prevTab": "切换模式 - 上一个模式/标签页",
 			"moveNextWord": "对齐 - 移动到下一个单词",
@@ -849,6 +859,39 @@
 		"notFound": "未找到结果，请尝试不同的关键词",
 		"noResult": "输入关键词开始搜索",
 		"title": "从 LRCLIB 导入歌词"
+	},
+	"joox": {
+		"title": "从 JOOX 导入歌词和音频",
+		"previewTitle": "JOOX — 歌词与音频预览",
+		"searchAudioTitle": "在 JOOX 搜索并选择音频",
+		"searchAudioDesc": "搜索 \"{title}\" 并选择要加载到应用中的音频。",
+		"searchPlaceholder": "搜索歌曲名、歌手，或粘贴 Spotify 链接…",
+		"searchPlaceholderWithLink": "歌曲名、歌手，或粘贴 Spotify 链接…",
+		"searchBtn": "搜索",
+		"searching": "正在搜索 JOOX 曲库…",
+		"downloadAudio": "下载音频到应用",
+		"downloadingAudio": "[Beta] 正在下载 \"{title}\" 的音频...",
+		"downloadingAudioProgress": "[Beta] 正在下载 \"{title}\" 的音频… {percent}%",
+		"audioLoaded": "[Beta] 已加载 \"{title}\" 的音频",
+		"audioNotFound": "在 JOOX 上未找到 \"{title}\" 的匹配音频",
+		"audioFailed": "无法下载音频: {error}",
+		"audioQuality": "音质",
+		"useAudio": "使用此音频",
+		"downloading": "下载中…",
+		"preview": "试听",
+		"stopPreview": "停止",
+		"noPreviewAvailable": "该歌曲暂无可用的音频试听。",
+		"previewPlayFailed": "播放试听流失败。",
+		"noTracksFound": "在 JOOX 上未找到歌曲。",
+		"noTracksFoundTip": "请尝试修改关键词（例如仅搜索歌名，或更换歌手写法）。",
+		"enterKeywords": "在上方输入关键词以搜索 JOOX 曲库。"
+	},
+	"audioSearch": {
+		"dialogTitle": "选择音频曲目",
+		"dialogDesc": "为 \"{title}\" 选择正确的音频版本以载入应用。",
+		"searching": "正在搜索音乐库…",
+		"noTracksFound": "未找到匹配曲目。",
+		"noTracksFoundTip": "尝试切换音源（QQ音乐 / JOOX）或调整关键词。"
 	},
 	"lyricEditor": {
 		"locate": "定位",
@@ -1391,7 +1434,10 @@
 		"openedSuccessWithAudio": "已从云端加载 \"{title}\" 及其音频",
 		"savedSuccess": "歌词已成功保存至云端！",
 		"savedWithAudioSuccess": "歌词及音频已成功保存至云端！",
+		"loadingAudio": "正在加载 \"{title}\" 的音频...",
+		"loadingAudioProgress": "正在加载 \"{title}\" 的音频… {percent}%",
 		"downloadingAudio": "正在下载云端音频...",
+		"downloadingAudioProgress": "正在下载 \"{title}\" 的音频… {percent}%",
 		"audioDownloadFailed": "已加载 TTML 歌词，但下载关联音频失败。",
 		"deletedSuccess": "已从云端删除 \"{title}\"。",
 		"confirmDelete": "确定要从云端资料库中删除 \"{title}\" 吗？",

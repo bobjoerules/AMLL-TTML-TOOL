@@ -1,28 +1,37 @@
-import classNames from "classnames";
 import {
 	BackgroundRender,
 	MeshGradientRenderer,
 } from "@applemusic-like-lyrics/react";
+import {
+	MusicNote224Regular,
+} from "@fluentui/react-icons";
+import classNames from "classnames";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PreviewProgressBar } from "$/components/PreviewProgressBar";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import {
 	activeLineIdsAtom,
-	currentTimeAtom,
-	currentDurationAtom,
-	audioPlayingAtom,
 	audioCoverArtAtom,
+	audioPlayingAtom,
+	currentDurationAtom,
+	currentTimeAtom,
 } from "$/modules/audio/states/index.ts";
+import { customBackgroundImageAtom } from "$/modules/settings/modals/customBackground";
 import {
+	backgroundModeAtom,
+	customAccentColorAtom,
+	useCustomAccentAtom,
+} from "$/modules/settings/states/index.ts";
+import {
+	bgFollowsDuetAtom,
+	instantHighlightFadeAtom,
+	lyricWordFadeWidthAtom,
+	previewShowAlbumArtworkAtom,
+	showFpsCounterAtom,
 	showRomanLinesAtom,
 	showTranslationLinesAtom,
 	vsyncAtom,
-	showFpsCounterAtom,
-	lyricWordFadeWidthAtom,
-	instantHighlightFadeAtom,
-	previewFullscreenAtom,
-	previewShowAlbumArtworkAtom,
-	bgFollowsDuetAtom,
 } from "$/modules/settings/states/preview";
 import {
 	isDarkThemeAtom,
@@ -30,19 +39,8 @@ import {
 	projectIdentityAtom,
 	selectedLinesAtom,
 } from "$/states/main.ts";
-import {
-	useCustomAccentAtom,
-	customAccentColorAtom,
-} from "$/modules/settings/states/index.ts";
-import { customBackgroundImageAtom } from "$/modules/settings/modals/customBackground";
-import {
-	FullScreenMaximize20Regular,
-	FullScreenMinimize20Regular,
-	Image20Regular,
-	MusicNote224Regular,
-} from "@fluentui/react-icons";
+import { isVoiceRightAligned } from "$/types/ttml.ts";
 import styles from "./index.module.css";
-import { PreviewProgressBar } from "$/components/PreviewProgressBar";
 
 const displayTimeAtom = atom(0);
 
@@ -158,15 +156,13 @@ const StaticLineGroup = memo(
 	({ group, isPast }: { group: LineGroup; isPast: boolean }) => {
 		const bgFollowsDuet = useAtomValue(bgFollowsDuetAtom);
 		const mainTimed = isLineTimed(group.main);
-		const isMainDuet = Boolean(
-			group.main.isDuet || (group.main.agent && group.main.agent !== "v1"),
-		);
+		const isMainRight = isVoiceRightAligned(group.main);
 		return (
 			<div
 				className={classNames(
 					styles.lineGroup,
 					isPast && styles.lineGroupPast,
-					group.main.isDuet && styles.lineGroupDuet,
+					isMainRight && styles.lineGroupDuet,
 					!mainTimed && styles.lineGroupUnsynced,
 				)}
 			>
@@ -174,7 +170,7 @@ const StaticLineGroup = memo(
 				<div
 					className={classNames(
 						styles.line,
-						group.main.isDuet && styles.lineDuetR,
+						isMainRight && styles.lineDuetR,
 						!mainTimed && styles.lineUnsynced,
 					)}
 				>
@@ -187,16 +183,16 @@ const StaticLineGroup = memo(
 				{/* BG lines */}
 				{group.bg.map((bgLine, i) => {
 					const bgTimed = isLineTimed(bgLine);
-					const isDuet = bgFollowsDuet
-						? isMainDuet
-						: Boolean(bgLine.isDuet || (bgLine.agent && bgLine.agent !== "v1"));
+					const isBgRight = bgFollowsDuet
+						? isMainRight
+						: isVoiceRightAligned(bgLine);
 					return (
 						<div
 							key={bgLine.id || i}
 							className={classNames(
 								styles.line,
 								styles.lineBG,
-								isDuet && styles.lineDuetR,
+								isBgRight && styles.lineDuetR,
 								!bgTimed && styles.lineUnsynced,
 							)}
 						>
@@ -225,15 +221,13 @@ const ActiveLineGroup = memo(
 		const showRoman = useAtomValue(showRomanLinesAtom);
 		const bgFollowsDuet = useAtomValue(bgFollowsDuetAtom);
 		const mainTimed = isLineTimed(group.main);
-		const isMainDuet = Boolean(
-			group.main.isDuet || (group.main.agent && group.main.agent !== "v1"),
-		);
+		const isMainRight = isVoiceRightAligned(group.main);
 		return (
 			<div
 				className={classNames(
 					styles.lineGroup,
 					styles.lineGroupActive,
-					group.main.isDuet && styles.lineGroupDuet,
+					isMainRight && styles.lineGroupDuet,
 					!mainTimed && styles.lineGroupUnsynced,
 				)}
 			>
@@ -242,7 +236,7 @@ const ActiveLineGroup = memo(
 					className={classNames(
 						styles.line,
 						styles.lineActive,
-						group.main.isDuet && styles.lineDuetR,
+						isMainRight && styles.lineDuetR,
 						!mainTimed && styles.lineUnsynced,
 					)}
 				>
@@ -263,9 +257,9 @@ const ActiveLineGroup = memo(
 				{/* BG lines - also highlight when group is active */}
 				{group.bg.map((bgLine, i) => {
 					const bgTimed = isLineTimed(bgLine);
-					const isDuet = bgFollowsDuet
-						? isMainDuet
-						: Boolean(bgLine.isDuet || (bgLine.agent && bgLine.agent !== "v1"));
+					const isBgRight = bgFollowsDuet
+						? isMainRight
+						: isVoiceRightAligned(bgLine);
 					return (
 						<div
 							key={bgLine.id || i}
@@ -273,7 +267,7 @@ const ActiveLineGroup = memo(
 								styles.line,
 								styles.lineBG,
 								styles.lineBGActive,
-								isDuet && styles.lineDuetR,
+								isBgRight && styles.lineDuetR,
 								!bgTimed && styles.lineUnsynced,
 							)}
 						>
@@ -486,6 +480,7 @@ export const AMLLWrapper = memo(
 
 		const embeddedCoverArt = useAtomValue(audioCoverArtAtom);
 		const customBackgroundImage = useAtomValue(customBackgroundImageAtom);
+		const backgroundMode = useAtomValue(backgroundModeAtom);
 		const coverArtImage = useMemo(
 			() =>
 				lyrics.metadata
@@ -493,14 +488,11 @@ export const AMLLWrapper = memo(
 					?.value.find((value) => value.trim().length > 0) ?? null,
 			[lyrics.metadata],
 		);
-		const albumImg =
-			embeddedCoverArt || coverArtImage || customBackgroundImage || null;
+		const songCoverArt = embeddedCoverArt || coverArtImage || null;
+		const bgImg =
+			songCoverArt || (backgroundMode === "image" ? customBackgroundImage : null);
 
-		const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
-		const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
-		const [controlsVisible, setControlsVisible] = useState(false);
-		const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
-		const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+		const showArtwork = useAtomValue(previewShowAlbumArtworkAtom);
 
 		const currentDuration = useAtomValue(currentDurationAtom);
 
@@ -520,78 +512,6 @@ export const AMLLWrapper = memo(
 				audioEngine.resumeOrSeekMusic();
 			}
 		};
-
-		const handleMouseMove = useCallback(
-			(e: React.MouseEvent) => {
-				if (!isFullscreen) {
-					setControlsVisible(true);
-					return;
-				}
-
-				// Discard synthetic mousemove events dispatched by browsers when DOM elements
-				// scroll/animate underneath a stationary cursor
-				if (
-					lastPosRef.current &&
-					lastPosRef.current.x === e.clientX &&
-					lastPosRef.current.y === e.clientY
-				) {
-					return;
-				}
-				lastPosRef.current = { x: e.clientX, y: e.clientY };
-
-				if (e.clientY <= 72) {
-					setControlsVisible(true);
-					if (hideTimerRef.current) {
-						clearTimeout(hideTimerRef.current);
-						hideTimerRef.current = null;
-					}
-				} else {
-					if (!hideTimerRef.current) {
-						hideTimerRef.current = setTimeout(() => {
-							setControlsVisible(false);
-							hideTimerRef.current = null;
-						}, 200);
-					}
-				}
-			},
-			[isFullscreen],
-		);
-
-		useEffect(() => {
-			if (!isFullscreen) {
-				setControlsVisible(true);
-				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-			} else {
-				// Briefly show controls for 2.5s on entering fullscreen, then hide
-				setControlsVisible(true);
-				hideTimerRef.current = setTimeout(() => {
-					setControlsVisible(false);
-					hideTimerRef.current = null;
-				}, 2500);
-			}
-			return () => {
-				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-			};
-		}, [isFullscreen]);
-
-		useEffect(() => {
-			const handleKeyDown = (e: KeyboardEvent) => {
-				if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName))
-					return;
-				if (e.key === "Escape" && isFullscreen) {
-					setIsFullscreen(false);
-				} else if (
-					(e.key === "f" || e.key === "F") &&
-					!e.ctrlKey &&
-					!e.metaKey &&
-					!e.altKey
-				) {
-					setIsFullscreen((prev) => !prev);
-				}
-			};
-			window.addEventListener("keydown", handleKeyDown);
-			return () => window.removeEventListener("keydown", handleKeyDown);
-		}, [isFullscreen, setIsFullscreen]);
 
 		const useCustomAccent = useAtomValue(useCustomAccentAtom);
 		const customAccentColor = useAtomValue(customAccentColorAtom);
@@ -648,13 +568,12 @@ export const AMLLWrapper = memo(
 					isToxi && styles.isToxi,
 					instantFade && styles.hasInstantFade,
 				)}
-				onMouseMove={handleMouseMove}
 			>
 				{/* Dynamic Mesh Warp Background (Kawarp) */}
 				<div className={styles.bgLayer}>
 					<BackgroundRender
-						key={albumImg || "default"}
-						album={albumImg || undefined}
+						key={bgImg || "default"}
+						album={bgImg || undefined}
 						color={fallbackColors?.[0]}
 						// PERF: Only animate when audio is actually playing
 						playing={isPlaying}
@@ -663,38 +582,6 @@ export const AMLLWrapper = memo(
 						renderer={MeshGradientRenderer}
 					/>
 				</div>
-
-				{/* Floating Controls */}
-				{!isPanel && (
-					<div
-						className={classNames(
-							styles.floatingControls,
-							isFullscreen && !controlsVisible && styles.autohideHidden,
-						)}
-						style={isFullscreen ? { right: 205 } : undefined}
-					>
-						<button
-							type="button"
-							className={styles.floatingBtn}
-							onClick={() => setShowArtwork((prev) => !prev)}
-							title={showArtwork ? "Hide Album Art" : "Show Album Art"}
-							aria-label="Toggle Album Art"
-						>
-							<Image20Regular />
-						</button>
-						{!isFullscreen && (
-							<button
-								type="button"
-								className={styles.floatingBtn}
-								onClick={() => setIsFullscreen(true)}
-								title="Fullscreen (F)"
-								aria-label="Enter Fullscreen"
-							>
-								<FullScreenMaximize20Regular />
-							</button>
-						)}
-					</div>
-				)}
 
 				<div className={styles.contentOverlay}>
 					{!isPanel && showArtwork ? (
@@ -708,9 +595,9 @@ export const AMLLWrapper = memo(
 										style={{ cursor: "pointer" }}
 										title={isPlaying ? "Click to Pause" : "Click to Play"}
 									>
-										{albumImg ? (
+										{songCoverArt ? (
 											<img
-												src={albumImg}
+												src={songCoverArt}
 												alt={projectIdentity.name || "Album Artwork"}
 												className={styles.artworkImage}
 											/>

@@ -13,6 +13,8 @@ import { ReplaceWordDialog } from "$/modules/lyric-editor/tools/ReplaceWordDialo
 import { TimeShiftDialog } from "$/modules/lyric-editor/tools/TimeShift.tsx";
 import { TimeStretchDialog } from "$/modules/lyric-editor/tools/TimeStretch.tsx";
 import { ImportLyricsDialog } from "$/modules/lyrics-import/modals/ImportLyricsDialog.tsx";
+import { JooxAudioSearchDialog } from "$/modules/joox/modals/JooxAudioSearchDialog.tsx";
+import { JooxImportLyricsDialog } from "$/modules/joox/modals/JooxImportLyricsDialog.tsx";
 import { HistoryRestoreDialog } from "$/modules/project/modals/HistoryRestore.tsx";
 import { ImportFromText } from "$/modules/project/modals/ImportFromText.tsx";
 import { MetadataEditor } from "$/modules/project/modals/MetadataEditor.tsx";
@@ -42,6 +44,8 @@ export const Dialogs = () => {
 			<ImportFromText />
 			<ImportFromLRCLIB />
 			<ImportLyricsDialog />
+			<JooxImportLyricsDialog />
+			<JooxAudioSearchDialog />
 			<ImportAppleTtmlDialog />
 			<MetadataEditor />
 			<SettingsDialog />

@@ -23,6 +23,7 @@ import {
 	cmdPlaybackRateReset,
 	cmdPlaybackRateUp,
 	cmdPlayPause,
+	cmdPreviewFullscreen,
 	cmdPrevTab,
 	cmdRedo,
 	cmdReplace,
@@ -32,10 +33,9 @@ import {
 	cmdSelectAll,
 	cmdSelectInverted,
 	cmdSelectWordsOfMatchedSelection,
+	cmdSpotMatch,
 	cmdSwitchEditMode,
 	cmdSwitchPreviewMode,
-	cmdSpotMatch,
-	cmdTtmlChecklist,
 	cmdSwitchSyncMode,
 	cmdSyncEnd,
 	cmdSyncNext,
@@ -43,6 +43,7 @@ import {
 	cmdToggleBackground,
 	cmdToggleDuet,
 	cmdToggleWordHighlight,
+	cmdTtmlChecklist,
 	cmdUndo,
 	cmdUnselectAll,
 	cmdUrbanDictionary,
@@ -81,6 +82,7 @@ export const keyToggleDuetAtom = cmdToggleDuet.atom;
 export const keySwitchEditModeAtom = cmdSwitchEditMode.atom;
 export const keySwitchSyncModeAtom = cmdSwitchSyncMode.atom;
 export const keySwitchPreviewModeAtom = cmdSwitchPreviewMode.atom;
+export const keyPreviewFullscreenAtom = cmdPreviewFullscreen.atom;
 export const keyNextTabAtom = cmdNextTab.atom;
 export const keyPrevTabAtom = cmdPrevTab.atom;
 

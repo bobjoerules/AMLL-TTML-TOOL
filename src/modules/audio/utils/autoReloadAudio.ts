@@ -135,7 +135,7 @@ export async function tryReloadAudioFromComputer(
 			await addDir(desktopDir);
 			await addDir(documentDir);
 
-			// Search direct filenames in candidate folders
+			// Fast direct path check for candidate filenames across search dirs
 			for (const dir of searchDirs) {
 				for (const name of candidateNames) {
 					try {
@@ -161,11 +161,21 @@ export async function tryReloadAudioFromComputer(
 				}
 			}
 
-			// Search directory entries for matching files
-			for (const dir of searchDirs) {
+			// Limited fuzzy search in Music and Downloads directories only (up to 150 items each)
+			const fuzzyDirs: string[] = [];
+			try {
+				const aDir = await audioDir();
+				if (aDir) fuzzyDirs.push(aDir);
+				const dlDir = await downloadDir();
+				if (dlDir && !fuzzyDirs.includes(dlDir)) fuzzyDirs.push(dlDir);
+			} catch {}
+
+			for (const dir of fuzzyDirs) {
 				try {
 					const entries = await readDir(dir);
+					let checkedCount = 0;
 					for (const entry of entries) {
+						if (++checkedCount > 150) break;
 						if (!entry.name) continue;
 						const entryNameLower = entry.name.toLowerCase();
 						const ext = entry.name.split(".").pop()?.toLowerCase() || "";
@@ -231,7 +241,10 @@ export async function tryReloadAudioFromComputer(
 			if (cached.path) {
 				(file as unknown as { path?: string }).path = cached.path;
 			}
-			await audioEngine.loadMusic(file);
+			if (cached.isAutoDownloaded) {
+				(file as any).isAutoDownloaded = true;
+			}
+			await audioEngine.loadMusic(file, false, cached.isAutoDownloaded);
 			if (!options.silent) {
 				toast.info(
 					i18n.t(

@@ -1,4 +1,9 @@
-import type { LyricLine, LyricWord } from "$/types/ttml";
+import {
+	getLineVoice,
+	isVoiceRightAligned,
+	type LyricLine,
+	type LyricWord,
+} from "$/types/ttml";
 
 export interface SpicyToken {
 	id: string;
@@ -242,8 +247,8 @@ export function buildSpicyLines(
 			isRtl: isRtl(lineText(line, false)),
 			text,
 			isBackground: !!line.isBG,
-			isDuet: line.agent ? line.agent !== "v1" : !!line.isDuet,
-			agent: line.agent || (line.isDuet ? "v2" : "v1"),
+			isDuet: isVoiceRightAligned(line),
+			agent: getLineVoice(line),
 			translation: line.translatedLyric || undefined,
 			words: makeTokens(line.words, simple, romanized, !!line.isBG),
 		};

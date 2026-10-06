@@ -63,11 +63,18 @@ import {
 	groupCloudTTMLs,
 	type SongGroup,
 } from "../songGrouping";
+import { JooxApi } from "$/modules/joox/api/client";
 import {
 	allowConsecutiveBackgroundLinesAtom,
+	autoLoadCloudAudioAtom,
+	jooxApiTokenAtom,
+	jooxAudioQualityAtom,
 	lyricTextNormalizationOptionsAtom,
 } from "$/modules/settings/states";
-import { openAccountSettingsAtom } from "$/states/dialogs";
+import {
+	jooxAudioSearchDialogAtom,
+	openAccountSettingsAtom,
+} from "$/states/dialogs";
 import { lyricLinesAtom, saveFileNameAtom } from "$/states/main";
 import {
 	cloudFileManagerInitialTabAtom,
@@ -801,6 +808,10 @@ export const CloudFileManagerModal: FC = () => {
 	const allowConsecutiveBackgroundLines = useAtomValue(
 		allowConsecutiveBackgroundLinesAtom,
 	);
+	const autoLoadCloudAudio = useAtomValue(autoLoadCloudAudioAtom);
+	const [jooxToken] = useAtom(jooxApiTokenAtom);
+	const [audioQuality] = useAtom(jooxAudioQualityAtom);
+	const setJooxAudioSearch = useSetAtom(jooxAudioSearchDialogAtom);
 	const { openFile } = useFileOpener();
 
 	const [cloudList, setCloudList] = useAtom(cloudTTMLListAtom);
@@ -1071,49 +1082,133 @@ export const CloudFileManagerModal: FC = () => {
 	const handleOpenItem = async (item: CloudTTMLMetadata) => {
 		try {
 			setLoadingDocId(item.id);
-			const doc = await loadTTMLFromCloud(item.id);
+			const doc = await loadTTMLFromCloud(item.id, item.authorUid);
 			const file = new File([doc.rawTTML], `${doc.title || "lyric"}.ttml`, {
 				type: "application/xml",
 			});
 			await openFile(file);
 
-			// Auto-load audio into audio-engine if present in the cloud document
-			let audioLoaded = false;
-			if (doc.audioUrl) {
-				try {
-					const audioResp = await fetch(doc.audioUrl);
-					if (audioResp.ok) {
-						const audioBlob = await audioResp.blob();
-						await audioEngine.loadMusic(audioBlob);
-						audioLoaded = true;
-						toast.info(
-							t(
-								"cloud.audioAutoLoaded",
-								'Loaded attached audio for "{title}"',
-								{ title: doc.title || "Untitled" },
-							),
-						);
-					}
-				} catch (audioErr) {
-					console.warn("Failed to auto-load cloud audio:", audioErr);
-				}
-			}
-
-			// If audio wasn't loaded from cloud URL, try reloading audio from computer automatically
-			if (!audioLoaded) {
-				void tryReloadAudioFromComputer({
-					audioFileName: doc.audioFileName,
-					title: doc.title,
-					artist: doc.artist,
-				});
-			}
-
+			setOpen(false);
 			toast.success(
 				t("cloud.openedSuccess", 'Loaded "{title}" from Cloud', {
 					title: doc.title || "Untitled",
 				}),
 			);
-			setOpen(false);
+
+			// Auto-load audio into audio-engine in the background if setting is enabled
+			if (autoLoadCloudAudio) {
+				(async () => {
+					let audioLoaded = false;
+					if (doc.audioUrl || doc.audioStoragePath) {
+						let audioToastId: any = null;
+						try {
+							audioToastId = toast.loading(
+								t(
+									"cloud.loadingAudio",
+									'Loading audio for "{title}"…',
+									{
+										title: doc.title || "song",
+									},
+								),
+							);
+							const audioBlob = await downloadCloudAudio(
+								doc.audioUrl,
+								doc.audioStoragePath,
+							);
+							const audioFileName =
+								doc.audioFileName || `${doc.title || "audio"}.mp3`;
+							const audioFile = new File([audioBlob], audioFileName, {
+								type: audioBlob.type || "audio/mpeg",
+							});
+							await audioEngine.loadMusic(audioFile);
+							audioLoaded = true;
+							if (audioToastId) {
+								toast.update(audioToastId, {
+									render: t(
+										"cloud.audioAutoLoaded",
+										'Loaded attached audio for "{title}"',
+										{ title: doc.title || "Untitled" },
+									),
+									type: "success",
+									isLoading: false,
+									autoClose: 3000,
+								});
+							}
+						} catch (audioErr) {
+							console.warn("Failed to auto-load cloud audio:", audioErr);
+							if (audioToastId) toast.dismiss(audioToastId);
+						}
+					}
+
+					// If audio wasn't loaded from cloud URL, try reloading audio from computer automatically
+					if (!audioLoaded) {
+						audioLoaded = await tryReloadAudioFromComputer({
+							audioFileName: doc.audioFileName,
+							title: doc.title,
+							artist: doc.artist,
+						});
+					}
+
+					// If audio still was not found locally, fetch matching audio from JOOX/QQ Music API
+					if (!audioLoaded && (doc.title || doc.artist)) {
+						let streamToastId: any = null;
+						try {
+							streamToastId = toast.loading(
+								t(
+									"joox.downloadingAudio",
+									'[Beta] Downloading audio for "{title}"…',
+									{ title: doc.title || "song" },
+								),
+							);
+							const result = await JooxApi.searchAndGetAudio(
+								doc.title || "",
+								doc.artist || "",
+								jooxToken,
+								audioQuality,
+							);
+							if (result?.audioBlob) {
+								const audioFile = new File(
+									[result.audioBlob],
+									result.fileName || `${doc.title || "audio"}.mp3`,
+									{ type: result.audioBlob.type || "audio/mpeg" },
+								);
+								(audioFile as any).isAutoDownloaded = true;
+								await audioEngine.loadMusic(audioFile, false, true);
+								audioLoaded = true;
+								if (streamToastId) {
+									toast.update(streamToastId, {
+										render: t(
+											"joox.audioLoaded",
+											'Loaded audio for "{title}"',
+											{
+												title: doc.title || "song",
+											},
+										),
+										type: "success",
+										isLoading: false,
+										autoClose: 3000,
+									});
+								}
+							} else {
+								if (streamToastId) toast.dismiss(streamToastId);
+								setJooxAudioSearch({
+									open: true,
+									title: doc.title || "",
+									artist: doc.artist || "",
+								});
+							}
+						} catch (apiErr) {
+							console.warn("Failed to auto-fetch audio from API:", apiErr);
+							if (streamToastId) toast.dismiss(streamToastId);
+							setJooxAudioSearch({
+								open: true,
+								title: doc.title || "",
+								artist: doc.artist || "",
+							});
+						}
+					}
+				})();
+			}
 		} catch (err: unknown) {
 			console.error(err);
 			toast.error((err as Error)?.message || "Failed to open cloud file");
@@ -1124,8 +1219,16 @@ export const CloudFileManagerModal: FC = () => {
 
 	const handleDownloadAudio = async (item: CloudTTMLMetadata) => {
 		if (!item.audioUrl) return;
+		let toastId: any = null;
 		try {
 			setDownloadingAudioDocId(item.id);
+			toastId = toast.loading(
+				t(
+					"cloud.downloadingAudio",
+					'Downloading audio for "{title}"…',
+					{ title: item.title || "Untitled" },
+				),
+			);
 			const blob = await downloadCloudAudio(
 				item.audioUrl,
 				item.audioStoragePath,
@@ -1143,14 +1246,32 @@ export const CloudFileManagerModal: FC = () => {
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-			toast.success(
-				t("cloud.downloadedAudioSuccess", 'Downloaded audio for "{title}"', {
-					title: item.title || "Untitled",
-				}),
-			);
+			if (toastId) {
+				toast.update(toastId, {
+					render: t(
+						"cloud.downloadedAudioSuccess",
+						'Downloaded audio for "{title}"',
+						{
+							title: item.title || "Untitled",
+						},
+					),
+					type: "success",
+					isLoading: false,
+					autoClose: 3000,
+				});
+			}
 		} catch (err: unknown) {
 			console.error(err);
-			toast.error((err as Error)?.message || "Failed to download audio");
+			if (toastId) {
+				toast.update(toastId, {
+					render: (err as Error)?.message || "Failed to download audio",
+					type: "error",
+					isLoading: false,
+					autoClose: 5000,
+				});
+			} else {
+				toast.error((err as Error)?.message || "Failed to download audio");
+			}
 		} finally {
 			setDownloadingAudioDocId(null);
 		}
@@ -1431,7 +1552,7 @@ export const CloudFileManagerModal: FC = () => {
 	const handleDownloadRawTTML = async (item: CloudTTMLMetadata) => {
 		try {
 			setLoadingDocId(item.id);
-			const doc = await loadTTMLFromCloud(item.id);
+			const doc = await loadTTMLFromCloud(item.id, item.authorUid);
 			const blob = new Blob([doc.rawTTML], { type: "application/xml" });
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement("a");

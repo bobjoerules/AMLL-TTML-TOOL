@@ -17,6 +17,7 @@ import {
 	IconButton,
 	ScrollArea,
 	Spinner,
+	Switch,
 	Text,
 	TextField,
 } from "@radix-ui/themes";
@@ -26,10 +27,17 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { uid } from "uid";
 
+import { audioEngine } from "$/modules/audio/audio-engine";
+import { tryReloadAudioFromComputer } from "$/modules/audio/utils/autoReloadAudio";
 import { audioCoverArtAtom } from "$/modules/audio/states";
 import { GeniusResolver, isGeniusSongUrl } from "$/modules/genius/api/client";
+import { JooxApi } from "$/modules/joox/api/client";
 import { parseLyric as parseTTML } from "$/modules/project/logic/ttml-parser";
 import {
+	autoLoadCloudAudioAtom,
+	downloadAudioOnLyricImportAtom,
+	jooxApiTokenAtom,
+	jooxAudioQualityAtom,
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 } from "$/modules/settings/states";
@@ -38,6 +46,7 @@ import {
 	appleTtmlImportDialogAtom,
 	confirmDialogAtom,
 	importLyricsPrefillAtom,
+	jooxAudioSearchDialogAtom,
 } from "$/states/dialogs";
 import {
 	isDirtyAtom,
@@ -74,6 +83,13 @@ export const ImportAppleTtmlDialog = () => {
 	const setSaveFileName = useSetAtom(saveFileNameAtom);
 	const setConfirmDialog = useSetAtom(confirmDialogAtom);
 	const setAudioCoverArt = useSetAtom(audioCoverArtAtom);
+	const autoLoadCloudAudio = useAtomValue(autoLoadCloudAudioAtom);
+	const [downloadAudio, setDownloadAudio] = useAtom(
+		downloadAudioOnLyricImportAtom,
+	);
+	const [jooxToken] = useAtom(jooxApiTokenAtom);
+	const [audioQuality] = useAtom(jooxAudioQualityAtom);
+	const setJooxAudioSearch = useSetAtom(jooxAudioSearchDialogAtom);
 
 	const normalizeApostrophesOnImport = useAtomValue(
 		normalizeApostrophesOnImportAtom,
@@ -324,6 +340,62 @@ export const ImportAppleTtmlDialog = () => {
 					"Imported Apple Music TTML with full timings successfully!",
 				),
 			);
+
+			// Automatically load matching audio from computer or JOOX API
+			if (autoLoadCloudAudio || downloadAudio) {
+				void (async () => {
+					let audioLoaded = await tryReloadAudioFromComputer({
+						title: safeTitle,
+						artist: safeArtist,
+					});
+
+					if (!audioLoaded && (safeTitle || safeArtist)) {
+						try {
+							toast.info(
+								t(
+									"joox.downloadingAudio",
+									'[Beta] Downloading audio for "{title}"...',
+									{ title: safeTitle },
+								),
+							);
+							const result = await JooxApi.searchAndGetAudio(
+								safeTitle,
+								safeArtist,
+								jooxToken,
+								audioQuality,
+							);
+							if (result?.audioBlob) {
+								const audioFile = new File(
+									[result.audioBlob],
+									result.fileName || `${safeArtist} - ${safeTitle}.mp3`,
+									{ type: result.audioBlob.type || "audio/mpeg" },
+								);
+								(audioFile as any).isAutoDownloaded = true;
+								await audioEngine.loadMusic(audioFile, false, true);
+								toast.success(
+									t("joox.audioLoaded", 'Loaded audio for "{title}"', {
+										title: safeTitle,
+									}),
+								);
+							} else {
+								setJooxAudioSearch({
+									open: true,
+									title: safeTitle,
+									artist: safeArtist,
+								});
+							}
+						} catch (apiErr) {
+							console.warn("Failed to auto-fetch audio from API:", apiErr);
+							setJooxAudioSearch({
+								open: true,
+								title: safeTitle,
+								artist: safeArtist,
+							});
+						}
+					}
+				})();
+			}
+
 			setIsOpen(false);
 		} catch (err) {
 			console.error("Failed to parse and import Apple TTML:", err);
@@ -603,23 +675,69 @@ export const ImportAppleTtmlDialog = () => {
 							</Box>
 						)}
 
-						{/* Import action button */}
-						<Flex justify="end" gap="3" mt="2">
-							<Button
-								variant="soft"
-								color="gray"
-								onClick={() => setIsOpen(false)}
+						{/* Action bar with audio download toggle */}
+						<Flex align="center" justify="between" gap="3" mt="3" wrap="wrap">
+							<Flex
+								align="center"
+								gap="2"
+								style={{
+									padding: "4px 8px",
+									borderRadius: "var(--radius-2)",
+									backgroundColor: downloadAudio
+										? "var(--accent-a3)"
+										: "var(--gray-a2)",
+									border: `1px solid ${
+										downloadAudio
+											? "var(--accent-a6)"
+											: "var(--gray-a4)"
+									}`,
+									transition: "all 0.15s ease",
+								}}
 							>
-								{t("common.cancel", "Cancel")}
-							</Button>
-							<Button
-								color="crimson"
-								disabled={!selectedSong.ttml && !selectedSong.syncedLyrics}
-								onClick={handleImportClick}
-							>
-								<ArrowDownload24Regular style={{ width: 18, height: 18 }} />
-								{t("appleTtml.importIntoEditor", "Import TTML into Editor")}
-							</Button>
+								<Switch
+									id="chk-apple-download-audio"
+									size="1"
+									checked={downloadAudio}
+									onCheckedChange={setDownloadAudio}
+								/>
+								<Flex align="center" gap="2">
+									<Text
+										size="1"
+										as="label"
+										htmlFor="chk-apple-download-audio"
+										weight={downloadAudio ? "medium" : "regular"}
+										style={{
+											cursor: "pointer",
+											userSelect: "none",
+											color: downloadAudio
+												? "var(--accent-11)"
+												: "var(--gray-12)",
+										}}
+									>
+										{t("joox.downloadAudio", "Download audio into app")}
+									</Text>
+									<Badge color="orange" size="1" variant="soft">
+										Beta
+									</Badge>
+								</Flex>
+							</Flex>
+							<Flex justify="end" gap="3">
+								<Button
+									variant="soft"
+									color="gray"
+									onClick={() => setIsOpen(false)}
+								>
+									{t("common.cancel", "Cancel")}
+								</Button>
+								<Button
+									color="crimson"
+									disabled={!selectedSong.ttml && !selectedSong.syncedLyrics}
+									onClick={handleImportClick}
+								>
+									<ArrowDownload24Regular style={{ width: 18, height: 18 }} />
+									{t("appleTtml.importIntoEditor", "Import TTML into Editor")}
+								</Button>
+							</Flex>
 						</Flex>
 					</Flex>
 				)}

@@ -71,13 +71,20 @@ import {
 } from "$/modules/genius/api/client";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
 import { LyricallyApi } from "$/modules/lyrically/api/client";
-import { geniusApiKeyAtom } from "$/modules/settings/states/index.ts";
+import { JooxApi } from "$/modules/joox/api/client";
+import {
+	autoLoadCloudAudioAtom,
+	geniusApiKeyAtom,
+	jooxApiTokenAtom,
+	jooxAudioQualityAtom,
+} from "$/modules/settings/states/index.ts";
 import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import {
 	appleTtmlImportDialogAtom,
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
 	importLyricsPrefillAtom,
+	jooxAudioSearchDialogAtom,
 	lyricallyImportLyricsDialogAtom,
 	openAccountSettingsAtom,
 	ttmlChecklistDialogAtom,
@@ -1332,6 +1339,10 @@ export const TTMLChecklistDialog = () => {
 	const [open, setOpen] = useAtom(ttmlChecklistDialogAtom);
 	const [storedEntries, setStoredEntries] = useAtom(ttmlChecklistAtom);
 	const checklistShowUploadedToDb = useAtomValue(checklistShowUploadedToDbAtom);
+	const autoLoadCloudAudio = useAtomValue(autoLoadCloudAudioAtom);
+	const [jooxToken] = useAtom(jooxApiTokenAtom);
+	const [audioQuality] = useAtom(jooxAudioQualityAtom);
+	const setJooxAudioSearch = useSetAtom(jooxAudioSearchDialogAtom);
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [filterTab, setFilterTab] = useState<
 		"all" | "pending" | "not-started" | "completed" | "favorites" | "uploaded"
@@ -1509,44 +1520,127 @@ export const TTMLChecklistDialog = () => {
 				);
 				await openFile(file);
 
-				let audioLoaded = false;
-				if (cloudDoc.audioUrl) {
-					try {
-						toast.info(
-							t("cloud.loadingAudio", 'Loading audio for "{title}"...', {
-								title: cloudDoc.title || "song",
-							}),
-						);
-						const audioBlob = await downloadCloudAudio(
-							cloudDoc.audioUrl,
-							cloudDoc.audioStoragePath,
-						);
-						const audioFileName =
-							cloudDoc.audioFileName || `${cloudDoc.title || "audio"}.mp3`;
-						const audioFile = new File([audioBlob], audioFileName, {
-							type: audioBlob.type || "audio/mpeg",
-						});
-						await audioEngine.loadMusic(audioFile);
-						audioLoaded = true;
-					} catch (audioErr) {
-						console.warn("Checklist cloud audio auto-load failed:", audioErr);
-					}
-				}
-
-				if (!audioLoaded) {
-					void tryReloadAudioFromComputer({
-						audioFileName: cloudDoc.audioFileName,
-						title: cloudDoc.title,
-						artist: cloudDoc.artist,
-					});
-				}
-
+				setOpen(false);
 				toast.success(
 					t("cloud.openedSuccess", 'Loaded "{title}" from Cloud', {
 						title: cloudDoc.title || "Untitled",
 					}),
 				);
-				setOpen(false);
+
+				if (autoLoadCloudAudio) {
+					(async () => {
+						let audioLoaded = false;
+						if (cloudDoc.audioUrl || cloudDoc.audioStoragePath) {
+							let audioToastId: any = null;
+							try {
+								audioToastId = toast.loading(
+									t(
+										"cloud.loadingAudio",
+										'Loading audio for "{title}"…',
+										{
+											title: cloudDoc.title || "song",
+										},
+									),
+								);
+								const audioBlob = await downloadCloudAudio(
+									cloudDoc.audioUrl,
+									cloudDoc.audioStoragePath,
+								);
+								const audioFileName =
+									cloudDoc.audioFileName || `${cloudDoc.title || "audio"}.mp3`;
+								const audioFile = new File([audioBlob], audioFileName, {
+									type: audioBlob.type || "audio/mpeg",
+								});
+								await audioEngine.loadMusic(audioFile);
+								audioLoaded = true;
+								if (audioToastId) {
+									toast.update(audioToastId, {
+										render: t(
+											"cloud.audioAutoLoaded",
+											'Loaded attached audio for "{title}"',
+											{ title: cloudDoc.title || "Untitled" },
+										),
+										type: "success",
+										isLoading: false,
+										autoClose: 3000,
+									});
+								}
+							} catch (audioErr) {
+								console.warn(
+									"Checklist cloud audio auto-load failed:",
+									audioErr,
+								);
+								if (audioToastId) toast.dismiss(audioToastId);
+							}
+						}
+
+						if (!audioLoaded) {
+							audioLoaded = await tryReloadAudioFromComputer({
+								audioFileName: cloudDoc.audioFileName,
+								title: cloudDoc.title,
+								artist: cloudDoc.artist,
+							});
+						}
+
+						if (!audioLoaded && (cloudDoc.title || cloudDoc.artist)) {
+							let streamToastId: any = null;
+							try {
+								streamToastId = toast.loading(
+									t(
+										"joox.downloadingAudio",
+										'[Beta] Downloading audio for "{title}"…',
+										{ title: cloudDoc.title || "song" },
+									),
+								);
+								const result = await JooxApi.searchAndGetAudio(
+									cloudDoc.title || "",
+									cloudDoc.artist || "",
+									jooxToken,
+									audioQuality,
+								);
+								if (result?.audioBlob) {
+									const audioFile = new File(
+										[result.audioBlob],
+										result.fileName || `${cloudDoc.title || "audio"}.mp3`,
+										{ type: result.audioBlob.type || "audio/mpeg" },
+									);
+									(audioFile as any).isAutoDownloaded = true;
+									await audioEngine.loadMusic(audioFile, false, true);
+									audioLoaded = true;
+									if (streamToastId) {
+										toast.update(streamToastId, {
+											render: t(
+												"joox.audioLoaded",
+												'Loaded audio for "{title}"',
+												{
+													title: cloudDoc.title || "song",
+												},
+											),
+											type: "success",
+											isLoading: false,
+											autoClose: 3000,
+										});
+									}
+								} else {
+									if (streamToastId) toast.dismiss(streamToastId);
+									setJooxAudioSearch({
+										open: true,
+										title: cloudDoc.title || "",
+										artist: cloudDoc.artist || "",
+									});
+								}
+							} catch (apiErr) {
+								console.warn("Failed to auto-fetch audio from API:", apiErr);
+								if (streamToastId) toast.dismiss(streamToastId);
+								setJooxAudioSearch({
+									open: true,
+									title: cloudDoc.title || "",
+									artist: cloudDoc.artist || "",
+								});
+							}
+						}
+					})();
+				}
 			} catch (err) {
 				console.error("Failed to load cloud TTML from checklist:", err);
 				toast.error((err as Error)?.message || "Failed to load cloud TTML.");

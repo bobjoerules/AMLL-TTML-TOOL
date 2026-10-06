@@ -359,4 +359,36 @@ describe("buildSpicyLines", () => {
 		expect(bg?.isDuet).toBe(false);
 		expect(bg?.agent).toBe("v1");
 	});
+
+	it("aligns odd voices (v1, v3, v5) to the left and even voices (v2, v4) to the right", () => {
+		const makeLine = (id: string, agent: string) => {
+			const l = newLyricLine();
+			l.id = id;
+			l.agent = agent;
+			l.startTime = 0;
+			l.endTime = 1000;
+			l.words = [{ ...newLyricWord(), startTime: 0, endTime: 1000, word: id }];
+			return l;
+		};
+
+		const lines = buildSpicyLines(
+			[
+				makeLine("line-v1", "v1"),
+				makeLine("line-v2", "v2"),
+				makeLine("line-v3", "v3"),
+				makeLine("line-v4", "v4"),
+				makeLine("line-v5", "v5"),
+			],
+			false,
+			false,
+			false,
+			false,
+		);
+
+		expect(lines.find((l) => l.id === "line-v1")?.isDuet).toBe(false); // left
+		expect(lines.find((l) => l.id === "line-v2")?.isDuet).toBe(true); // right
+		expect(lines.find((l) => l.id === "line-v3")?.isDuet).toBe(false); // left (v3 on left!)
+		expect(lines.find((l) => l.id === "line-v4")?.isDuet).toBe(true); // right
+		expect(lines.find((l) => l.id === "line-v5")?.isDuet).toBe(false); // left
+	});
 });

@@ -15,8 +15,11 @@ import {
 	TextWrap24Regular,
 	Cut24Regular,
 	Database24Regular,
+	Cloud24Regular,
+	ArrowDownload24Regular,
 } from "@fluentui/react-icons";
 import {
+	Badge,
 	Box,
 	Button,
 	Card,
@@ -36,6 +39,8 @@ import { playbackRateAtom, volumeAtom } from "$/modules/audio/states";
 import { checklistShowUploadedToDbAtom } from "$/modules/ttml-checklist/states";
 
 import {
+	autoLoadCloudAudioAtom,
+	downloadAudioOnLyricImportAtom,
 	autosaveEnabledAtom,
 	autosaveIntervalAtom,
 	autosaveLimitAtom,
@@ -89,6 +94,12 @@ export const SettingsCommonTab = ({
 	const [autosaveEnabled, setAutosaveEnabled] = useAtom(autosaveEnabledAtom);
 	const [autosaveInterval, setAutosaveInterval] = useAtom(autosaveIntervalAtom);
 	const [autosaveLimit, setAutosaveLimit] = useAtom(autosaveLimitAtom);
+	const [autoLoadCloudAudio, setAutoLoadCloudAudio] = useAtom(
+		autoLoadCloudAudioAtom,
+	);
+	const [downloadAudioOnLyricImport, setDownloadAudioOnLyricImport] = useAtom(
+		downloadAudioOnLyricImportAtom,
+	);
 	const [enableUpcomingWordHighlight, setEnableUpcomingWordHighlight] = useAtom(
 		enableUpcomingWordHighlightAtom,
 	);
@@ -1118,6 +1129,80 @@ export const SettingsCommonTab = ({
 											checked={checklistShowUploadedToDb}
 											onCheckedChange={setChecklistShowUploadedToDb}
 										/>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
+					</Card>
+
+					<Heading size="4" mt="4">
+						{t("settings.group.cloud", "Cloud saves")}
+					</Heading>
+
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
+								<Cloud24Regular />
+								<Box flexGrow="1">
+									<Flex direction="column" gap="1">
+										<Flex align="center" justify="between" gap="4">
+											<Flex align="center" gap="2">
+												<Text>
+													{t(
+														"settings.common.autoLoadCloudAudio",
+														"Load audio when opening cloud saves",
+													)}
+												</Text>
+												<Badge color="orange" size="1" variant="soft">
+													Beta
+												</Badge>
+											</Flex>
+											<Switch
+												checked={autoLoadCloudAudio}
+												onCheckedChange={setAutoLoadCloudAudio}
+											/>
+										</Flex>
+										<Text size="1" color="gray">
+											{t(
+												"settings.common.autoLoadCloudAudioDesc",
+												"Automatically load attached audio or match local audio files when loading from cloud saves.",
+											)}
+										</Text>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
+					</Card>
+
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
+								<ArrowDownload24Regular />
+								<Box flexGrow="1">
+									<Flex direction="column" gap="1">
+										<Flex align="center" justify="between" gap="4">
+											<Flex align="center" gap="2">
+												<Text>
+													{t(
+														"settings.common.downloadAudioOnLyricImport",
+														"Download audio when importing lyrics",
+													)}
+												</Text>
+												<Badge color="orange" size="1" variant="soft">
+													Beta
+												</Badge>
+											</Flex>
+											<Switch
+												checked={downloadAudioOnLyricImport}
+												onCheckedChange={setDownloadAudioOnLyricImport}
+											/>
+										</Flex>
+										<Text size="1" color="gray">
+											{t(
+												"settings.common.downloadAudioOnLyricImportDesc",
+												"Automatically search and download matching audio into the app when importing lyrics.",
+											)}
+										</Text>
 									</Flex>
 								</Box>
 							</Flex>

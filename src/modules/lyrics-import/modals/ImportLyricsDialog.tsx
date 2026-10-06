@@ -1,13 +1,29 @@
-import { Search16Regular, Search24Regular } from "@fluentui/react-icons";
 import {
+	ArrowDownload24Regular,
+	ArrowLeft20Regular,
+	DismissRegular,
+	Edit20Regular,
+	Eye20Regular,
+	GlobeSearch24Regular,
+	Key20Regular,
+	MusicNote1Regular,
+	MusicNote2Filled,
+	Search24Regular,
+} from "@fluentui/react-icons";
+import {
+	Badge,
 	Box,
 	Button,
 	Card,
 	Checkbox,
 	Dialog,
 	Flex,
+	Heading,
+	IconButton,
 	ScrollArea,
+	Select,
 	Spinner,
+	Switch,
 	Text,
 	TextArea,
 	TextField,
@@ -15,32 +31,53 @@ import {
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 
 import { useImmerAtom } from "jotai-immer";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { uid } from "uid";
+import { audioEngine } from "$/modules/audio/audio-engine";
 import {
 	GeniusApi,
 	GeniusResolver,
 	isGeniusSongUrl,
 } from "$/modules/genius/api/client";
 import { getBetterGeniusCoverArt } from "$/modules/genius/utils/image";
+import { JooxApi } from "$/modules/joox/api/client";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
 import { getGeniusHeader } from "$/modules/lyric-editor/utils/genius-sections.ts";
 import { applyReviewedSections } from "$/modules/lyric-editor/utils/section-system.ts";
 import { LyricallyApi } from "$/modules/lyrically/api/client";
 import {
+	autoSegmentOnLyricImportAtom,
+	downloadAudioOnLyricImportAtom,
 	geniusApiKeyAtom,
 	geniusCategorizationEnabledAtom,
+	jooxApiTokenAtom,
+	jooxAudioQualityAtom,
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 } from "$/modules/settings/states/index.ts";
+import {
+	segmentationEngineAtom,
+	segmentationSplitEnglishAtom,
+} from "$/modules/segmentation/states/index.ts";
+import { detectSyllabificationEngineFromText } from "$/modules/segmentation/utils/detect-syllabification-engine";
+import { loadHyphenator } from "$/modules/segmentation/utils/hyphen-loader";
+import { segmentLyricLines } from "$/modules/segmentation/utils/segmentation";
+import {
+	SYLLABIFICATION_ENGINES,
+	getHyphenationLanguage,
+} from "$/modules/segmentation/utils/syllabification-engines";
+import { useSegmentationConfig } from "$/modules/segmentation/utils/useSegmentationConfig";
+import type { SegmentationEngineId } from "$/modules/segmentation/types";
 import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import {
 	confirmDialogAtom,
 	geniusImportLyricsDialogAtom,
 	importFromLRCLIBDialogAtom,
 	importLyricsPrefillAtom,
+	jooxAudioSearchDialogAtom,
+	jooxImportLyricsDialogAtom,
 	lyricallyImportLyricsDialogAtom,
 } from "$/states/dialogs.ts";
 import {
@@ -63,7 +100,7 @@ import {
 	SectionImportReviewDialog,
 } from "./SectionImportReviewDialog";
 
-type ImportSource = "lyrically" | "genius" | "lrclib";
+type ImportSource = "lyrically" | "genius" | "lrclib" | "joox";
 
 type ImportTrack = {
 	id: string | number;
@@ -73,12 +110,69 @@ type ImportTrack = {
 	cover?: string;
 	lyrics?: string;
 	source?: string;
+	duration?: string;
 	fetchLyrics?: () => Promise<string>;
 	fetchSongwriters?: () => Promise<string[]>;
+	audioUrls?: Record<string, string>;
 };
 
 const lrcToPlainLyrics = (lyrics: string) =>
 	lyrics.replace(/^\s*\[(?:\d+:)?\d{1,2}(?:[.:]\d{1,3})?\]\s*/gm, "");
+
+const PROVIDER_CONFIG = {
+	genius: {
+		name: "Genius",
+		badgeColor: "orange" as const,
+		icon: <MusicNote1Regular style={{ width: 22, height: 22 }} />,
+		color: "var(--orange-11)",
+		background: "var(--orange-3)",
+		titleKey: "genius.importTitle",
+		defaultTitle: "Import Lyrics from Genius",
+		descKey: "genius.importDesc",
+		defaultDesc:
+			"Search and import rich lyrics, headers, and songwriter metadata from Genius.",
+		buttonColor: "orange" as const,
+	},
+	joox: {
+		name: "JOOX Music",
+		badgeColor: "teal" as const,
+		icon: <ArrowDownload24Regular style={{ width: 22, height: 22 }} />,
+		color: "var(--teal-11)",
+		background: "var(--teal-3)",
+		titleKey: "joox.title",
+		defaultTitle: "Import Lyrics & Audio from JOOX",
+		descKey: "joox.importDesc",
+		defaultDesc:
+			"Search and import synced lyrics or download audio straight into your project.",
+		buttonColor: "teal" as const,
+	},
+	lrclib: {
+		name: "LRCLIB",
+		badgeColor: "green" as const,
+		icon: <Search24Regular style={{ width: 22, height: 22 }} />,
+		color: "var(--green-11)",
+		background: "var(--green-3)",
+		titleKey: "lrclib.title",
+		defaultTitle: "Import Lyrics from LRCLIB",
+		descKey: "lrclib.importDesc",
+		defaultDesc:
+			"Search and import synchronized or plain lyrics from the LRCLIB open database.",
+		buttonColor: "green" as const,
+	},
+	lyrically: {
+		name: "Lyrically",
+		badgeColor: "purple" as const,
+		icon: <GlobeSearch24Regular style={{ width: 22, height: 22 }} />,
+		color: "var(--purple-11)",
+		background: "var(--purple-3)",
+		titleKey: "lyrically.importTitle",
+		defaultTitle: "Import Lyrics safely via Lyrically",
+		descKey: "lyrically.importDesc",
+		defaultDesc:
+			"Search and import clean lyrics safely across multiple platforms via Lyrically.",
+		buttonColor: "purple" as const,
+	},
+};
 
 export const ImportLyricsDialog = ({
 	source = "lyrically",
@@ -87,17 +181,36 @@ export const ImportLyricsDialog = ({
 }) => {
 	const { t, i18n } = useTranslation();
 	const store = useStore();
+	const provider = PROVIDER_CONFIG[source] || PROVIDER_CONFIG.lyrically;
 
 	const dialogAtom =
 		source === "genius"
 			? geniusImportLyricsDialogAtom
 			: source === "lrclib"
 				? importFromLRCLIBDialogAtom
-				: lyricallyImportLyricsDialogAtom;
+				: source === "joox"
+					? jooxImportLyricsDialogAtom
+					: lyricallyImportLyricsDialogAtom;
 	const [isOpen, setIsOpen] = useAtom(dialogAtom);
 	const [, setLyricLines] = useImmerAtom(lyricLinesAtom);
 	const setSaveFileName = useSetAtom(saveFileNameAtom);
 	const isDirty = useAtomValue(isDirtyAtom);
+	const [downloadAudio, setDownloadAudio] = useAtom(
+		downloadAudioOnLyricImportAtom,
+	);
+	const [autoSegment, setAutoSegment] = useAtom(autoSegmentOnLyricImportAtom);
+	const savedSegmentationEngine = useAtomValue(segmentationEngineAtom);
+	const setSavedSegmentationEngine = useSetAtom(segmentationEngineAtom);
+	const setSplitEnglish = useSetAtom(segmentationSplitEnglishAtom);
+	const { config: segmentationConfig } = useSegmentationConfig();
+	const [selectedEngine, setSelectedEngine] = useState<SegmentationEngineId>(
+		savedSegmentationEngine === "hyphenation-pt"
+			? "prosodic"
+			: savedSegmentationEngine,
+	);
+	const [jooxToken] = useAtom(jooxApiTokenAtom);
+	const [audioQuality, setAudioQuality] = useAtom(jooxAudioQualityAtom);
+	const [, setDownloadingAudio] = useState(false);
 	const normalizeApostrophesOnImport = useAtomValue(
 		normalizeApostrophesOnImportAtom,
 	);
@@ -105,6 +218,7 @@ export const ImportLyricsDialog = ({
 		normalizeCyrillicEsOnImportAtom,
 	);
 	const setConfirmDialog = useSetAtom(confirmDialogAtom);
+	const setJooxAudioSearch = useSetAtom(jooxAudioSearchDialogAtom);
 
 	// Search
 	const [query, setQuery] = useState("");
@@ -122,6 +236,23 @@ export const ImportLyricsDialog = ({
 	const [categorizeGeniusHeaders, setCategorizeGeniusHeaders] = useState(
 		source === "genius",
 	);
+
+	const detectedEngine = useMemo(
+		() => detectSyllabificationEngineFromText(editableLyrics),
+		[editableLyrics],
+	);
+
+	useEffect(() => {
+		if (detectedEngine) {
+			setSelectedEngine(detectedEngine);
+		} else {
+			setSelectedEngine(
+				savedSegmentationEngine === "hyphenation-pt"
+					? "prosodic"
+					: savedSegmentationEngine,
+			);
+		}
+	}, [detectedEngine, savedSegmentationEngine]);
 	const [sectionReviewOpen, setSectionReviewOpen] = useState(false);
 	const [sectionReviewSubmitted, setSectionReviewSubmitted] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -138,29 +269,6 @@ export const ImportLyricsDialog = ({
 			setFetchingLyrics(true);
 			setEditableLyrics("");
 			setIsEditing(false);
-
-			// Set TTML metadata and file name immediately
-			const title = hit.name;
-			const artist = hit.artist;
-			const safeFileName = `${artist} - ${title}.ttml`
-				.replace(/[/\\?%*:|"<>]/g, "-")
-				.trim();
-
-			setSaveFileName(safeFileName);
-			setLyricLines((prev) => {
-				const upsert = (key: string, value: string) => {
-					const existing = prev.metadata.find((m) => m.key === key);
-					if (existing) {
-						existing.value = [value];
-					} else {
-						prev.metadata.push({ key, value: [value] });
-					}
-				};
-				upsert("musicName", title);
-				upsert("artists", artist);
-				if (hit.album) upsert("album", hit.album);
-				if (hit.cover) upsert("cover_art", hit.cover);
-			});
 
 			try {
 				const lyrics =
@@ -184,7 +292,7 @@ export const ImportLyricsDialog = ({
 				setFetchingLyrics(false);
 			}
 		},
-		[setSaveFileName, setLyricLines, t],
+		[t],
 	);
 
 	const handleSearch = useCallback(async () => {
@@ -335,14 +443,42 @@ export const ImportLyricsDialog = ({
 									? "LRCLIB • synced lyrics available"
 									: "LRCLIB",
 							}))
-						: (await LyricallyApi.search(query)).map((track, index) => ({
-								id: `${track.artist}-${track.name}-${index}`,
-								...track,
-								fetchLyrics: () =>
-									LyricallyApi.getLyrics(track.name, track.artist).then(
-										(detail) => detail.lyrics || "",
-									),
-							}));
+						: source === "joox"
+							? (await JooxApi.search(effectiveQuery, jooxToken)).map(
+									(track) => {
+										const item: ImportTrack = {
+											id: track.id,
+											name: track.name,
+											artist: track.artist,
+											album: track.album,
+											duration: track.duration,
+											cover: track.cover,
+											source: "JOOX",
+											fetchLyrics: async () => {
+												const detail = await JooxApi.getDetail(
+													effectiveQuery,
+													track.index,
+													jooxToken,
+												);
+												item.audioUrls = detail.播放链接;
+												const lyrics = detail.歌词内容?.trim();
+												if (lyrics && lyrics !== "No lyric") {
+													return lrcToPlainLyrics(lyrics);
+												}
+												return "";
+											},
+										};
+										return item;
+									},
+								)
+							: (await LyricallyApi.search(query)).map((track, index) => ({
+									id: `${track.artist}-${track.name}-${index}`,
+									...track,
+									fetchLyrics: () =>
+										LyricallyApi.getLyrics(track.name, track.artist).then(
+											(detail) => detail.lyrics || "",
+										),
+								}));
 			if (geniusSong && source === "genius") {
 				const currentGeniusSong = geniusSong;
 				const existingIndex = hits.findIndex(
@@ -397,7 +533,7 @@ export const ImportLyricsDialog = ({
 		} finally {
 			setSearching(false);
 		}
-	}, [query, t, source, geniusApiKey]);
+	}, [query, t, source, geniusApiKey, jooxToken]);
 
 	useEffect(() => {
 		if (isOpen) {
@@ -621,6 +757,34 @@ export const ImportLyricsDialog = ({
 										? "LRCLIB • synced lyrics available"
 										: "LRCLIB",
 								}));
+							} else if (source === "joox") {
+								hits = (await JooxApi.search(searchQuery, jooxToken)).map(
+									(track) => {
+										const item: ImportTrack = {
+											id: track.id,
+											name: track.name,
+											artist: track.artist,
+											album: track.album,
+											duration: track.duration,
+											cover: track.cover,
+											source: "JOOX",
+											fetchLyrics: async () => {
+												const detail = await JooxApi.getDetail(
+													searchQuery,
+													track.index,
+													jooxToken,
+												);
+												item.audioUrls = detail.播放链接;
+												const lyrics = detail.歌词内容?.trim();
+												if (lyrics && lyrics !== "No lyric") {
+													return lrcToPlainLyrics(lyrics);
+												}
+												return "";
+											},
+										};
+										return item;
+									},
+								);
 							} else {
 								hits = (await LyricallyApi.search(searchQuery)).map(
 									(track, index) => ({
@@ -661,7 +825,15 @@ export const ImportLyricsDialog = ({
 				inputRef.current?.focus();
 			}, 50);
 		}
-	}, [isOpen, source, prefill, setPrefill, geniusApiKey, handleSelectSong]);
+	}, [
+		isOpen,
+		source,
+		prefill,
+		setPrefill,
+		geniusApiKey,
+		jooxToken,
+		handleSelectSong,
+	]);
 
 	const performImport = useCallback(
 		async (reviewed: ReviewedSection[] = []) => {
@@ -715,9 +887,94 @@ export const ImportLyricsDialog = ({
 				});
 			};
 
+			if (downloadAudio && selectedHit) {
+				const trackTitle = selectedHit.name;
+				const trackArtist = selectedHit.artist;
+				toast.info(
+					t(
+						"joox.downloadingAudio",
+						'[Beta] Downloading audio for "{title}"...',
+						{
+							title: trackTitle,
+						},
+					),
+				);
+
+				void (async () => {
+					try {
+						let audioBlob: Blob | null = null;
+						let audioFileName = "";
+
+						if (selectedHit.audioUrls) {
+							const best = JooxApi.getBestAudioUrl(
+								selectedHit.audioUrls,
+								audioQuality,
+							);
+							if (best) {
+								audioBlob = await JooxApi.downloadAudioBlob(best.url);
+								audioFileName = `${trackArtist} - ${trackTitle}.${best.ext}`
+									.replace(/[/\\?%*:|"<>]/g, "-")
+									.trim();
+							}
+						}
+
+						if (!audioBlob) {
+							const result = await JooxApi.searchAndGetAudio(
+								trackTitle,
+								trackArtist,
+								jooxToken,
+								audioQuality,
+							);
+							if (result) {
+								audioBlob = result.audioBlob;
+								audioFileName = result.fileName;
+							}
+						}
+
+						if (audioBlob) {
+							const mime =
+								audioBlob.type ||
+								(audioFileName.endsWith(".flac")
+									? "audio/flac"
+									: audioFileName.endsWith(".ogg")
+										? "audio/ogg"
+										: audioFileName.endsWith(".m4a")
+											? "audio/mp4"
+											: "audio/mpeg");
+							const audioFile = new File(
+								[audioBlob],
+								audioFileName || `${trackTitle}.mp3`,
+								{ type: mime },
+							);
+							(audioFile as any).isAutoDownloaded = true;
+							await audioEngine.loadMusic(audioFile, false, true);
+							toast.success(
+								t("joox.audioLoaded", 'Loaded audio for "{title}"', {
+									title: trackTitle,
+								}),
+							);
+						} else {
+							setJooxAudioSearch({
+								open: true,
+								title: trackTitle,
+								artist: trackArtist,
+							});
+						}
+					} catch (audioErr) {
+						console.warn("Audio download failed:", audioErr);
+						setJooxAudioSearch({
+							open: true,
+							title: trackTitle,
+							artist: trackArtist,
+						});
+					}
+				})();
+			}
+
+			const processedLines: LyricLine[] = [];
+			let geniusHeader: string | undefined;
+
 			if (processLyrics) {
-				let geniusHeader: string | undefined;
-				const processedLines: LyricLine[] = [];
 				for (const lineText of lines) {
 					const header = categorizeGeniusHeaders
 						? getGeniusHeader(lineText)
@@ -752,91 +1009,52 @@ export const ImportLyricsDialog = ({
 						geniusHeader,
 					});
 				}
+			} else {
+				// Standard import: preserve source lines verbatim, including parentheses.
+				for (const lineText of lines) {
+					const header = categorizeGeniusHeaders
+						? getGeniusHeader(lineText)
+						: undefined;
+					if (header) {
+						geniusHeader = header;
+						continue;
+					}
+					const parts = [lineText];
 
-				const normalizedLyrics = normalizeImportedLyricCyrillicEs(
-					normalizeImportedLyricApostrophes(
-						{ lyricLines: processedLines, metadata: [], sections: [] },
-						normalizeApostrophesOnImport,
-					),
-					normalizeCyrillicEsOnImport,
-				);
-				setLyricLines((prev) => {
-					prev.lyricLines = normalizedLyrics.lyricLines;
-					prev.sections = [];
-					applyReviewedSections(prev, reviewed);
-				});
-				if (categorizeGeniusHeaders) setGeniusCategorizationEnabled(true);
-				try {
-					await importSongwriters();
-				} catch (error) {
-					console.error("Genius songwriter fetch failed", error);
-				}
-				if (processedLines[0]?.words[0]) {
-					store.set(selectedLinesAtom, new Set([processedLines[0].id]));
-					store.set(
-						selectedWordsAtom,
-						new Set([processedLines[0].words[0].id]),
-					);
-				}
-				toast.success(
-					t(
-						"metadataDialog.fetchSongwriters.importSuccess",
-						"Imported {count} lines from Genius.",
-						{ count: processedLines.length },
-					),
-				);
-				setIsOpen(false);
-				setSectionReviewSubmitted(false);
-				return;
-			}
+					for (const part of parts) {
+						const trimmed = part.trim();
+						if (!trimmed) continue;
 
-			// Standard import: preserve source lines verbatim, including parentheses.
-			const processedLines: LyricLine[] = [];
-			let geniusHeader: string | undefined;
+						const isBG = false;
+						let text = trimmed;
 
-			for (const lineText of lines) {
-				const header = categorizeGeniusHeaders
-					? getGeniusHeader(lineText)
-					: undefined;
-				if (header) {
-					geniusHeader = header;
-					continue;
-				}
-				const parts = [lineText];
+						text = text.replace(/\\/g, "").replace(/\s+/g, " ");
+						if (!text) continue;
 
-				for (const part of parts) {
-					const trimmed = part.trim();
-					if (!trimmed) continue;
+						const wordStrings = [text];
 
-					const isBG = false;
-					let text = trimmed;
+						const words: LyricWord[] = wordStrings.map((word) => ({
+							id: uid(),
+							word,
+							startTime: 0,
+							endTime: 0,
+							obscene: false,
+							romanWord: "",
+						}));
 
-					text = text.replace(/\\/g, "").replace(/\s+/g, " ");
-					if (!text) continue;
-
-					const wordStrings = [text];
-
-					const words: LyricWord[] = wordStrings.map((word) => ({
-						id: uid(),
-						word,
-						startTime: 0,
-						endTime: 0,
-						obscene: false,
-						romanWord: "",
-					}));
-
-					processedLines.push({
-						id: uid(),
-						words,
-						startTime: 0,
-						endTime: 0,
-						isBG,
-						isDuet: false,
-						ignoreSync: false,
-						translatedLyric: "",
-						romanLyric: "",
-						geniusHeader,
-					});
+						processedLines.push({
+							id: uid(),
+							words,
+							startTime: 0,
+							endTime: 0,
+							isBG,
+							isDuet: false,
+							ignoreSync: false,
+							translatedLyric: "",
+							romanLyric: "",
+							geniusHeader,
+						});
+					}
 				}
 			}
 
@@ -847,7 +1065,49 @@ export const ImportLyricsDialog = ({
 				),
 				normalizeCyrillicEsOnImport,
 			);
+
+			if (autoSegment) {
+				const language = getHyphenationLanguage(selectedEngine);
+				let hyphenatorFunc = segmentationConfig.hyphenator;
+				if (language && selectedEngine !== segmentationConfig.engine) {
+					hyphenatorFunc = (await loadHyphenator(language)) || undefined;
+				}
+				normalizedLyrics.lyricLines = segmentLyricLines(
+					normalizedLyrics.lyricLines,
+					{
+						...segmentationConfig,
+						engine: selectedEngine,
+						splitEnglish: selectedEngine !== "none",
+						hyphenator: hyphenatorFunc,
+					},
+				);
+			}
+
+			if (selectedHit) {
+				const title = selectedHit.name;
+				const artist = selectedHit.artist;
+				const safeFileName = `${artist} - ${title}.ttml`
+					.replace(/[/\\?%*:|"<>]/g, "-")
+					.trim();
+
+				setSaveFileName(safeFileName);
+			}
+
 			setLyricLines((prev) => {
+				if (selectedHit) {
+					const upsert = (key: string, value: string) => {
+						const existing = prev.metadata.find((m) => m.key === key);
+						if (existing) {
+							existing.value = [value];
+						} else {
+							prev.metadata.push({ key, value: [value] });
+						}
+					};
+					upsert("musicName", selectedHit.name);
+					upsert("artists", selectedHit.artist);
+					if (selectedHit.album) upsert("album", selectedHit.album);
+					if (selectedHit.cover) upsert("cover_art", selectedHit.cover);
+				}
 				prev.lyricLines = normalizedLyrics.lyricLines;
 				prev.sections = [];
 				applyReviewedSections(prev, reviewed);
@@ -860,12 +1120,15 @@ export const ImportLyricsDialog = ({
 			}
 
 			// Select first new word
-			if (processedLines.length > 0) {
-				store.set(selectedLinesAtom, new Set([processedLines[0].id]));
-				if (processedLines[0].words.length > 0) {
+			if (normalizedLyrics.lyricLines.length > 0) {
+				store.set(
+					selectedLinesAtom,
+					new Set([normalizedLyrics.lyricLines[0].id]),
+				);
+				if (normalizedLyrics.lyricLines[0].words.length > 0) {
 					store.set(
 						selectedWordsAtom,
-						new Set([processedLines[0].words[0].id]),
+						new Set([normalizedLyrics.lyricLines[0].words[0].id]),
 					);
 				}
 			}
@@ -875,7 +1138,7 @@ export const ImportLyricsDialog = ({
 					"metadataDialog.fetchSongwriters.importSuccess",
 					"Imported {count} lines from Genius.",
 					{
-						count: processedLines.length,
+						count: normalizedLyrics.lyricLines.length,
 					},
 				),
 			);
@@ -885,6 +1148,7 @@ export const ImportLyricsDialog = ({
 		[
 			editableLyrics,
 			setLyricLines,
+			setSaveFileName,
 			setIsOpen,
 			t,
 			processLyrics,
@@ -896,12 +1160,25 @@ export const ImportLyricsDialog = ({
 			fetchSongwriters,
 			selectedHit,
 			setGeniusCategorizationEnabled,
+			downloadAudio,
+			audioQuality,
+			jooxToken,
+			autoSegment,
+			selectedEngine,
+			segmentationConfig,
+			setSavedSegmentationEngine,
+			setSplitEnglish,
 		],
 	);
 
 	const confirmAndPerformImport = useCallback(
 		(reviewed: ReviewedSection[] = [], onCancel?: () => void) => {
-			if (isDirty) {
+			const currentLyrics = store.get(lyricLinesAtom);
+			const hasExistingContent =
+				currentLyrics.lyricLines.length > 0 ||
+				currentLyrics.metadata.some((m) => m.value.some((v) => v.trim()));
+
+			if (isDirty && hasExistingContent) {
 				setConfirmDialog({
 					open: true,
 					title: t("confirmDialog.importFile.title", "Confirm lyric import"),
@@ -918,7 +1195,7 @@ export const ImportLyricsDialog = ({
 			}
 			void performImport(reviewed);
 		},
-		[isDirty, performImport, setConfirmDialog, t],
+		[isDirty, performImport, setConfirmDialog, store, t],
 	);
 
 	const handleImport = useCallback(() => {
@@ -942,44 +1219,114 @@ export const ImportLyricsDialog = ({
 	if (source === "genius" && !geniusApiKey) {
 		return (
 			<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-				<Dialog.Content style={{ maxWidth: 500 }}>
-					<Dialog.Title>
-						{t("genius.setupTitle", "Genius API Key Setup")}
-					</Dialog.Title>
-					<Flex direction="column" gap="4">
-						<Text>
-							{t(
-								"genius.setupDesc",
-								"To import lyrics from Genius you need a CLIENT ACCESS TOKEN.",
-							)}
-						</Text>
-						<Text size="2">
-							<a
-								href={getGeniusKeyGuideUrl(i18n.resolvedLanguage)}
-								target="_blank"
-								rel="noopener noreferrer"
+				<Dialog.Content style={{ maxWidth: 520 }}>
+					<Flex justify="between" align="start" mb="4">
+						<Flex align="center" gap="3">
+							<Box
+								style={{
+									width: 40,
+									height: 40,
+									borderRadius: "var(--radius-3)",
+									background: "var(--orange-3)",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									color: "var(--orange-11)",
+									flexShrink: 0,
+								}}
 							>
-								{t(
-									"genius.howToGetKey",
-									"How to create a Genius Client Access Token",
-								)}
-							</a>
-						</Text>
+								<Key20Regular style={{ width: 22, height: 22 }} />
+							</Box>
+							<Box>
+								<Flex align="center" gap="2">
+									<Dialog.Title size="5" mb="0" style={{ fontWeight: 600 }}>
+										{t("genius.setupTitle", "Genius API Key Setup")}
+									</Dialog.Title>
+									<Badge color="orange" variant="soft" radius="full" size="1">
+										Genius
+									</Badge>
+								</Flex>
+								<Dialog.Description size="2" color="gray">
+									{t(
+										"genius.setupDesc",
+										"To import lyrics from Genius you need a CLIENT ACCESS TOKEN.",
+									)}
+								</Dialog.Description>
+							</Box>
+						</Flex>
+						<Dialog.Close>
+							<IconButton variant="ghost" color="gray" size="2">
+								<DismissRegular />
+							</IconButton>
+						</Dialog.Close>
+					</Flex>
+
+					<Flex direction="column" gap="4">
+						<Card
+							variant="surface"
+							style={{
+								padding: "var(--space-3)",
+								background: "var(--gray-2)",
+							}}
+						>
+							<Text size="2" color="gray">
+								<a
+									href={getGeniusKeyGuideUrl(i18n.resolvedLanguage)}
+									target="_blank"
+									rel="noopener noreferrer"
+									style={{
+										color: "var(--accent-11)",
+										textDecoration: "none",
+										fontWeight: 500,
+									}}
+								>
+									{t(
+										"genius.howToGetKey",
+										"How to create a Genius Client Access Token →",
+									)}
+								</a>
+							</Text>
+						</Card>
+
 						<TextField.Root
+							size="3"
 							value={tempApiKey}
 							onChange={(e) => setTempApiKey(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === "Enter" && tempApiKey.trim()) {
+									setGeniusApiKey(tempApiKey.trim());
+								}
+							}}
 							placeholder={t(
 								"genius.keyPlaceholder",
 								"Paste CLIENT ACCESS TOKEN here…",
 							)}
-						/>
-						<Flex justify="end" gap="2">
+						>
+							<TextField.Slot>
+								<Key20Regular style={{ width: 18, height: 18, opacity: 0.6 }} />
+							</TextField.Slot>
+							{tempApiKey && (
+								<TextField.Slot>
+									<IconButton
+										variant="ghost"
+										size="1"
+										color="gray"
+										onClick={() => setTempApiKey("")}
+									>
+										<DismissRegular style={{ width: 14, height: 14 }} />
+									</IconButton>
+								</TextField.Slot>
+							)}
+						</TextField.Root>
+
+						<Flex justify="end" gap="3" mt="2">
 							<Dialog.Close>
 								<Button variant="soft" color="gray">
 									{t("common.cancel", "Cancel")}
 								</Button>
 							</Dialog.Close>
 							<Button
+								color="orange"
 								disabled={!tempApiKey.trim()}
 								onClick={() => setGeniusApiKey(tempApiKey.trim())}
 							>
@@ -999,58 +1346,175 @@ export const ImportLyricsDialog = ({
 					open={isOpen && !sectionReviewOpen && !sectionReviewSubmitted}
 					onOpenChange={setIsOpen}
 				>
-					<Dialog.Content style={{ maxWidth: 680, height: "80vh" }}>
-						<Flex justify="between" align="center" mb="3">
-							<Flex direction="column">
-								<Dialog.Title mb="0">
-									{source === "genius"
-										? t("genius.previewTitle", "Genius — Lyrics Preview")
-										: source === "lrclib"
-											? t("lrclib.title", "LRCLIB — Lyrics Preview")
-											: t(
-													"lyrically.previewTitle",
-													"Lyrically — Lyrics Preview",
-												)}
-								</Dialog.Title>
-								<Text size="1" color="gray" truncate style={{ maxWidth: 460 }}>
-									{selectedHit.name} - {selectedHit.artist}
-								</Text>
-							</Flex>
+					<Dialog.Content
+						style={{
+							maxWidth: 720,
+							height: "85vh",
+							maxHeight: 780,
+							display: "flex",
+							flexDirection: "column",
+							overflow: "hidden",
+							padding: "var(--space-4)",
+						}}
+					>
+						{/* Top Header with Back button and Close button */}
+						<Flex justify="between" align="center" mb="2" style={{ flexShrink: 0 }}>
 							<Button
-								variant="soft"
+								variant="ghost"
+								size="2"
 								color="gray"
 								onClick={() => {
 									setSelectedHit(null);
 									setEditableLyrics("");
 								}}
 							>
-								{t("genius.back", "← Back")}
+								<ArrowLeft20Regular style={{ width: 16, height: 16 }} />
+								{t("genius.back", "Back to results")}
 							</Button>
+							<Dialog.Close>
+								<IconButton variant="ghost" color="gray" size="2">
+									<DismissRegular />
+								</IconButton>
+							</Dialog.Close>
 						</Flex>
 
+						{/* Track Header Card */}
+						<Card
+							variant="surface"
+							style={{
+								padding: "var(--space-2) var(--space-3)",
+								marginBottom: "var(--space-2)",
+								flexShrink: 0,
+							}}
+						>
+							<Flex gap="3" align="center">
+								{selectedHit.cover ? (
+									<img
+										src={getBetterGeniusCoverArt(selectedHit.cover, 100)}
+										alt={selectedHit.name}
+										style={{
+											width: 48,
+											height: 48,
+											borderRadius: 6,
+											objectFit: "cover",
+											boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+											flexShrink: 0,
+										}}
+										referrerPolicy="no-referrer"
+									/>
+								) : (
+									<Box
+										style={{
+											width: 48,
+											height: 48,
+											borderRadius: 6,
+											background: "var(--gray-4)",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											flexShrink: 0,
+										}}
+									>
+										<MusicNote2Filled
+											style={{ width: 22, height: 22, opacity: 0.4 }}
+										/>
+									</Box>
+								)}
+								<Flex
+									direction="column"
+									gap="0"
+									style={{ flex: 1, minWidth: 0 }}
+								>
+									<Heading size="3" truncate>
+										{selectedHit.name}
+									</Heading>
+									<Text size="2" weight="medium" color="gray" truncate>
+										{selectedHit.artist}
+									</Text>
+									{selectedHit.album && (
+										<Text
+											size="1"
+											color="gray"
+											truncate
+											style={{ opacity: 0.8 }}
+										>
+											{selectedHit.album}
+										</Text>
+									)}
+								</Flex>
+								<Flex gap="2" align="center" style={{ flexShrink: 0 }}>
+									<Badge color={provider.badgeColor} size="1" variant="soft">
+										{provider.name}
+									</Badge>
+									{selectedHit.duration && (
+										<Badge color="gray" size="1" variant="surface">
+											{selectedHit.duration}
+										</Badge>
+									)}
+								</Flex>
+							</Flex>
+						</Card>
+
 						{fetchingLyrics ? (
-							<Flex align="center" justify="center" style={{ height: "60%" }}>
+							<Flex
+								direction="column"
+								align="center"
+								justify="center"
+								gap="3"
+								style={{ flex: "1 1 0", minHeight: 0 }}
+							>
 								<Spinner size="3" />
+								<Text size="2" color="gray">
+									{t("lyricsImport.fetchingLyrics", "Fetching lyrics…")}
+								</Text>
 							</Flex>
 						) : (
-							<>
-								<Flex justify="between" align="center" mb="2">
-									<Text size="1" color="gray">
-										{isEditing
-											? t("lyrically.editingRawText", "Editing Raw Text")
-											: t(
-													"genius.previewSubtitle",
-													"Text in parentheses will be separated as background lyrics.",
-												)}
-									</Text>
+							<Flex
+								direction="column"
+								style={{ flex: "1 1 0", minHeight: 0, overflow: "hidden" }}
+							>
+								<Flex
+									justify="between"
+									align="center"
+									mb="2"
+									style={{ flexShrink: 0 }}
+								>
+									<Flex align="center" gap="2">
+										<Text size="1" color="gray" weight="medium">
+											{isEditing
+												? t("lyrically.editingRawText", "Editing Raw Text")
+												: t(
+														"genius.previewSubtitle",
+														"Text in parentheses will be separated as background lyrics.",
+													)}
+										</Text>
+										{editableLyrics && (
+											<Badge size="1" color="gray" variant="surface">
+												{t("genius.linesCount", "{count} lines", {
+													count: editableLyrics
+														.split("\n")
+														.filter((line) => line.trim()).length,
+												})}
+											</Badge>
+										)}
+									</Flex>
 									<Button
-										variant="ghost"
+										variant="soft"
 										size="1"
+										color="gray"
 										onClick={() => setIsEditing(!isEditing)}
 									>
-										{isEditing
-											? t("lyrically.backToPreview", "Back to Preview")
-											: t("lyrically.manualEdit", "Manual Edit")}
+										{isEditing ? (
+											<>
+												<Eye20Regular style={{ width: 14, height: 14 }} />
+												{t("lyrically.backToPreview", "Back to Preview")}
+											</>
+										) : (
+											<>
+												<Edit20Regular style={{ width: 14, height: 14 }} />
+												{t("lyrically.manualEdit", "Manual Edit")}
+											</>
+										)}
 									</Button>
 								</Flex>
 
@@ -1059,16 +1523,22 @@ export const ImportLyricsDialog = ({
 										value={editableLyrics}
 										onChange={(e) => setEditableLyrics(e.target.value)}
 										style={{
-											height: "calc(82vh - 200px)",
+											flex: "1 1 0",
+											height: "100%",
+											minHeight: 0,
 											resize: "none",
+											fontFamily: "var(--font-mono, monospace)",
 											fontSize: 13,
+											lineHeight: 1.6,
 										}}
 									/>
 								) : (
 									<Box
 										style={{
-											height: "calc(82vh - 200px)",
-											padding: "16px",
+											flex: "1 1 0",
+											height: "100%",
+											minHeight: 0,
+											padding: "12px 16px",
 											backgroundColor: "var(--gray-2)",
 											border: "1px solid var(--gray-5)",
 											borderRadius: "var(--radius-3)",
@@ -1099,97 +1569,320 @@ export const ImportLyricsDialog = ({
 									</Box>
 								)}
 
-								<Flex justify="between" align="end" gap="2" wrap="wrap" mt="3">
-									<Flex
-										gap="3"
-										align="center"
-										wrap="wrap"
-										style={{ flex: 1, minWidth: 0 }}
-									>
-										<Text size="1" color="gray">
-											{t("genius.linesCount", "{count} lines", {
-												count: editableLyrics
-													.split("\n")
-													.filter((line) => line.trim()).length,
-											})}
-										</Text>
-										<Flex direction="column" gap="2" align="start">
-											<Flex gap="3" align="center" wrap="wrap">
-												<Flex gap="2" align="center">
-													<Text size="1" color="gray">
+								{/* Options Bar Card */}
+								<Box
+									style={{
+										padding: "6px 8px",
+										background: "var(--gray-2)",
+										border: "1px solid var(--gray-5)",
+										borderRadius: "var(--radius-3)",
+										marginTop: "var(--space-2)",
+										flexShrink: 0,
+									}}
+								>
+									<Flex gap="2" align="center" wrap="wrap">
+										{/* Auto Segment Toggle */}
+										<Flex
+											align="center"
+											gap="2"
+											style={{
+												padding: "4px 8px",
+												borderRadius: "var(--radius-2)",
+												backgroundColor: autoSegment
+													? "var(--accent-a3)"
+													: "var(--gray-a2)",
+												border: `1px solid ${
+													autoSegment
+														? "var(--accent-a6)"
+														: "var(--gray-a4)"
+												}`,
+												transition: "all 0.15s ease",
+											}}
+										>
+											<Switch
+												id="chk-auto-segment"
+												size="1"
+												checked={autoSegment}
+												onCheckedChange={setAutoSegment}
+											/>
+											<Text
+												size="1"
+												as="label"
+												htmlFor="chk-auto-segment"
+												weight={autoSegment ? "medium" : "regular"}
+												style={{
+													cursor: "pointer",
+													userSelect: "none",
+													color: autoSegment
+														? "var(--accent-11)"
+														: "var(--gray-12)",
+												}}
+											>
+												{t("autoSegmentDialog.title", "Auto Segment")}
+											</Text>
+											{autoSegment && (
+												<Select.Root
+													size="1"
+													value={selectedEngine}
+													onValueChange={(val) =>
+														setSelectedEngine(val as SegmentationEngineId)
+													}
+												>
+													<Select.Trigger
+														style={{
+															height: 22,
+															fontSize: 11,
+															padding: "0 6px",
+															borderRadius: "var(--radius-1)",
+														}}
+													/>
+													<Select.Content position="popper" side="top">
+														{SYLLABIFICATION_ENGINES.map(({ id, name }) => (
+															<Select.Item key={id} value={id}>
+																{name}
+																{id === detectedEngine ? " ★" : ""}
+															</Select.Item>
+														))}
+													</Select.Content>
+												</Select.Root>
+											)}
+										</Flex>
+
+										{/* Process Lyrics Toggle */}
+										<Flex
+											align="center"
+											gap="2"
+											style={{
+												padding: "4px 8px",
+												borderRadius: "var(--radius-2)",
+												backgroundColor: processLyrics
+													? "var(--accent-a3)"
+													: "var(--gray-a2)",
+												border: `1px solid ${
+													processLyrics
+														? "var(--accent-a6)"
+														: "var(--gray-a4)"
+												}`,
+												transition: "all 0.15s ease",
+											}}
+										>
+											<Switch
+												id="chk-process-lyrics"
+												size="1"
+												checked={processLyrics}
+												onCheckedChange={setProcessLyrics}
+											/>
+											<Text
+												size="1"
+												as="label"
+												htmlFor="chk-process-lyrics"
+												weight={processLyrics ? "medium" : "regular"}
+												style={{
+													cursor: "pointer",
+													userSelect: "none",
+													color: processLyrics
+														? "var(--accent-11)"
+														: "var(--gray-12)",
+												}}
+											>
+												{t("textImportDialog.processLyrics", "Process Lyrics")}
+											</Text>
+										</Flex>
+
+										{/* Download Audio Toggle */}
+										<Flex
+											align="center"
+											gap="2"
+											style={{
+												padding: "4px 8px",
+												borderRadius: "var(--radius-2)",
+												backgroundColor: downloadAudio
+													? "var(--accent-a3)"
+													: "var(--gray-a2)",
+												border: `1px solid ${
+													downloadAudio
+														? "var(--accent-a6)"
+														: "var(--gray-a4)"
+												}`,
+												transition: "all 0.15s ease",
+											}}
+										>
+											<Switch
+												id="chk-download-audio"
+												size="1"
+												checked={downloadAudio}
+												onCheckedChange={setDownloadAudio}
+											/>
+											<Flex align="center" gap="2">
+												<Text
+													size="1"
+													as="label"
+													htmlFor="chk-download-audio"
+													weight={downloadAudio ? "medium" : "regular"}
+													style={{
+														cursor: "pointer",
+														userSelect: "none",
+														color: downloadAudio
+															? "var(--accent-11)"
+															: "var(--gray-12)",
+													}}
+												>
+													{t("joox.downloadAudio", "Download audio into app")}
+												</Text>
+												<Badge color="orange" size="1" variant="soft">
+													Beta
+												</Badge>
+											</Flex>
+											{downloadAudio && (
+												<Select.Root
+													size="1"
+													value={audioQuality}
+													onValueChange={setAudioQuality}
+												>
+													<Select.Trigger
+														style={{
+															height: 22,
+															fontSize: 11,
+															padding: "0 6px",
+															borderRadius: "var(--radius-1)",
+														}}
+													/>
+													<Select.Content position="popper" side="top">
+														<Select.Item value="320">MP3 320k</Select.Item>
+														<Select.Item value="flac">
+															FLAC Lossless
+														</Select.Item>
+														<Select.Item value="128">MP3 128k</Select.Item>
+													</Select.Content>
+												</Select.Root>
+											)}
+										</Flex>
+
+										{source === "genius" && (
+											<>
+												{/* Fetch Songwriters Toggle */}
+												<Flex
+													align="center"
+													gap="2"
+													style={{
+														padding: "4px 8px",
+														borderRadius: "var(--radius-2)",
+														backgroundColor: fetchSongwriters
+															? "var(--accent-a3)"
+															: "var(--gray-a2)",
+														border: `1px solid ${
+															fetchSongwriters
+																? "var(--accent-a6)"
+																: "var(--gray-a4)"
+														}`,
+														transition: "all 0.15s ease",
+													}}
+												>
+													<Switch
+														id="chk-fetch-songwriters"
+														size="1"
+														checked={fetchSongwriters}
+														onCheckedChange={setFetchSongwriters}
+													/>
+													<Text
+														size="1"
+														as="label"
+														htmlFor="chk-fetch-songwriters"
+														weight={fetchSongwriters ? "medium" : "regular"}
+														style={{
+															cursor: "pointer",
+															userSelect: "none",
+															color: fetchSongwriters
+																? "var(--accent-11)"
+																: "var(--gray-12)",
+														}}
+													>
 														{t(
-															"textImportDialog.processLyrics",
-															"Process Lyrics",
+															"metadataDialog.fetchSongwriters.button",
+															"Fetch Songwriters",
 														)}
 													</Text>
-													<Checkbox
-														size="1"
-														checked={processLyrics}
-														onCheckedChange={(checked: boolean) =>
-															setProcessLyrics(checked)
-														}
-													/>
 												</Flex>
-												{source === "genius" && (
-													<Flex gap="2" align="center">
-														<Text size="1" color="gray">
-															{t(
-																"metadataDialog.fetchSongwriters.button",
-																"Fetch Songwriters",
-															)}
-														</Text>
-														<Checkbox
-															size="1"
-															checked={fetchSongwriters}
-															onCheckedChange={(checked: boolean) =>
-																setFetchSongwriters(checked)
-															}
-														/>
-													</Flex>
-												)}
-											</Flex>
-											{source === "genius" && (
-												<Flex gap="2" align="center">
-													<Text size="1" color="gray">
+
+												{/* Genius Header Categorization Toggle */}
+												<Flex
+													align="center"
+													gap="2"
+													style={{
+														padding: "4px 8px",
+														borderRadius: "var(--radius-2)",
+														backgroundColor: categorizeGeniusHeaders
+															? "var(--accent-a3)"
+															: "var(--gray-a2)",
+														border: `1px solid ${
+															categorizeGeniusHeaders
+																? "var(--accent-a6)"
+																: "var(--gray-a4)"
+														}`,
+														transition: "all 0.15s ease",
+													}}
+												>
+													<Switch
+														id="chk-categorize-headers"
+														size="1"
+														checked={categorizeGeniusHeaders}
+														onCheckedChange={setCategorizeGeniusHeaders}
+													/>
+													<Text
+														size="1"
+														as="label"
+														htmlFor="chk-categorize-headers"
+														weight={
+															categorizeGeniusHeaders ? "medium" : "regular"
+														}
+														style={{
+															cursor: "pointer",
+															userSelect: "none",
+															color: categorizeGeniusHeaders
+																? "var(--accent-11)"
+																: "var(--gray-12)",
+														}}
+													>
 														{t(
 															"experimentalFeatures.geniusCategorization.title",
 															"Genius Header Categorization",
 														)}
 													</Text>
-													<Checkbox
-														size="1"
-														checked={categorizeGeniusHeaders}
-														onCheckedChange={(checked: boolean) =>
-															setCategorizeGeniusHeaders(checked)
-														}
-													/>
 												</Flex>
-											)}
-										</Flex>
+											</>
+										)}
 									</Flex>
+								</Box>
 
-									<Flex gap="2" style={{ flexShrink: 0 }}>
-										<Dialog.Close>
-											<Button variant="soft" color="gray">
-												{t("common.cancel", "Cancel")}
-											</Button>
-										</Dialog.Close>
-										<Button
-											onClick={handleImport}
-											disabled={
-												!editableLyrics.trim() ||
-												editableLyrics ===
-													t(
-														"lyrically.noLyricsLabel",
-														"No lyrics available for this track.",
-													)
-											}
-										>
-											{t("genius.importButton", "Import Lyrics")}
+								{/* Bottom Action Footer */}
+								<Flex
+									justify="end"
+									gap="3"
+									mt="3"
+									style={{ flexShrink: 0 }}
+								>
+									<Dialog.Close>
+										<Button variant="soft" color="gray">
+											{t("common.cancel", "Cancel")}
 										</Button>
-									</Flex>
+									</Dialog.Close>
+									<Button
+										color={provider.buttonColor}
+										onClick={handleImport}
+										disabled={
+											!editableLyrics.trim() ||
+											editableLyrics ===
+												t(
+													"lyrically.noLyricsLabel",
+													"No lyrics available for this track.",
+												)
+										}
+									>
+										<ArrowDownload24Regular style={{ width: 18, height: 18 }} />
+										{t("genius.importButton", "Import Lyrics")}
+									</Button>
 								</Flex>
-							</>
+							</Flex>
 						)}
 					</Dialog.Content>
 				</Dialog.Root>
@@ -1213,59 +1906,168 @@ export const ImportLyricsDialog = ({
 	// ── Search pane ────────────────────────────────────────────────────────────
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-			<Dialog.Content style={{ maxWidth: 620, height: "72vh" }}>
-				<Dialog.Title>
-					{source === "genius"
-						? t("genius.importTitle", "Import Lyrics from Genius")
-						: source === "lrclib"
-							? t("lrclib.title", "Import Lyrics from LRCLIB")
-							: t(
-									"lyrically.importTitle",
-									"Import Lyrics safely via Lyrically",
-								)}
-				</Dialog.Title>
+			<Dialog.Content
+				style={{
+					maxWidth: 680,
+					height: "76vh",
+					maxHeight: 720,
+					display: "flex",
+					flexDirection: "column",
+					overflow: "hidden",
+				}}
+			>
+				{/* Modern Header */}
+				<Flex justify="between" align="start" mb="4" style={{ flexShrink: 0 }}>
+					<Flex align="center" gap="3">
+						<Box
+							style={{
+								width: 40,
+								height: 40,
+								borderRadius: "var(--radius-3)",
+								background: provider.background,
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								color: provider.color,
+								flexShrink: 0,
+							}}
+						>
+							{provider.icon}
+						</Box>
+						<Box>
+							<Flex align="center" gap="2">
+								<Dialog.Title size="5" mb="0" style={{ fontWeight: 600 }}>
+									{t(provider.titleKey, provider.defaultTitle)}
+								</Dialog.Title>
+								<Badge
+									color={provider.badgeColor}
+									variant="soft"
+									radius="full"
+									size="1"
+								>
+									{provider.name}
+								</Badge>
+							</Flex>
+							<Dialog.Description size="2" color="gray">
+								{t(provider.descKey, provider.defaultDesc)}
+							</Dialog.Description>
+						</Box>
+					</Flex>
+					<Dialog.Close>
+						<IconButton variant="ghost" color="gray" size="2">
+							<DismissRegular />
+						</IconButton>
+					</Dialog.Close>
+				</Flex>
 
-				<Flex gap="3" mb="4">
+				{/* Search Input Bar */}
+				<Flex gap="2" mb="4" style={{ flexShrink: 0 }}>
 					<TextField.Root
 						ref={inputRef}
+						size="3"
 						style={{ flex: 1 }}
-						placeholder={t(
-							"genius.searchPlaceholderWithLink",
-							"Artist – Song title, or paste Spotify link…",
-						)}
+						placeholder={
+							source === "joox"
+								? t(
+										"joox.searchPlaceholderWithLink",
+										"Song title, artist, or paste Spotify link…",
+									)
+								: t(
+										"genius.searchPlaceholderWithLink",
+										"Artist – Song title, or paste Spotify link…",
+									)
+						}
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
 						onKeyDown={(e) => e.key === "Enter" && handleSearch()}
 					>
 						<TextField.Slot>
-							<Search16Regular />
+							<Search24Regular
+								style={{ width: 18, height: 18, opacity: 0.6 }}
+							/>
 						</TextField.Slot>
+						{query && (
+							<TextField.Slot>
+								<IconButton
+									variant="ghost"
+									size="1"
+									color="gray"
+									onClick={() => setQuery("")}
+								>
+									<DismissRegular style={{ width: 14, height: 14 }} />
+								</IconButton>
+							</TextField.Slot>
+						)}
 					</TextField.Root>
-					<Button onClick={handleSearch} disabled={searching}>
-						{searching ? <Spinner /> : t("common.search", "Search")}
+					<Button
+						size="3"
+						color={provider.buttonColor}
+						onClick={handleSearch}
+						disabled={!query.trim() || searching}
+					>
+						{searching ? (
+							<Spinner />
+						) : (
+							<>
+								<GlobeSearch24Regular style={{ width: 18, height: 18 }} />
+								{t("common.search", "Search")}
+							</>
+						)}
 					</Button>
 				</Flex>
 
+				{/* Results / Empty / Loading State Container */}
 				<ScrollArea
 					type="auto"
 					scrollbars="vertical"
-					style={{ height: "calc(70vh - 160px)" }}
+					style={{ flex: "1 1 0", minHeight: 0 }}
 				>
-					<Flex direction="column" gap="2">
-						{searching && (
-							<Flex align="center" justify="center" p="6">
-								<Spinner size="3" />
-							</Flex>
-						)}
+					{searching && (
+						<Flex
+							direction="column"
+							align="center"
+							justify="center"
+							py="8"
+							gap="3"
+						>
+							<Spinner size="3" />
+							<Text size="2" color="gray">
+								{t(
+									"lyricsImport.searchingWithProvider",
+									`Searching ${provider.name}…`,
+								)}
+							</Text>
+						</Flex>
+					)}
 
-						{!searching &&
-							results.map((hit, i) => (
+					{!searching && results.length > 0 && (
+						<Flex direction="column" gap="2" pr="2">
+							{results.map((hit, i) => (
 								<Card
 									key={`${hit.artist}-${hit.name}-${i}`}
-									onClick={() => handleSelectSong(hit)}
-									style={{ cursor: "pointer" }}
+									asChild
+									variant="surface"
+									style={{
+										cursor: "pointer",
+										transition: "all 0.15s ease",
+										padding: "var(--space-2)",
+									}}
 								>
-									<Flex align="center" gap="3">
+									<button
+										type="button"
+										onClick={() => handleSelectSong(hit)}
+										style={{
+											textAlign: "left",
+											background: "transparent",
+											border: "none",
+											width: "100%",
+											display: "flex",
+											alignItems: "center",
+											gap: "var(--space-3)",
+											cursor: "pointer",
+											padding: 0,
+										}}
+									>
 										{hit.cover ? (
 											<img
 												src={getBetterGeniusCoverArt(hit.cover, 100)}
@@ -1273,8 +2075,9 @@ export const ImportLyricsDialog = ({
 												style={{
 													width: 48,
 													height: 48,
-													borderRadius: 6,
+													borderRadius: 8,
 													objectFit: "cover",
+													boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
 													flexShrink: 0,
 												}}
 												referrerPolicy="no-referrer"
@@ -1284,15 +2087,22 @@ export const ImportLyricsDialog = ({
 												style={{
 													width: 48,
 													height: 48,
-													borderRadius: 6,
-													backgroundColor: "var(--gray-3)",
+													borderRadius: 8,
+													backgroundColor: "var(--gray-4)",
+													display: "flex",
+													alignItems: "center",
+													justifyContent: "center",
 													flexShrink: 0,
 												}}
-											/>
+											>
+												<MusicNote2Filled
+													style={{ width: 22, height: 22, opacity: 0.4 }}
+												/>
+											</Box>
 										)}
 										<Flex
 											direction="column"
-											gap="1"
+											gap="0"
 											style={{ flex: 1, minWidth: 0 }}
 										>
 											<Text size="2" weight="bold" truncate>
@@ -1300,72 +2110,132 @@ export const ImportLyricsDialog = ({
 											</Text>
 											<Text size="1" color="gray" truncate>
 												{hit.artist}
-												{hit.album ? ` • ${hit.album}` : ""}
 											</Text>
-											{hit.source && (
-												<Text size="1" color="gray" style={{ opacity: 0.6 }}>
-													{t("lyrically.source", "Source: ")}
-													{hit.source}
+											{hit.album && (
+												<Text
+													size="1"
+													color="gray"
+													truncate
+													style={{ opacity: 0.75 }}
+												>
+													{hit.album}
 												</Text>
 											)}
 										</Flex>
-									</Flex>
+										<Flex align="center" gap="2" style={{ flexShrink: 0 }}>
+											{hit.duration && (
+												<Badge size="1" color="gray" variant="soft">
+													{hit.duration}
+												</Badge>
+											)}
+											{hit.source && (
+												<Badge size="1" color="gray" variant="surface">
+													{hit.source}
+												</Badge>
+											)}
+											<ArrowDownload24Regular
+												style={{
+													width: 18,
+													height: 18,
+													opacity: 0.5,
+													flexShrink: 0,
+												}}
+											/>
+										</Flex>
+									</button>
 								</Card>
 							))}
+						</Flex>
+					)}
 
-						{!searching && hasSearched && results.length === 0 && (
-							<Flex
-								direction="column"
-								align="center"
-								justify="center"
-								gap="2"
-								p="6"
-								style={{ color: "var(--gray-9)" }}
-							>
-								<Search24Regular style={{ width: 40, height: 40 }} />
-								<Text>
+					{!searching && hasSearched && results.length === 0 && (
+						<Box
+							py="8"
+							px="4"
+							style={{
+								textAlign: "center",
+								background: "var(--gray-2)",
+								borderRadius: 8,
+								border: "1px dashed var(--gray-6)",
+								margin: "var(--space-2) 0",
+							}}
+						>
+							<Flex direction="column" align="center" justify="center" gap="2">
+								<Search24Regular
+									style={{ width: 36, height: 36, opacity: 0.4 }}
+								/>
+								<Heading size="3" color="gray">
+									{t("genius.notFound", "No results found")}
+								</Heading>
+								<Text size="2" color="gray">
 									{t(
-										"genius.notFound",
-										"No results found. Try different keywords.",
+										"lyricsImport.tryDifferentKeywords",
+										"Try searching with different keywords, artist name, or paste a link.",
 									)}
 								</Text>
 							</Flex>
-						)}
+						</Box>
+					)}
 
-						{!hasSearched && !searching && results.length === 0 && (
-							<Flex
-								direction="column"
-								align="center"
-								justify="center"
-								gap="2"
-								p="6"
-								style={{ color: "var(--gray-9)" }}
-							>
-								<Search24Regular style={{ width: 40, height: 40 }} />
-								<Text>
+					{!hasSearched && !searching && results.length === 0 && (
+						<Box
+							py="8"
+							px="4"
+							style={{
+								textAlign: "center",
+								background: "var(--gray-2)",
+								borderRadius: 8,
+								border: "1px dashed var(--gray-6)",
+								margin: "var(--space-2) 0",
+							}}
+						>
+							<Flex direction="column" align="center" justify="center" gap="2">
+								<Box
+									style={{
+										width: 48,
+										height: 48,
+										borderRadius: "50%",
+										background: provider.background,
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+										color: provider.color,
+										marginBottom: 4,
+									}}
+								>
+									{provider.icon}
+								</Box>
+								<Heading size="3">
+									{t("lyricsImport.initialHeading", `Search ${provider.name}`)}
+								</Heading>
+								<Text size="2" color="gray" style={{ maxWidth: 360 }}>
 									{t(
-										"genius.noResult",
-										"Enter a song name or artist to start.",
+										"lyricsImport.initialSubtext",
+										"Enter song title and artist name, or paste a Spotify link to fetch lyrics automatically.",
 									)}
 								</Text>
 							</Flex>
-						)}
-					</Flex>
+						</Box>
+					)}
 				</ScrollArea>
 
-				<Flex justify="between" align="center" mt="3">
-					{source === "genius" && (
+				{/* Footer */}
+				<Flex justify="between" align="center" mt="4" style={{ flexShrink: 0 }}>
+					{source === "genius" ? (
 						<Button
 							variant="ghost"
-							size="1"
+							size="2"
 							color="gray"
 							onClick={() => setGeniusApiKey("")}
 						>
+							<Key20Regular style={{ width: 16, height: 16 }} />
 							{t("genius.changeKey", "Change API Key")}
 						</Button>
+					) : (
+						<Box />
 					)}
 					<Dialog.Close>
-						<Button variant="soft" color="gray">
+						<Button variant="soft" color="gray" size="2">
 							{t("common.close", "Close")}
 						</Button>
 					</Dialog.Close>

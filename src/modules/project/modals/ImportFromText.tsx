@@ -41,6 +41,7 @@ import {
 
 import { type LyricLine, newLyricLine, newLyricWord } from "$/types/ttml";
 import {
+	autoSegmentOnLyricImportAtom,
 	importAddSpacesAtom,
 	importSplitHyphensAtom,
 	normalizeApostrophesOnImportAtom,
@@ -50,6 +51,8 @@ import {
 	geniusHeaderDetectionDialogShownAtom,
 	geniusHeaderRestorationTextAtom,
 } from "$/modules/settings/states/index.ts";
+import { segmentLyricLines } from "$/modules/segmentation/utils/segmentation";
+import { useSegmentationConfig } from "$/modules/segmentation/utils/useSegmentationConfig";
 
 import { error as logError } from "$/utils/logging.ts";
 import { prepareLyricLine } from "$/utils/lyric-prep";
@@ -160,6 +163,8 @@ export const ImportFromText = () => {
 	const [addSpaces, setAddSpaces] = useAtom(importAddSpacesAtom);
 	const [splitHyphens, setSplitHyphens] = useAtom(importSplitHyphensAtom);
 	const [isGuideClicked, setIsGuideClicked] = useAtom(isGuideClickedAtom);
+	const [autoSegment, setAutoSegment] = useAtom(autoSegmentOnLyricImportAtom);
+	const { config: segmentationConfig } = useSegmentationConfig();
 	const [geniusCategorizationEnabled, setGeniusCategorizationEnabled] = useAtom(
 		geniusCategorizationEnabledAtom,
 	);
@@ -379,6 +384,10 @@ export const ImportFromText = () => {
 						word: word.replace(/\\/g, ""),
 					}));
 				}
+			}
+
+			if (autoSegment) {
+				result = segmentLyricLines(result, segmentationConfig);
 			}
 
 			const importedLyrics = {
@@ -818,6 +827,17 @@ export const ImportFromText = () => {
 											<Switch
 												checked={geniusCategorizationEnabled}
 												onCheckedChange={setGeniusCategorizationEnabled}
+											/>
+
+											<PrefText>
+												{t(
+													"autoSegmentDialog.title",
+													"Auto Segment",
+												)}
+											</PrefText>
+											<Switch
+												checked={autoSegment}
+												onCheckedChange={setAutoSegment}
 											/>
 										</Grid>
 									</Flex>
