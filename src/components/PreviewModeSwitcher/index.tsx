@@ -1,13 +1,23 @@
+import {
+	FullScreenMaximize20Regular,
+	FullScreenMinimize20Regular,
+	Image20Regular,
+} from "@fluentui/react-icons";
+import classNames from "classnames";
 import { useAtom, useAtomValue } from "jotai";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import SuspensePlaceHolder from "$/components/SuspensePlaceHolder";
 import {
 	PreviewModeType,
-	previewModeTypeAtom,
 	previewFullscreenAtom,
+	previewModeTypeAtom,
+	previewShowAlbumArtworkAtom,
 } from "$/modules/settings/states/preview";
-import { FullScreenMinimize20Regular } from "@fluentui/react-icons";
+import { keyPreviewFullscreenAtom } from "$/states/keybindings.ts";
+import { ToolMode, toolModeAtom } from "$/states/main.ts";
+import { useKeyBindingAtom } from "$/utils/keybindings.ts";
 import { lazy } from "$/utils/lazy.ts";
+import styles from "./index.module.css";
 
 const AMLLWrapper = lazy(() => import("$/components/AMLLWrapper"));
 const TimingOverview = lazy(() => import("$/components/TimingOverview"));
@@ -22,6 +32,7 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 }) => {
 	const previewModeType = useAtomValue(previewModeTypeAtom);
 	const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
+	const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
 	const [controlsVisible, setControlsVisible] = useState(false);
 	const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 	const lastPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -83,41 +94,38 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 		};
 	}, [isFullscreen, isPanel]);
 
+	const toolMode = useAtomValue(toolModeAtom);
+
+	useKeyBindingAtom(keyPreviewFullscreenAtom, () => {
+		if (!isPanel && toolMode === ToolMode.Preview) {
+			setIsFullscreen((prev) => !prev);
+		}
+	}, [isPanel, toolMode, setIsFullscreen]);
+
+	useEffect(() => {
+		if (isPanel) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName))
+				return;
+			if (e.key === "Escape" && isFullscreen) {
+				setIsFullscreen(false);
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isPanel, isFullscreen, setIsFullscreen]);
+
 	return (
 		<div
 			style={{ position: "relative", width: "100%", height: "100%" }}
 			onMouseMove={handleMouseMove}
 		>
-			{!isPanel && isFullscreen && (
-				<button
-					type="button"
-					style={{
-						position: "absolute",
-						top: 16,
-						right: 20,
-						height: 36,
-						boxSizing: "border-box",
-						zIndex: 9999,
-						display: "flex",
-						alignItems: "center",
-						gap: 6,
-						padding: "0 16px",
-						borderRadius: 9999,
-						background: "rgba(0, 0, 0, 0.45)",
-						backdropFilter: "blur(14px)",
-						WebkitBackdropFilter: "blur(14px)",
-						border: "1px solid rgba(255, 255, 255, 0.2)",
-						color: "rgba(255, 255, 255, 0.95)",
-						fontSize: "0.85rem",
-						fontWeight: 600,
-						cursor: "pointer",
-						boxShadow: "0 4px 16px rgba(0, 0, 0, 0.35)",
-						transition: "opacity 0.25s ease, transform 0.25s ease",
-						opacity: controlsVisible ? 1 : 0,
-						pointerEvents: controlsVisible ? "auto" : "none",
-						transform: controlsVisible ? "translateY(0)" : "translateY(-8px)",
-					}}
-					onClick={() => setIsFullscreen(false)}
+			{!isPanel && (
+				<div
+					className={classNames(
+						styles.floatingControls,
+						isFullscreen && !controlsVisible && styles.autohideHidden,
+					)}
 					onMouseEnter={() => {
 						if (hideTimerRef.current) {
 							clearTimeout(hideTimerRef.current);
@@ -130,11 +138,41 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 							setControlsVisible(false);
 						}
 					}}
-					title="Exit Fullscreen (Esc)"
 				>
-					<FullScreenMinimize20Regular />
-					<span>Exit Fullscreen (Esc)</span>
-				</button>
+					{previewModeType !== PreviewModeType.Timing && (
+						<button
+							type="button"
+							className={styles.floatingBtn}
+							onClick={() => setShowArtwork((prev) => !prev)}
+							title={showArtwork ? "Hide Album Art" : "Show Album Art"}
+							aria-label="Toggle Album Art"
+						>
+							<Image20Regular />
+						</button>
+					)}
+					{isFullscreen ? (
+						<button
+							type="button"
+							className={styles.exitFullscreenBtn}
+							onClick={() => setIsFullscreen(false)}
+							title="Exit Fullscreen (Esc)"
+							aria-label="Exit Fullscreen"
+						>
+							<FullScreenMinimize20Regular />
+							<span>Exit Fullscreen (Esc)</span>
+						</button>
+					) : (
+						<button
+							type="button"
+							className={styles.floatingBtn}
+							onClick={() => setIsFullscreen(true)}
+							title="Fullscreen (F)"
+							aria-label="Enter Fullscreen"
+						>
+							<FullScreenMaximize20Regular />
+						</button>
+					)}
+				</div>
 			)}
 			<Suspense fallback={<SuspensePlaceHolder />}>
 				{(previewModeType === PreviewModeType.Standard ||

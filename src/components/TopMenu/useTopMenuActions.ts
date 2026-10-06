@@ -165,6 +165,7 @@ export const useTopMenuActions = () => {
 	const onNewFile = useCallback(() => {
 		const action = () => {
 			newLyricLine();
+			audioEngine.unloadMusic();
 			setProjectId(uid());
 			setSaveFileName("lyric.ttml");
 		};

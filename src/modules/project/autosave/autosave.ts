@@ -95,6 +95,7 @@ export interface AudioCacheEntry {
 	path?: string;
 	blob: Blob;
 	timestamp: number;
+	isAutoDownloaded?: boolean;
 }
 
 /**
@@ -313,10 +314,15 @@ export async function saveAudioToCache(entry: {
 	fileName: string;
 	path?: string | null;
 	blob: Blob;
+	isAutoDownloaded?: boolean;
 }) {
 	try {
 		const db = await getDB();
 		const id = entry.projectId || entry.fileName;
+		const isAuto =
+			entry.isAutoDownloaded ??
+			(entry.blob as any).isAutoDownloaded ??
+			false;
 		await db.put("audio_cache", {
 			id,
 			projectId: entry.projectId,
@@ -324,6 +330,7 @@ export async function saveAudioToCache(entry: {
 			path: entry.path || undefined,
 			blob: entry.blob,
 			timestamp: Date.now(),
+			isAutoDownloaded: isAuto,
 		});
 	} catch (e) {
 		console.warn("Failed to cache audio in IndexedDB:", e);

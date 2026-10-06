@@ -1,4 +1,5 @@
 import {
+	ArrowDownload24Regular,
 	DismissRegular,
 	DocumentText24Regular,
 	GlobeSearch24Regular,
@@ -25,12 +26,13 @@ import {
 	importFromLRCLIBDialogAtom,
 	importFromTextDialogAtom,
 	importLyricsChooserDialogAtom,
+	jooxImportLyricsDialogAtom,
 	lyricallyImportLyricsDialogAtom,
 } from "$/states/dialogs.ts";
 import styles from "./import-lyrics-chooser.module.css";
 
 type ImportChoice = {
-	id: "plainText" | "lrclib" | "lyrically" | "genius" | "appleTtml";
+	id: "plainText" | "lrclib" | "lyrically" | "genius" | "appleTtml" | "joox";
 	icon: ReactNode;
 	color: string;
 	background: string;
@@ -45,6 +47,7 @@ export function ImportLyricsChooserDialog() {
 	const setImportFromLyrically = useSetAtom(lyricallyImportLyricsDialogAtom);
 	const setImportFromGenius = useSetAtom(geniusImportLyricsDialogAtom);
 	const setImportFromAppleTtml = useSetAtom(appleTtmlImportDialogAtom);
+	const setImportFromJoox = useSetAtom(jooxImportLyricsDialogAtom);
 
 	const choices: ImportChoice[] = [
 		{
@@ -81,6 +84,13 @@ export function ImportLyricsChooserDialog() {
 			color: "var(--orange-11)",
 			background: "var(--orange-3)",
 			open: () => setImportFromGenius(true),
+		},
+		{
+			id: "joox",
+			icon: <ArrowDownload24Regular />,
+			color: "var(--teal-11)",
+			background: "var(--teal-3)",
+			open: () => setImportFromJoox(true),
 		},
 	];
 

@@ -52,8 +52,71 @@ const splitAtLengths = (word: string, lengths: number[]) => {
 	return parts.filter(Boolean);
 };
 
+/**
+ * Repairs syllable boundaries where a consonant cluster was split across syllables
+ * with an onset that is phonotactically impossible in English.
+ * E.g., "blin" + "dfold" -> "blind" + "fold", "hea" + "dlights" -> "head" + "lights".
+ */
+export const repairEnglishSyllables = (syllables: string[]): string[] => {
+	if (syllables.length <= 1) return syllables;
+	const result = [...syllables];
+
+	for (let i = 1; i < result.length; i++) {
+		const prev = result[i - 1];
+		const curr = result[i];
+		if (!prev || !curr) continue;
+
+		// Move leading consonant cluster 'ht' (e.g. nig-htclub -> night-club)
+		if (/^ht/i.test(curr)) {
+			result[i - 1] = prev + curr.slice(0, 2);
+			result[i] = curr.slice(2);
+			continue;
+		}
+
+		// Move leading consonant cluster 'ld' (e.g. wor-ldview -> world-view)
+		if (/^ld/i.test(curr)) {
+			result[i - 1] = prev + curr.slice(0, 2);
+			result[i] = curr.slice(2);
+			continue;
+		}
+
+		// Move 'd' if followed by an impossible English onset:
+		// e.g. df (blindfold -> blin-dfold), dl (headlights -> hea-dlights),
+		// dm, dn, db, dc, dg, dp, dt, dv, ds, dw (headwind, headway).
+		// Exclude syllabic -dle/-dles/-dled (needle, candle, cradled),
+		// contractions like didn't / couldn't, and affricate dg before e/i/y (gadget, budget).
+		if (
+			/^d[bcfjklmnpqtvxz]/i.test(curr) ||
+			/^ds/i.test(curr) ||
+			/^dw/i.test(curr) ||
+			/^dg[^eiy]/i.test(curr)
+		) {
+			if (!/^dle[sd]?$/i.test(curr) && !/^dn['’]?t?$/i.test(curr)) {
+				result[i - 1] = prev + curr[0];
+				result[i] = curr.slice(1);
+				continue;
+			}
+		}
+
+		// Move 't' if followed by an impossible English onset:
+		// e.g. tm (postman -> pos-tman), tp (dustpan -> dus-tpan), tb, tc, tf, tg, tk, tl, etc.
+		// Exclude tr, tw, th, syllabic -tle/-tles/-tled (bottle, little, entitled),
+		// and contractions (e.g. shouldn't).
+		if (/^t[bcfgjklmnpqstvxz]/i.test(curr)) {
+			if (!/^tle[sd]?$/i.test(curr) && !/^tn['’]?t?$/i.test(curr)) {
+				result[i - 1] = prev + curr[0];
+				result[i] = curr.slice(1);
+				continue;
+			}
+		}
+	}
+
+	return result.filter(Boolean);
+};
+
 const compromiseSplit = (word: string) => {
-	const syllables = (nlpWithSpeech(word).syllables() as string[][]).flat();
+	const rawSyllables = (nlpWithSpeech(word).syllables() as string[][]).flat();
+	const syllables = repairEnglishSyllables(rawSyllables);
 	if (syllables.length <= 1) return [word];
 
 	let offset = 0;
@@ -119,9 +182,13 @@ const prosodicSplit = (word: string) => {
 		dictionary.get(key) ??
 		(key.endsWith("in") ? dictionary.get(`${key}g`) : undefined);
 	if (entry !== undefined) {
-		return splitAtLengths(word, typeof entry === "number" ? [entry] : entry);
+		const parts = splitAtLengths(
+			word,
+			typeof entry === "number" ? [entry] : entry,
+		);
+		return repairEnglishSyllables(parts);
 	}
-	return mergeContractionSuffix(compromiseSplit(word));
+	return repairEnglishSyllables(mergeContractionSuffix(compromiseSplit(word)));
 };
 
 const isJapaneseCharacter = (char: string | undefined) =>

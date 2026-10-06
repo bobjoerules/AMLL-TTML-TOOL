@@ -23,11 +23,11 @@ import {
 } from "$/modules/audio/states";
 import { customBackgroundImageAtom } from "$/modules/settings/modals/customBackground";
 import {
+	backgroundModeAtom,
 	customAccentColorAtom,
 	useCustomAccentAtom,
 } from "$/modules/settings/states";
 import {
-	previewFullscreenAtom,
 	previewShowAlbumArtworkAtom,
 	showFpsCounterAtom,
 	showRomanLinesAtom,
@@ -39,8 +39,6 @@ import {
 } from "$/modules/settings/states/preview";
 import { lyricLinesAtom, projectIdentityAtom } from "$/states/main";
 import {
-	FullScreenMaximize20Regular,
-	Image20Regular,
 	MusicNote224Regular,
 } from "@fluentui/react-icons";
 import styles from "./index.module.css";
@@ -285,11 +283,7 @@ export const SpicyLyrics = memo(
 		const currentDuration = useAtomValue(currentDurationAtom);
 		const isPlaying = useAtomValue(audioPlayingAtom);
 
-		const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
-		const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
-		const [controlsVisible, setControlsVisible] = useState(false);
-		const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
-		const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+		const showArtwork = useAtomValue(previewShowAlbumArtworkAtom);
 
 		const totalDuration = useMemo(() => {
 			if (currentDuration > 0) return currentDuration;
@@ -313,78 +307,6 @@ export const SpicyLyrics = memo(
 			}
 		};
 
-		const handleMouseMove = useCallback(
-			(e: React.MouseEvent) => {
-				if (!isFullscreen) {
-					setControlsVisible(true);
-					return;
-				}
-
-				// Discard synthetic mousemove events dispatched by browsers when DOM elements
-				// scroll/animate underneath a stationary cursor
-				if (
-					lastPosRef.current &&
-					lastPosRef.current.x === e.clientX &&
-					lastPosRef.current.y === e.clientY
-				) {
-					return;
-				}
-				lastPosRef.current = { x: e.clientX, y: e.clientY };
-
-				if (e.clientY <= 72) {
-					setControlsVisible(true);
-					if (hideTimerRef.current) {
-						clearTimeout(hideTimerRef.current);
-						hideTimerRef.current = null;
-					}
-				} else {
-					if (!hideTimerRef.current) {
-						hideTimerRef.current = setTimeout(() => {
-							setControlsVisible(false);
-							hideTimerRef.current = null;
-						}, 200);
-					}
-				}
-			},
-			[isFullscreen],
-		);
-
-		useEffect(() => {
-			if (!isFullscreen) {
-				setControlsVisible(true);
-				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-			} else {
-				// Briefly show controls for 2.5s on entering fullscreen, then hide
-				setControlsVisible(true);
-				hideTimerRef.current = setTimeout(() => {
-					setControlsVisible(false);
-					hideTimerRef.current = null;
-				}, 2500);
-			}
-			return () => {
-				if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-			};
-		}, [isFullscreen]);
-
-		useEffect(() => {
-			const handleKeyDown = (e: KeyboardEvent) => {
-				if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName))
-					return;
-				if (e.key === "Escape" && isFullscreen) {
-					setIsFullscreen(false);
-				} else if (
-					(e.key === "f" || e.key === "F") &&
-					!e.ctrlKey &&
-					!e.metaKey &&
-					!e.altKey
-				) {
-					setIsFullscreen((prev) => !prev);
-				}
-			};
-			window.addEventListener("keydown", handleKeyDown);
-			return () => window.removeEventListener("keydown", handleKeyDown);
-		}, [isFullscreen, setIsFullscreen]);
-
 		const lines = useMemo(
 			() =>
 				buildSpicyLines(
@@ -400,8 +322,7 @@ export const SpicyLyrics = memo(
 			() => lines.some((line) => !line.isDotLine && line.isDuet),
 			[lines],
 		);
-		// Match Spicy's priority: artwork embedded in the loaded audio file comes first.
-		// TTML cover_art and the app-level custom image are only fallbacks.
+		// Actual song artwork: only embedded in audio or specified in TTML cover_art metadata
 		const coverArtImage = useMemo(
 			() =>
 				lyrics.metadata
@@ -409,8 +330,10 @@ export const SpicyLyrics = memo(
 					?.value.find((value) => value.trim().length > 0) ?? null,
 			[lyrics.metadata],
 		);
+		const appBackgroundMode = useAtomValue(backgroundModeAtom);
+		const songCoverArt = embeddedCoverArt || coverArtImage || null;
 		const backgroundImage =
-			embeddedCoverArt ?? coverArtImage ?? customBackgroundImage;
+			songCoverArt || (appBackgroundMode === "image" ? customBackgroundImage : null);
 		const coverPalette = useCoverPalette(backgroundImage);
 		const viewportRef = useRef<HTMLDivElement>(null);
 		const backgroundRef = useRef<HTMLDivElement>(null);
@@ -1156,7 +1079,6 @@ export const SpicyLyrics = memo(
 						"--spicy-cover-highlight": coverPalette?.highlight,
 					} as CSSProperties
 				}
-				onMouseMove={handleMouseMove}
 			>
 				<div
 					ref={backgroundRef}
@@ -1180,38 +1102,6 @@ export const SpicyLyrics = memo(
 				<div className={styles.overlay} />
 				{showFps ? <div className={styles.fpsCounter}>FPS: {fps}</div> : null}
 
-				{/* Floating Controls */}
-				{!isPanel && (
-					<div
-						className={classNames(
-							styles.floatingControls,
-							isFullscreen && !controlsVisible && styles.autohideHidden,
-						)}
-						style={isFullscreen ? { right: 205 } : undefined}
-					>
-						<button
-							type="button"
-							className={styles.floatingBtn}
-							onClick={() => setShowArtwork((prev) => !prev)}
-							title={showArtwork ? "Hide Album Art" : "Show Album Art"}
-							aria-label="Toggle Album Art"
-						>
-							<Image20Regular />
-						</button>
-						{!isFullscreen && (
-							<button
-								type="button"
-								className={styles.floatingBtn}
-								onClick={() => setIsFullscreen(true)}
-								title="Fullscreen (F)"
-								aria-label="Enter Fullscreen"
-							>
-								<FullScreenMaximize20Regular />
-							</button>
-						)}
-					</div>
-				)}
-
 				<div className={styles.contentOverlay}>
 					{!isPanel && showArtwork ? (
 						<div className={styles.twoColumnContainer}>
@@ -1224,9 +1114,9 @@ export const SpicyLyrics = memo(
 										style={{ cursor: "pointer" }}
 										title={isPlaying ? "Click to Pause" : "Click to Play"}
 									>
-										{backgroundImage ? (
+										{songCoverArt ? (
 											<img
-												src={backgroundImage}
+												src={songCoverArt}
 												alt={projectIdentity.name || "Album Artwork"}
 												className={styles.artworkImage}
 											/>

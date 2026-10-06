@@ -76,6 +76,29 @@ describe("syllabification engines", () => {
 		expect(parts.join("")).toBe(word);
 	});
 
+	it("splits compound words with consonant codas correctly (e.g., blindfold, headlights)", () => {
+		const engine = getSyllabificationEngine("prosodic");
+		expect(engine.split("blindfold")).toEqual(["blind", "fold"]);
+		expect(engine.split("blindfolded")).toEqual(["blind", "fol", "ded"]);
+		expect(engine.split("headlights")).toEqual(["head", "lights"]);
+		expect(engine.split("headlight")).toEqual(["head", "light"]);
+		expect(engine.split("headline")).toEqual(["head", "line"]);
+		expect(engine.split("soundtrack")).toEqual(["sound", "track"]);
+		expect(engine.split("landlord")).toEqual(["land", "lord"]);
+		expect(engine.split("windmill")).toEqual(["wind", "mill"]);
+		expect(engine.split("goldfish")).toEqual(["gold", "fish"]);
+
+		const wordBlindfold = { ...newLyricWord(), word: "blindfold" };
+		expect(
+			segmentWord(wordBlindfold, prosodicConfig).map((part) => part.word),
+		).toEqual(["blind", "fold"]);
+
+		const wordHeadlights = { ...newLyricWord(), word: "headlights" };
+		expect(
+			segmentWord(wordHeadlights, prosodicConfig).map((part) => part.word),
+		).toEqual(["head", "lights"]);
+	});
+
 	it("loads Polish hyphenation patterns", async () => {
 		const hyphenate = await loadHyphenator("pl");
 		expect(hyphenate?.("przepraszam").split("\u00ad")).toEqual([

@@ -181,6 +181,18 @@ export function getLineVoice(
 }
 
 /**
+ * Determines whether a lyric line aligns to the right side (e.g. duet / even-numbered voice channels v2, v4, etc.).
+ * Odd voices (v1, v3, v5, etc.) align to the left side, matching Apple Music behavior.
+ */
+export function isVoiceRightAligned(
+	line: Pick<LyricLine, "agent" | "isDuet">,
+): boolean {
+	const voice = getLineVoice(line);
+	const num = getVoiceNumber(voice);
+	return num % 2 === 0;
+}
+
+/**
  * Formats a user-friendly label for a singer voice channel.
  */
 export function formatVoiceLabel(voice: string, singerName?: string): string {

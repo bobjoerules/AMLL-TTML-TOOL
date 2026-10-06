@@ -15,6 +15,31 @@ export enum LayoutMode {
 
 export const geniusApiKeyAtom = atomWithStorage<string>("geniusApiKey", "");
 
+export const jooxApiTokenAtom = atomWithStorage<string>(
+	"jooxApiToken",
+	"f84ao9lMF_q7husBWRfgUw",
+);
+
+export const downloadAudioOnLyricImportAtom = atomWithStorage<boolean>(
+	"downloadAudioOnLyricImport",
+	false,
+);
+
+export const autoLoadCloudAudioAtom = atomWithStorage<boolean>(
+	"autoLoadCloudAudio",
+	true,
+);
+
+export const autoSegmentOnLyricImportAtom = atomWithStorage<boolean>(
+	"autoSegmentOnLyricImport",
+	false,
+);
+
+export const jooxAudioQualityAtom = atomWithStorage<string>(
+	"jooxAudioQuality",
+	"320",
+);
+
 export const latencyTestBPMAtom = atomWithStorage("latencyTestBPM", 120);
 
 export const syncJudgeModeAtom = atomWithStorage(

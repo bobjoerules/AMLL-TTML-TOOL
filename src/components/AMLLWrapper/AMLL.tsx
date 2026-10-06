@@ -9,10 +9,14 @@ import { useTranslation } from "react-i18next";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import {
 	accentColorAtom,
+	backgroundModeAtom,
 	useCustomAccentAtom,
 	customAccentColorAtom,
 } from "$/modules/settings/states/index.ts";
-import { audioPlayingAtom } from "$/modules/audio/states/index.ts";
+import {
+	audioCoverArtAtom,
+	audioPlayingAtom,
+} from "$/modules/audio/states/index.ts";
 import { isDarkThemeAtom, lyricLinesAtom } from "$/states/main.ts";
 import { customBackgroundImageAtom } from "$/modules/settings/modals/customBackground";
 import styles from "./AMLL.module.css";
@@ -26,7 +30,19 @@ export const AMLL = memo(() => {
 	const { t } = useTranslation();
 	const lyrics = useAtomValue(lyricLinesAtom);
 	const darkMode = useAtomValue(isDarkThemeAtom);
-	const albumImg = useAtomValue(customBackgroundImageAtom);
+	const embeddedCoverArt = useAtomValue(audioCoverArtAtom);
+	const customBackgroundImage = useAtomValue(customBackgroundImageAtom);
+	const backgroundMode = useAtomValue(backgroundModeAtom);
+	const coverArtImage = useMemo(
+		() =>
+			lyrics?.metadata
+				?.find((entry) => entry.key.toLowerCase() === "cover_art")
+				?.value.find((value) => value.trim().length > 0) ?? null,
+		[lyrics?.metadata],
+	);
+	const songCoverArt = embeddedCoverArt || coverArtImage || null;
+	const albumImg =
+		songCoverArt || (backgroundMode === "image" ? customBackgroundImage : null);
 	const isPlaying = useAtomValue(audioPlayingAtom);
 	const accentColor = useAtomValue(accentColorAtom);
 

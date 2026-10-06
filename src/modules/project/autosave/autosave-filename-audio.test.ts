@@ -73,4 +73,14 @@ describe("Autosave filename and audio reload tests", () => {
 
 		expect(result).toBe(false);
 	});
+
+	it("has autoLoadCloudAudioAtom defaulting to true", async () => {
+		const { getDefaultStore } = await import("jotai");
+		const { autoLoadCloudAudioAtom } = await import(
+			"$/modules/settings/states"
+		);
+		const store = getDefaultStore();
+		expect(store.get(autoLoadCloudAudioAtom)).toBe(true);
+	});
 });
+
