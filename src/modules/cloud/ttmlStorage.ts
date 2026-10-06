@@ -31,6 +31,7 @@ export interface SaveCloudTTMLInput {
 	includeAudio?: boolean;
 	audioBlob?: Blob | null;
 	audioFileName?: string | null;
+	audioPath?: string | null;
 	onProgress?: (percent: number) => void;
 	publishToCommunity?: boolean;
 	isCompleted?: boolean;
@@ -151,7 +152,8 @@ export async function saveTTMLToCloud(
 	let hasAudio = false;
 	let audioUrl: string | null = null;
 	let audioStoragePath: string | null = null;
-	let audioFileName: string | null = null;
+	let audioFileName: string | null = input.audioFileName || null;
+	let audioPath: string | null = input.audioPath || null;
 	let audioSize: number | null = null;
 
 	if (input.includeAudio && input.audioBlob && input.audioBlob.size > 0) {
@@ -232,6 +234,7 @@ export async function saveTTMLToCloud(
 		audioUrl,
 		audioStoragePath,
 		audioFileName,
+		audioPath,
 		audioSize,
 		coverArt,
 		tags,
@@ -359,6 +362,7 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 				audioUrl: d.audioUrl || null,
 				audioStoragePath: d.audioStoragePath || null,
 				audioFileName: d.audioFileName || null,
+				audioPath: d.audioPath || null,
 				audioSize: d.audioSize || null,
 				coverArt: d.coverArt || null,
 				publishedToCommunity: Boolean(d.publishedToCommunity),
@@ -527,6 +531,7 @@ export async function loadTTMLFromCloud(
 		audioUrl: d.audioUrl || null,
 		audioStoragePath: d.audioStoragePath || null,
 		audioFileName: d.audioFileName || null,
+		audioPath: d.audioPath || null,
 		audioSize: d.audioSize || null,
 	};
 }

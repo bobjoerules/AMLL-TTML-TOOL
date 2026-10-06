@@ -22,6 +22,7 @@ export interface CloudTTMLMetadata {
 	audioUrl?: string | null;
 	audioStoragePath?: string | null;
 	audioFileName?: string | null;
+	audioPath?: string | null;
 	audioSize?: number | null;
 	coverArt?: string | null;
 	publishedToCommunity?: boolean;

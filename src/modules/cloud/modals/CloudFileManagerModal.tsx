@@ -48,6 +48,10 @@ import { uid } from "uid";
 import { useFileOpener } from "$/hooks/useFileOpener";
 import { audioEngine } from "$/modules/audio/audio-engine";
 import { tryReloadAudioFromComputer } from "$/modules/audio/utils/autoReloadAudio";
+import {
+	loadedAudioFileNameAtom,
+	loadedAudioPathAtom,
+} from "$/modules/audio/states";
 import exportTTMLText from "$/modules/project/logic/ttml-writer";
 import { parseLyric as parseTTML } from "$/modules/project/logic/ttml-parser";
 import { openExternal } from "$/utils/openExternal";
@@ -809,6 +813,8 @@ export const CloudFileManagerModal: FC = () => {
 		allowConsecutiveBackgroundLinesAtom,
 	);
 	const autoLoadCloudAudio = useAtomValue(autoLoadCloudAudioAtom);
+	const loadedAudioFileName = useAtomValue(loadedAudioFileNameAtom);
+	const loadedAudioPath = useAtomValue(loadedAudioPathAtom);
 	const [jooxToken] = useAtom(jooxApiTokenAtom);
 	const [audioQuality] = useAtom(jooxAudioQualityAtom);
 	const setJooxAudioSearch = useSetAtom(jooxAudioSearchDialogAtom);
@@ -1061,7 +1067,10 @@ export const CloudFileManagerModal: FC = () => {
 				durationMs: currentTrackInfo.durationMs,
 				includeAudio: false,
 				audioBlob: null,
-				audioFileName: null,
+				audioFileName:
+					loadedAudioFileName || (audioEngine.currentFile as any)?.name || null,
+				audioPath:
+					loadedAudioPath || (audioEngine.currentFile as any)?.path || null,
 				publishToCommunity,
 				isCompleted: shouldMarkCompleted,
 				onProgress: (pct) => setUploadProgress(pct),
@@ -1098,8 +1107,16 @@ export const CloudFileManagerModal: FC = () => {
 			// Auto-load audio into audio-engine in the background if setting is enabled
 			if (autoLoadCloudAudio) {
 				(async () => {
-					let audioLoaded = false;
-					if (doc.audioUrl || doc.audioStoragePath) {
+					// 1. Check if audio file still exists in original location on disk or computer
+					let audioLoaded = await tryReloadAudioFromComputer({
+						audioPath: doc.audioPath,
+						audioFileName: doc.audioFileName,
+						title: doc.title,
+						artist: doc.artist,
+					});
+
+					// 2. Only if not found locally, try downloading attached audio from cloud storage
+					if (!audioLoaded && (doc.audioUrl || doc.audioStoragePath)) {
 						let audioToastId: any = null;
 						try {
 							audioToastId = toast.loading(
@@ -1140,16 +1157,7 @@ export const CloudFileManagerModal: FC = () => {
 						}
 					}
 
-					// If audio wasn't loaded from cloud URL, try reloading audio from computer automatically
-					if (!audioLoaded) {
-						audioLoaded = await tryReloadAudioFromComputer({
-							audioFileName: doc.audioFileName,
-							title: doc.title,
-							artist: doc.artist,
-						});
-					}
-
-					// If audio still was not found locally, fetch matching audio from JOOX/QQ Music API
+					// 3. If audio still was not found locally or in cloud storage, fetch matching audio from online APIs
 					if (!audioLoaded && (doc.title || doc.artist)) {
 						let streamToastId: any = null;
 						try {
