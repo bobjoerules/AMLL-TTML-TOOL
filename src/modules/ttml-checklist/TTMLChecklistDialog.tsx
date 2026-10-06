@@ -1529,8 +1529,16 @@ export const TTMLChecklistDialog = () => {
 
 				if (autoLoadCloudAudio) {
 					(async () => {
-						let audioLoaded = false;
-						if (cloudDoc.audioUrl || cloudDoc.audioStoragePath) {
+						// 1. Check if audio file still exists in original location on disk or computer
+						let audioLoaded = await tryReloadAudioFromComputer({
+							audioPath: cloudDoc.audioPath,
+							audioFileName: cloudDoc.audioFileName,
+							title: cloudDoc.title,
+							artist: cloudDoc.artist,
+						});
+
+						// 2. Only if not found locally, try downloading attached audio from cloud storage
+						if (!audioLoaded && (cloudDoc.audioUrl || cloudDoc.audioStoragePath)) {
 							let audioToastId: any = null;
 							try {
 								audioToastId = toast.loading(
@@ -1574,14 +1582,7 @@ export const TTMLChecklistDialog = () => {
 							}
 						}
 
-						if (!audioLoaded) {
-							audioLoaded = await tryReloadAudioFromComputer({
-								audioFileName: cloudDoc.audioFileName,
-								title: cloudDoc.title,
-								artist: cloudDoc.artist,
-							});
-						}
-
+						// 3. If audio still was not found locally or in cloud storage, fetch matching audio from online APIs
 						if (!audioLoaded && (cloudDoc.title || cloudDoc.artist)) {
 							let streamToastId: any = null;
 							try {
