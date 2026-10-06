@@ -51,7 +51,7 @@ dependencies = [
 
 [[package]]
 name = "amll-ttml-tool"
-version = "2.2.14"
+version = "2.2.15"
 dependencies = [
  "discord-rich-presence",
  "log",

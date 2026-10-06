@@ -51,6 +51,34 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.15
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 6, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Local Audio Path Prioritization:</b> Before attempting to
+									download audio from cloud storage or online providers, the app
+									now checks if the audio file still exists in the local disk location
+									it was in when the TTML was uploaded, loading the original file
+									instantly without re-downloading.
+								</Text>
+								<Text size="2">
+									• <b>Audio Select Track Dialog Polish:</b> Expanded the track selection
+									dialog to a spacious responsive width, added proper flex truncation
+									for long song titles, and resolved an issue where action buttons were
+									partially pushed off-screen.
+								</Text>
+								<Text size="2">
+									• <b>Desktop Release Pipeline Stability:</b> Resolved a release collision
+									race condition across multi-platform desktop build runners in GitHub Actions.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.14
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
