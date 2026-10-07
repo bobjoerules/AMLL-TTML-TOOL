@@ -35,6 +35,11 @@ export const autoSegmentOnLyricImportAtom = atomWithStorage<boolean>(
 	false,
 );
 
+export const autoDuetOnGeniusImportAtom = atomWithStorage<boolean>(
+	"autoDuetOnGeniusImport",
+	false,
+);
+
 export const jooxAudioQualityAtom = atomWithStorage<string>(
 	"jooxAudioQuality",
 	"320",

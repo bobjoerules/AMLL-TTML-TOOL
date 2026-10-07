@@ -622,6 +622,9 @@
 			"advancedSegment": "Advanced Segment...",
 			"learnedSplits": "Learned Splits...",
 			"syncLineTimestamps": "Sync Line Timestamps",
+			"autoDuetBySinger": "Auto Duet Based on Singer",
+			"autoDuetSuccess": "Auto duet assigned {singers} singers to {count} lines: {mapping}",
+			"autoDuetNotEnoughSingers": "At least two distinct singers/vocalists are required to auto-duet.",
 			"ttmlChecklist": "TTML Checklist",
 			"statsAndProfiles": "User Profiles & Stats...",
 			"spotMatch": "SpotMatch (Alternate Spotify IDs)...",
@@ -1090,6 +1093,7 @@
 		"linesCount": "{count} lines",
 		"importButton": "Import Lyrics",
 		"importTitle": "Import Lyrics from Genius",
+		"autoDuet": "Auto Duet by Singer",
 		"searchPlaceholder": "Artist – Song title…",
 		"notFound": "No results found. Try different keywords.",
 		"noResult": "Enter a song name or artist to start."

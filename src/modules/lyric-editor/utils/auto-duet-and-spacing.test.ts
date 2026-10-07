@@ -12,6 +12,7 @@ import {
 	extractFirstSinger,
 	getLineSinger,
 } from "./auto-duet";
+import { applyReviewedSections } from "./section-system";
 
 describe("splitTrailingSpace", () => {
 	it("splits trailing single space into baseWord and spaceWord", () => {
@@ -385,5 +386,96 @@ describe("formatVoiceLabel and singer name formatting", () => {
 
 		const lineWithHumanAgent = { ...newLyricLine(), agent: "Alice" };
 		expect(getLineSinger(lineWithHumanAgent, new Map())).toBe("Alice");
+	});
+});
+
+describe("Genius lyrics import auto-duet workflow", () => {
+	it("correctly assigns auto-duet singers when lyrics have Genius headers", () => {
+		const draft: TTMLLyric = {
+			metadata: [],
+			sections: [],
+			lyricLines: [
+				{
+					...newLyricLine(),
+					id: "line-1",
+					geniusHeader: "[Verse 1: Drake]",
+					words: [{ ...newLyricWord(), word: "Starting off" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-2",
+					geniusHeader: "[Verse 1: Drake]",
+					words: [{ ...newLyricWord(), word: "still Drake" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-3",
+					geniusHeader: "[Chorus: Rihanna]",
+					words: [{ ...newLyricWord(), word: "Shining bright" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-4",
+					geniusHeader: "[Outro: Drake & Rihanna]",
+					words: [{ ...newLyricWord(), word: "Ending" }],
+				},
+			],
+		};
+
+		// 1. Process sections as done during import
+		applyReviewedSections(draft, []);
+
+		// Verify sections were created with vocalists
+		expect(draft.sections?.length).toBeGreaterThanOrEqual(2);
+
+		// 2. Apply auto-duet by singer
+		const result = applyAutoDuetBySinger(draft);
+
+		expect(result).toMatchObject({
+			singersCount: 2,
+			singerMap: { Drake: "v1", Rihanna: "v2" },
+		});
+
+		// Drake is primary (v1, isDuet = false)
+		expect(draft.lyricLines[0].agent).toBe("v1");
+		expect(draft.lyricLines[0].isDuet).toBe(false);
+		expect(draft.lyricLines[1].agent).toBe("v1");
+		expect(draft.lyricLines[1].isDuet).toBe(false);
+
+		// Rihanna is duet (v2, isDuet = true)
+		expect(draft.lyricLines[2].agent).toBe("v2");
+		expect(draft.lyricLines[2].isDuet).toBe(true);
+
+		// "Drake & Rihanna" resolves first singer Drake -> v1
+		expect(draft.lyricLines[3].agent).toBe("v1");
+		expect(draft.lyricLines[3].isDuet).toBe(false);
+	});
+
+	it("gracefully reports not_enough_singers when Genius headers have single singer", () => {
+		const draft: TTMLLyric = {
+			metadata: [],
+			sections: [],
+			lyricLines: [
+				{
+					...newLyricLine(),
+					id: "line-1",
+					geniusHeader: "[Verse 1: Drake]",
+					words: [{ ...newLyricWord(), word: "Solo song" }],
+				},
+				{
+					...newLyricLine(),
+					id: "line-2",
+					geniusHeader: "[Chorus: Drake]",
+					words: [{ ...newLyricWord(), word: "Just Drake" }],
+				},
+			],
+		};
+
+		applyReviewedSections(draft, []);
+		const result = applyAutoDuetBySinger(draft);
+
+		expect(result).toEqual({ error: "not_enough_singers" });
+		expect(draft.lyricLines[0].agent).toBeUndefined();
+		expect(draft.lyricLines[0].isDuet).toBe(false);
 	});
 });
