@@ -10,6 +10,29 @@
  */
 
 import {
+	Beaker24Regular,
+	ClipboardPaste16Regular,
+	Clock24Regular,
+	Copy16Regular,
+	Cut16Regular,
+	DocumentSync16Regular,
+	Eye16Regular,
+	FastForward16Regular,
+	Flash16Regular,
+	Flow16Regular,
+	Keyboard16Regular,
+	LayoutRowTwo16Regular,
+	Lightbulb16Regular,
+	List24Regular,
+	LocalLanguage16Regular,
+	Settings24Regular,
+	Sparkle16Regular,
+	TextT24Regular,
+	TextWrap16Regular,
+	Timer16Regular,
+	Warning16Regular,
+} from "@fluentui/react-icons";
+import {
 	Box,
 	Button,
 	Checkbox,
@@ -29,9 +52,12 @@ import { useSetImmerAtom } from "jotai-immer";
 import { type FC, forwardRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { useCurrentLocation } from "$/modules/lyric-editor/utils/lyric-states.ts";
-import { useSyncProgress } from "$/hooks/useSyncProgress";
 import { getProgressBadgeColor } from "$/components/TopMenu/HeaderFileInfo";
+import { useSyncProgress } from "$/hooks/useSyncProgress";
+import { currentTimeAtom } from "$/modules/audio/states/index.ts";
+import { snapSelectedLineTimingsToTime } from "$/modules/lyric-editor/utils/line-timing.ts";
+import { useCurrentLocation } from "$/modules/lyric-editor/utils/lyric-states.ts";
+import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
 import {
 	displayRomanizationInSyncAtom,
 	enableManualTimestampEditAtom,
@@ -42,27 +68,27 @@ import {
 	showWordRomanizationInputAtom,
 	wrapLyricLinesAtom,
 } from "$/modules/settings/states/index.ts";
+import { instantHighlightFadeAtom } from "$/modules/settings/states/preview";
 import {
+	type AutoSegmentSyncMode,
 	autoSegmentOnLineSyncAtom,
 	autoSegmentSyncModeAtom,
-	type AutoSegmentSyncMode,
 	enableTimeModeDoubleClickEditAtom,
+	type SyncLevelMode,
 	showTouchSyncPanelAtom,
+	syncCommitOffsetAtom,
 	syncLevelModeAtom,
 	syncTimeOffsetAtom,
-	syncCommitOffsetAtom,
 	visualizeTimestampUpdateAtom,
-	type SyncLevelMode,
 } from "$/modules/settings/states/sync.ts";
-import { instantHighlightFadeAtom } from "$/modules/settings/states/preview";
-import { spectrogramOnlyShowSyncLineAtom } from "$/modules/spectrogram/states/index.ts";
-import { currentTimeAtom } from "$/modules/audio/states/index.ts";
-import { snapSelectedLineTimingsToTime } from "$/modules/lyric-editor/utils/line-timing.ts";
-
+import {
+	spectrogramOnlyShowSyncLineAtom,
+	spectrogramSplitBgMainAtom,
+} from "$/modules/spectrogram/states/index.ts";
 import {
 	bgLyricIgnoreSyncAtom,
-	copiedTimingsAtom,
 	type CopiedTimingsData,
+	copiedTimingsAtom,
 	lyricLinesAtom,
 	mainLyricIgnoreSyncAtom,
 	selectedLinesAtom,
@@ -70,29 +96,6 @@ import {
 	showPreviewPanelAtom,
 } from "$/states/main.ts";
 import { RibbonFrame, RibbonSection } from "./common";
-import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
-import {
-	Clock24Regular,
-	List24Regular,
-	Beaker24Regular,
-	TextT24Regular,
-	Settings24Regular,
-	Timer16Regular,
-	LocalLanguage16Regular,
-	Warning16Regular,
-	Lightbulb16Regular,
-	Eye16Regular,
-	Flash16Regular,
-	Sparkle16Regular,
-	Keyboard16Regular,
-	DocumentSync16Regular,
-	Flow16Regular,
-	Copy16Regular,
-	ClipboardPaste16Regular,
-	FastForward16Regular,
-	TextWrap16Regular,
-	Cut16Regular,
-} from "@fluentui/react-icons";
 
 export const LineTimingTools = () => {
 	const { t } = useTranslation();
@@ -518,6 +521,9 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	const [instantFade, setInstantFade] = useAtom(instantHighlightFadeAtom);
 	const [spectrogramOnlyShowSyncLine, setSpectrogramOnlyShowSyncLine] = useAtom(
 		spectrogramOnlyShowSyncLineAtom,
+	);
+	const [spectrogramSplitBgMain, setSpectrogramSplitBgMain] = useAtom(
+		spectrogramSplitBgMainAtom,
 	);
 	const [wrapLyricLines, setWrapLyricLines] = useAtom(wrapLyricLinesAtom);
 	const { t } = useTranslation();
@@ -988,6 +994,19 @@ export const SyncModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 											onCheckedChange={(v) =>
 												setSpectrogramOnlyShowSyncLine(!!v)
 											}
+										/>
+										<Text size="2" style={{ color: "var(--accent-11)" }}>
+											<Flex gap="2" align="center">
+												<LayoutRowTwo16Regular />
+												{t(
+													"ribbonBar.syncMode.splitBgMainOnSpectrogram",
+													"Split Vocals on Spectrogram",
+												)}
+											</Flex>
+										</Text>
+										<Checkbox
+											checked={spectrogramSplitBgMain}
+											onCheckedChange={(v) => setSpectrogramSplitBgMain(!!v)}
 										/>
 										<Text size="2" style={{ color: "var(--accent-11)" }}>
 											<Flex gap="2" align="center">

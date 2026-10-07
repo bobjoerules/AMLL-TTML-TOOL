@@ -1,6 +1,7 @@
 import {
 	CenterHorizontal24Regular,
 	EyeTrackingOff24Regular,
+	LayoutRowTwo24Regular,
 	MusicNote2Filled,
 	NextFrame24Regular,
 	Target24Regular,
@@ -52,7 +53,6 @@ import {
 	currentPaletteAtom,
 	spectrogramContainerWidthAtom,
 	spectrogramFftSizeAtom,
-	spectrogramPlayheadTrackingModeAtom,
 	spectrogramGainAtom,
 	spectrogramHeightAtom,
 	spectrogramHoverFrequencyAtom,
@@ -60,7 +60,9 @@ import {
 	spectrogramHoverPyAtom,
 	spectrogramHoverTimeMsAtom,
 	spectrogramOnlyShowSyncLineAtom,
+	spectrogramPlayheadTrackingModeAtom,
 	spectrogramSelectionAtom,
+	spectrogramSplitBgMainAtom,
 } from "$/modules/spectrogram/states";
 import { isDraggingAtom } from "$/modules/spectrogram/states/dnd.ts";
 import {
@@ -121,6 +123,7 @@ export const AudioSpectrogram: FC = memo(() => {
 	const [playheadTrackingMode, setPlayheadTrackingMode] = useAtom(
 		spectrogramPlayheadTrackingModeAtom,
 	);
+	const [splitBgMain, setSplitBgMain] = useAtom(spectrogramSplitBgMainAtom);
 	const globalEnableInsert = useAtomValue(globalEnableInsertAtom);
 
 	useCommand(cmdDuplicatePaste, () => {
@@ -800,6 +803,21 @@ export const AudioSpectrogram: FC = memo(() => {
 							onClick={() => setOnlyShowSyncLine((prev) => !prev)}
 						>
 							<Target24Regular />
+						</IconButton>
+					</Tooltip>
+
+					<Tooltip
+						content={t(
+							"spectrogram.splitBgMain",
+							"Split background and main vocals",
+						)}
+						side="left"
+					>
+						<IconButton
+							variant={splitBgMain ? "solid" : "outline"}
+							onClick={() => setSplitBgMain((prev) => !prev)}
+						>
+							<LayoutRowTwo24Regular />
 						</IconButton>
 					</Tooltip>
 

@@ -84,7 +84,7 @@ const ToolMenuItems = () => {
 				{t("topBar.menu.ttmlChecklist", "TTML Checklist...")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenGrammarCheck}>
-				{t("topBar.menu.grammarCheck", "Grammar & Spelling Check...")}
+				{t("topBar.menu.grammarCheck", "Grammar and Spelling Check...")}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenStatsAndProfiles}>
 				{t("topBar.menu.statsAndProfiles", "User Profiles & Stats...")}

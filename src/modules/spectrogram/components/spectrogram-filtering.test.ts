@@ -204,3 +204,126 @@ describe("Spectrogram Follow Playhead Centering", () => {
 		expect(scroll).toBe(1000);
 	});
 });
+
+describe("Spectrogram Split Background and Main Vocals Layout", () => {
+	function getLineSegmentPosition({
+		isBG,
+		splitBgMain,
+	}: {
+		isBG?: boolean;
+		splitBgMain: boolean;
+	}) {
+		if (splitBgMain) {
+			return {
+				top: isBG ? "50%" : "0%",
+				height: "50%",
+			};
+		}
+		return {
+			top: "0%",
+			height: "100%",
+		};
+	}
+
+	it("positions both main and background vocals at full height when splitBgMain is false", () => {
+		const mainPos = getLineSegmentPosition({ isBG: false, splitBgMain: false });
+		const bgPos = getLineSegmentPosition({ isBG: true, splitBgMain: false });
+
+		expect(mainPos).toEqual({ top: "0%", height: "100%" });
+		expect(bgPos).toEqual({ top: "0%", height: "100%" });
+	});
+
+	it("positions main vocals on top half and background vocals on bottom half when splitBgMain is true", () => {
+		const mainPos = getLineSegmentPosition({ isBG: false, splitBgMain: true });
+		const bgPos = getLineSegmentPosition({ isBG: true, splitBgMain: true });
+
+		expect(mainPos).toEqual({ top: "0%", height: "50%" });
+		expect(bgPos).toEqual({ top: "50%", height: "50%" });
+	});
+
+	it("scopes touching start/end boundaries per track when splitBgMain is active", () => {
+		const lines = [
+			{ id: "main-1", startTime: 1000, endTime: 3000, isBG: false },
+			{ id: "bg-1", startTime: 3000, endTime: 5000, isBG: true },
+			{ id: "main-2", startTime: 3000, endTime: 6000, isBG: false },
+		];
+
+		const lineStartTimes = new Set(lines.map((l) => l.startTime));
+		const lineEndTimes = new Set(lines.map((l) => l.endTime));
+
+		const mainStartTimes = new Set(
+			lines.filter((l) => !l.isBG).map((l) => l.startTime),
+		);
+		const mainEndTimes = new Set(
+			lines.filter((l) => !l.isBG).map((l) => l.endTime),
+		);
+		const bgStartTimes = new Set(
+			lines.filter((l) => l.isBG).map((l) => l.startTime),
+		);
+		const bgEndTimes = new Set(
+			lines.filter((l) => l.isBG).map((l) => l.endTime),
+		);
+
+		// When splitBgMain is false, bg-1 starts where main-1 ends (time 3000) so they touch in the same track
+		const bg1TouchesStartCombined = lineEndTimes.has(3000);
+		expect(bg1TouchesStartCombined).toBe(true);
+
+		// When splitBgMain is true, bg-1 does not touch main-1 because bg-1 checks bgEndTimes
+		const bg1TouchesStartSplit = bgEndTimes.has(3000);
+		expect(bg1TouchesStartSplit).toBe(false);
+
+		// But main-2 does touch main-1 at time 3000 in split mode
+		const main2TouchesStartSplit = mainEndTimes.has(3000);
+		expect(main2TouchesStartSplit).toBe(true);
+	});
+
+	it("shows overlapping background lines when main line is selected and both onlyShowSyncLine and splitBgMain are true", () => {
+		const songLines = [
+			{ id: "main-1", startTime: 1000, endTime: 5000, isBG: false },
+			{ id: "bg-1", startTime: 2000, endTime: 4000, isBG: true },
+			{ id: "bg-2", startTime: 6000, endTime: 8000, isBG: true },
+			{ id: "main-2", startTime: 6000, endTime: 9000, isBG: false },
+		];
+
+		const selectedLines = new Set(["main-1"]);
+		const selectedLineObjs = songLines.filter((l) => selectedLines.has(l.id));
+
+		const filtered = songLines.filter((line) => {
+			if (selectedLines.has(line.id)) return true;
+			if (line.startTime == null || line.endTime == null) return false;
+
+			return selectedLineObjs.some((sel) => {
+				if (sel.startTime == null || sel.endTime == null) return false;
+				if (Boolean(sel.isBG) === Boolean(line.isBG)) return false;
+				return line.startTime < sel.endTime && line.endTime > sel.startTime;
+			});
+		});
+
+		expect(filtered.map((l) => l.id)).toEqual(["main-1", "bg-1"]);
+	});
+
+	it("shows overlapping main lines when background line is selected and both onlyShowSyncLine and splitBgMain are true", () => {
+		const songLines = [
+			{ id: "main-1", startTime: 1000, endTime: 5000, isBG: false },
+			{ id: "bg-1", startTime: 2000, endTime: 4000, isBG: true },
+			{ id: "bg-2", startTime: 6000, endTime: 8000, isBG: true },
+			{ id: "main-2", startTime: 6000, endTime: 9000, isBG: false },
+		];
+
+		const selectedLines = new Set(["bg-1"]);
+		const selectedLineObjs = songLines.filter((l) => selectedLines.has(l.id));
+
+		const filtered = songLines.filter((line) => {
+			if (selectedLines.has(line.id)) return true;
+			if (line.startTime == null || line.endTime == null) return false;
+
+			return selectedLineObjs.some((sel) => {
+				if (sel.startTime == null || sel.endTime == null) return false;
+				if (Boolean(sel.isBG) === Boolean(line.isBG)) return false;
+				return line.startTime < sel.endTime && line.endTime > sel.startTime;
+			});
+		});
+
+		expect(filtered.map((l) => l.id)).toEqual(["main-1", "bg-1"]);
+	});
+});

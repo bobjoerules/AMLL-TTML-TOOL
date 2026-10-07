@@ -206,6 +206,7 @@
 			"enableGlowAnimation": "启用发光动画",
 			"highlightErrors": "高亮错误",
 			"onlyShowSyncLineOnSpectrogram": "仅在频谱图显示当前打轴行",
+			"splitBgMainOnSpectrogram": "频谱图分离主唱和和声",
 			"wrapLyricLines": "自动换行长歌词",
 			"showPerWordRomanization": "显示单词注音",
 			"keyBindingReference": "快捷键参考",
@@ -513,6 +514,8 @@
 			}
 		},
 		"spectrogram": {
+			"splitBgMain": "频谱图分离主唱和和声",
+			"splitBgMainDesc": "在频谱图上方显示主唱，下方显示背景和声。",
 			"palette": "调色板",
 			"paletteCustom": "自定义",
 			"gradientEditorDesc": "Pos 值为 0.0 对应最安静的部分，1.0 对应最响亮的部分。建议在更大的 Pos 值时使用更亮的颜色。",
@@ -1404,6 +1407,8 @@
 		"showUnselectedLines": "显示未选中行",
 		"onlyShowSyncLine": "仅显示当前打轴行",
 		"onlyShowSyncLineDesc": "在进行打轴同步时，隐藏其他歌词行，频谱图时间轴覆盖层上仅显示当前正在同步的行。",
+		"splitBgMain": "分离主唱和和声",
+		"splitBgMainDesc": "在频谱图上方显示主唱，下方显示背景和声。",
 		"playheadTrackingMode": "指针跟随模式",
 		"playheadTrackingOff": "关闭",
 		"playheadTrackingSnap": "靠左跳转",
