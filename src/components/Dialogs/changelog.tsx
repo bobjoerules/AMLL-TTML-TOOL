@@ -51,6 +51,23 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.3.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 7, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Split Background and Main Vocals on Spectrogram:</b> Added a setting and sidebar toggle to separate main vocals into the upper track and background vocals into the lower track on the spectrogram, with simultaneous display for overlapping lines during sync.
+								</Text>
+								<Text size="2">
+									• <b>Native Menu Labeling Polish:</b> Resolved an issue where native OS menu accelerators stripped the ampersand in Grammar and Spelling Check, creating an unwanted double space.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.16
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

@@ -1,4 +1,12 @@
 import {
+	CenterHorizontal24Regular,
+	EyeTrackingOff24Regular,
+	LayoutRowTwo24Regular,
+	LayoutRowTwoSplitBottom24Regular,
+	NextFrame24Regular,
+	Target24Regular,
+} from "@fluentui/react-icons";
+import {
 	Box,
 	Button,
 	Card,
@@ -10,26 +18,20 @@ import {
 	Text,
 	TextField,
 } from "@radix-ui/themes";
-import {
-	CenterHorizontal24Regular,
-	EyeTrackingOff24Regular,
-	LayoutRowTwoSplitBottom24Regular,
-	NextFrame24Regular,
-	Target24Regular,
-} from "@fluentui/react-icons";
 import { useAtom } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	customPaletteStopsAtom,
 	predefinedPalettes,
+	type SpectrogramPlayheadTrackingMode,
 	selectedPaletteIdAtom,
 	spectrogramFftSizeAtom,
 	spectrogramFullWidthAtom,
 	spectrogramHeightAtom,
 	spectrogramOnlyShowSyncLineAtom,
 	spectrogramPlayheadTrackingModeAtom,
-	type SpectrogramPlayheadTrackingMode,
+	spectrogramSplitBgMainAtom,
 } from "$/modules/spectrogram/states";
 
 export const SettingsSpectrogramTab = () => {
@@ -44,6 +46,9 @@ export const SettingsSpectrogramTab = () => {
 	const [localStops, setLocalStops] = useState(globalStops);
 	const [spectrogramOnlyShowSyncLine, setSpectrogramOnlyShowSyncLine] = useAtom(
 		spectrogramOnlyShowSyncLineAtom,
+	);
+	const [spectrogramSplitBgMain, setSpectrogramSplitBgMain] = useAtom(
+		spectrogramSplitBgMainAtom,
 	);
 	const [playheadTrackingMode, setPlayheadTrackingMode] = useAtom(
 		spectrogramPlayheadTrackingModeAtom,
@@ -156,6 +161,36 @@ export const SettingsSpectrogramTab = () => {
 								<Switch
 									checked={spectrogramOnlyShowSyncLine}
 									onCheckedChange={setSpectrogramOnlyShowSyncLine}
+								/>
+							</Flex>
+						</Box>
+					</Flex>
+				</Text>
+			</Card>
+
+			<Card>
+				<Text as="label">
+					<Flex gap="3" align="center">
+						<LayoutRowTwo24Regular />
+						<Box flexGrow="1">
+							<Flex gap="2" align="center" justify="between">
+								<Flex direction="column" gap="1">
+									<Text>
+										{t(
+											"settings.spectrogram.splitBgMain",
+											"Split Background and Main Vocals",
+										)}
+									</Text>
+									<Text size="1" color="gray">
+										{t(
+											"settings.spectrogram.splitBgMainDesc",
+											"Display main vocals in the upper half and background vocals in the lower half of the spectrogram.",
+										)}
+									</Text>
+								</Flex>
+								<Switch
+									checked={spectrogramSplitBgMain}
+									onCheckedChange={setSpectrogramSplitBgMain}
 								/>
 							</Flex>
 						</Box>

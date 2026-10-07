@@ -1,13 +1,16 @@
+import classNames from "classnames";
 import { useAtomValue, useSetAtom } from "jotai";
 import React, { type FC, memo, useCallback, useContext } from "react";
-import classNames from "classnames";
 import type { ProcessedLyricLine } from "$/modules/segmentation/utils/segment-processing.ts";
 import {
 	previewLineAtom,
 	selectedWordIdAtom,
 	timelineDragAtom,
 } from "$/modules/spectrogram/states/dnd.ts";
-import { spectrogramScrollLeftAtom } from "$/modules/spectrogram/states/index.ts";
+import {
+	spectrogramScrollLeftAtom,
+	spectrogramSplitBgMainAtom,
+} from "$/modules/spectrogram/states/index.ts";
 import { editingTimeFieldAtom, selectedLinesAtom } from "$/states/main.ts";
 import { globalStore } from "$/states/store.ts";
 import { DividerSegment } from "./DividerSegment.tsx";
@@ -38,6 +41,7 @@ export const LyricLineSegment: FC<LyricLineSegmentProps> = memo(
 		const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
 		const editingTimeField = useAtomValue(editingTimeFieldAtom);
 		const setTimelineDrag = useSetAtom(timelineDragAtom);
+		const splitBgMain = useAtomValue(spectrogramSplitBgMainAtom);
 
 		let displayLine: ProcessedLyricLine;
 		if (!isGhost && previewLine && previewLine.id === line.id) {
@@ -107,16 +111,29 @@ export const LyricLineSegment: FC<LyricLineSegmentProps> = memo(
 			return null;
 		}
 
-		const dynamicStyles = {
+		const dynamicStyles: React.CSSProperties = {
 			left: `${left}px`,
 			width: `${width}px`,
 			cursor: isGhost ? "default" : "auto",
+			...(splitBgMain
+				? {
+						top: displayLine.isBG ? "50%" : "0%",
+						height: "50%",
+					}
+				: {
+						top: "0%",
+						height: "100%",
+					}),
 		};
 
 		return (
 			// biome-ignore lint/a11y/useSemanticElements: <button> 不适用
 			<div
-				className={classNames(styles.lineSegment, isGhost && styles.ghost)}
+				className={classNames(
+					styles.lineSegment,
+					isGhost && styles.ghost,
+					displayLine.isBG ? styles.bgLine : styles.mainLine,
+				)}
 				style={dynamicStyles}
 				onMouseDown={handleMouseDown}
 				tabIndex={isGhost ? -1 : 0}

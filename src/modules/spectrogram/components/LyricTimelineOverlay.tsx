@@ -19,11 +19,10 @@ import {
 	timelineDragAtom,
 } from "$/modules/spectrogram/states/dnd.ts";
 import {
-	timeShiftPreviewOffsetAtom,
-	timeShiftPreviewActiveAtom,
-	timeShiftPreviewScopeAtom,
-	timeShiftPreviewCustomRangeAtom,
-} from "$/states/dialogs.ts";
+	spectrogramOnlyShowSyncLineAtom,
+	spectrogramScrollLeftAtom,
+	spectrogramSplitBgMainAtom,
+} from "$/modules/spectrogram/states/index.ts";
 import {
 	commitUpdatedLine,
 	getUpdatedLineForDivider,
@@ -31,15 +30,17 @@ import {
 	getUpdatedLineForWordPan,
 } from "$/modules/spectrogram/utils/timeline-mutations.ts";
 import {
-	spectrogramOnlyShowSyncLineAtom,
-	spectrogramScrollLeftAtom,
-} from "$/modules/spectrogram/states/index.ts";
+	timeShiftPreviewActiveAtom,
+	timeShiftPreviewCustomRangeAtom,
+	timeShiftPreviewOffsetAtom,
+	timeShiftPreviewScopeAtom,
+} from "$/states/dialogs.ts";
 import {
 	bgLyricIgnoreSyncAtom,
 	mainLyricIgnoreSyncAtom,
 	selectedLinesAtom,
-	toolModeAtom,
 	ToolMode,
+	toolModeAtom,
 } from "$/states/main.ts";
 import { globalStore } from "$/states/store.ts";
 import { LyricLineSegment } from "./LyricLineSegment";
@@ -59,7 +60,7 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 		const bgLyricIgnoreSync = useAtomValue(bgLyricIgnoreSyncAtom);
 		const mainLyricIgnoreSync = useAtomValue(mainLyricIgnoreSyncAtom);
 		const [timelineDrag, setTimelineDrag] = useAtom(timelineDragAtom);
-		const setPreviewLine = useSetAtom(previewLineAtom);
+		const [previewLine, setPreviewLine] = useAtom(previewLineAtom);
 		const snapTargetsMs = useRef<number[]>([]);
 		const scrollLeft = useAtomValue(spectrogramScrollLeftAtom);
 		const { scrollContainerRef, zoom } = useContext(SpectrogramContext);
@@ -81,6 +82,7 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 		const spectrogramOnlyShowSyncLine = useAtomValue(
 			spectrogramOnlyShowSyncLineAtom,
 		);
+		const splitBgMain = useAtomValue(spectrogramSplitBgMainAtom);
 		const toolMode = useAtomValue(toolModeAtom);
 		const selectedLines = useAtomValue(selectedLinesAtom);
 		const previewActive = useAtomValue(timeShiftPreviewActiveAtom);
@@ -291,9 +293,30 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 			spectrogramOnlyShowSyncLine &&
 			(toolMode === ToolMode.Sync || selectedLines.size > 0)
 		) {
-			linesToRender = linesToRender.filter((line) =>
-				selectedLines.has(line.id),
-			);
+			if (splitBgMain) {
+				const selectedLineObjs = activeProcessedLines
+					.filter((line) => selectedLines.has(line.id))
+					.map((line) =>
+						previewLine && previewLine.id === line.id ? previewLine : line,
+					);
+
+				linesToRender = linesToRender.filter((line) => {
+					if (selectedLines.has(line.id)) return true;
+					if (line.startTime == null || line.endTime == null) return false;
+
+					return selectedLineObjs.some((sel) => {
+						if (sel.startTime == null || sel.endTime == null) return false;
+						if (Boolean(sel.isBG) === Boolean(line.isBG)) return false;
+						return (
+							line.startTime < sel.endTime && line.endTime > sel.startTime
+						);
+					});
+				});
+			} else {
+				linesToRender = linesToRender.filter((line) =>
+					selectedLines.has(line.id),
+				);
+			}
 		}
 
 		const lineStartTimes = useMemo(() => {
@@ -312,17 +335,62 @@ export const LyricTimelineOverlay: FC<LyricTimelineOverlayProps> = memo(
 			return set;
 		}, [activeProcessedLines]);
 
+		const mainLineStartTimes = useMemo(() => {
+			const set = new Set<number>();
+			for (const l of activeProcessedLines) {
+				if (!l.isBG && l.startTime != null) set.add(l.startTime);
+			}
+			return set;
+		}, [activeProcessedLines]);
+
+		const mainLineEndTimes = useMemo(() => {
+			const set = new Set<number>();
+			for (const l of activeProcessedLines) {
+				if (!l.isBG && l.endTime != null) set.add(l.endTime);
+			}
+			return set;
+		}, [activeProcessedLines]);
+
+		const bgLineStartTimes = useMemo(() => {
+			const set = new Set<number>();
+			for (const l of activeProcessedLines) {
+				if (l.isBG && l.startTime != null) set.add(l.startTime);
+			}
+			return set;
+		}, [activeProcessedLines]);
+
+		const bgLineEndTimes = useMemo(() => {
+			const set = new Set<number>();
+			for (const l of activeProcessedLines) {
+				if (l.isBG && l.endTime != null) set.add(l.endTime);
+			}
+			return set;
+		}, [activeProcessedLines]);
+
 		return (
 			<div className={styles.overlay}>
+				{splitBgMain && <div className={styles.splitTrackDivider} />}
 				{linesToRender.map((line) => (
 					<LyricLineSegment
 						key={line.id}
 						line={line}
 						isTouchingStart={
-							line.startTime != null && lineEndTimes.has(line.startTime)
+							line.startTime != null &&
+							(splitBgMain
+								? line.isBG
+									? bgLineEndTimes
+									: mainLineEndTimes
+								: lineEndTimes
+							).has(line.startTime)
 						}
 						isTouchingEnd={
-							line.endTime != null && lineStartTimes.has(line.endTime)
+							line.endTime != null &&
+							(splitBgMain
+								? line.isBG
+									? bgLineStartTimes
+									: mainLineStartTimes
+								: lineStartTimes
+							).has(line.endTime)
 						}
 					/>
 				))}

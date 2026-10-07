@@ -642,7 +642,7 @@ pub fn run() {
                 let grammar_check_item = MenuItem::with_id(
                     app,
                     "menu-grammar-check",
-                    "Grammar & Spelling Check...",
+                    "Grammar and Spelling Check...",
                     true,
                     None::<&str>,
                 )?;

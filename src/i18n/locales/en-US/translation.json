@@ -237,6 +237,7 @@
 			"enableGlowAnimation": "Enable Glow Animation",
 			"highlightErrors": "Highlight Errors",
 			"onlyShowSyncLineOnSpectrogram": "Only Show Synced Line on Spectrogram",
+			"splitBgMainOnSpectrogram": "Split Vocals on Spectrogram",
 			"wrapLyricLines": "Wrap Long Lines",
 			"showPerWordRomanization": "Show Per-Word Romanization",
 			"keyBindingReference": "Important Hotkeys",
@@ -539,6 +540,8 @@
 			}
 		},
 		"spectrogram": {
+			"splitBgMain": "Split Background and Main Vocals",
+			"splitBgMainDesc": "Display main vocals in the upper half and background vocals in the lower half of the spectrogram.",
 			"palette": "Color Palette",
 			"paletteCustom": "Custom",
 			"gradientEditorDesc": "A Pos value of 0.0 corresponds to the quietest part, and 1.0 corresponds to the loudest part. It is recommended to use brighter colors for larger Pos values.",
@@ -626,6 +629,7 @@
 			"autoDuetSuccess": "Auto duet assigned {singers} singers to {count} lines: {mapping}",
 			"autoDuetNotEnoughSingers": "At least two distinct singers/vocalists are required to auto-duet.",
 			"ttmlChecklist": "TTML Checklist",
+			"grammarCheck": "Grammar and Spelling Check...",
 			"statsAndProfiles": "User Profiles & Stats...",
 			"spotMatch": "SpotMatch (Alternate Spotify IDs)...",
 			"tool": "Tools",
@@ -1449,6 +1453,8 @@
 		"showUnselectedLines": "Show unselected lines",
 		"onlyShowSyncLine": "Only show line being time synced",
 		"onlyShowSyncLineDesc": "When syncing lyrics, hides other lines and only displays the line currently being synchronized on the spectrogram overlay.",
+		"splitBgMain": "Split background and main vocals",
+		"splitBgMainDesc": "Display main vocals in the upper half and background vocals in the lower half of the spectrogram.",
 		"playheadTrackingMode": "Playhead Tracking",
 		"playheadTrackingOff": "Off",
 		"playheadTrackingSnap": "Snap",

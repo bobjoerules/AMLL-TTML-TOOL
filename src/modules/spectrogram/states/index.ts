@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import { audioBufferAtom } from "$/modules/audio/states/index.ts";
 import {
 	type ColorStop,
 	generateLutFromStops,
@@ -8,7 +9,6 @@ import {
 	getGreenColor,
 	getIcyBlueColor,
 } from "$/modules/spectrogram/utils/colors";
-import { audioBufferAtom } from "$/modules/audio/states/index.ts";
 
 export const spectrogramGainAtom = atomWithStorage(
 	"settings_spectrogramGain",
@@ -181,5 +181,10 @@ export const spectrogramSelectionAtom = atom<{
 
 export const spectrogramFullWidthAtom = atomWithStorage<boolean>(
 	"settings_spectrogramFullWidth",
+	false,
+);
+
+export const spectrogramSplitBgMainAtom = atomWithStorage<boolean>(
+	"settings_spectrogramSplitBgMain",
 	false,
 );
