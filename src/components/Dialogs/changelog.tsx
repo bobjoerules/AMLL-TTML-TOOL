@@ -51,6 +51,23 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v2.2.16
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 6, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Auto Duet by Singer on Genius Import:</b> Added an Auto Duet option when downloading lyrics from Genius, automatically assigning sequential voices (v1, v2, etc.) and duet flags based on section vocalist headers.
+								</Text>
+								<Text size="2">
+									• <b>Cloud Save Fix:</b> Resolved a runtime error caused by a missing Firestore updateDoc import when saving projects to Cloud Storage.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.2.15
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
