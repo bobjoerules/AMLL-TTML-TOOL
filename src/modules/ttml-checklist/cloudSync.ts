@@ -19,26 +19,38 @@ import {
 import {
 	batchLinkUploadedTTMLsToChecklist,
 	deduplicateChecklistEntries,
+	filterTombstonedEntries,
+	isEntryDeleted,
 	linkUploadedTTMLToChecklist,
+	mergeChecklistTombstones,
 	normalizeChecklistEntries,
+	type ChecklistTombstones,
 	type TTMLChecklistEntry,
 	type UploadedTTMLPayload,
 } from "./logic";
-import { ttmlChecklistAtom } from "./states";
+import {
+	checklistDeletedTombstonesAtom,
+	ttmlChecklistAtom,
+} from "./states";
 
 export interface CloudChecklistData {
 	entries: TTMLChecklistEntry[];
+	deletedIds?: string[];
+	deletedDocIds?: string[];
+	deletedSongKeys?: string[];
 	updatedAt: number;
 	lastUpdatedBy?: string;
 }
 
 /**
  * Scans the user's cloud saves (users/{uid}/ttmls) for finished lyrics,
- * and automatically integrates any finished tracks into the checklist.
+ * and automatically integrates any finished tracks into the checklist,
+ * respecting user-deleted tombstones so deleted tracks are never resurrected.
  */
 export async function syncFinishedCloudTTMLsToChecklist(
 	currentEntries: TTMLChecklistEntry[],
 	uid: string,
+	tombstones?: ChecklistTombstones,
 ): Promise<{ entries: TTMLChecklistEntry[]; importedCount: number }> {
 	if (!isFirebaseConfigured()) {
 		return { entries: currentEntries, importedCount: 0 };
@@ -61,9 +73,20 @@ export async function syncFinishedCloudTTMLsToChecklist(
 				d.publishedToCommunity === true;
 
 			if (isFinished) {
+				const title = d.title || "Untitled";
+				const artist = d.artist || "";
+				if (
+					isEntryDeleted(
+						{ id: docSnap.id, cloudDocId: docSnap.id, song: title, artist },
+						tombstones,
+					)
+				) {
+					return;
+				}
+
 				finishedUploads.push({
-					title: d.title || "Untitled",
-					artist: d.artist || "",
+					title,
+					artist,
 					album: d.album || undefined,
 					coverArt: d.coverArt || null,
 					docId: docSnap.id,
@@ -74,7 +97,11 @@ export async function syncFinishedCloudTTMLsToChecklist(
 			}
 		});
 
-		return batchLinkUploadedTTMLsToChecklist(currentEntries, finishedUploads);
+		return batchLinkUploadedTTMLsToChecklist(
+			currentEntries,
+			finishedUploads,
+			tombstones,
+		);
 	} catch (err) {
 		console.warn("Could not sync finished cloud TTMLs to checklist:", err);
 		return { entries: currentEntries, importedCount: 0 };
@@ -84,6 +111,7 @@ export async function syncFinishedCloudTTMLsToChecklist(
 export async function saveChecklistToCloud(
 	entries: TTMLChecklistEntry[],
 	uid?: string,
+	tombstones?: ChecklistTombstones,
 ): Promise<{ success: boolean; error?: string }> {
 	if (!isFirebaseConfigured()) {
 		return { success: false, error: "Firebase is not configured." };
@@ -107,8 +135,15 @@ export async function saveChecklistToCloud(
 		}
 
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
+		const currentTombstones =
+			tombstones || globalStore.get(checklistDeletedTombstonesAtom);
 		const rawData = {
-			entries: normalizeChecklistEntries(entries),
+			entries: normalizeChecklistEntries(
+				filterTombstonedEntries(entries, currentTombstones),
+			),
+			deletedIds: currentTombstones?.ids || [],
+			deletedDocIds: currentTombstones?.cloudDocIds || [],
+			deletedSongKeys: currentTombstones?.songKeys || [],
 			updatedAt: Date.now(),
 		};
 		// Deep clean to strip all undefined fields which cause Firestore setDoc to throw
@@ -146,6 +181,11 @@ export async function loadChecklistFromCloud(
 		}
 
 		let baseEntries: TTMLChecklistEntry[] = [];
+		let remoteTombstones: ChecklistTombstones = {
+			ids: [],
+			cloudDocIds: [],
+			songKeys: [],
+		};
 		const docRef = doc(db, "users", targetUid, "userData", "checklist");
 		const snap = await getDoc(docRef);
 		if (snap.exists()) {
@@ -153,14 +193,32 @@ export async function loadChecklistFromCloud(
 			if (Array.isArray(data.entries)) {
 				baseEntries = normalizeChecklistEntries(data.entries);
 			}
+			remoteTombstones = {
+				ids: Array.isArray(data.deletedIds) ? data.deletedIds : [],
+				cloudDocIds: Array.isArray(data.deletedDocIds) ? data.deletedDocIds : [],
+				songKeys: Array.isArray(data.deletedSongKeys)
+					? data.deletedSongKeys
+					: [],
+			};
 		}
+
+		const localTombstones = globalStore.get(checklistDeletedTombstonesAtom);
+		const mergedTombstones = mergeChecklistTombstones(
+			localTombstones,
+			remoteTombstones,
+		);
+		globalStore.set(checklistDeletedTombstonesAtom, mergedTombstones);
+		baseEntries = filterTombstonedEntries(baseEntries, mergedTombstones);
 
 		// Also incorporate any finished cloud TTMLs from user's library
 		const finishedSync = await syncFinishedCloudTTMLsToChecklist(
 			baseEntries,
 			targetUid,
+			mergedTombstones,
 		);
-		return { entries: finishedSync.entries };
+		return {
+			entries: filterTombstonedEntries(finishedSync.entries, mergedTombstones),
+		};
 	} catch (err: any) {
 		console.error("Failed to load checklist from Firebase:", err);
 		return {
@@ -262,6 +320,11 @@ export function useChecklistCloudSync() {
 				async (docSnap) => {
 					try {
 						let remoteEntries: TTMLChecklistEntry[] = [];
+						let remoteTombstones: ChecklistTombstones = {
+							ids: [],
+							cloudDocIds: [],
+							songKeys: [],
+						};
 						let docExisted = false;
 
 						if (docSnap.exists()) {
@@ -270,7 +333,29 @@ export function useChecklistCloudSync() {
 							if (Array.isArray(data.entries)) {
 								remoteEntries = normalizeChecklistEntries(data.entries);
 							}
+							remoteTombstones = {
+								ids: Array.isArray(data.deletedIds) ? data.deletedIds : [],
+								cloudDocIds: Array.isArray(data.deletedDocIds)
+									? data.deletedDocIds
+									: [],
+								songKeys: Array.isArray(data.deletedSongKeys)
+									? data.deletedSongKeys
+									: [],
+							};
 						}
+
+						const localTombstones = globalStore.get(
+							checklistDeletedTombstonesAtom,
+						);
+						const mergedTombstones = mergeChecklistTombstones(
+							localTombstones,
+							remoteTombstones,
+						);
+						globalStore.set(checklistDeletedTombstonesAtom, mergedTombstones);
+						remoteEntries = filterTombstonedEntries(
+							remoteEntries,
+							mergedTombstones,
+						);
 
 						let importedCount = 0;
 						// Only scan for finished cloud TTMLs ONCE per session/user, NOT on every recurring snapshot update
@@ -279,34 +364,57 @@ export function useChecklistCloudSync() {
 							const finishedSync = await syncFinishedCloudTTMLsToChecklist(
 								remoteEntries,
 								user.uid,
+								mergedTombstones,
 							);
-							remoteEntries = finishedSync.entries;
+							remoteEntries = filterTombstonedEntries(
+								finishedSync.entries,
+								mergedTombstones,
+							);
 							importedCount = finishedSync.importedCount;
 						}
 
-						const currentEntries = globalStore.get(ttmlChecklistAtom);
+						const currentEntries = filterTombstonedEntries(
+							globalStore.get(ttmlChecklistAtom),
+							mergedTombstones,
+						);
 
 						let resolvedEntries: TTMLChecklistEntry[];
 						if (!isInitialSyncDoneRef.current) {
 							// INITIAL SYNC ON APP BOOT / LOGIN:
-							if (currentEntries.length === 0) {
+							if (
+								currentEntries.length === 0 &&
+								mergedTombstones.ids.length === 0 &&
+								mergedTombstones.cloudDocIds.length === 0 &&
+								mergedTombstones.songKeys.length === 0
+							) {
 								// Fresh device or empty local state: remote wins, never wipe cloud!
 								resolvedEntries = remoteEntries;
 							} else if (remoteEntries.length === 0 && !docExisted) {
 								// Brand new cloud account with existing local entries: push local to cloud
 								resolvedEntries = currentEntries;
-								void saveChecklistToCloud(currentEntries, user.uid);
+								void saveChecklistToCloud(
+									currentEntries,
+									user.uid,
+									mergedTombstones,
+								);
 							} else {
 								// Both local and remote have entries: merge both without losing anything!
-								resolvedEntries = deduplicateChecklistEntries([
-									...remoteEntries,
-									...currentEntries,
-								]);
+								resolvedEntries = filterTombstonedEntries(
+									deduplicateChecklistEntries([
+										...remoteEntries,
+										...currentEntries,
+									]),
+									mergedTombstones,
+								);
 								if (
 									importedCount > 0 ||
 									resolvedEntries.length !== remoteEntries.length
 								) {
-									void saveChecklistToCloud(resolvedEntries, user.uid);
+									void saveChecklistToCloud(
+										resolvedEntries,
+										user.uid,
+										mergedTombstones,
+									);
 								}
 							}
 							isInitialSyncDoneRef.current = true;
@@ -357,12 +465,10 @@ export function useChecklistCloudSync() {
 		const json = JSON.stringify(entries);
 		if (json === lastUploadedHashRef.current) return;
 
-		// Safeguard: Never overwrite cloud with empty list if the last state wasn't established
-		if (entries.length === 0 && !lastUploadedHashRef.current) return;
-
 		lastUploadedHashRef.current = json;
+		const currentTombstones = globalStore.get(checklistDeletedTombstonesAtom);
 		const timer = setTimeout(() => {
-			void saveChecklistToCloud(entries, user.uid);
+			void saveChecklistToCloud(entries, user.uid, currentTombstones);
 		}, 400);
 
 		return () => clearTimeout(timer);

@@ -2,6 +2,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useRef } from "react";
 import {
 	spectrogramContainerWidthAtom,
+	spectrogramPlayheadTrackingModeAtom,
 	spectrogramScrollLeftAtom,
 	spectrogramZoomAtom,
 } from "$/modules/spectrogram/states";
@@ -17,6 +18,10 @@ export const useAudioRegion = (
 	const [scrollLeft, setScrollLeft] = useAtom(spectrogramScrollLeftAtom);
 	const containerWidth = useAtomValue(spectrogramContainerWidthAtom);
 	const currentDuration = useAtomValue(currentDurationAtom);
+	const playheadTrackingMode = useAtomValue(
+		spectrogramPlayheadTrackingModeAtom,
+	);
+	const isTrackingOn = playheadTrackingMode !== "off";
 
 	const dragStateRef = useRef<{
 		type: "drag" | "resizeLeft" | "resizeRight";
@@ -111,10 +116,9 @@ export const useAudioRegion = (
 
 	const handleMouseDown = useCallback(
 		(e: React.MouseEvent<HTMLDivElement>) => {
-			e.preventDefault();
-			e.stopPropagation();
-			if (currentDuration <= 0 || sliderWidthPx <= 0 || !containerRef.current)
+			if (e.shiftKey || e.altKey) {
 				return;
+			}
 
 			const type = e.currentTarget.dataset.dragType as
 				| "drag"
@@ -122,6 +126,16 @@ export const useAudioRegion = (
 				| "resizeRight";
 
 			if (!type) return;
+
+			// When playhead tracking is active, disable dragging the region body so clicks seek the playhead
+			if (isTrackingOn && type === "drag") {
+				return;
+			}
+
+			e.preventDefault();
+			e.stopPropagation();
+			if (currentDuration <= 0 || sliderWidthPx <= 0 || !containerRef.current)
+				return;
 
 			const timePerPixelOnSlider = currentDuration / sliderWidthPx;
 			const startTimeMs = (scrollLeft / zoom) * 1000;
@@ -151,6 +165,7 @@ export const useAudioRegion = (
 			handleDragEnd,
 			containerRef,
 			isDraggingRef,
+			isTrackingOn,
 		],
 	);
 
@@ -177,5 +192,6 @@ export const useAudioRegion = (
 		durationS,
 		viewDurationMs,
 		startTimeMs,
+		isTrackingOn,
 	};
 };

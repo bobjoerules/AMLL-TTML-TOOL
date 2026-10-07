@@ -949,6 +949,13 @@ export const SpicyLyrics = memo(
 						!isWordTimed && styles.tokenUnsynced,
 					)}
 					dir={isRtl(word.text) ? "rtl" : undefined}
+					onClick={
+						!isWordTimed
+							? (e) => {
+									e.stopPropagation();
+							  }
+							: undefined
+					}
 				>
 					{letters
 						? letters
@@ -1012,7 +1019,10 @@ export const SpicyLyrics = memo(
 								!isLineTimed && styles.lineUnsynced,
 							)}
 							dir={line.isRtl ? "rtl" : undefined}
-							onClick={() => seek(line.startTime)}
+							onClick={() => {
+								if (!isLineTimed) return;
+								seek(line.startTime);
+							}}
 						>
 							{line.isDotLine ? (
 								<div className={styles.dotGroup}>

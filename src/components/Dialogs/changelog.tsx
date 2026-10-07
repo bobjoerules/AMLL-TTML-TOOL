@@ -51,6 +51,29 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v3.0.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 7, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Spectrogram Playhead Tracking and Navigation:</b> Clicking the bottom audio slider while the spectrogram is open now moves the playhead and snaps according to playhead tracking mode, preventing unintended viewport displacements.
+								</Text>
+								<Text size="2">
+									• <b>Preview Unsynced Lyric Protection:</b> Clicking unsynced lines or words in preview mode no longer moves the audio playhead.
+								</Text>
+								<Text size="2">
+									• <b>Checklist Deletion and Cloud Sync:</b> Fixed checklist deletion persistence so removing entries deletes them across local storage and cloud sync rather than reappearing on reload.
+								</Text>
+								<Text size="2">
+									• <b>UI and Layout Polish:</b> Resolved dropdown menu scrollbar overflow issues, stabilized toggle button widths, and improved lyrics import dialog responsiveness.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v2.3.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

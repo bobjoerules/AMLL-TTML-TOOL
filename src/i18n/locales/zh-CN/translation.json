@@ -768,6 +768,8 @@
 		"markerDescription": "Description...",
 		"deleteMarker": "Delete Marker",
 		"waveform": "Audio Waveform",
+		"spectrogramBarHint": "点击以居中频谱图。Shift+点击以跳转播放指针。",
+		"spectrogramBarTrackingHint": "点击以跳转播放指针（播放指针跟踪已开启）。",
 		"status": {
 			"transcoding": "解码失败，正在尝试转码音频...",
 			"loading": "正在加载音频...",

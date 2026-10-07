@@ -100,8 +100,11 @@ import {
 import { type AlbumTrackItem, ImportAlbumModal } from "./ImportAlbumModal";
 import {
 	addChecklistEntry,
+	addEntryToTombstones,
+	clearEntryFromTombstones,
 	createChecklistEntry,
 	deleteChecklistEntry,
+	filterTombstonedEntries,
 	isChecklistEntryCompleted,
 	isChecklistEntryInProgress,
 	isChecklistEntryNotStarted,
@@ -113,7 +116,11 @@ import {
 	type TTMLChecklistEntryInput,
 	updateChecklistEntry,
 } from "./logic";
-import { ttmlChecklistAtom, checklistShowUploadedToDbAtom } from "./states";
+import {
+	ttmlChecklistAtom,
+	checklistShowUploadedToDbAtom,
+	checklistDeletedTombstonesAtom,
+} from "./states";
 
 type ProviderSearchResult = {
 	id: string | number;
@@ -1363,16 +1370,19 @@ export const TTMLChecklistDialog = () => {
 	const setLrclibImportDialog = useSetAtom(importFromLRCLIBDialogAtom);
 	const setAppleTtmlImportDialog = useSetAtom(appleTtmlImportDialogAtom);
 
+	const [tombstones, setTombstones] = useAtom(checklistDeletedTombstonesAtom);
+
 	const entries = useMemo(
-		() => normalizeChecklistEntries(storedEntries),
-		[storedEntries],
+		() => filterTombstonedEntries(normalizeChecklistEntries(storedEntries), tombstones),
+		[storedEntries, tombstones],
 	);
 
 	useEffect(() => {
-		if (entries.length !== storedEntries.length) {
-			setStoredEntries(entries);
+		const normalized = normalizeChecklistEntries(storedEntries);
+		if (JSON.stringify(normalized) !== JSON.stringify(storedEntries)) {
+			setStoredEntries(normalized);
 		}
-	}, [entries, storedEntries.length, setStoredEntries]);
+	}, [storedEntries, setStoredEntries]);
 
 	const totalCount = entries.length;
 	const completedCount = entries.filter((e) =>
@@ -1417,7 +1427,7 @@ export const TTMLChecklistDialog = () => {
 		}
 
 		if (sortBy === "title-asc") {
-			result.sort((a, b) => a.song.localeCompare(b.song));
+			result.sort((a, b) => a.song.localeCompare(a.song));
 		} else if (sortBy === "title-desc") {
 			result.sort((a, b) => b.song.localeCompare(a.song));
 		} else if (sortBy === "artist-asc") {
@@ -1469,9 +1479,22 @@ export const TTMLChecklistDialog = () => {
 
 	const handleDelete = useCallback(
 		(id: string) => {
-			setStoredEntries((prev) => deleteChecklistEntry(prev, id));
+			const target = storedEntries.find(
+				(e) => e.id === id || e.cloudDocId === id,
+			);
+			const nextEntries = deleteChecklistEntry(storedEntries, id);
+			setStoredEntries(nextEntries);
+
+			if (target) {
+				const nextTombstones = addEntryToTombstones(target, tombstones);
+				setTombstones(nextTombstones);
+
+				if (user?.uid) {
+					void saveChecklistToCloud(nextEntries, user.uid, nextTombstones);
+				}
+			}
 		},
-		[setStoredEntries],
+		[storedEntries, setStoredEntries, tombstones, setTombstones, user?.uid],
 	);
 
 	const handleEdit = useCallback(
@@ -1488,7 +1511,12 @@ export const TTMLChecklistDialog = () => {
 			if (!albumTracks.length) return;
 
 			let nextList = [...entries];
+			let nextTombstones = tombstones;
 			for (const t of albumTracks) {
+				nextTombstones = clearEntryFromTombstones(
+					{ song: t.song, artist: t.artist },
+					nextTombstones,
+				);
 				nextList = addChecklistEntry(nextList, {
 					song: t.song,
 					artist: t.artist,
@@ -1498,9 +1526,10 @@ export const TTMLChecklistDialog = () => {
 					sourceId: t.sourceId,
 				});
 			}
+			setTombstones(nextTombstones);
 			save(nextList);
 		},
-		[entries, save],
+		[entries, save, tombstones, setTombstones],
 	);
 
 	const { openFile } = useFileOpener();
@@ -1808,7 +1837,7 @@ export const TTMLChecklistDialog = () => {
 		}
 		try {
 			setIsSyncingCloud(true);
-			const result = await saveChecklistToCloud(entries, user.uid);
+			const result = await saveChecklistToCloud(entries, user.uid, tombstones);
 			if (result.success) {
 				toast.success(
 					t("ttmlChecklist.pushSuccess", "Pushed checklist to cloud!"),
@@ -2183,6 +2212,12 @@ export const TTMLChecklistDialog = () => {
 						<EntryForm
 							onCancel={() => setShowAddForm(false)}
 							onSubmit={(input) => {
+								setTombstones((prev) =>
+									clearEntryFromTombstones(
+										{ song: input.song, artist: input.artist },
+										prev,
+									),
+								);
 								save(addChecklistEntry(entries, input));
 								setShowAddForm(false);
 							}}

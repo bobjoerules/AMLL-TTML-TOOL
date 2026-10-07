@@ -809,9 +809,109 @@ export interface UploadedTTMLPayload {
 	isCompleted?: boolean;
 }
 
+export interface ChecklistTombstones {
+	ids: string[];
+	cloudDocIds: string[];
+	songKeys: string[];
+}
+
+export function createChecklistSongKey(song: string, artist?: string): string {
+	const base = getBaseSongTitle(song) || normalizeSongKey(song);
+	const artTokens = extractArtistTokens(artist);
+	const art = artTokens.primary || (artist || "").toLowerCase().trim();
+	return `${base}::${art}`;
+}
+
+export function isEntryDeleted(
+	entry: { id?: string; cloudDocId?: string; song?: string; artist?: string },
+	tombstones?: ChecklistTombstones,
+): boolean {
+	if (!tombstones) return false;
+	if (entry.id && tombstones.ids?.includes(entry.id)) return true;
+	if (entry.cloudDocId && tombstones.cloudDocIds?.includes(entry.cloudDocId))
+		return true;
+	if (entry.song) {
+		const key = createChecklistSongKey(entry.song, entry.artist);
+		if (key && tombstones.songKeys?.includes(key)) return true;
+		const rawKey = `${normalizeSongKey(entry.song)}::${(entry.artist || "").toLowerCase().trim()}`;
+		if (rawKey && tombstones.songKeys?.includes(rawKey)) return true;
+	}
+	return false;
+}
+
+export function addEntryToTombstones(
+	entry: { id?: string; cloudDocId?: string; song?: string; artist?: string },
+	tombstones?: ChecklistTombstones,
+): ChecklistTombstones {
+	const ids = new Set(tombstones?.ids || []);
+	if (entry.id) ids.add(entry.id);
+
+	const cloudDocIds = new Set(tombstones?.cloudDocIds || []);
+	if (entry.cloudDocId) cloudDocIds.add(entry.cloudDocId);
+
+	const songKeys = new Set(tombstones?.songKeys || []);
+	if (entry.song) {
+		const key = createChecklistSongKey(entry.song, entry.artist);
+		if (key) songKeys.add(key);
+		const rawKey = `${normalizeSongKey(entry.song)}::${(entry.artist || "").toLowerCase().trim()}`;
+		if (rawKey) songKeys.add(rawKey);
+	}
+
+	return {
+		ids: Array.from(ids),
+		cloudDocIds: Array.from(cloudDocIds),
+		songKeys: Array.from(songKeys),
+	};
+}
+
+export function clearEntryFromTombstones(
+	entry: { id?: string; cloudDocId?: string; song?: string; artist?: string },
+	tombstones?: ChecklistTombstones,
+): ChecklistTombstones {
+	if (!tombstones) return { ids: [], cloudDocIds: [], songKeys: [] };
+	const songKey = entry.song
+		? createChecklistSongKey(entry.song, entry.artist)
+		: "";
+	const rawKey = entry.song
+		? `${normalizeSongKey(entry.song)}::${(entry.artist || "").toLowerCase().trim()}`
+		: "";
+	return {
+		ids: tombstones.ids.filter((id) => !entry.id || id !== entry.id),
+		cloudDocIds: tombstones.cloudDocIds.filter(
+			(docId) => !entry.cloudDocId || docId !== entry.cloudDocId,
+		),
+		songKeys: tombstones.songKeys.filter(
+			(k) => (!songKey || k !== songKey) && (!rawKey || k !== rawKey),
+		),
+	};
+}
+
+export function mergeChecklistTombstones(
+	a?: Partial<ChecklistTombstones>,
+	b?: Partial<ChecklistTombstones>,
+): ChecklistTombstones {
+	const ids = Array.from(new Set([...(a?.ids || []), ...(b?.ids || [])]));
+	const cloudDocIds = Array.from(
+		new Set([...(a?.cloudDocIds || []), ...(b?.cloudDocIds || [])]),
+	);
+	const songKeys = Array.from(
+		new Set([...(a?.songKeys || []), ...(b?.songKeys || [])]),
+	);
+	return { ids, cloudDocIds, songKeys };
+}
+
+export function filterTombstonedEntries(
+	entries: TTMLChecklistEntry[],
+	tombstones?: ChecklistTombstones,
+): TTMLChecklistEntry[] {
+	if (!tombstones) return entries;
+	return entries.filter((e) => !isEntryDeleted(e, tombstones));
+}
+
 export function batchLinkUploadedTTMLsToChecklist(
 	entries: TTMLChecklistEntry[],
 	uploads: UploadedTTMLPayload[],
+	tombstones?: ChecklistTombstones,
 ): { entries: TTMLChecklistEntry[]; importedCount: number } {
 	if (uploads.length === 0) {
 		return { entries, importedCount: 0 };
@@ -827,6 +927,16 @@ export function batchLinkUploadedTTMLsToChecklist(
 		const coverArt = uploaded.coverArt?.trim() || undefined;
 		const audioUrl = uploaded.audioUrl?.trim() || undefined;
 		const docId = uploaded.docId;
+
+		if (
+			tombstones &&
+			isEntryDeleted(
+				{ id: docId, cloudDocId: docId, song: title, artist },
+				tombstones,
+			)
+		) {
+			continue;
+		}
 
 		let isCompleted = uploaded.isCompleted ?? false;
 		if (!isCompleted && uploaded.rawTTML) {
@@ -946,5 +1056,5 @@ export function deleteChecklistEntry(
 	entries: TTMLChecklistEntry[],
 	id: string,
 ): TTMLChecklistEntry[] {
-	return entries.filter((entry) => entry.id !== id);
+	return entries.filter((entry) => entry.id !== id && entry.cloudDocId !== id);
 }

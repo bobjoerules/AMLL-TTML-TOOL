@@ -1388,7 +1388,8 @@ export const ImportLyricsDialog = ({
 				>
 					<Dialog.Content
 						style={{
-							maxWidth: 720,
+							maxWidth: 820,
+							width: "100%",
 							height: "85vh",
 							maxHeight: 780,
 							display: "flex",
@@ -1620,187 +1621,190 @@ export const ImportLyricsDialog = ({
 										flexShrink: 0,
 									}}
 								>
-									<Flex gap="2" align="center" wrap="wrap">
-										{/* Auto Segment Toggle */}
-										<Flex
-											align="center"
-											gap="2"
-											style={{
-												padding: "4px 8px",
-												borderRadius: "var(--radius-2)",
-												backgroundColor: autoSegment
-													? "var(--accent-a3)"
-													: "var(--gray-a2)",
-												border: `1px solid ${
-													autoSegment
-														? "var(--accent-a6)"
-														: "var(--gray-a4)"
-												}`,
-												transition: "all 0.15s ease",
-											}}
-										>
-											<Switch
-												id="chk-auto-segment"
-												size="1"
-												checked={autoSegment}
-												onCheckedChange={setAutoSegment}
-											/>
-											<Text
-												size="1"
-												as="label"
-												htmlFor="chk-auto-segment"
-												weight={autoSegment ? "medium" : "regular"}
+									<Flex direction="column" gap="2">
+										{/* Row 1: Segmentation & Processing */}
+										<Flex gap="2" align="center" wrap="wrap">
+											{/* Auto Segment Toggle */}
+											<Flex
+												align="center"
+												gap="2"
 												style={{
-													cursor: "pointer",
-													userSelect: "none",
-													color: autoSegment
-														? "var(--accent-11)"
-														: "var(--gray-12)",
+													padding: "4px 8px",
+													borderRadius: "var(--radius-2)",
+													backgroundColor: autoSegment
+														? "var(--accent-a3)"
+														: "var(--gray-a2)",
+													border: `1px solid ${
+														autoSegment
+															? "var(--accent-a6)"
+															: "var(--gray-a4)"
+													}`,
+													transition: "all 0.15s ease",
 												}}
 											>
-												{t("autoSegmentDialog.title", "Auto Segment")}
-											</Text>
-											{autoSegment && (
-												<Select.Root
+												<Switch
+													id="chk-auto-segment"
 													size="1"
-													value={selectedEngine}
-													onValueChange={(val) =>
-														setSelectedEngine(val as SegmentationEngineId)
-													}
-												>
-													<Select.Trigger
-														style={{
-															height: 22,
-															fontSize: 11,
-															padding: "0 6px",
-															borderRadius: "var(--radius-1)",
-														}}
-													/>
-													<Select.Content position="popper" side="top">
-														{SYLLABIFICATION_ENGINES.map(({ id, name }) => (
-															<Select.Item key={id} value={id}>
-																{name}
-																{id === detectedEngine ? " ★" : ""}
-															</Select.Item>
-														))}
-													</Select.Content>
-												</Select.Root>
-											)}
-										</Flex>
-
-										{/* Process Lyrics Toggle */}
-										<Flex
-											align="center"
-											gap="2"
-											style={{
-												padding: "4px 8px",
-												borderRadius: "var(--radius-2)",
-												backgroundColor: processLyrics
-													? "var(--accent-a3)"
-													: "var(--gray-a2)",
-												border: `1px solid ${
-													processLyrics
-														? "var(--accent-a6)"
-														: "var(--gray-a4)"
-												}`,
-												transition: "all 0.15s ease",
-											}}
-										>
-											<Switch
-												id="chk-process-lyrics"
-												size="1"
-												checked={processLyrics}
-												onCheckedChange={setProcessLyrics}
-											/>
-											<Text
-												size="1"
-												as="label"
-												htmlFor="chk-process-lyrics"
-												weight={processLyrics ? "medium" : "regular"}
-												style={{
-													cursor: "pointer",
-													userSelect: "none",
-													color: processLyrics
-														? "var(--accent-11)"
-														: "var(--gray-12)",
-												}}
-											>
-												{t("textImportDialog.processLyrics", "Process Lyrics")}
-											</Text>
-										</Flex>
-
-										{/* Download Audio Toggle */}
-										<Flex
-											align="center"
-											gap="2"
-											style={{
-												padding: "4px 8px",
-												borderRadius: "var(--radius-2)",
-												backgroundColor: downloadAudio
-													? "var(--accent-a3)"
-													: "var(--gray-a2)",
-												border: `1px solid ${
-													downloadAudio
-														? "var(--accent-a6)"
-														: "var(--gray-a4)"
-												}`,
-												transition: "all 0.15s ease",
-											}}
-										>
-											<Switch
-												id="chk-download-audio"
-												size="1"
-												checked={downloadAudio}
-												onCheckedChange={setDownloadAudio}
-											/>
-											<Flex align="center" gap="2">
+													checked={autoSegment}
+													onCheckedChange={setAutoSegment}
+												/>
 												<Text
 													size="1"
 													as="label"
-													htmlFor="chk-download-audio"
-													weight={downloadAudio ? "medium" : "regular"}
+													htmlFor="chk-auto-segment"
+													weight={autoSegment ? "medium" : "regular"}
 													style={{
 														cursor: "pointer",
 														userSelect: "none",
-														color: downloadAudio
+														color: autoSegment
 															? "var(--accent-11)"
 															: "var(--gray-12)",
 													}}
 												>
-													{t("joox.downloadAudio", "Download audio into app")}
+													{t("autoSegmentDialog.title", "Auto Segment")}
 												</Text>
-												<Badge color="orange" size="1" variant="soft">
-													Beta
-												</Badge>
+												{autoSegment && (
+													<Select.Root
+														size="1"
+														value={selectedEngine}
+														onValueChange={(val) =>
+															setSelectedEngine(val as SegmentationEngineId)
+														}
+													>
+														<Select.Trigger
+															style={{
+																height: 22,
+																fontSize: 11,
+																padding: "0 6px",
+																borderRadius: "var(--radius-1)",
+															}}
+														/>
+														<Select.Content position="popper" side="top">
+															{SYLLABIFICATION_ENGINES.map(({ id, name }) => (
+																<Select.Item key={id} value={id}>
+																	{name}
+																	{id === detectedEngine ? " ★" : ""}
+																</Select.Item>
+															))}
+														</Select.Content>
+													</Select.Root>
+												)}
 											</Flex>
-											{downloadAudio && (
-												<Select.Root
+
+											{/* Process Lyrics Toggle */}
+											<Flex
+												align="center"
+												gap="2"
+												style={{
+													padding: "4px 8px",
+													borderRadius: "var(--radius-2)",
+													backgroundColor: processLyrics
+														? "var(--accent-a3)"
+														: "var(--gray-a2)",
+													border: `1px solid ${
+														processLyrics
+															? "var(--accent-a6)"
+															: "var(--gray-a4)"
+													}`,
+													transition: "all 0.15s ease",
+												}}
+											>
+												<Switch
+													id="chk-process-lyrics"
 													size="1"
-													value={audioQuality}
-													onValueChange={setAudioQuality}
+													checked={processLyrics}
+													onCheckedChange={setProcessLyrics}
+												/>
+												<Text
+													size="1"
+													as="label"
+													htmlFor="chk-process-lyrics"
+													weight={processLyrics ? "medium" : "regular"}
+													style={{
+														cursor: "pointer",
+														userSelect: "none",
+														color: processLyrics
+															? "var(--accent-11)"
+															: "var(--gray-12)",
+													}}
 												>
-													<Select.Trigger
-														style={{
-															height: 22,
-															fontSize: 11,
-															padding: "0 6px",
-															borderRadius: "var(--radius-1)",
-														}}
-													/>
-													<Select.Content position="popper" side="top">
-														<Select.Item value="320">MP3 320k</Select.Item>
-														<Select.Item value="flac">
-															FLAC Lossless
-														</Select.Item>
-														<Select.Item value="128">MP3 128k</Select.Item>
-													</Select.Content>
-												</Select.Root>
-											)}
+													{t("textImportDialog.processLyrics", "Process Lyrics")}
+												</Text>
+											</Flex>
 										</Flex>
 
-										{source === "genius" && (
-											<>
-												{/* Fetch Songwriters Toggle */}
+										{/* Row 2: Audio Download & Songwriters */}
+										<Flex gap="2" align="center" wrap="wrap">
+											{/* Download Audio Toggle */}
+											<Flex
+												align="center"
+												gap="2"
+												style={{
+													padding: "4px 8px",
+													borderRadius: "var(--radius-2)",
+													backgroundColor: downloadAudio
+														? "var(--accent-a3)"
+														: "var(--gray-a2)",
+													border: `1px solid ${
+														downloadAudio
+															? "var(--accent-a6)"
+															: "var(--gray-a4)"
+													}`,
+													transition: "all 0.15s ease",
+												}}
+											>
+												<Switch
+													id="chk-download-audio"
+													size="1"
+													checked={downloadAudio}
+													onCheckedChange={setDownloadAudio}
+												/>
+												<Flex align="center" gap="2">
+													<Text
+														size="1"
+														as="label"
+														htmlFor="chk-download-audio"
+														weight={downloadAudio ? "medium" : "regular"}
+														style={{
+															cursor: "pointer",
+															userSelect: "none",
+															color: downloadAudio
+																? "var(--accent-11)"
+																: "var(--gray-12)",
+														}}
+													>
+														{t("joox.downloadAudio", "Download audio into app")}
+													</Text>
+													<Badge color="orange" size="1" variant="soft">
+														Beta
+													</Badge>
+												</Flex>
+												{downloadAudio && (
+													<Select.Root
+														size="1"
+														value={audioQuality}
+														onValueChange={setAudioQuality}
+													>
+														<Select.Trigger
+															style={{
+																height: 22,
+																fontSize: 11,
+																padding: "0 6px",
+																borderRadius: "var(--radius-1)",
+															}}
+														/>
+														<Select.Content position="popper" side="top">
+															<Select.Item value="320">MP3 320k</Select.Item>
+															<Select.Item value="flac">
+																FLAC Lossless
+															</Select.Item>
+															<Select.Item value="128">MP3 128k</Select.Item>
+														</Select.Content>
+													</Select.Root>
+												)}
+											</Flex>
+
+											{source === "genius" && (
 												<Flex
 													align="center"
 													gap="2"
@@ -1843,8 +1847,12 @@ export const ImportLyricsDialog = ({
 														)}
 													</Text>
 												</Flex>
+											)}
+										</Flex>
 
-												{/* Genius Header Categorization Toggle */}
+										{/* Row 3: Genius Categorization & Duet */}
+										{source === "genius" && (
+											<Flex gap="2" align="center" wrap="wrap">
 												<Flex
 													align="center"
 													gap="2"
@@ -1895,7 +1903,6 @@ export const ImportLyricsDialog = ({
 													</Text>
 												</Flex>
 
-												{/* Auto Duet Toggle */}
 												<Flex
 													align="center"
 													gap="2"
@@ -1943,7 +1950,7 @@ export const ImportLyricsDialog = ({
 														)}
 													</Text>
 												</Flex>
-											</>
+											</Flex>
 										)}
 									</Flex>
 								</Box>
@@ -2002,7 +2009,8 @@ export const ImportLyricsDialog = ({
 		<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
 			<Dialog.Content
 				style={{
-					maxWidth: 680,
+					maxWidth: 820,
+					width: "100%",
 					height: "76vh",
 					maxHeight: 720,
 					display: "flex",
