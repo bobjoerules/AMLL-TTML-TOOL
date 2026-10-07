@@ -44,10 +44,15 @@ import {
 import { getBetterGeniusCoverArt } from "$/modules/genius/utils/image";
 import { JooxApi } from "$/modules/joox/api/client";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
+import {
+	applyAutoDuetBySinger,
+	type AutoDuetResult,
+} from "$/modules/lyric-editor/utils/auto-duet.ts";
 import { getGeniusHeader } from "$/modules/lyric-editor/utils/genius-sections.ts";
 import { applyReviewedSections } from "$/modules/lyric-editor/utils/section-system.ts";
 import { LyricallyApi } from "$/modules/lyrically/api/client";
 import {
+	autoDuetOnGeniusImportAtom,
 	autoSegmentOnLyricImportAtom,
 	downloadAudioOnLyricImportAtom,
 	geniusApiKeyAtom,
@@ -236,6 +241,7 @@ export const ImportLyricsDialog = ({
 	const [categorizeGeniusHeaders, setCategorizeGeniusHeaders] = useState(
 		source === "genius",
 	);
+	const [autoDuet, setAutoDuet] = useAtom(autoDuetOnGeniusImportAtom);
 
 	const detectedEngine = useMemo(
 		() => detectSyllabificationEngineFromText(editableLyrics),
@@ -837,19 +843,20 @@ export const ImportLyricsDialog = ({
 
 	const performImport = useCallback(
 		async (reviewed: ReviewedSection[] = []) => {
+			const preserveHeaders = categorizeGeniusHeaders || autoDuet;
 			const rawLines = (
 				processLyrics
 					? editableLyrics
 							.split("\n")
 							.flatMap((line) =>
-								categorizeGeniusHeaders && /^\[.+\]$/.test(line.trim())
+								preserveHeaders && /^\[.+\]$/.test(line.trim())
 									? [line]
 									: prepareLyricLine(line).split("\n"),
 							)
 					: editableLyrics.split("\n")
 			).map((line) => line.trim());
 
-			const slopPatterns = categorizeGeniusHeaders ? [] : [/^\[.*\]$/];
+			const slopPatterns = preserveHeaders ? [] : [/^\[.*\]$/];
 
 			const lines = rawLines.filter((l) => {
 				if (!l) return false;
@@ -976,7 +983,7 @@ export const ImportLyricsDialog = ({
 
 			if (processLyrics) {
 				for (const lineText of lines) {
-					const header = categorizeGeniusHeaders
+					const header = preserveHeaders
 						? getGeniusHeader(lineText)
 						: undefined;
 					if (header) {
@@ -1012,7 +1019,7 @@ export const ImportLyricsDialog = ({
 			} else {
 				// Standard import: preserve source lines verbatim, including parentheses.
 				for (const lineText of lines) {
-					const header = categorizeGeniusHeaders
+					const header = preserveHeaders
 						? getGeniusHeader(lineText)
 						: undefined;
 					if (header) {
@@ -1093,6 +1100,8 @@ export const ImportLyricsDialog = ({
 				setSaveFileName(safeFileName);
 			}
 
+			let autoDuetResult: AutoDuetResult | null = null;
+
 			setLyricLines((prev) => {
 				if (selectedHit) {
 					const upsert = (key: string, value: string) => {
@@ -1111,12 +1120,41 @@ export const ImportLyricsDialog = ({
 				prev.lyricLines = normalizedLyrics.lyricLines;
 				prev.sections = [];
 				applyReviewedSections(prev, reviewed);
+				if (source === "genius" && autoDuet) {
+					autoDuetResult = applyAutoDuetBySinger(prev);
+				}
 			});
-			if (categorizeGeniusHeaders) setGeniusCategorizationEnabled(true);
+			if (categorizeGeniusHeaders || autoDuet) setGeniusCategorizationEnabled(true);
 			try {
 				await importSongwriters();
 			} catch (error) {
 				console.error("Genius songwriter fetch failed", error);
+			}
+
+			if (source === "genius" && autoDuet && autoDuetResult) {
+				if (!("error" in autoDuetResult) && autoDuetResult.modifiedCount > 0) {
+					const mappingSummary = Object.entries(autoDuetResult.singerMap)
+						.map(([singer, voice]) => `${singer} (${voice})`)
+						.join(", ");
+					toast.success(
+						t(
+							"topBar.menu.autoDuetSuccess",
+							"Auto duet assigned {singers} singers to {count} lines: {mapping}",
+							{
+								count: autoDuetResult.modifiedCount,
+								singers: autoDuetResult.singersCount,
+								mapping: mappingSummary,
+							},
+						),
+					);
+				} else if ("error" in autoDuetResult) {
+					toast.info(
+						t(
+							"topBar.menu.autoDuetNotEnoughSingers",
+							"At least two distinct singers/vocalists are required to auto-duet.",
+						),
+					);
+				}
 			}
 
 			// Select first new word
@@ -1154,6 +1192,7 @@ export const ImportLyricsDialog = ({
 			processLyrics,
 			store,
 			categorizeGeniusHeaders,
+			autoDuet,
 			normalizeApostrophesOnImport,
 			normalizeCyrillicEsOnImport,
 			source,
@@ -1201,7 +1240,7 @@ export const ImportLyricsDialog = ({
 	const handleImport = useCallback(() => {
 		if (
 			source === "genius" &&
-			categorizeGeniusHeaders &&
+			(categorizeGeniusHeaders || autoDuet) &&
 			hasReviewableSections(editableLyrics)
 		) {
 			setSectionReviewOpen(true);
@@ -1209,6 +1248,7 @@ export const ImportLyricsDialog = ({
 		}
 		confirmAndPerformImport();
 	}, [
+		autoDuet,
 		categorizeGeniusHeaders,
 		confirmAndPerformImport,
 		editableLyrics,
@@ -1826,7 +1866,12 @@ export const ImportLyricsDialog = ({
 														id="chk-categorize-headers"
 														size="1"
 														checked={categorizeGeniusHeaders}
-														onCheckedChange={setCategorizeGeniusHeaders}
+														onCheckedChange={(checked) => {
+															setCategorizeGeniusHeaders(checked);
+															if (!checked && autoDuet) {
+																setAutoDuet(false);
+															}
+														}}
 													/>
 													<Text
 														size="1"
@@ -1846,6 +1891,55 @@ export const ImportLyricsDialog = ({
 														{t(
 															"experimentalFeatures.geniusCategorization.title",
 															"Genius Header Categorization",
+														)}
+													</Text>
+												</Flex>
+
+												{/* Auto Duet Toggle */}
+												<Flex
+													align="center"
+													gap="2"
+													style={{
+														padding: "4px 8px",
+														borderRadius: "var(--radius-2)",
+														backgroundColor: autoDuet
+															? "var(--accent-a3)"
+															: "var(--gray-a2)",
+														border: `1px solid ${
+															autoDuet
+																? "var(--accent-a6)"
+																: "var(--gray-a4)"
+														}`,
+														transition: "all 0.15s ease",
+													}}
+												>
+													<Switch
+														id="chk-auto-duet"
+														size="1"
+														checked={autoDuet}
+														onCheckedChange={(checked) => {
+															setAutoDuet(checked);
+															if (checked && !categorizeGeniusHeaders) {
+																setCategorizeGeniusHeaders(true);
+															}
+														}}
+													/>
+													<Text
+														size="1"
+														as="label"
+														htmlFor="chk-auto-duet"
+														weight={autoDuet ? "medium" : "regular"}
+														style={{
+															cursor: "pointer",
+															userSelect: "none",
+															color: autoDuet
+																? "var(--accent-11)"
+																: "var(--gray-12)",
+														}}
+													>
+														{t(
+															"genius.autoDuet",
+															"Auto Duet by Singer",
 														)}
 													</Text>
 												</Flex>
