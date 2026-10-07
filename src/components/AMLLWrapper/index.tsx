@@ -72,6 +72,13 @@ const StaticWord = memo(({ word }: { word: any }) => {
 	return (
 		<span
 			className={classNames(styles.wordStatic, !timed && styles.wordUnsynced)}
+			onClick={
+				!timed
+					? (e) => {
+							e.stopPropagation();
+					  }
+					: undefined
+			}
 		>
 			{word.word}
 		</span>
@@ -135,6 +142,7 @@ const ActiveWord = memo(
 				}
 				onClick={(e) => {
 					e.stopPropagation();
+					if (!timed) return;
 					onWordClick(word.startTime);
 				}}
 			>
@@ -153,7 +161,15 @@ interface LineGroup {
 }
 
 const StaticLineGroup = memo(
-	({ group, isPast }: { group: LineGroup; isPast: boolean }) => {
+	({
+		group,
+		isPast,
+		onLineClick,
+	}: {
+		group: LineGroup;
+		isPast: boolean;
+		onLineClick: (line: any) => void;
+	}) => {
 		const bgFollowsDuet = useAtomValue(bgFollowsDuetAtom);
 		const mainTimed = isLineTimed(group.main);
 		const isMainRight = isVoiceRightAligned(group.main);
@@ -165,6 +181,13 @@ const StaticLineGroup = memo(
 					isMainRight && styles.lineGroupDuet,
 					!mainTimed && styles.lineGroupUnsynced,
 				)}
+				onClick={(e) => {
+					if (!mainTimed) {
+						e.stopPropagation();
+						return;
+					}
+					onLineClick(group.main);
+				}}
 			>
 				{/* Main / duet line */}
 				<div
@@ -173,6 +196,11 @@ const StaticLineGroup = memo(
 						isMainRight && styles.lineDuetR,
 						!mainTimed && styles.lineUnsynced,
 					)}
+					onClick={(e) => {
+						e.stopPropagation();
+						if (!mainTimed) return;
+						onLineClick(group.main);
+					}}
 				>
 					<div className={styles.wordsContainer}>
 						{group.main.words.map((w: any, i: number) => (
@@ -195,6 +223,11 @@ const StaticLineGroup = memo(
 								isBgRight && styles.lineDuetR,
 								!bgTimed && styles.lineUnsynced,
 							)}
+							onClick={(e) => {
+								e.stopPropagation();
+								if (!bgTimed) return;
+								onLineClick(bgLine);
+							}}
 						>
 							<div className={styles.wordsContainer}>
 								{bgLine.words.map((w: any, wi: number) => (
@@ -212,9 +245,11 @@ const StaticLineGroup = memo(
 const ActiveLineGroup = memo(
 	({
 		group,
+		onLineClick,
 		onWordClick,
 	}: {
 		group: LineGroup;
+		onLineClick: (line: any) => void;
 		onWordClick: (t: number) => void;
 	}) => {
 		const showTranslation = useAtomValue(showTranslationLinesAtom);
@@ -230,6 +265,13 @@ const ActiveLineGroup = memo(
 					isMainRight && styles.lineGroupDuet,
 					!mainTimed && styles.lineGroupUnsynced,
 				)}
+				onClick={(e) => {
+					if (!mainTimed) {
+						e.stopPropagation();
+						return;
+					}
+					onLineClick(group.main);
+				}}
 			>
 				{/* Main / duet line */}
 				<div
@@ -239,6 +281,11 @@ const ActiveLineGroup = memo(
 						isMainRight && styles.lineDuetR,
 						!mainTimed && styles.lineUnsynced,
 					)}
+					onClick={(e) => {
+						e.stopPropagation();
+						if (!mainTimed) return;
+						onLineClick(group.main);
+					}}
 				>
 					<div className={styles.wordsContainer}>
 						{group.main.words.map((w: any, i: number) => (
@@ -270,6 +317,11 @@ const ActiveLineGroup = memo(
 								isBgRight && styles.lineDuetR,
 								!bgTimed && styles.lineUnsynced,
 							)}
+							onClick={(e) => {
+								e.stopPropagation();
+								if (!bgTimed) return;
+								onLineClick(bgLine);
+							}}
 						>
 							<div className={styles.wordsContainer}>
 								{bgLine.words.map((w: any, wi: number) => (
@@ -465,6 +517,7 @@ export const AMLLWrapper = memo(
 		}, [activeLineIdsSet, lineGroups]);
 
 		const handleLineClick = (line: any) => {
+			if (!isLineTimed(line)) return;
 			setCurrentTime(line.startTime);
 			setSelectedLines(new Set([line.id]));
 			audioEngine.resumeOrSeekMusic(line.startTime / 1000);
@@ -539,20 +592,26 @@ export const AMLLWrapper = memo(
 						return (
 							<div
 								key={group.main.id}
-								onClick={() => handleLineClick(group.main)}
 								style={{ display: "contents" }}
 							>
-								<ActiveLineGroup group={group} onWordClick={handleWordClick} />
+								<ActiveLineGroup
+									group={group}
+									onLineClick={handleLineClick}
+									onWordClick={handleWordClick}
+								/>
 							</div>
 						);
 					}
 					return (
 						<div
 							key={group.main.id}
-							onClick={() => handleLineClick(group.main)}
 							style={{ display: "contents" }}
 						>
-							<StaticLineGroup group={group} isPast={false} />
+							<StaticLineGroup
+								group={group}
+								isPast={false}
+								onLineClick={handleLineClick}
+							/>
 						</div>
 					);
 				})}

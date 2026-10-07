@@ -1,4 +1,5 @@
 import { useAtomValue } from "jotai";
+import { useTranslation } from "react-i18next";
 import { msToTimestamp } from "$/utils/timestamp";
 import { spectrogramVisibleAtom } from "../states";
 import { useAudioRegion } from "../hooks";
@@ -15,6 +16,7 @@ export const AudioRegion = ({
 	containerRef,
 	isDraggingRef,
 }: AudioRegionProps) => {
+	const { t } = useTranslation();
 	const spectrogramVisible = useAtomValue(spectrogramVisibleAtom);
 	const {
 		handleMouseDown,
@@ -26,6 +28,7 @@ export const AudioRegion = ({
 		durationS,
 		viewDurationMs,
 		startTimeMs,
+		isTrackingOn,
 	} = useAudioRegion(sliderWidthPx, containerRef, isDraggingRef);
 
 	if (!spectrogramVisible || !audioLoaded || rectWidthPx <= 0) return null;
@@ -53,12 +56,21 @@ export const AudioRegion = ({
 				role="slider"
 				data-drag-type="drag"
 				className={styles.regionBody}
+				style={isTrackingOn ? { cursor: "pointer" } : undefined}
 				onMouseDown={handleMouseDown}
 				tabIndex={0}
 				aria-valuenow={startTimeS}
 				aria-valuemin={0}
 				aria-valuemax={durationS}
 				aria-valuetext={msToTimestamp(startTimeMs)}
+				title={
+					isTrackingOn
+						? t(
+								"audio.spectrogramBarTrackingHint",
+								"Click to seek playhead (playhead tracking active).",
+						  )
+						: undefined
+				}
 			/>
 			<div
 				role="slider"

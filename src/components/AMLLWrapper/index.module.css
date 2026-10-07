@@ -348,6 +348,12 @@
 }
 
 /* ── Non-synced words & lines (Red Tint) ──────────────────── */
+.lineGroupUnsynced,
+.lineUnsynced,
+.wordUnsynced {
+	cursor: default !important;
+}
+
 .wordUnsynced {
 	color: rgba(255, 110, 110, 0.55) !important;
 	text-shadow: 0 0 10px rgba(255, 60, 60, 0.3);

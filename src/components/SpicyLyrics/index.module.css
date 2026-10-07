@@ -453,6 +453,11 @@
 }
 
 /* ── Non-synced words & lines (Red Tint) ──────────────────── */
+.lineUnsynced,
+.tokenUnsynced {
+	cursor: default !important;
+}
+
 .lineUnsynced {
 	opacity: 0.65 !important;
 }

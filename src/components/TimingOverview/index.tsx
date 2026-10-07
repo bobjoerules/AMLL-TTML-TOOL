@@ -43,6 +43,13 @@ const WordPill = memo(
 					isGrouped && styles.groupedWordPill,
 					!isWordTimed && !isWhitespace && styles.wordPillUnsynced,
 				)}
+				onClick={
+					!isWordTimed && !isWhitespace
+						? (e) => {
+								e.stopPropagation();
+						  }
+						: undefined
+				}
 			>
 				<Text className={styles.wordText}>
 					{word.word || (isWhitespace ? "\u00A0" : "")}
@@ -199,7 +206,10 @@ const LineRow = memo(
 					isActive && styles.activeRow,
 					!isLineTimed && styles.rowUnsynced,
 				)}
-				onClick={() => onRowClick(line)}
+				onClick={() => {
+					if (!isLineTimed) return;
+					onRowClick(line);
+				}}
 				style={{ display: "flex", borderBottom: "1px solid var(--gray-4)" }}
 			>
 				<div
@@ -326,6 +336,14 @@ export const TimingOverview = memo(() => {
 
 	const handleRowClick = useMemo(
 		() => (line: any) => {
+			const isLineTimed =
+				line.startTime > 0 ||
+				line.endTime > 0 ||
+				Boolean(
+					line.words &&
+						line.words.some((w: any) => w.startTime > 0 || w.endTime > 0),
+				);
+			if (!isLineTimed) return;
 			setCurrentTime(line.startTime);
 			setSelectedLines(new Set([line.id]));
 			audioEngine.resumeOrSeekMusic(line.startTime / 1000);

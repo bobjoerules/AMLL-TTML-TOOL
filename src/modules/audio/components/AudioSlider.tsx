@@ -19,6 +19,7 @@ import {
 	audioPlayingAtom,
 	currentDurationAtom,
 	currentTimeAtom,
+	spectrogramVisibleAtom,
 } from "$/modules/audio/states";
 import {
 	isDarkThemeAtom,
@@ -33,7 +34,13 @@ import {
 	advancedWaveformProgressColorAtom,
 	activePresetIdAtom,
 } from "$/modules/settings/states";
-import { useHoverGuide } from "../hooks";
+import {
+	spectrogramContainerWidthAtom,
+	spectrogramPlayheadTrackingModeAtom,
+	spectrogramScrollLeftAtom,
+	spectrogramZoomAtom,
+} from "$/modules/spectrogram/states";
+import { clampScroll, useHoverGuide } from "../hooks";
 import { AudioRegion } from "./AudioRegion";
 import styles from "./AudioSlider.module.css";
 import { HoverGuide } from "./HoverGuide";
@@ -68,23 +75,32 @@ const WaveformMarkers = memo(
 
 const InteractiveHoverOverlay = memo(
 	({
-		sliderWidthPx,
-		isDraggingRef,
+		spectrogramVisible,
+		onMouseDown,
+		hoverState,
+		title,
 	}: {
-		sliderWidthPx: number;
-		isDraggingRef: React.RefObject<boolean>;
+		spectrogramVisible: boolean;
+		onMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
+		hoverState: {
+			x: number;
+			timeStr: string;
+			isNearRight: boolean;
+			isVisible: boolean;
+		};
+		title?: string;
 	}) => {
-		const { hoverState, handleContainerMouseMove, handleContainerMouseLeave } =
-			useHoverGuide(sliderWidthPx, isDraggingRef);
-
 		return (
-			<div
-				className={styles.interactionOverlay}
-				onMouseMove={handleContainerMouseMove}
-				onMouseLeave={handleContainerMouseLeave}
-			>
+			<>
+				<div
+					className={`${styles.interactionOverlay} ${
+						spectrogramVisible ? styles.interactionOverlayActive : ""
+					}`}
+					onMouseDown={spectrogramVisible ? onMouseDown : undefined}
+					title={title}
+				/>
 				<HoverGuide hoverState={hoverState} />
-			</div>
+			</>
 		);
 	},
 );
@@ -205,11 +221,31 @@ export const AudioSlider = memo(() => {
 	const advWaveformProgress = useAtomValue(advancedWaveformProgressColorAtom);
 	const activePresetId = useAtomValue(activePresetIdAtom);
 
+	const spectrogramVisible = useAtomValue(spectrogramVisibleAtom);
+	const playheadTrackingMode = useAtomValue(
+		spectrogramPlayheadTrackingModeAtom,
+	);
+	const isTrackingOn = playheadTrackingMode !== "off";
+	const [scrollLeft, setScrollLeft] = useAtom(spectrogramScrollLeftAtom);
+	const zoom = useAtomValue(spectrogramZoomAtom);
+	const containerWidth = useAtomValue(spectrogramContainerWidthAtom);
+	const spectrogramVisibleRef = useRef(spectrogramVisible);
+
 	const wsContainerRef = useRef<HTMLDivElement>(null);
 	const waveSurferRef = useRef<WaveSurfer | null>(null);
 
 	const [sliderWidthPx, setSliderWidthPx] = useState(0);
 	const isDraggingRef = useRef(false);
+
+	const { hoverState, handleContainerMouseMove, handleContainerMouseLeave } =
+		useHoverGuide(sliderWidthPx, isDraggingRef);
+
+	useEffect(() => {
+		spectrogramVisibleRef.current = spectrogramVisible;
+		if (waveSurferRef.current) {
+			waveSurferRef.current.toggleInteraction(!spectrogramVisible);
+		}
+	}, [spectrogramVisible]);
 
 	const toggleMark = useCallback(
 		(timeMs: number) => {
@@ -245,19 +281,155 @@ export const AudioSlider = memo(() => {
 		[setLyricLines],
 	);
 
-	const handleContainerMouseDown = useCallback(
-		(e: React.MouseEvent) => {
-			if (e.shiftKey) {
-				const rect = wsContainerRef.current?.getBoundingClientRect();
-				if (!rect || sliderWidthPx <= 0 || currentDuration <= 0) return;
-				const x = e.clientX - rect.left;
-				const timeMs = (x / sliderWidthPx) * currentDuration;
-				toggleMark(timeMs);
-				e.preventDefault();
-				e.stopPropagation();
+	const seekPlayheadFromClientX = useCallback(
+		(clientX: number) => {
+			if (!wsContainerRef.current || currentDuration <= 0) return;
+			const rect = wsContainerRef.current.getBoundingClientRect();
+			if (rect.width <= 0) return;
+			const progress = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+			const timeMs = progress * currentDuration;
+			const timeS = timeMs / 1000;
+			audioEngine.seekMusic(timeS);
+			setCurrentTime(Math.round(timeMs));
+			if (waveSurferRef.current) {
+				waveSurferRef.current.setTime(timeS);
 			}
 		},
-		[currentDuration, sliderWidthPx, toggleMark],
+		[currentDuration, setCurrentTime],
+	);
+
+	const scrollSpectrogramFromClientX = useCallback(
+		(clientX: number) => {
+			if (!wsContainerRef.current || currentDuration <= 0) return;
+			const rect = wsContainerRef.current.getBoundingClientRect();
+			if (rect.width <= 0) return;
+			const progress = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+			const timeS = progress * (currentDuration / 1000);
+			const targetScroll = clampScroll(
+				timeS * zoom - containerWidth / 2,
+				zoom,
+				currentDuration,
+				containerWidth,
+			);
+			setScrollLeft(targetScroll);
+		},
+		[containerWidth, currentDuration, setScrollLeft, zoom],
+	);
+
+	const startSeekPlayheadDrag = useCallback(
+		(initialClientX: number) => {
+			seekPlayheadFromClientX(initialClientX);
+			isDraggingRef.current = true;
+			const onMouseMove = (e: MouseEvent) => {
+				seekPlayheadFromClientX(e.clientX);
+			};
+			const onMouseUp = () => {
+				isDraggingRef.current = false;
+				window.removeEventListener("mousemove", onMouseMove);
+				window.removeEventListener("mouseup", onMouseUp);
+			};
+			window.addEventListener("mousemove", onMouseMove);
+			window.addEventListener("mouseup", onMouseUp);
+		},
+		[seekPlayheadFromClientX],
+	);
+
+	const startSpectrogramScrollDrag = useCallback(
+		(initialClientX: number) => {
+			scrollSpectrogramFromClientX(initialClientX);
+			isDraggingRef.current = true;
+			const onMouseMove = (e: MouseEvent) => {
+				scrollSpectrogramFromClientX(e.clientX);
+			};
+			const onMouseUp = () => {
+				isDraggingRef.current = false;
+				window.removeEventListener("mousemove", onMouseMove);
+				window.removeEventListener("mouseup", onMouseUp);
+			};
+			window.addEventListener("mousemove", onMouseMove);
+			window.addEventListener("mouseup", onMouseUp);
+		},
+		[scrollSpectrogramFromClientX],
+	);
+
+	const handleOverlayMouseDown = useCallback(
+		(e: React.MouseEvent<HTMLDivElement>) => {
+			e.preventDefault();
+			e.stopPropagation();
+
+			if (!wsContainerRef.current || sliderWidthPx <= 0 || currentDuration <= 0) return;
+			const rect = wsContainerRef.current.getBoundingClientRect();
+			if (rect.width <= 0) return;
+			const progress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+			const timeMs = progress * currentDuration;
+
+			if (e.altKey) {
+				toggleMark(timeMs);
+				return;
+			}
+
+			if (e.shiftKey || isTrackingOn) {
+				startSeekPlayheadDrag(e.clientX);
+				return;
+			}
+
+			startSpectrogramScrollDrag(e.clientX);
+		},
+		[
+			currentDuration,
+			isTrackingOn,
+			sliderWidthPx,
+			startSeekPlayheadDrag,
+			startSpectrogramScrollDrag,
+			toggleMark,
+		],
+	);
+
+	const handleContainerMouseDown = useCallback(
+		(e: React.MouseEvent) => {
+			if (!wsContainerRef.current || sliderWidthPx <= 0 || currentDuration <= 0) return;
+			const rect = wsContainerRef.current.getBoundingClientRect();
+			if (rect.width <= 0) return;
+			const progress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+			const timeMs = progress * currentDuration;
+
+			if (e.altKey) {
+				e.preventDefault();
+				e.stopPropagation();
+				toggleMark(timeMs);
+				return;
+			}
+
+			if (e.shiftKey) {
+				e.preventDefault();
+				e.stopPropagation();
+				if (spectrogramVisible) {
+					startSeekPlayheadDrag(e.clientX);
+				} else {
+					toggleMark(timeMs);
+				}
+				return;
+			}
+
+			if (spectrogramVisible) {
+				e.preventDefault();
+				e.stopPropagation();
+				if (isTrackingOn) {
+					startSeekPlayheadDrag(e.clientX);
+				} else {
+					startSpectrogramScrollDrag(e.clientX);
+				}
+			}
+		},
+		[
+			currentDuration,
+			isTrackingOn,
+			sliderWidthPx,
+			spectrogramVisible,
+			startSeekPlayheadDrag,
+			startSpectrogramScrollDrag,
+			toggleMark,
+		],
 	);
 
 	const destroyWaveSurfer = useCallback(() => {
@@ -297,12 +469,14 @@ export const AudioSlider = memo(() => {
 			barHeight: 0.8,
 			peaks: peaks,
 			duration: duration,
-			interact: true,
+			interact: !spectrogramVisibleRef.current,
 		});
 		ws.on("dragstart", () => {
+			if (spectrogramVisibleRef.current) return;
 			isDraggingRef.current = true;
 		});
 		ws.on("dragend", () => {
+			if (spectrogramVisibleRef.current) return;
 			isDraggingRef.current = false;
 			const time = audioEngine.musicCurrentTime;
 			setCurrentTime(Math.round(time * 1000));
@@ -311,6 +485,7 @@ export const AudioSlider = memo(() => {
 			}
 		});
 		ws.on("interaction", (newTime: number) => {
+			if (spectrogramVisibleRef.current) return;
 			setCurrentTime(Math.round(newTime * 1000));
 			audioEngine.seekMusic(newTime);
 		});
@@ -509,10 +684,26 @@ export const AudioSlider = memo(() => {
 				ref={wsContainerRef}
 				style={{ width: "100%", height: "100%", overflow: "hidden" }}
 				onMouseDown={handleContainerMouseDown}
+				onMouseMove={handleContainerMouseMove}
+				onMouseLeave={handleContainerMouseLeave}
 			>
 				<InteractiveHoverOverlay
-					sliderWidthPx={sliderWidthPx}
-					isDraggingRef={isDraggingRef}
+					spectrogramVisible={spectrogramVisible}
+					onMouseDown={handleOverlayMouseDown}
+					title={
+						spectrogramVisible
+							? isTrackingOn
+								? t(
+										"audio.spectrogramBarTrackingHint",
+										"Click to seek playhead (playhead tracking active).",
+								  )
+								: t(
+										"audio.spectrogramBarHint",
+										"Click to center spectrogram. Shift+click to seek playhead.",
+								  )
+							: undefined
+					}
+					hoverState={hoverState}
 				/>
 
 				{selectedRegions.map((region) => (

@@ -99,8 +99,8 @@ export const CloudStatusButton: FC = () => {
 				</Button>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content>
-				<DropdownMenu.Label>
-					<Flex direction="column">
+				<DropdownMenu.Label style={{ height: "auto" }}>
+					<Flex direction="column" gap="1">
 						<Text weight="bold" size="2">
 							{user.displayName}
 						</Text>

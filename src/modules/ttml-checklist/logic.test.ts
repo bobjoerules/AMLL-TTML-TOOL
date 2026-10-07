@@ -484,4 +484,95 @@ describe("TTML checklist", () => {
 		expect(result.length).toBe(50);
 		expect(duration).toBeLessThan(100); // Must be well under 100ms
 	});
+
+	it("tombstones prevent deleted entries from being re-imported or re-added", async () => {
+		const {
+			addEntryToTombstones,
+			isEntryDeleted,
+			filterTombstonedEntries,
+			clearEntryFromTombstones,
+		} = await import("./logic");
+
+		const entry = {
+			id: "entry-1",
+			song: "Stay",
+			artist: "The Kid LAROI",
+			cloudDocId: "doc-stay-123",
+		};
+
+		const tombstones = addEntryToTombstones(entry, {
+			ids: [],
+			cloudDocIds: [],
+			songKeys: [],
+		});
+
+		expect(isEntryDeleted(entry, tombstones)).toBe(true);
+		expect(
+			isEntryDeleted(
+				{ song: "Stay (Explicit)", artist: "The Kid LAROI" },
+				tombstones,
+			),
+		).toBe(true);
+		expect(
+			isEntryDeleted({ song: "Different Song", artist: "Artist" }, tombstones),
+		).toBe(false);
+
+		// batchLinkUploadedTTMLsToChecklist should skip tombstoned entries
+		const linkResult = batchLinkUploadedTTMLsToChecklist(
+			[],
+			[
+				{
+					title: "Stay",
+					artist: "The Kid LAROI",
+					docId: "doc-stay-123",
+					isCompleted: true,
+				},
+				{
+					title: "New Song",
+					artist: "New Artist",
+					docId: "doc-new-456",
+					isCompleted: true,
+				},
+			],
+			tombstones,
+		);
+
+		expect(linkResult.importedCount).toBe(1);
+		expect(linkResult.entries).toHaveLength(1);
+		expect(linkResult.entries[0].song).toBe("New Song");
+
+		// Filter tombstoned entries
+		const filtered = filterTombstonedEntries(
+			[
+				{
+					id: "entry-1",
+					song: "Stay",
+					artist: "The Kid LAROI",
+					notes: "",
+					completed: false,
+					createdAt: 1,
+				},
+				{
+					id: "entry-2",
+					song: "Keep Me",
+					artist: "Artist",
+					notes: "",
+					completed: false,
+					createdAt: 2,
+				},
+			],
+			tombstones,
+		);
+		expect(filtered).toHaveLength(1);
+		expect(filtered[0].id).toBe("entry-2");
+
+		// Re-adding a song clears tombstone
+		const cleared = clearEntryFromTombstones(
+			{ song: "Stay", artist: "The Kid LAROI" },
+			tombstones,
+		);
+		expect(
+			isEntryDeleted({ song: "Stay", artist: "The Kid LAROI" }, cleared),
+		).toBe(false);
+	});
 });

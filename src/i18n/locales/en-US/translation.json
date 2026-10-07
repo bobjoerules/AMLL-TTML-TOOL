@@ -798,6 +798,8 @@
 		"markerDescription": "Description...",
 		"deleteMarker": "Delete Marker",
 		"waveform": "Audio Waveform",
+		"spectrogramBarHint": "Click to center spectrogram. Shift+click to seek playhead.",
+		"spectrogramBarTrackingHint": "Click to seek playhead (playhead tracking active).",
 		"status": {
 			"transcoding": "Decoding failed, attempting to transcode audio...",
 			"loading": "Loading audio...",

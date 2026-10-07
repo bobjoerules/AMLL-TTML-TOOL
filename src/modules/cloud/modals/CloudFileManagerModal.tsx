@@ -1327,28 +1327,33 @@ export const CloudFileManagerModal: FC = () => {
 		const selectedItems = cloudList.filter((doc) => selectedDocIds.has(doc.id));
 		if (selectedItems.length === 0) return;
 
+		const currentList = Array.isArray(checklist) ? checklist : [];
+		let nextList = [...currentList];
 		let addedCount = 0;
 		for (const item of selectedItems) {
-			const exists = checklist.entries.some(
+			const itemTitle = item.title || "Untitled";
+			const itemArtist = item.artist || "";
+			const exists = nextList.some(
 				(e) =>
 					e.cloudDocId === item.id ||
-					(e.title.toLowerCase() === item.title.toLowerCase() &&
-						(e.artist || "").toLowerCase() ===
-							(item.artist || "").toLowerCase()),
+					(e.song.toLowerCase() === itemTitle.toLowerCase() &&
+						(e.artist || "").toLowerCase() === itemArtist.toLowerCase()),
 			);
 			if (!exists) {
-				addChecklistEntry(setChecklist, {
-					title: item.title || "Untitled",
-					artist: item.artist || "",
+				nextList = addChecklistEntry(nextList, {
+					song: itemTitle,
+					artist: itemArtist,
 					album: item.album || "",
-					durationMs: item.durationMs || 0,
-					targetWordCount: item.lineCount || 0,
-					coverUrl: item.coverArt || "",
+					coverArt: item.coverArt || undefined,
 					cloudDocId: item.id,
 					notes: "Imported from TTML Cloud Library",
 				});
 				addedCount++;
 			}
+		}
+
+		if (addedCount > 0) {
+			setChecklist(nextList);
 		}
 
 		toast.success(
