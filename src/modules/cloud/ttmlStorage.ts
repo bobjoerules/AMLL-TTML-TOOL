@@ -8,6 +8,7 @@ import {
 	orderBy,
 	query,
 	setDoc,
+	updateDoc,
 } from "firebase/firestore";
 import { binaryToBlob } from "$/utils/binaryBlob";
 import { globalStore } from "$/states/store";
