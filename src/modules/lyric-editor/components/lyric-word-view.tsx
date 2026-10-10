@@ -995,6 +995,7 @@ const LyricSyncWordView: FC<{
 						if (field === "start") word.startTime = newMs;
 						else word.endTime = newMs;
 					}
+					normalizeLineTime(targetLine);
 				});
 			} catch {
 				// invalid format — silently revert

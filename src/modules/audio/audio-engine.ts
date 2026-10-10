@@ -83,6 +83,13 @@ class AudioEngine extends EventTarget {
 		});
 		this._ctx.addEventListener("statechange", () => {
 			log("AudioContext state changed to:", this._ctx?.state);
+			if (this._ctx?.state === "interrupted") {
+				this._needsFreshContext = true;
+				if (this._isPlaying) {
+					this._pausedPosition =
+						this._lastKnownPlaybackPosition || this.musicCurrentTime;
+				}
+			}
 		});
 		log(
 			"AudioContext created with latency",
@@ -190,34 +197,65 @@ class AudioEngine extends EventTarget {
 		if (typeof window !== "undefined") {
 			let lastHeartbeat = Date.now();
 
-			const handleWakeOrInteraction = () => {
+			const handleWakeOrInteraction = async () => {
 				const now = Date.now();
 				const elapsed = now - lastHeartbeat;
 				lastHeartbeat = now;
 
-				if (elapsed > 4000) {
-					// Woke up from sleep
-					this._needsFreshContext = true;
-				}
+				const systemWasAsleep = elapsed > 3500 || this._wasPlayingBeforeSleep;
+				const idleTooLong = now - this._lastAudioActivityTime > 30_000;
+				const isContextDead =
+					!this._ctx ||
+					this._ctx.state === "closed" ||
+					this._ctx.state === "interrupted";
+				const isContextSuspended = this._ctx?.state === "suspended";
+
 				if (
-					this._ctx &&
-					(this._ctx.state === "suspended" || this._ctx.state === "interrupted")
+					systemWasAsleep ||
+					this._needsFreshContext ||
+					isContextDead ||
+					(idleTooLong && !this._isPlaying)
 				) {
-					void this._ctx.resume().catch(() => {});
+					this._needsFreshContext = false;
+					await this.recreateContext();
+				} else if (isContextSuspended) {
+					try {
+						await this._ctx.resume();
+						if (this._ctx.state !== "running") {
+							await this.recreateContext();
+						} else if (
+							this._isPlaying &&
+							this.musicBuffer &&
+							!this._activeSourceNode &&
+							!this._pitchShifter
+						) {
+							void this.resumeOrSeekMusic(
+								this._lastKnownPlaybackPosition || this._pausedPosition,
+							);
+						}
+					} catch {
+						await this.recreateContext();
+					}
+				} else if (this._isPlaying && this.musicBuffer) {
+					if (!this._activeSourceNode && !this._pitchShifter) {
+						void this.resumeOrSeekMusic(
+							this._lastKnownPlaybackPosition || this._pausedPosition,
+						);
+					}
 				}
 			};
 
-			window.addEventListener("focus", handleWakeOrInteraction);
-			window.addEventListener("pointerdown", handleWakeOrInteraction, {
+			window.addEventListener("focus", () => void handleWakeOrInteraction());
+			window.addEventListener("pointerdown", () => void handleWakeOrInteraction(), {
 				passive: true,
 			});
-			window.addEventListener("keydown", handleWakeOrInteraction, {
+			window.addEventListener("keydown", () => void handleWakeOrInteraction(), {
 				passive: true,
 			});
 
 			document.addEventListener("visibilitychange", () => {
 				if (document.visibilityState === "visible") {
-					handleWakeOrInteraction();
+					void handleWakeOrInteraction();
 				}
 			});
 
@@ -228,17 +266,24 @@ class AudioEngine extends EventTarget {
 				}
 			});
 
-			// Heartbeat timer to detect sleep gaps or idle periods while app was in background
+			// Heartbeat timer to detect sleep gaps, preserve position, and keep activity fresh
 			setInterval(() => {
 				const now = Date.now();
 				const elapsed = now - lastHeartbeat;
 				lastHeartbeat = now;
 
-				if (elapsed > 4000) {
-					// System was asleep
+				if (elapsed > 3500) {
+					// System was asleep / suspended
 					this._needsFreshContext = true;
+					if (this._isPlaying) {
+						this._wasPlayingBeforeSleep = true;
+						this._pausedPosition = this._lastKnownPlaybackPosition;
+					}
+				} else if (this._isPlaying) {
+					this._lastKnownPlaybackPosition = this.musicCurrentTime;
+					this._lastAudioActivityTime = now;
 				}
-			}, 2000);
+			}, 1000);
 
 			this.setupMediaSession();
 		}
@@ -247,6 +292,9 @@ class AudioEngine extends EventTarget {
 	private _rawAudioData: ArrayBuffer | null = null;
 	private _needsFreshContext = false;
 	private _lastAudioActivityTime = Date.now();
+	private _lastKnownPlaybackPosition = 0;
+	private _wasPlayingBeforeSleep = false;
+	private _recreatingPromise: Promise<AudioContext> | null = null;
 	private _isAutoDownloaded = false;
 
 	public get isAutoDownloaded() {
@@ -257,9 +305,22 @@ class AudioEngine extends EventTarget {
 		this._needsFreshContext = true;
 	}
 
-	public async recreateContext(): Promise<AudioContext> {
-		const wasPlaying = this.musicPlaying;
-		const currentPos = this.musicCurrentTime;
+	public recreateContext(): Promise<AudioContext> {
+		if (this._recreatingPromise) {
+			return this._recreatingPromise;
+		}
+		this._recreatingPromise = this._recreateContextInternal().finally(() => {
+			this._recreatingPromise = null;
+		});
+		return this._recreatingPromise;
+	}
+
+	private async _recreateContextInternal(): Promise<AudioContext> {
+		const wasPlaying = this.musicPlaying || this._wasPlayingBeforeSleep;
+		const currentPos = this._wasPlayingBeforeSleep
+			? (this._lastKnownPlaybackPosition || this._pausedPosition)
+			: this.musicCurrentTime;
+		this._wasPlayingBeforeSleep = false;
 
 		if (this._activeSourceNode) {
 			try {
@@ -338,7 +399,8 @@ class AudioEngine extends EventTarget {
 		}
 
 		if (wasPlaying && this.musicBuffer) {
-			void this.resumeOrSeekMusic(currentPos);
+			const safePos = Math.min(this.musicDuration, Math.max(0, currentPos));
+			void this.resumeOrSeekMusic(safePos);
 		}
 		return newCtx;
 	}
@@ -375,11 +437,12 @@ class AudioEngine extends EventTarget {
 	public async resumeContext() {
 		const now = Date.now();
 		const idleTooLong =
-			!this._isPlaying && now - this._lastAudioActivityTime > 30_000;
+			now - this._lastAudioActivityTime > 30_000;
 		this._lastAudioActivityTime = now;
 
 		if (
 			this._needsFreshContext ||
+			this._wasPlayingBeforeSleep ||
 			idleTooLong ||
 			!this._ctx ||
 			this._ctx.state === "closed" ||
@@ -497,11 +560,16 @@ class AudioEngine extends EventTarget {
 	get musicCurrentTime() {
 		if (this.musicBuffer) {
 			if (!this._isPlaying) return this._pausedPosition;
+			if (this._wasPlayingBeforeSleep) {
+				return this._lastKnownPlaybackPosition || this._pausedPosition;
+			}
 			const elapsed =
 				(this.ctx.currentTime - this._startTimeInContext) *
 				this._musicPlayBackRate;
 			const pos = this._startOffsetInSeconds + elapsed;
-			return Math.min(this.musicDuration, Math.max(0, pos));
+			const clamped = Math.min(this.musicDuration, Math.max(0, pos));
+			this._lastKnownPlaybackPosition = clamped;
+			return clamped;
 		}
 		return this._audioEl?.currentTime ?? this._pausedPosition;
 	}
@@ -603,6 +671,7 @@ class AudioEngine extends EventTarget {
 		const duration = this.musicDuration;
 		const clampedOffset = Math.min(duration, Math.max(0, offset));
 		this._pausedPosition = clampedOffset;
+		this._lastKnownPlaybackPosition = clampedOffset;
 
 		if (this._audioEl) {
 			this._audioEl.currentTime = clampedOffset;
@@ -682,8 +751,12 @@ class AudioEngine extends EventTarget {
 					() => {
 						if (this._pitchShifter === shifter) {
 							this._pitchShifter = null;
+							if (this._wasPlayingBeforeSleep || this._needsFreshContext) {
+								return;
+							}
 							this._isPlaying = false;
 							this._pausedPosition = this.musicDuration;
+							this._lastKnownPlaybackPosition = this.musicDuration;
 							this.updateMediaSessionState();
 							this.dispatchEvent(new Event("music-pause"));
 							this.dispatchEvent(new Event("music-seeked"));
@@ -707,8 +780,12 @@ class AudioEngine extends EventTarget {
 				source.onended = () => {
 					if (this._activeSourceNode === source) {
 						this._activeSourceNode = null;
+						if (this._wasPlayingBeforeSleep || this._needsFreshContext) {
+							return;
+						}
 						this._isPlaying = false;
 						this._pausedPosition = this.musicDuration;
+						this._lastKnownPlaybackPosition = this.musicDuration;
 						this.updateMediaSessionState();
 						this.dispatchEvent(new Event("music-pause"));
 						this.dispatchEvent(new Event("music-seeked"));
@@ -720,7 +797,9 @@ class AudioEngine extends EventTarget {
 			this._startTimeInContext = this.ctx.currentTime;
 			this._startOffsetInSeconds = clampedOffset;
 			this._pausedPosition = clampedOffset;
+			this._lastKnownPlaybackPosition = clampedOffset;
 			this._isPlaying = true;
+			this._lastAudioActivityTime = Date.now();
 
 			if (this._audioEl) {
 				this._audioEl.currentTime = clampedOffset;
@@ -745,7 +824,9 @@ class AudioEngine extends EventTarget {
 					this._startTimeInContext = this.ctx.currentTime;
 					this._startOffsetInSeconds = clampedOffset;
 					this._pausedPosition = clampedOffset;
+					this._lastKnownPlaybackPosition = clampedOffset;
 					this._isPlaying = true;
+					this._lastAudioActivityTime = Date.now();
 					this.dispatchEvent(new Event("music-resume"));
 				}
 			} catch (retryErr) {
@@ -768,6 +849,8 @@ class AudioEngine extends EventTarget {
 			return;
 		}
 		this._pausedPosition = this.musicCurrentTime;
+		this._lastKnownPlaybackPosition = this._pausedPosition;
+		this._wasPlayingBeforeSleep = false;
 		this._isPlaying = false;
 		// Mark activity so the idle-too-long check in resumeContext() doesn't
 		// incorrectly recreate the AudioContext after a normal pause on macOS.
@@ -934,6 +1017,8 @@ class AudioEngine extends EventTarget {
 		this.musicBuffer = null;
 		this._rawAudioData = null;
 		this._isAutoDownloaded = false;
+		this._wasPlayingBeforeSleep = false;
+		this._lastKnownPlaybackPosition = 0;
 		globalStore.set(audioBufferAtom, null);
 		globalStore.set(loadedAudioAtom, new Blob([]));
 		globalStore.set(loadedAudioFileNameAtom, null);

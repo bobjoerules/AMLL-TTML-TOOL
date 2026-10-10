@@ -50,34 +50,88 @@ describe("JooxApi", () => {
 		});
 	});
 
-	it("parses search response properly", async () => {
-		global.fetch = vi.fn().mockResolvedValue({
-			ok: true,
-			json: async () => ({
-				code: 200,
-				data: {
-					count: 1,
-					songs: [
-						{
-							序号: 1,
-							歌曲名称: "Test Song",
-							歌手: "Test Artist",
-							专辑: "Test Album",
-							时长: "03:00",
-							歌曲ID: "12345",
-							songmid: "Z12345",
-						},
-					],
-				},
-			}),
-		} as any);
+	it("parses search response properly without fake broken image URLs", async () => {
+		global.fetch = vi.fn().mockImplementation((url: string) => {
+			if (typeof url === "string" && url.includes("itunes.apple.com")) {
+				return Promise.resolve({
+					ok: true,
+					json: async () => ({ results: [] }),
+				});
+			}
+			return Promise.resolve({
+				ok: true,
+				json: async () => ({
+					code: 200,
+					data: {
+						count: 1,
+						songs: [
+							{
+								序号: 1,
+								歌曲名称: "Test Song",
+								歌手: "Test Artist",
+								专辑: "Test Album",
+								时长: "03:00",
+								歌曲ID: "12345",
+								songmid: "Z12345",
+							},
+						],
+					},
+				}),
+			});
+		}) as any;
 
 		const tracks = await JooxApi.search("Test");
 		expect(tracks).toHaveLength(1);
 		expect(tracks[0].name).toBe("Test Song");
 		expect(tracks[0].artist).toBe("Test Artist");
 		expect(tracks[0].source).toBe("JOOX");
-		expect(tracks[0].cover).toContain("Z12345");
+		expect(tracks[0].cover).toBeUndefined();
+	});
+
+	it("enriches tracks with iTunes album art when matched", async () => {
+		global.fetch = vi.fn().mockImplementation((url: string) => {
+			if (typeof url === "string" && url.includes("itunes.apple.com")) {
+				return Promise.resolve({
+					ok: true,
+					json: async () => ({
+						results: [
+							{
+								trackName: "Cruel Summer",
+								artistName: "Taylor Swift",
+								artworkUrl100:
+									"https://is1-ssl.mzstatic.com/image/100x100bb.jpg",
+							},
+						],
+					}),
+				});
+			}
+			return Promise.resolve({
+				ok: true,
+				json: async () => ({
+					code: 200,
+					data: {
+						count: 1,
+						songs: [
+							{
+								序号: 1,
+								歌曲名称: "Cruel Summer",
+								歌手: "Taylor Swift",
+								专辑: "Lover",
+								时长: "02:58",
+								歌曲ID: "402214824",
+								songmid: "Z6F1BFC08826B2",
+							},
+						],
+					},
+				}),
+			});
+		}) as any;
+
+		const tracks = await JooxApi.search("Cruel Summer");
+		expect(tracks).toHaveLength(1);
+		expect(tracks[0].cover).toBe(
+			"https://is1-ssl.mzstatic.com/image/300x300bb.jpg",
+		);
 	});
 
 	it("scores a song named 'Paul' higher than a song with an artist named 'Paul'", async () => {

@@ -17,7 +17,7 @@ import {
 	FolderOpen24Regular,
 	MyLocation24Regular,
 } from "@fluentui/react-icons";
-import { Box, Button, Card, ContextMenu, Flex, Text } from "@radix-ui/themes";
+import { Box, Button, Card, ContextMenu, Flex, IconButton, Text } from "@radix-ui/themes";
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
 import { splitAtom } from "jotai/utils";
 import { useSetImmerAtom } from "jotai-immer";
@@ -804,14 +804,16 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 					)}
 				</ContextMenu.Root>
 			</LyricWordSettingsProvider>
-			<Button
+			<IconButton
 				className={styles.locateButton}
-				variant="soft"
+				size="3"
+				variant="surface"
 				onClick={handleLocate}
 				title={t("lyricEditor.locate", "Locate")}
+				aria-label={t("lyricEditor.locate", "Locate")}
 			>
 				<MyLocation24Regular />
-			</Button>
+			</IconButton>
 		</Flex>
 	);
 });

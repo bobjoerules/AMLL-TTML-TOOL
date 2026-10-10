@@ -148,6 +148,57 @@ async function fetchJooxJson<T = any>(url: string): Promise<T> {
 	}
 }
 
+export async function fetchItunesCover(
+	name: string,
+	artist?: string,
+): Promise<string | undefined> {
+	try {
+		const term = artist ? `${name} ${artist}` : name;
+		const res = await fetch(
+			`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=1`,
+			{ signal: AbortSignal.timeout(3500) },
+		);
+		if (!res.ok) return undefined;
+		const data = await res.json();
+		const result = data.results?.[0];
+		if (!result) return undefined;
+		const raw = result.artworkUrl100 || result.artworkUrl60;
+		return raw ? raw.replace(/100x100bb\.jpg/i, "600x600bb.jpg") : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
+async function fetchItunesCoversForQuery(
+	query: string,
+): Promise<Map<string, string>> {
+	const map = new Map<string, string>();
+	try {
+		const res = await fetch(
+			`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=10`,
+			{ signal: AbortSignal.timeout(3500) },
+		);
+		if (!res.ok) return map;
+		const data = await res.json();
+		if (!Array.isArray(data.results)) return map;
+		for (const item of data.results) {
+			const key = normalizeSearchText(item.trackName || "");
+			const raw = item.artworkUrl100 || item.artworkUrl60;
+			if (key && raw) {
+				const highRes = raw.replace(/100x100bb\.jpg/i, "300x300bb.jpg");
+				if (!map.has(key)) {
+					map.set(key, highRes);
+				}
+				const fullKey = `${key} ${normalizeSearchText(item.artistName || "")}`;
+				map.set(fullKey, highRes);
+			}
+		}
+	} catch {
+		// Covers are an enhancement, fail safely
+	}
+	return map;
+}
+
 export const JooxApi = {
 	/**
 	 * Search for songs on JOOX.
@@ -172,19 +223,34 @@ export const JooxApi = {
 			return [];
 		}
 
-		return json.data.songs.map((song: JooxSongItem) => ({
-			id: String(song.歌曲ID || song.songmid || song.序号),
-			index: song.序号,
-			name: song.歌曲名称,
-			artist: song.歌手,
-			album: song.专辑,
-			duration: song.时长,
-			songmid: song.songmid,
-			cover: song.songmid
-				? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${song.songmid}.jpg`
-				: undefined,
-			source: "JOOX",
-		}));
+		// Try fetching real album covers from iTunes in parallel with JOOX results parsing
+		let itunesCovers = new Map<string, string>();
+		try {
+			itunesCovers = await fetchItunesCoversForQuery(query.trim());
+		} catch {
+			// ignore
+		}
+
+		return json.data.songs.map((song: JooxSongItem) => {
+			const normTitle = normalizeSearchText(song.歌曲名称 || "");
+			const normArtist = normalizeSearchText(song.歌手 || "");
+			const cover =
+				itunesCovers.get(`${normTitle} ${normArtist}`) ||
+				itunesCovers.get(normTitle) ||
+				undefined;
+
+			return {
+				id: String(song.歌曲ID || song.songmid || song.序号),
+				index: song.序号,
+				name: song.歌曲名称,
+				artist: song.歌手,
+				album: song.专辑,
+				duration: song.时长,
+				songmid: song.songmid,
+				cover,
+				source: "JOOX",
+			};
+		});
 	},
 
 	/**

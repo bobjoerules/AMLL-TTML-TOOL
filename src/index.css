@@ -227,17 +227,17 @@ body {
 }
 
 .Toastify__toast-container--top-right {
-	top: max(16px, env(safe-area-inset-top)) !important;
+	top: calc(max(60px, env(safe-area-inset-top) + 54px) * var(--scaling, 1)) !important;
 	right: max(16px, env(safe-area-inset-right)) !important;
 }
 
 .Toastify__toast-container--top-left {
-	top: max(16px, env(safe-area-inset-top)) !important;
+	top: calc(max(60px, env(safe-area-inset-top) + 54px) * var(--scaling, 1)) !important;
 	left: max(16px, env(safe-area-inset-left)) !important;
 }
 
 .Toastify__toast-container--top-center {
-	top: max(16px, env(safe-area-inset-top)) !important;
+	top: calc(max(60px, env(safe-area-inset-top) + 54px) * var(--scaling, 1)) !important;
 }
 
 .Toastify__toast-container--bottom-right {
@@ -542,6 +542,12 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	padding: 0 !important;
 	--base-menu-content-padding: 5px !important;
 	animation: menuPopupSlideFade 0.14s cubic-bezier(0.16, 1, 0.3, 1) !important;
+	background-color: var(--color-panel-solid, rgba(28, 28, 32, 0.95)) !important;
+	backdrop-filter: blur(28px) saturate(190%) !important;
+	-webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+	box-shadow:
+		0 18px 40px -4px rgba(0, 0, 0, 0.55),
+		0 4px 14px rgba(0, 0, 0, 0.3) !important;
 }
 
 :is(.rt-DropdownMenuLabel, .rt-BaseMenuLabel) {
@@ -556,13 +562,26 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	height: 0 !important;
 }
 
-:is(.dark, .dark-theme, [data-theme="dark"])
+/* Prevent vertical-only ScrollArea viewport contents from expanding horizontally beyond container */
+.rt-ScrollAreaRoot:not(:has([data-orientation="horizontal"])) .rt-ScrollAreaViewport > * {
+	max-width: 100% !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+:is(
+		.dark,
+		.dark-theme,
+		[data-theme="dark"],
+		.radix-themes:where([data-appearance="dark"], .dark),
+		:root:not(.light):not([data-theme="light"])
+	)
 	:is(
 		.rt-DropdownMenuContent,
 		.rt-DropdownMenuSubContent,
 		.rt-ContextMenuContent
 	) {
-	background-color: rgba(24, 24, 28, 0.88) !important;
+	background-color: rgba(24, 24, 28, 0.92) !important;
 	backdrop-filter: blur(28px) saturate(190%) !important;
 	-webkit-backdrop-filter: blur(28px) saturate(190%) !important;
 	border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -572,13 +591,13 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 		inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
 
-:is(.light, .light-theme, [data-theme="light"])
+:is(.light, .light-theme, [data-theme="light"], .radix-themes:where([data-appearance="light"], .light))
 	:is(
 		.rt-DropdownMenuContent,
 		.rt-DropdownMenuSubContent,
 		.rt-ContextMenuContent
 	) {
-	background-color: rgba(255, 255, 255, 0.92) !important;
+	background-color: rgba(255, 255, 255, 0.95) !important;
 	backdrop-filter: blur(28px) saturate(190%) !important;
 	-webkit-backdrop-filter: blur(28px) saturate(190%) !important;
 	border: 1px solid rgba(0, 0, 0, 0.1) !important;

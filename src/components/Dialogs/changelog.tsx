@@ -51,6 +51,35 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v3.1.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 9, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Audio Engine Sleep & Wake Recovery:</b> Automatically recovers and resumes the AudioContext hardware clock when the computer sleeps, switches applications, or loses focus, ensuring sound playback never gets permanently silenced.
+								</Text>
+								<Text size="2">
+									• <b>Settings Search:</b> Added an integrated search bar in the Settings dialog with real-time keyword indexing, category match counts, and keyboard shortcuts (Cmd/Ctrl+F, Esc).
+								</Text>
+								<Text size="2">
+									• <b>Theme & Tool Menu Acrylic Polish:</b> Fixed transparent tool menus in Web and Windows when using the Clear theme with solid and backdrop-blur styling, and added proper surface backgrounds and hover states for the locate button.
+								</Text>
+								<Text size="2">
+									• <b>Line End Time Normalization & Word Preview Sync:</b> Normalized line end times to always match the last synced word instead of leaving them at zero on partially synced lines, keeping word sweep animations active in preview.
+								</Text>
+								<Text size="2">
+									• <b>JOOX Artwork Resolution & Fallback:</b> Resolved 404 broken image placeholders across JOOX search results with automatic Apple iTunes artwork enrichment and graceful fallback to music note icons.
+								</Text>
+								<Text size="2">
+									• <b>Notification Indicator Positioning:</b> Shifted toast indicator pop-ups down below the title bar so the Preview Panel toggle button is never obscured.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v3.0.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
