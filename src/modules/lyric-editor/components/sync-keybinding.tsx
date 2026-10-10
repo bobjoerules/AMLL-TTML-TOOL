@@ -37,6 +37,7 @@ import {
 	segmentationSplitCJKAtom,
 } from "$/modules/segmentation/states";
 import { maybeAutoSegmentLine } from "../utils/auto-segment-sync";
+import { normalizeLineTime } from "../utils/normalize-line-time";
 import {
 	keyMoveFirstWordAndPlayAtom,
 	keyMoveLastWordAndPlayAtom,
@@ -543,6 +544,7 @@ export const SyncKeyBinding: FC = () => {
 						currentTime,
 					);
 					nextLine.endTime = currentTime;
+					normalizeLineTime(nextLine);
 					nextLines[location.lineIndex] = maybeAutoSegmentLine(
 						nextLine,
 						getAutoSegmentOptions(store),
@@ -583,13 +585,11 @@ export const SyncKeyBinding: FC = () => {
 				);
 
 				const curEditLine = getLineToEdit(curLineIndex);
-				if (curEditLine.words.length === 1) {
-					curEditLine.endTime = currentTime;
-					nextLines[curLineIndex] = maybeAutoSegmentLine(
-						curEditLine,
-						getAutoSegmentOptions(store),
-					);
-				}
+				normalizeLineTime(curEditLine);
+				nextLines[curLineIndex] = maybeAutoSegmentLine(
+					curEditLine,
+					getAutoSegmentOptions(store),
+				);
 
 				// 2. Scan forward for next selection
 				targetSelection = null;
@@ -607,6 +607,7 @@ export const SyncKeyBinding: FC = () => {
 						const targetLine = getLineToEdit(next.lineIndex);
 						if (next.lineIndex !== iterLineIndex) {
 							nextLines[iterLineIndex].endTime = currentTime;
+							normalizeLineTime(nextLines[iterLineIndex]);
 							targetLine.startTime = currentTime;
 						}
 						setUnitStartTimeCloned(
@@ -621,6 +622,7 @@ export const SyncKeyBinding: FC = () => {
 							next.unit.rubyIndex,
 							currentTime,
 						);
+						normalizeLineTime(targetLine);
 						iterLineIndex = next.lineIndex;
 						iterSyncIndex = next.syncIndex;
 					} else {
@@ -628,6 +630,7 @@ export const SyncKeyBinding: FC = () => {
 						const targetLine = getLineToEdit(next.lineIndex);
 						if (next.lineIndex !== iterLineIndex) {
 							nextLines[iterLineIndex].endTime = currentTime;
+							normalizeLineTime(nextLines[iterLineIndex]);
 							targetLine.startTime = currentTime;
 						}
 						setUnitStartTimeCloned(
@@ -769,7 +772,7 @@ export const SyncKeyBinding: FC = () => {
 					location.rubyIndex,
 					currentTime,
 				);
-				if (location.isLastWord) nextLine.endTime = currentTime;
+				normalizeLineTime(nextLine);
 				nextLines[location.lineIndex] = maybeAutoSegmentLine(
 					nextLine,
 					getAutoSegmentOptions(store),

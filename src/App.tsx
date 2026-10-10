@@ -786,7 +786,7 @@ function App() {
 			--radius-factor: ${vGlobalRadius / 12} !important;
 
 			/* Comprehensive Overrides */
-			${shouldApplyTitlebarBg && (isDarkTheme || titlebarBgLum === null || titlebarBgLum > 0.4) ? `--color-panel-translucent: ${vTitlebarBg} !important;` : ""}
+			${shouldApplyTitlebarBg && vTitlebarBg !== "transparent" && (isDarkTheme || titlebarBgLum === null || titlebarBgLum > 0.4) ? `--color-panel-translucent: ${vTitlebarBg} !important;` : ""}
 			${shouldApplyEditorBg ? `--color-background: ${vEditorBg} !important;` : ""}
 			${vSelection ? `--accent-a5: ${vSelection} !important;` : ""}
 			${shouldApplyDialogBg ? `--color-panel-solid: ${vDialogBg} !important;` : ""}

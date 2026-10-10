@@ -665,4 +665,118 @@ export async function fetchUserProfilesWithStats(): Promise<{
   return { profiles, globalStats };
 }
 
+export interface CloudSongStats {
+  totalUsers: number;
+  totalSongs: number;
+  uniqueSongs: number;
+  duplicateSongs: number;
+  publicSongs: number;
+  privateSongs: number;
+  totalDurationMs: number;
+  totalLines: number;
+}
 
+export async function fetchCloudSongStats(): Promise<CloudSongStats> {
+  if (!db) {
+    return {
+      totalUsers: 0,
+      totalSongs: 0,
+      uniqueSongs: 0,
+      duplicateSongs: 0,
+      publicSongs: 0,
+      privateSongs: 0,
+      totalDurationMs: 0,
+      totalLines: 0,
+    };
+  }
+
+  try {
+    const [ttmlsSnap, usersSnap, finishedSnap] = await Promise.all([
+      getDocs(collectionGroup(db, "ttmls")),
+      getDocs(query(collection(db, "users"), limit(250))).catch(() => null),
+      getDocs(query(collection(db, "finished_ttmls"), limit(250))).catch(() => null),
+    ]);
+
+    const usersSet = new Set<string>();
+    if (usersSnap) {
+      usersSnap.forEach((u) => usersSet.add(u.id));
+    }
+
+    const seenDocIds = new Set<string>();
+    let publicCount = 0;
+    let privateCount = 0;
+    let totalLines = 0;
+    let totalDurationMs = 0;
+    const songKeyOccurrences = new Map<string, number>();
+
+    const processDoc = (id: string, data: DocumentData, authorFromPath?: string) => {
+      if (seenDocIds.has(id)) return;
+      seenDocIds.add(id);
+
+      const isPublic = isTTMLPubliclyOptedIn(data);
+      if (isPublic) {
+        publicCount++;
+      } else {
+        privateCount++;
+      }
+
+      const author = data.authorUid || data.author_uid || authorFromPath;
+      if (author) {
+        usersSet.add(author);
+      }
+
+      if (typeof data.lineCount === "number") totalLines += data.lineCount;
+      if (typeof data.durationMs === "number") totalDurationMs += data.durationMs;
+
+      const title = data.title || "Untitled";
+      const artist = data.artist || "Unknown Artist";
+      const key = getSongKey(title, artist);
+      songKeyOccurrences.set(key, (songKeyOccurrences.get(key) || 0) + 1);
+    };
+
+    ttmlsSnap.forEach((docSnap) => {
+      const authorFromPath = docSnap.ref.parent?.parent?.id;
+      processDoc(docSnap.id, docSnap.data(), authorFromPath);
+    });
+
+    if (finishedSnap) {
+      finishedSnap.forEach((docSnap) => {
+        processDoc(docSnap.id, docSnap.data());
+      });
+    }
+
+    let duplicateSongs = 0;
+    for (const count of songKeyOccurrences.values()) {
+      if (count > 1) {
+        duplicateSongs += count - 1;
+      }
+    }
+
+    const totalSongs = seenDocIds.size;
+    const uniqueSongs = songKeyOccurrences.size;
+    const totalUsers = usersSet.size;
+
+    return {
+      totalUsers,
+      totalSongs,
+      uniqueSongs,
+      duplicateSongs,
+      publicSongs: publicCount,
+      privateSongs: privateCount,
+      totalDurationMs,
+      totalLines,
+    };
+  } catch (err) {
+    console.error("Failed to fetch cloud song stats:", err);
+    return {
+      totalUsers: 0,
+      totalSongs: 0,
+      uniqueSongs: 0,
+      duplicateSongs: 0,
+      publicSongs: 0,
+      privateSongs: 0,
+      totalDurationMs: 0,
+      totalLines: 0,
+    };
+  }
+}

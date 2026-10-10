@@ -42,7 +42,7 @@ import {
 	isGeniusSongUrl,
 } from "$/modules/genius/api/client";
 import { getBetterGeniusCoverArt } from "$/modules/genius/utils/image";
-import { JooxApi } from "$/modules/joox/api/client";
+import { fetchItunesCover, JooxApi } from "$/modules/joox/api/client";
 import { LrcLibApi } from "$/modules/lrclib/api/client";
 import {
 	applyAutoDuetBySinger,
@@ -179,6 +179,66 @@ const PROVIDER_CONFIG = {
 	},
 };
 
+const TrackCover = ({
+	cover,
+	name,
+	size = 48,
+	borderRadius = 8,
+}: {
+	cover?: string;
+	name: string;
+	size?: number;
+	borderRadius?: number;
+}) => {
+	const [error, setError] = useState(false);
+
+	useEffect(() => {
+		setError(false);
+	}, [cover]);
+
+	if (!cover || error) {
+		return (
+			<Box
+				style={{
+					width: size,
+					height: size,
+					borderRadius,
+					backgroundColor: "var(--gray-4)",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					flexShrink: 0,
+				}}
+			>
+				<MusicNote2Filled
+					style={{
+						width: Math.round(size * 0.45),
+						height: Math.round(size * 0.45),
+						opacity: 0.4,
+					}}
+				/>
+			</Box>
+		);
+	}
+
+	return (
+		<img
+			src={getBetterGeniusCoverArt(cover, 100)}
+			alt={name}
+			style={{
+				width: size,
+				height: size,
+				borderRadius,
+				objectFit: "cover",
+				boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+				flexShrink: 0,
+			}}
+			referrerPolicy="no-referrer"
+			onError={() => setError(true)}
+		/>
+	);
+};
+
 export const ImportLyricsDialog = ({
 	source = "lyrically",
 }: {
@@ -247,6 +307,23 @@ export const ImportLyricsDialog = ({
 		() => detectSyllabificationEngineFromText(editableLyrics),
 		[editableLyrics],
 	);
+
+	// Dynamically resolve missing artwork for the selected hit
+	useEffect(() => {
+		if (selectedHit && !selectedHit.cover) {
+			let active = true;
+			fetchItunesCover(selectedHit.name, selectedHit.artist).then((cover) => {
+				if (active && cover) {
+					setSelectedHit((prev) =>
+						prev && prev.id === selectedHit.id ? { ...prev, cover } : prev,
+					);
+				}
+			});
+			return () => {
+				active = false;
+			};
+		}
+	}, [selectedHit?.id, selectedHit?.name, selectedHit?.artist]);
 
 	useEffect(() => {
 		if (detectedEngine) {
@@ -1429,38 +1506,12 @@ export const ImportLyricsDialog = ({
 							}}
 						>
 							<Flex gap="3" align="center">
-								{selectedHit.cover ? (
-									<img
-										src={getBetterGeniusCoverArt(selectedHit.cover, 100)}
-										alt={selectedHit.name}
-										style={{
-											width: 48,
-											height: 48,
-											borderRadius: 6,
-											objectFit: "cover",
-											boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-											flexShrink: 0,
-										}}
-										referrerPolicy="no-referrer"
-									/>
-								) : (
-									<Box
-										style={{
-											width: 48,
-											height: 48,
-											borderRadius: 6,
-											background: "var(--gray-4)",
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											flexShrink: 0,
-										}}
-									>
-										<MusicNote2Filled
-											style={{ width: 22, height: 22, opacity: 0.4 }}
-										/>
-									</Box>
-								)}
+								<TrackCover
+									cover={selectedHit.cover}
+									name={selectedHit.name}
+									size={48}
+									borderRadius={6}
+								/>
 								<Flex
 									direction="column"
 									gap="0"
@@ -2170,38 +2221,12 @@ export const ImportLyricsDialog = ({
 											padding: 0,
 										}}
 									>
-										{hit.cover ? (
-											<img
-												src={getBetterGeniusCoverArt(hit.cover, 100)}
-												alt={hit.name}
-												style={{
-													width: 48,
-													height: 48,
-													borderRadius: 8,
-													objectFit: "cover",
-													boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-													flexShrink: 0,
-												}}
-												referrerPolicy="no-referrer"
-											/>
-										) : (
-											<Box
-												style={{
-													width: 48,
-													height: 48,
-													borderRadius: 8,
-													backgroundColor: "var(--gray-4)",
-													display: "flex",
-													alignItems: "center",
-													justifyContent: "center",
-													flexShrink: 0,
-												}}
-											>
-												<MusicNote2Filled
-													style={{ width: 22, height: 22, opacity: 0.4 }}
-												/>
-											</Box>
-										)}
+										<TrackCover
+											cover={hit.cover}
+											name={hit.name}
+											size={48}
+											borderRadius={8}
+										/>
 										<Flex
 											direction="column"
 											gap="0"

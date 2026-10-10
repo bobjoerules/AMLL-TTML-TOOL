@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   Play,
@@ -13,13 +13,19 @@ import {
   Flame,
   ArrowRight,
   Globe,
-  ExternalLink
+  ExternalLink,
+  Users,
+  Music,
+  Copy,
+  Lock,
+  RefreshCw,
 } from 'lucide-react';
 import { GithubIcon } from '../components/GithubIcon';
 import { LiquidPlayerIcon } from '../components/LiquidPlayerIcon';
+import { fetchCloudSongStats, type CloudSongStats } from '../utils/firebase';
 
 interface HomePageProps {
-  onNavigate: (tab: 'home' | 'finished' | 'liquid') => void;
+  onNavigate: (tab: 'home' | 'finished' | 'stats' | 'liquid') => void;
 }
 
 interface ScreenshotItem {
@@ -85,6 +91,24 @@ const SCREENSHOTS: ScreenshotItem[] = [
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const [activeScreenshot, setActiveScreenshot] = useState<string>('preview');
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [cloudStats, setCloudStats] = useState<CloudSongStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState<boolean>(true);
+
+  const loadCloudStats = async () => {
+    setLoadingStats(true);
+    try {
+      const data = await fetchCloudSongStats();
+      setCloudStats(data);
+    } catch (err) {
+      console.error('Failed to load cloud stats:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCloudStats();
+  }, []);
 
   const currentItem = SCREENSHOTS.find((s) => s.id === activeScreenshot) || SCREENSHOTS[0];
 
@@ -208,6 +232,466 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <span>View Source</span>
               <ArrowRight size={14} />
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Cloud Library & Community Live Statistics Section */}
+      <section style={{ marginTop: 70, marginBottom: 20 }}>
+        <div
+          className="glass-panel"
+          style={{
+            padding: '36px 32px',
+            borderRadius: 24,
+            position: 'relative',
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            background:
+              'linear-gradient(180deg, rgba(22, 22, 28, 0.8) 0%, rgba(14, 14, 18, 0.92) 100%)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)',
+          }}
+        >
+          {/* Subtle atmospheric glow behind the card */}
+          <div
+            style={{
+              position: 'absolute',
+              top: -60,
+              right: '8%',
+              width: 320,
+              height: 320,
+              background:
+                'radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%)',
+              filter: 'blur(50px)',
+              pointerEvents: 'none',
+            }}
+          />
+
+          {/* Section Header */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 16,
+              marginBottom: 28,
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              paddingBottom: 20,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '4px 12px',
+                  borderRadius: 999,
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#ffffff',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  marginBottom: 8,
+                }}
+              >
+                <Cloud size={14} />
+                <span>Cloud Synchronization Network</span>
+              </div>
+              <h2
+                style={{
+                  fontSize: '1.85rem',
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  color: '#ffffff',
+                  margin: '4px 0',
+                }}
+              >
+                Live Cloud Library Statistics
+              </h2>
+              <p
+                style={{
+                  color: 'var(--text-secondary)',
+                  fontSize: 14,
+                  maxWidth: 640,
+                }}
+              >
+                Real-time analytics across all user cloud libraries, including private saves and alternate duplicate versions.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={loadCloudStats}
+                disabled={loadingStats}
+                title="Refresh live cloud statistics"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <RefreshCw size={13} className={loadingStats ? 'spin' : ''} />
+                <span>{loadingStats ? 'Updating…' : 'Refresh'}</span>
+              </button>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => onNavigate('stats')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <Users size={14} />
+                <span>Creator Stats</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 16,
+            }}
+          >
+            {/* 1. Total Users */}
+            <div
+              className="glass-panel"
+              style={{
+                padding: '24px 20px',
+                borderRadius: 18,
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 12,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    Active Users
+                  </span>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <Users size={18} />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: '2.5rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    color: '#ffffff',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {loadingStats && !cloudStats
+                    ? '...'
+                    : (cloudStats?.totalUsers || 0).toLocaleString()}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                }}
+              >
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  Registered synchronizers & cloud creators
+                </span>
+              </div>
+            </div>
+
+            {/* 2. Songs Saved to Cloud (Even Private Ones) */}
+            <div
+              className="glass-panel"
+              style={{
+                padding: '24px 20px',
+                borderRadius: 18,
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 12,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    Songs Saved to Cloud
+                  </span>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: 'rgba(56, 189, 248, 0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#38bdf8',
+                    }}
+                  >
+                    <Cloud size={18} />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: '2.5rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    color: '#ffffff',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {loadingStats && !cloudStats
+                    ? '...'
+                    : (cloudStats?.totalSongs || 0).toLocaleString()}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#94a3b8',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                  }}
+                >
+                  <Lock size={10} />
+                  {cloudStats?.privateSongs ?? 0} Private
+                </span>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#34d399',
+                    background: 'rgba(16, 185, 129, 0.1)',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                  }}
+                >
+                  <Globe size={10} />
+                  {cloudStats?.publicSongs ?? 0} Public
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Unique Songs */}
+            <div
+              className="glass-panel"
+              style={{
+                padding: '24px 20px',
+                borderRadius: 18,
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 12,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    Unique Songs
+                  </span>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: 'rgba(168, 85, 247, 0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#c084fc',
+                    }}
+                  >
+                    <Music size={18} />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: '2.5rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    color: '#ffffff',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {loadingStats && !cloudStats
+                    ? '...'
+                    : (cloudStats?.uniqueSongs || 0).toLocaleString()}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                }}
+              >
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  Distinct song & artist pairs in cloud
+                </span>
+              </div>
+            </div>
+
+            {/* 4. Dupe Amount (Separate Stat) */}
+            <div
+              className="glass-panel"
+              style={{
+                padding: '24px 20px',
+                borderRadius: 18,
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.07)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 12,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    Duplicate Saves
+                  </span>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: 'rgba(251, 191, 36, 0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fbbf24',
+                    }}
+                  >
+                    <Copy size={18} />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: '2.5rem',
+                    fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    color: '#ffffff',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {loadingStats && !cloudStats
+                    ? '...'
+                    : (cloudStats?.duplicateSongs || 0).toLocaleString()}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#fbbf24',
+                    background: 'rgba(251, 191, 36, 0.1)',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                  }}
+                >
+                  Separate Stat
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  Alternative versions & revisions
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>

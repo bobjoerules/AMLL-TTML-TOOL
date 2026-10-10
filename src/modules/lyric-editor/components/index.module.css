@@ -743,7 +743,32 @@
 	right: var(--space-7);
 	bottom: var(--space-3);
 	z-index: 5;
-	box-shadow: var(--base-card-surface-box-shadow);
+	background-color: var(--color-panel-solid) !important;
+	color: var(--gray-12) !important;
+	border: 1px solid var(--gray-a5) !important;
+	border-radius: var(--radius-4) !important;
+	box-shadow:
+		var(--base-card-surface-box-shadow),
+		0 4px 12px rgba(0, 0, 0, 0.16) !important;
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		transform 0.15s ease,
+		box-shadow 0.15s ease !important;
+}
+
+.locateButton:hover {
+	background-color: var(--gray-a4) !important;
+	transform: scale(1.06);
+	box-shadow:
+		var(--base-card-surface-box-shadow),
+		0 6px 16px rgba(0, 0, 0, 0.22) !important;
+}
+
+.locateButton:active {
+	transform: scale(0.96);
 }
 
 @keyframes highlightBurst {

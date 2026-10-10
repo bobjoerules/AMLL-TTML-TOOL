@@ -18,7 +18,14 @@ const activeLineIdsBaseAtom = atom((get) => {
 					: (timedWords[timedWords.length - 1]?.endTime ??
 						(start > 0 ? start + 3000 : 0));
 			if (start === 0 && end === 0) return false;
-			return currentTime >= start && currentTime <= end;
+			const lastStartedWord = l.words
+				? [...l.words].reverse().find((w) => w.startTime > 0)
+				: undefined;
+			const effectiveEnd =
+				lastStartedWord && lastStartedWord.startTime >= end
+					? Math.max(end, lastStartedWord.startTime + 3000)
+					: end;
+			return currentTime >= start && currentTime <= effectiveEnd;
 		})
 		.map((l) => l.id);
 });

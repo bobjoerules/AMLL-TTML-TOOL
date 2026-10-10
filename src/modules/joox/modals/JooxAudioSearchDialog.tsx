@@ -34,6 +34,72 @@ import {
 import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import { jooxAudioSearchDialogAtom } from "$/states/dialogs.ts";
 
+const JooxTrackThumbnail = ({
+	track,
+	isKuwo,
+	isQq,
+}: {
+	track: JooxTrack;
+	isKuwo: boolean;
+	isQq: boolean;
+}) => {
+	const [error, setError] = useState(false);
+
+	useEffect(() => {
+		setError(false);
+	}, [track.cover]);
+
+	if (!track.cover || error) {
+		return (
+			<Box
+				style={{
+					width: 44,
+					height: 44,
+					borderRadius: "8px",
+					backgroundColor: isKuwo
+						? "var(--amber-3)"
+						: isQq
+							? "var(--indigo-3)"
+							: "var(--teal-3)",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					flexShrink: 0,
+				}}
+			>
+				<MusicNote2Regular
+					style={{
+						width: 22,
+						height: 22,
+						color: isKuwo
+							? "var(--amber-10)"
+							: isQq
+								? "var(--indigo-10)"
+								: "var(--teal-10)",
+					}}
+				/>
+			</Box>
+		);
+	}
+
+	return (
+		<img
+			src={track.cover}
+			alt={track.name}
+			style={{
+				width: 44,
+				height: 44,
+				borderRadius: "8px",
+				objectFit: "cover",
+				flexShrink: 0,
+				backgroundColor: "var(--gray-3)",
+			}}
+			loading="lazy"
+			onError={() => setError(true)}
+		/>
+	);
+};
+
 export const JooxAudioSearchDialog = () => {
 	const { t } = useTranslation();
 	const [searchState, setSearchState] = useAtom(jooxAudioSearchDialogAtom);
@@ -363,8 +429,8 @@ export const JooxAudioSearchDialog = () => {
 				</Flex>
 
 				{/* Search Input Bar, Source & Quality */}
-				<Flex gap="2" align="center" mt="3" mb="3" wrap="nowrap" style={{ width: "100%" }}>
-					<Box style={{ flex: 1, minWidth: 0 }}>
+				<Flex gap="2" align="center" mt="3" mb="3" wrap="wrap" style={{ width: "100%" }}>
+					<Box style={{ flex: "1 1 200px", minWidth: "160px" }}>
 						<TextField.Root
 							ref={inputRef}
 							value={query}
@@ -438,7 +504,7 @@ export const JooxAudioSearchDialog = () => {
 				</Flex>
 
 				{/* Results List */}
-				<Box style={{ flex: 1, minHeight: "260px", overflow: "hidden", width: "100%" }}>
+				<Box style={{ flex: 1, minHeight: "260px", overflow: "hidden", width: "100%", minWidth: 0 }}>
 					{loading ? (
 						<Flex
 							align="center"
@@ -456,9 +522,24 @@ export const JooxAudioSearchDialog = () => {
 						<ScrollArea
 							type="auto"
 							scrollbars="vertical"
-							style={{ maxHeight: "calc(85vh - 210px)", width: "100%" }}
+							style={{
+								maxHeight: "calc(85vh - 210px)",
+								width: "100%",
+								maxWidth: "100%",
+								minWidth: 0,
+							}}
 						>
-							<Flex direction="column" gap="2" pr="3" style={{ width: "100%", boxSizing: "border-box" }}>
+							<Flex
+								direction="column"
+								gap="2"
+								pr="2"
+								style={{
+									width: "100%",
+									maxWidth: "100%",
+									minWidth: 0,
+									boxSizing: "border-box",
+								}}
+							>
 								{results.map((track) => {
 									const isDownloading = downloadingTrackId === track.id;
 									const isKuwo = track.source === "Kuwo";
@@ -468,67 +549,39 @@ export const JooxAudioSearchDialog = () => {
 										<Card
 											key={`${track.source || "music"}-${track.id}-${track.index}`}
 											style={{
-												padding: "12px 16px",
+												padding: "12px 14px",
 												borderRadius: "10px",
 												backgroundColor: "var(--color-surface)",
 												border: "1px solid var(--gray-a4)",
 												transition: "border-color 0.15s ease",
 												width: "100%",
+												maxWidth: "100%",
+												minWidth: 0,
 												boxSizing: "border-box",
 												overflow: "hidden",
 											}}
 										>
-											<Flex align="center" justify="between" gap="3" style={{ width: "100%" }}>
+											<Flex
+												align="center"
+												justify="between"
+												gap="3"
+												style={{
+													width: "100%",
+													maxWidth: "100%",
+													minWidth: 0,
+												}}
+											>
 												{/* Left: Thumbnail & Info */}
 												<Flex
 													align="center"
 													gap="3"
 													style={{ minWidth: 0, flex: 1, overflow: "hidden" }}
 												>
-													{track.cover ? (
-														<img
-															src={track.cover}
-															alt={track.name}
-															style={{
-																width: 44,
-																height: 44,
-																borderRadius: "8px",
-																objectFit: "cover",
-																flexShrink: 0,
-																backgroundColor: "var(--gray-3)",
-															}}
-															loading="lazy"
-														/>
-													) : (
-														<Box
-															style={{
-																width: 44,
-																height: 44,
-																borderRadius: "8px",
-																backgroundColor: isKuwo
-																	? "var(--amber-3)"
-																	: isQq
-																		? "var(--indigo-3)"
-																		: "var(--teal-3)",
-																display: "flex",
-																alignItems: "center",
-																justifyContent: "center",
-																flexShrink: 0,
-															}}
-														>
-															<MusicNote2Regular
-																style={{
-																	width: 22,
-																	height: 22,
-																	color: isKuwo
-																		? "var(--amber-10)"
-																		: isQq
-																			? "var(--indigo-10)"
-																			: "var(--teal-10)",
-																}}
-															/>
-														</Box>
-													)}
+													<JooxTrackThumbnail
+														track={track}
+														isKuwo={isKuwo}
+														isQq={isQq}
+													/>
 
 													<Flex
 														direction="column"
@@ -538,15 +591,14 @@ export const JooxAudioSearchDialog = () => {
 														<Flex
 															align="center"
 															gap="2"
-															style={{ minWidth: 0, width: "100%" }}
+															style={{ minWidth: 0, width: "100%", overflow: "hidden" }}
 														>
 															<Text
+																as="div"
 																weight="bold"
 																size="2"
+																truncate
 																style={{
-																	overflow: "hidden",
-																	textOverflow: "ellipsis",
-																	whiteSpace: "nowrap",
 																	minWidth: 0,
 																	flex: "0 1 auto",
 																}}
@@ -575,13 +627,13 @@ export const JooxAudioSearchDialog = () => {
 															</Badge>
 														</Flex>
 														<Text
+															as="div"
 															size="1"
 															color="gray"
+															truncate
 															style={{
-																overflow: "hidden",
-																textOverflow: "ellipsis",
-																whiteSpace: "nowrap",
 																minWidth: 0,
+																width: "100%",
 															}}
 														>
 															{track.artist}
@@ -596,7 +648,11 @@ export const JooxAudioSearchDialog = () => {
 													variant="solid"
 													disabled={isDownloading}
 													onClick={() => void handleDownloadTrack(track)}
-													style={{ cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}
+													style={{
+														cursor: "pointer",
+														flexShrink: 0,
+														whiteSpace: "nowrap",
+													}}
 												>
 													{isDownloading ? (
 														<>
