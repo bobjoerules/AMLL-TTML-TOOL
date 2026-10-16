@@ -18,6 +18,18 @@ export function normalizeSearchText(str: string): string {
 		.trim();
 }
 
+export function extractBaseTitle(title: string): string {
+	return normalizeSearchText(
+		title
+			.replace(/\s*[\(\[\{][^\)\]\}]*[\)\]\}]/g, " ")
+			.replace(
+				/\s*[-–—/]\s*(?:feat\.?|ft\.?|featuring|with|remix|version|edit|live|acoustic|deluxe|remastered|explicit|clean|radio)[\s\S]*/gi,
+				" ",
+			)
+			.replace(/\s+(?:feat\.?|ft\.?|featuring|with)\s+[\s\S]*/gi, " "),
+	);
+}
+
 export function scoreCandidateTrack(
 	track: JooxTrack,
 	targetTitle: string,
@@ -28,6 +40,9 @@ export function scoreCandidateTrack(
 	const expectedTitle = normalizeSearchText(targetTitle);
 	const expectedArtist = normalizeSearchText(targetArtist);
 
+	const baseTrackName = extractBaseTitle(track.name);
+	const baseExpectedTitle = extractBaseTitle(targetTitle);
+
 	let score = 0;
 
 	// Title evaluation
@@ -37,22 +52,54 @@ export function scoreCandidateTrack(
 			score += 100;
 			titleMatches = true;
 		} else if (
-			trackName.startsWith(expectedTitle) ||
-			expectedTitle.startsWith(trackName)
+			baseTrackName &&
+			baseExpectedTitle &&
+			baseTrackName === baseExpectedTitle
 		) {
-			score += 70;
-			titleMatches = true;
-		} else if (trackName.includes(expectedTitle)) {
-			score += 50;
+			score += 95;
 			titleMatches = true;
 		} else {
-			// Title does NOT match track name.
-			// If expectedTitle appears in the artist name instead of the title (e.g. Sean Paul),
-			// heavily penalize so we don't pick a song just because its artist is named "Paul".
-			if (trackArtist.includes(expectedTitle)) {
-				score -= 100;
+			// Check if track name has significant extra or missing words
+			const trackWords = baseTrackName.split(" ").filter(Boolean);
+			const expectedWords = baseExpectedTitle.split(" ").filter(Boolean);
+
+			const matchingWords = expectedWords.filter((w) => trackWords.includes(w));
+			const isSubset =
+				expectedWords.length > 0 &&
+				matchingWords.length === expectedWords.length;
+			const extraWords = trackWords.filter((w) => !expectedWords.includes(w));
+
+			// If track has extra distinct words (not features/versions), it's a completely different song
+			if (isSubset && extraWords.length === 0) {
+				score += 90;
+				titleMatches = true;
+			} else if (isSubset && extraWords.length > 0) {
+				// Different song by same artist that merely contains or starts with the title!
+				// E.g., target: "Hold On", track: "Hold On We're Going Home"
+				score -= 80;
+			} else if (
+				trackName.startsWith(expectedTitle) ||
+				expectedTitle.startsWith(trackName)
+			) {
+				if (baseTrackName === baseExpectedTitle) {
+					score += 70;
+					titleMatches = true;
+				} else {
+					score -= 60;
+				}
+			} else if (trackName.includes(expectedTitle)) {
+				if (baseTrackName === baseExpectedTitle) {
+					score += 50;
+					titleMatches = true;
+				} else {
+					score -= 60;
+				}
 			} else {
-				score -= 40;
+				if (trackArtist.includes(expectedTitle)) {
+					score -= 100;
+				} else {
+					score -= 50;
+				}
 			}
 		}
 	}
@@ -94,20 +141,60 @@ export function scoreCandidateTrack(
 		return -1;
 	}
 
-	// Deduct for unrequested covers or instrumentals so authentic track is chosen
 	const text =
 		`${track.name} ${track.artist || ""} ${track.album || ""}`.toLowerCase();
+	const targetText = `${targetTitle} ${targetArtist}`.toLowerCase();
+
+	// Clean vs Explicit versions evaluation
+	const isTargetClean =
+		/\b(clean|radio edit|radio version|censored)\b/i.test(targetText);
+	const isTrackClean =
+		/\b(clean|clean version|clean edit|radio edit|radio version|censored|edited version|tv edit)\b/i.test(
+			text,
+		);
+
+	if (isTrackClean && !isTargetClean) {
+		// Heavily penalize clean/radio edit versions when not requested
+		score -= 60;
+	} else if (!isTrackClean && isTargetClean) {
+		score -= 40;
+	}
+
+	const isTrackExplicit =
+		/\b(explicit|dirty|uncensored|original mix|original version)\b/i.test(text);
+	if (isTrackExplicit && !isTargetClean) {
+		// Bonus for authentic explicit/original track
+		score += 25;
+	}
+
+	// Deduct for unrequested covers or instrumentals so authentic track is chosen
 	if (
 		/instrumental|karaoke|伴奏|纯音乐/.test(text) &&
 		!/instrumental|karaoke/.test(targetTitle.toLowerCase())
 	) {
-		score -= 40;
+		score -= 50;
 	}
 	if (
 		/cover|tribute|remake|翻唱/.test(text) &&
 		!/cover|tribute/.test((targetTitle + targetArtist).toLowerCase())
 	) {
+		score -= 50;
+	}
+
+	// Deduct for unrequested live versions
+	if (
+		/\b(live|concert|in concert|live at|live from)\b/i.test(text) &&
+		!/\b(live|concert)\b/i.test(targetText)
+	) {
 		score -= 40;
+	}
+
+	// Deduct for unrequested remixes
+	if (
+		/\b(remix|bootleg|mashup|club mix|extended mix|dub mix)\b/i.test(text) &&
+		!/\b(remix|bootleg|mashup|club mix|extended mix|dub mix)\b/i.test(targetText)
+	) {
+		score -= 45;
 	}
 
 	return score;

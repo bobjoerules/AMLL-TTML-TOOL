@@ -23,6 +23,7 @@ import {
 	ArrowUpload16Regular,
 	Checkmark16Filled,
 	Checkmark16Regular,
+	CheckmarkCircle16Filled,
 	ChevronDown16Regular,
 	ChevronUp16Regular,
 	Cloud24Filled,
@@ -39,6 +40,7 @@ import {
 	Play16Regular,
 	Save16Regular,
 	Search16Regular,
+	Timer16Regular,
 } from "@fluentui/react-icons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { type FC, useEffect, useMemo, useState } from "react";
@@ -796,11 +798,17 @@ export const CloudFileManagerModal: FC = () => {
 	const [open, setOpen] = useAtom(cloudFileManagerOpenAtom);
 	const initialTab = useAtomValue(cloudFileManagerInitialTabAtom);
 	const [activeTab, setActiveTab] = useState<"open" | "save" | "batch">("open");
-	const [filterTab, setFilterTab] = useState<"all" | "public" | "private">(
-		"all",
-	);
+	const [filterTab, setFilterTab] = useState<
+		"all" | "pending" | "completed" | "public" | "private"
+	>("all");
 	const [sortBy, setSortBy] = useState<
-		"recent" | "title-asc" | "title-desc" | "artist-asc" | "lines-desc"
+		| "recent"
+		| "title-asc"
+		| "title-desc"
+		| "artist-asc"
+		| "lines-desc"
+		| "status-completed"
+		| "status-pending"
 	>("recent");
 
 	const user = useAtomValue(currentUserAtom);
@@ -978,6 +986,11 @@ export const CloudFileManagerModal: FC = () => {
 
 	// Stats calculations - each unique song is only counted once
 	const uniqueSongsCount = songGroups.length;
+	const completedCount = useMemo(
+		() => songGroups.filter((g) => g.isCompleted).length,
+		[songGroups],
+	);
+	const inProgressCount = uniqueSongsCount - completedCount;
 	const publicCount = useMemo(
 		() => songGroups.filter((g) => g.isPublic).length,
 		[songGroups],
@@ -987,7 +1000,11 @@ export const CloudFileManagerModal: FC = () => {
 	const filteredSongGroups = useMemo(() => {
 		let result = [...songGroups];
 
-		if (filterTab === "public") {
+		if (filterTab === "pending") {
+			result = result.filter((g) => !g.isCompleted);
+		} else if (filterTab === "completed") {
+			result = result.filter((g) => g.isCompleted);
+		} else if (filterTab === "public") {
 			result = result.filter((g) => g.isPublic);
 		} else if (filterTab === "private") {
 			result = result.filter((g) => !g.isPublic);
@@ -1021,6 +1038,18 @@ export const CloudFileManagerModal: FC = () => {
 			);
 		} else if (sortBy === "lines-desc") {
 			result.sort((a, b) => b.maxLines - a.maxLines);
+		} else if (sortBy === "status-completed") {
+			result.sort(
+				(a, b) =>
+					(b.isCompleted === a.isCompleted ? 0 : b.isCompleted ? 1 : -1) ||
+					b.latestUpdated - a.latestUpdated,
+			);
+		} else if (sortBy === "status-pending") {
+			result.sort(
+				(a, b) =>
+					(b.isCompleted === a.isCompleted ? 0 : a.isCompleted ? 1 : -1) ||
+					b.latestUpdated - a.latestUpdated,
+			);
 		} else {
 			// recent
 			result.sort((a, b) => b.latestUpdated - a.latestUpdated);
@@ -1167,6 +1196,11 @@ export const CloudFileManagerModal: FC = () => {
 									'[Beta] Downloading audio for "{title}"…',
 									{ title: doc.title || "song" },
 								),
+								{
+									autoClose: false,
+									closeButton: false,
+									closeOnClick: false,
+								},
 							);
 							const result = await JooxApi.searchAndGetAudio(
 								doc.title || "",
@@ -1195,6 +1229,8 @@ export const CloudFileManagerModal: FC = () => {
 										type: "success",
 										isLoading: false,
 										autoClose: 3000,
+										closeButton: true,
+										closeOnClick: true,
 									});
 								}
 							} else {
@@ -1236,6 +1272,11 @@ export const CloudFileManagerModal: FC = () => {
 					'Downloading audio for "{title}"…',
 					{ title: item.title || "Untitled" },
 				),
+				{
+					autoClose: false,
+					closeButton: false,
+					closeOnClick: false,
+				},
 			);
 			const blob = await downloadCloudAudio(
 				item.audioUrl,
@@ -1266,6 +1307,8 @@ export const CloudFileManagerModal: FC = () => {
 					type: "success",
 					isLoading: false,
 					autoClose: 3000,
+					closeButton: true,
+					closeOnClick: true,
 				});
 			}
 		} catch (err: unknown) {
@@ -1276,6 +1319,8 @@ export const CloudFileManagerModal: FC = () => {
 					type: "error",
 					isLoading: false,
 					autoClose: 5000,
+					closeButton: true,
+					closeOnClick: true,
 				});
 			} else {
 				toast.error((err as Error)?.message || "Failed to download audio");
@@ -2709,7 +2754,20 @@ export const CloudFileManagerModal: FC = () => {
 											{uniqueSongsCount} {t("cloud.savedSongs", "Saved Songs")}
 										</Text>
 									</Flex>
-									<Flex align="center" gap="3">
+									<Flex align="center" gap="3" wrap="wrap">
+										<Flex align="center" gap="1">
+											<span
+												style={{
+													width: 6,
+													height: 6,
+													borderRadius: "50%",
+													backgroundColor: "var(--amber-9)",
+												}}
+											/>
+											<Text size="1" color="gray">
+												{inProgressCount} {t("ttmlChecklist.pending", "In Progress")}
+											</Text>
+										</Flex>
 										<Flex align="center" gap="1">
 											<span
 												style={{
@@ -2717,6 +2775,19 @@ export const CloudFileManagerModal: FC = () => {
 													height: 6,
 													borderRadius: "50%",
 													backgroundColor: "var(--green-9)",
+												}}
+											/>
+											<Text size="1" color="gray">
+												{completedCount} {t("ttmlChecklist.completed", "Completed")}
+											</Text>
+										</Flex>
+										<Flex align="center" gap="1">
+											<span
+												style={{
+													width: 6,
+													height: 6,
+													borderRadius: "50%",
+													backgroundColor: "var(--accent-9)",
 												}}
 											/>
 											<Text size="1" color="gray">
@@ -2804,6 +2875,12 @@ export const CloudFileManagerModal: FC = () => {
 									<Select.Item value="lines-desc">
 										{t("cloud.sortLinesDesc", "Most Lines")}
 									</Select.Item>
+									<Select.Item value="status-completed">
+										{t("cloud.sortCompletedFirst", "Completed First")}
+									</Select.Item>
+									<Select.Item value="status-pending">
+										{t("cloud.sortInProgressFirst", "In Progress First")}
+									</Select.Item>
 								</Select.Content>
 							</Select.Root>
 
@@ -2861,6 +2938,104 @@ export const CloudFileManagerModal: FC = () => {
 													borderRadius: "2px",
 													backgroundColor: "var(--accent-9)",
 													boxShadow: "0 0 6px var(--accent-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
+
+								<Tooltip
+									content={`${t("ttmlChecklist.pending", "In Progress")} (${inProgressCount})`}
+								>
+									<button
+										type="button"
+										onClick={() => setFilterTab("pending")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "pending"
+													? "var(--color-surface)"
+													: "transparent",
+											color:
+												filterTab === "pending"
+													? "var(--amber-11)"
+													: "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "pending"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<Timer16Regular style={{ width: 16, height: 16 }} />
+										{filterTab === "pending" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--amber-9)",
+													boxShadow: "0 0 6px var(--amber-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
+
+								<Tooltip
+									content={`${t("ttmlChecklist.completed", "Completed")} (${completedCount})`}
+								>
+									<button
+										type="button"
+										onClick={() => setFilterTab("completed")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "completed"
+													? "var(--color-surface)"
+													: "transparent",
+											color:
+												filterTab === "completed"
+													? "var(--green-11)"
+													: "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "completed"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<CheckmarkCircle16Filled
+											style={{ width: 16, height: 16 }}
+										/>
+										{filterTab === "completed" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--green-9)",
+													boxShadow: "0 0 6px var(--green-9)",
 												}}
 											/>
 										)}

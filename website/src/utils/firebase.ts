@@ -167,6 +167,9 @@ export async function removeFromFinishedList(ttml: FinishedTTML, currentUserUid:
 export function isTTMLPubliclyOptedIn(data: DocumentData): boolean {
   return (
     data.publishedToCommunity === true ||
+    data.isPublic === true ||
+    Boolean(data.publishedToCommunity) ||
+    Boolean(data.isPublic) ||
     (Array.isArray(data.tags) && data.tags.includes("community"))
   );
 }
@@ -279,18 +282,20 @@ export function deduplicateAndMergeTTMLs(rawDocs: FinishedTTML[]): FinishedTTML[
   );
 }
 
-export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
+export async function fetchRawPublicTTMLs(): Promise<FinishedTTML[]> {
   if (!db) return FEATURED_FINISHED_TTMLS;
 
   const rawDocs: FinishedTTML[] = [];
+  const seenDocIds = new Set<string>();
 
   try {
     // 1. Query collection "finished_ttmls" (opt-in community shares)
     try {
-      const snap = await getDocs(query(collection(db, "finished_ttmls"), limit(100)));
+      const snap = await getDocs(query(collection(db, "finished_ttmls"), limit(500)));
       snap.forEach((docSnap) => {
         const data = docSnap.data();
-        if (isTTMLPubliclyOptedIn(data)) {
+        if (isTTMLPubliclyOptedIn(data) && !seenDocIds.has(docSnap.id)) {
+          seenDocIds.add(docSnap.id);
           rawDocs.push(parseTTMLDoc(docSnap.id, data));
         }
       });
@@ -300,10 +305,11 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
 
     // 2. Query collection "public_ttmls"
     try {
-      const snap = await getDocs(query(collection(db, "public_ttmls"), limit(100)));
+      const snap = await getDocs(query(collection(db, "public_ttmls"), limit(500)));
       snap.forEach((docSnap) => {
         const data = docSnap.data();
-        if (isTTMLPubliclyOptedIn(data)) {
+        if (isTTMLPubliclyOptedIn(data) && !seenDocIds.has(docSnap.id)) {
+          seenDocIds.add(docSnap.id);
           rawDocs.push(parseTTMLDoc(docSnap.id, data));
         }
       });
@@ -313,10 +319,11 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
 
     // 3. Query collectionGroup "ttmls", but ONLY include documents where user explicitly opted in to community
     try {
-      const snap = await getDocs(query(collectionGroup(db, "ttmls"), limit(100)));
+      const snap = await getDocs(query(collectionGroup(db, "ttmls"), limit(1000)));
       snap.forEach((docSnap) => {
         const data = docSnap.data();
-        if (isTTMLPubliclyOptedIn(data)) {
+        if (isTTMLPubliclyOptedIn(data) && !seenDocIds.has(docSnap.id)) {
+          seenDocIds.add(docSnap.id);
           const authorUidFromPath = docSnap.ref.parent?.parent?.id;
           rawDocs.push(parseTTMLDoc(docSnap.id, data, authorUidFromPath));
         }
@@ -328,6 +335,11 @@ export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
     console.error("Error connecting to Firebase:", err);
   }
 
+  return rawDocs;
+}
+
+export async function fetchFinishedTTMLs(): Promise<FinishedTTML[]> {
+  const rawDocs = await fetchRawPublicTTMLs();
   return deduplicateAndMergeTTMLs(rawDocs);
 }
 
@@ -523,13 +535,13 @@ export async function fetchUserProfilesWithStats(): Promise<{
   profiles: UserProfileStats[];
   globalStats: CommunityGlobalStats;
 }> {
-  const songs = await fetchFinishedTTMLs();
+  const songs = await fetchRawPublicTTMLs();
 
   // Fetch registered user profiles for rich avatar & up-to-date display name
   const userDocsMap = new Map<string, { displayName?: string; photoURL?: string }>();
   if (db) {
     try {
-      const snap = await getDocs(query(collection(db, "users"), limit(150)));
+      const snap = await getDocs(query(collection(db, "users"), limit(500)));
       snap.forEach((docSnap) => {
         const data = docSnap.data();
         userDocsMap.set(docSnap.id, {
@@ -548,31 +560,14 @@ export async function fetchUserProfilesWithStats(): Promise<{
       uid: string;
       displayName: string;
       photoURL?: string;
-      songs: FinishedTTML[];
+      songMap: Map<string, FinishedTTML>;
       artistsSet: Set<string>;
-      totalLines: number;
-      totalDurationMs: number;
-      wordSyncSongs: number;
-      lineSyncSongs: number;
       firstContribution: number;
       lastContribution: number;
     }
   >();
 
-  const allArtistsSet = new Set<string>();
-  let globalTotalLines = 0;
-  let globalTotalDuration = 0;
-  let globalWordSync = 0;
-
   for (const song of songs) {
-    const isWord = isSongWordSync(song);
-    if (isWord) globalWordSync++;
-    globalTotalLines += song.lineCount || 0;
-    globalTotalDuration += song.durationMs || 0;
-    if (song.artist && song.artist.trim()) {
-      allArtistsSet.add(song.artist.trim().toLowerCase());
-    }
-
     const uid = song.authorUid || (song.authorName ? `author:${song.authorName.toLowerCase()}` : "community");
     const userDoc = song.authorUid ? userDocsMap.get(song.authorUid) : undefined;
     const displayName =
@@ -587,18 +582,13 @@ export async function fetchUserProfilesWithStats(): Promise<{
         uid: song.authorUid || uid,
         displayName,
         photoURL,
-        songs: [],
+        songMap: new Map<string, FinishedTTML>(),
         artistsSet: new Set<string>(),
-        totalLines: 0,
-        totalDurationMs: 0,
-        wordSyncSongs: 0,
-        lineSyncSongs: 0,
         firstContribution: song.createdAt || Date.now(),
         lastContribution: song.updatedAt || song.createdAt || Date.now(),
       };
       creatorsMap.set(uid, creator);
     } else {
-      // Prioritize registered user doc or better non-generic displayName
       if (userDoc?.displayName) {
         creator.displayName = userDoc.displayName;
       } else if (!creator.displayName || creator.displayName.startsWith("Creator (")) {
@@ -609,16 +599,25 @@ export async function fetchUserProfilesWithStats(): Promise<{
       }
     }
 
-    creator.songs.push(song);
+    // Deduplicate songs PER CREATOR (so different versions of same song are merged into 1 song entry for this creator)
+    const songKey = getSongKey(song.title, song.artist);
+    const existing = creator.songMap.get(songKey);
+    if (!existing) {
+      creator.songMap.set(songKey, { ...song });
+    } else {
+      const songTime = song.updatedAt || song.createdAt || 0;
+      const existingTime = existing.updatedAt || existing.createdAt || 0;
+      if (songTime > existingTime) {
+        const merged = { ...song };
+        if (!merged.rawTTML && existing.rawTTML) merged.rawTTML = existing.rawTTML;
+        creator.songMap.set(songKey, merged);
+      } else if (!existing.rawTTML && song.rawTTML) {
+        existing.rawTTML = song.rawTTML;
+      }
+    }
+
     if (song.artist && song.artist.trim()) {
       creator.artistsSet.add(song.artist.trim());
-    }
-    creator.totalLines += song.lineCount || 0;
-    creator.totalDurationMs += song.durationMs || 0;
-    if (isWord) {
-      creator.wordSyncSongs++;
-    } else {
-      creator.lineSyncSongs++;
     }
 
     const t = song.updatedAt || song.createdAt || 0;
@@ -632,29 +631,63 @@ export async function fetchUserProfilesWithStats(): Promise<{
     }
   }
 
-  const profiles: UserProfileStats[] = Array.from(creatorsMap.values()).map((c) => ({
-    uid: c.uid,
-    displayName: c.displayName,
-    photoURL: c.photoURL,
-    isModerator: isUserModerator(c.uid),
-    totalSongs: c.songs.length,
-    totalLines: c.totalLines,
-    totalDurationMs: c.totalDurationMs,
-    wordSyncSongs: c.wordSyncSongs,
-    lineSyncSongs: c.lineSyncSongs,
-    uniqueArtists: Array.from(c.artistsSet),
-    firstContribution: c.firstContribution,
-    lastContribution: c.lastContribution,
-    songs: c.songs.sort(
-      (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
-    ),
-  }));
+  const allArtistsSet = new Set<string>();
+  let globalTotalLines = 0;
+  let globalTotalDuration = 0;
+  let globalWordSync = 0;
+  let globalTotalSongs = 0;
 
-  // Sort creators by song count descending, then total lines
-  profiles.sort((a, b) => b.totalSongs - a.totalSongs || b.totalLines - a.totalLines);
+  const profiles: UserProfileStats[] = Array.from(creatorsMap.values()).map((c) => {
+    const creatorSongs = Array.from(c.songMap.values()).sort(
+      (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),
+    );
+
+    let cLines = 0;
+    let cDuration = 0;
+    let cWordSync = 0;
+    let cLineSync = 0;
+
+    for (const s of creatorSongs) {
+      cLines += s.lineCount || 0;
+      cDuration += s.durationMs || 0;
+      const isWord = isSongWordSync(s);
+      if (isWord) {
+        cWordSync++;
+      } else {
+        cLineSync++;
+      }
+      if (s.artist && s.artist.trim()) {
+        allArtistsSet.add(s.artist.trim().toLowerCase());
+      }
+    }
+
+    globalTotalLines += cLines;
+    globalTotalDuration += cDuration;
+    globalWordSync += cWordSync;
+    globalTotalSongs += creatorSongs.length;
+
+    return {
+      uid: c.uid,
+      displayName: c.displayName,
+      photoURL: c.photoURL,
+      isModerator: isUserModerator(c.uid),
+      totalSongs: creatorSongs.length,
+      totalLines: cLines,
+      totalDurationMs: cDuration,
+      wordSyncSongs: cWordSync,
+      lineSyncSongs: cLineSync,
+      uniqueArtists: Array.from(c.artistsSet),
+      firstContribution: c.firstContribution,
+      lastContribution: c.lastContribution,
+      songs: creatorSongs,
+    };
+  });
+
+  // Sort profiles by total lines descending (standard leaderboard ranking)
+  profiles.sort((a, b) => b.totalLines - a.totalLines || b.totalSongs - a.totalSongs);
 
   const globalStats: CommunityGlobalStats = {
-    totalSongs: songs.length,
+    totalSongs: globalTotalSongs,
     totalLines: globalTotalLines,
     totalDurationMs: globalTotalDuration,
     totalCreators: profiles.length,
@@ -663,6 +696,129 @@ export async function fetchUserProfilesWithStats(): Promise<{
   };
 
   return { profiles, globalStats };
+}
+
+export async function fetchUserProfileDirect(userUid: string): Promise<UserProfileStats | null> {
+  if (!db || !userUid) return null;
+
+  try {
+    // 1. Fetch user profile details
+    let displayName = `Creator (${userUid.slice(0, 6)})`;
+    let photoURL: string | undefined;
+
+    try {
+      const userSnap = await getDoc(doc(db, "users", userUid));
+      if (userSnap.exists()) {
+        const udata = userSnap.data();
+        displayName = udata.displayName || udata.name || displayName;
+        photoURL = udata.photoURL || udata.avatarUrl || udata.photoUrl;
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2. Fetch all user ttmls directly from users/{uid}/ttmls
+    const userTtmlsSnap = await getDocs(collection(db, "users", userUid, "ttmls"));
+    const rawUserDocs: FinishedTTML[] = [];
+
+    userTtmlsSnap.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (isTTMLPubliclyOptedIn(data)) {
+        rawUserDocs.push(parseTTMLDoc(docSnap.id, data, userUid));
+      }
+    });
+
+    // Also check finished_ttmls and public_ttmls for any docs authored by this user
+    try {
+      const finishedSnap = await getDocs(query(collection(db, "finished_ttmls"), limit(500)));
+      finishedSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if ((data.authorUid === userUid || data.author_uid === userUid) && isTTMLPubliclyOptedIn(data)) {
+          if (!rawUserDocs.some((d) => d.id === docSnap.id)) {
+            rawUserDocs.push(parseTTMLDoc(docSnap.id, data, userUid));
+          }
+        }
+      });
+    } catch {
+      // ignore
+    }
+
+    if (rawUserDocs.length === 0) {
+      return null;
+    }
+
+    // Group songs per song key (just like groupCloudTTMLs in the app)
+    const songMap = new Map<string, FinishedTTML>();
+    for (const docItem of rawUserDocs) {
+      const key = getSongKey(docItem.title, docItem.artist);
+      const existing = songMap.get(key);
+      if (!existing) {
+        songMap.set(key, { ...docItem });
+      } else {
+        const docTime = docItem.updatedAt || docItem.createdAt || 0;
+        const existingTime = existing.updatedAt || existing.createdAt || 0;
+        if (docTime > existingTime) {
+          const merged = { ...docItem };
+          if (!merged.rawTTML && existing.rawTTML) merged.rawTTML = existing.rawTTML;
+          songMap.set(key, merged);
+        } else if (!existing.rawTTML && docItem.rawTTML) {
+          existing.rawTTML = docItem.rawTTML;
+        }
+      }
+    }
+
+    const uniqueSongs = Array.from(songMap.values()).sort(
+      (a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0)
+    );
+
+    const artistsSet = new Set<string>();
+    let totalLines = 0;
+    let totalDurationMs = 0;
+    let wordSyncSongs = 0;
+    let lineSyncSongs = 0;
+    let firstContribution = Date.now();
+    let lastContribution = 0;
+
+    for (const song of uniqueSongs) {
+      if (song.artist && song.artist.trim()) {
+        artistsSet.add(song.artist.trim());
+      }
+      totalLines += song.lineCount || 0;
+      totalDurationMs += song.durationMs || 0;
+      if (isSongWordSync(song)) {
+        wordSyncSongs++;
+      } else {
+        lineSyncSongs++;
+      }
+      const t = song.updatedAt || song.createdAt || 0;
+      if (t > 0) {
+        if (t < firstContribution) firstContribution = t;
+        if (t > lastContribution) lastContribution = t;
+      }
+      if (displayName.startsWith("Creator (") && song.authorName) {
+        displayName = song.authorName;
+      }
+    }
+
+    return {
+      uid: userUid,
+      displayName,
+      photoURL,
+      isModerator: isUserModerator(userUid),
+      totalSongs: uniqueSongs.length,
+      totalLines,
+      totalDurationMs,
+      wordSyncSongs,
+      lineSyncSongs,
+      uniqueArtists: Array.from(artistsSet),
+      firstContribution: firstContribution === Date.now() ? undefined : firstContribution,
+      lastContribution: lastContribution === 0 ? undefined : lastContribution,
+      songs: uniqueSongs,
+    };
+  } catch (err) {
+    console.error("Error fetching direct user profile:", err);
+    return null;
+  }
 }
 
 export interface CloudSongStats {

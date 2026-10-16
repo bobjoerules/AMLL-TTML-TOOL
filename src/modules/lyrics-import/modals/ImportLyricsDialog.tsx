@@ -61,6 +61,7 @@ import {
 	jooxAudioQualityAtom,
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
+	splitBackgroundLyricsOnGeniusImportAtom,
 } from "$/modules/settings/states/index.ts";
 import {
 	segmentationEngineAtom,
@@ -98,12 +99,8 @@ import {
 	normalizeImportedLyricCyrillicEs,
 } from "$/utils/apostrophe-normalization";
 import { getGeniusKeyGuideUrl } from "$/utils/genius-guide";
-import { prepareLyricLine } from "$/utils/lyric-prep";
-import {
-	hasReviewableSections,
-	type ReviewedSection,
-	SectionImportReviewDialog,
-} from "./SectionImportReviewDialog";
+import { prepareLyricLine, splitBackgroundLine } from "$/utils/lyric-prep";
+import type { ReviewedSection } from "./SectionImportReviewDialog";
 
 type ImportSource = "lyrically" | "genius" | "lrclib" | "joox";
 
@@ -302,6 +299,9 @@ export const ImportLyricsDialog = ({
 		source === "genius",
 	);
 	const [autoDuet, setAutoDuet] = useAtom(autoDuetOnGeniusImportAtom);
+	const [splitBackgroundLyrics, setSplitBackgroundLyrics] = useAtom(
+		splitBackgroundLyricsOnGeniusImportAtom,
+	);
 
 	const detectedEngine = useMemo(
 		() => detectSyllabificationEngineFromText(editableLyrics),
@@ -336,8 +336,6 @@ export const ImportLyricsDialog = ({
 			);
 		}
 	}, [detectedEngine, savedSegmentationEngine]);
-	const [sectionReviewOpen, setSectionReviewOpen] = useState(false);
-	const [sectionReviewSubmitted, setSectionReviewSubmitted] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [geniusApiKey, setGeniusApiKey] = useAtom(geniusApiKeyAtom);
 	const [, setGeniusCategorizationEnabled] = useAtom(
@@ -928,9 +926,18 @@ export const ImportLyricsDialog = ({
 							.flatMap((line) =>
 								preserveHeaders && /^\[.+\]$/.test(line.trim())
 									? [line]
-									: prepareLyricLine(line).split("\n"),
+									: prepareLyricLine(line, true, {
+											splitBackground:
+												source === "genius" && splitBackgroundLyrics,
+									  }).split("\n"),
 							)
-					: editableLyrics.split("\n")
+					: editableLyrics
+							.split("\n")
+							.flatMap((line) =>
+								source === "genius" && splitBackgroundLyrics
+									? splitBackgroundLine(line)
+									: [line],
+							)
 			).map((line) => line.trim());
 
 			const slopPatterns = preserveHeaders ? [] : [/^\[.*\]$/];
@@ -974,7 +981,7 @@ export const ImportLyricsDialog = ({
 			if (downloadAudio && selectedHit) {
 				const trackTitle = selectedHit.name;
 				const trackArtist = selectedHit.artist;
-				toast.info(
+				const audioToastId = toast.loading(
 					t(
 						"joox.downloadingAudio",
 						'[Beta] Downloading audio for "{title}"...',
@@ -982,6 +989,11 @@ export const ImportLyricsDialog = ({
 							title: trackTitle,
 						},
 					),
+					{
+						autoClose: false,
+						closeButton: false,
+						closeOnClick: false,
+					},
 				);
 
 				void (async () => {
@@ -1032,12 +1044,29 @@ export const ImportLyricsDialog = ({
 							);
 							(audioFile as any).isAutoDownloaded = true;
 							await audioEngine.loadMusic(audioFile, false, true);
-							toast.success(
-								t("joox.audioLoaded", 'Loaded audio for "{title}"', {
+							toast.update(audioToastId, {
+								render: t("joox.audioLoaded", 'Loaded audio for "{title}"', {
 									title: trackTitle,
 								}),
-							);
+								type: "success",
+								isLoading: false,
+								autoClose: 3000,
+								closeButton: true,
+								closeOnClick: true,
+							});
 						} else {
+							toast.update(audioToastId, {
+								render: t(
+									"joox.audioNotFound",
+									'Could not find matching audio for "{title}" on JOOX',
+									{ title: trackTitle },
+								),
+								type: "warning",
+								isLoading: false,
+								autoClose: 4000,
+								closeButton: true,
+								closeOnClick: true,
+							});
 							setJooxAudioSearch({
 								open: true,
 								title: trackTitle,
@@ -1046,6 +1075,20 @@ export const ImportLyricsDialog = ({
 						}
 					} catch (audioErr) {
 						console.warn("Audio download failed:", audioErr);
+						toast.update(audioToastId, {
+							render: t(
+								"joox.audioFailed",
+								"Could not download audio: {error}",
+								{
+									error: (audioErr as Error)?.message || "Unknown error",
+								},
+							),
+							type: "error",
+							isLoading: false,
+							autoClose: 5000,
+							closeButton: true,
+							closeOnClick: true,
+						});
 						setJooxAudioSearch({
 							open: true,
 							title: trackTitle,
@@ -1258,7 +1301,6 @@ export const ImportLyricsDialog = ({
 				),
 			);
 			setIsOpen(false);
-			setSectionReviewSubmitted(false);
 		},
 		[
 			editableLyrics,
@@ -1270,6 +1312,7 @@ export const ImportLyricsDialog = ({
 			store,
 			categorizeGeniusHeaders,
 			autoDuet,
+			splitBackgroundLyrics,
 			normalizeApostrophesOnImport,
 			normalizeCyrillicEsOnImport,
 			source,
@@ -1315,22 +1358,8 @@ export const ImportLyricsDialog = ({
 	);
 
 	const handleImport = useCallback(() => {
-		if (
-			source === "genius" &&
-			(categorizeGeniusHeaders || autoDuet) &&
-			hasReviewableSections(editableLyrics)
-		) {
-			setSectionReviewOpen(true);
-			return;
-		}
 		confirmAndPerformImport();
-	}, [
-		autoDuet,
-		categorizeGeniusHeaders,
-		confirmAndPerformImport,
-		editableLyrics,
-		source,
-	]);
+	}, [confirmAndPerformImport]);
 
 	// ── Lyrics preview pane ────────────────────────────────────────────────────
 	if (source === "genius" && !geniusApiKey) {
@@ -1458,11 +1487,7 @@ export const ImportLyricsDialog = ({
 
 	if (selectedHit) {
 		return (
-			<>
-				<Dialog.Root
-					open={isOpen && !sectionReviewOpen && !sectionReviewSubmitted}
-					onOpenChange={setIsOpen}
-				>
+			<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
 					<Dialog.Content
 						style={{
 							maxWidth: 820,
@@ -2001,6 +2026,53 @@ export const ImportLyricsDialog = ({
 														)}
 													</Text>
 												</Flex>
+
+												<Flex
+													align="center"
+													gap="2"
+													style={{
+														padding: "4px 8px",
+														borderRadius: "var(--radius-2)",
+														backgroundColor: splitBackgroundLyrics
+															? "var(--accent-a3)"
+															: "var(--gray-a2)",
+														border: `1px solid ${
+															splitBackgroundLyrics
+																? "var(--accent-a6)"
+																: "var(--gray-a4)"
+														}`,
+														transition: "all 0.15s ease",
+													}}
+												>
+													<Switch
+														id="chk-split-background-lyrics"
+														size="1"
+														checked={splitBackgroundLyrics}
+														onCheckedChange={(checked) => {
+															setSplitBackgroundLyrics(checked);
+														}}
+													/>
+													<Text
+														size="1"
+														as="label"
+														htmlFor="chk-split-background-lyrics"
+														weight={
+															splitBackgroundLyrics ? "medium" : "regular"
+														}
+														style={{
+															cursor: "pointer",
+															userSelect: "none",
+															color: splitBackgroundLyrics
+																? "var(--accent-11)"
+																: "var(--gray-12)",
+														}}
+													>
+														{t(
+															"genius.splitBackgroundLyrics",
+															"Split Background Vocals (; / Caps)",
+														)}
+													</Text>
+												</Flex>
 											</Flex>
 										)}
 									</Flex>
@@ -2038,20 +2110,6 @@ export const ImportLyricsDialog = ({
 						)}
 					</Dialog.Content>
 				</Dialog.Root>
-				<SectionImportReviewDialog
-					open={sectionReviewOpen}
-					sourceText={editableLyrics}
-					onSourceTextChange={setEditableLyrics}
-					onCancel={() => setSectionReviewOpen(false)}
-					onConfirm={(sections) => {
-						setSectionReviewSubmitted(true);
-						setSectionReviewOpen(false);
-						confirmAndPerformImport(sections, () =>
-							setSectionReviewSubmitted(false),
-						);
-					}}
-				/>
-			</>
 		);
 	}
 

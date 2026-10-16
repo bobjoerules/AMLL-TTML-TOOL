@@ -269,6 +269,7 @@ export const TopMenu: FC = () => {
 				"menu-checklist": () => menuRef.current.onOpenTTMLChecklist(),
 				"menu-grammar-check": () => menuRef.current.onOpenGrammarCheck(),
 				"menu-spotmatch": () => menuRef.current.onOpenSpotMatch(),
+				"menu-download-audio": () => menuRef.current.onDownloadAudio(),
 				"menu-start-guide": () => {
 					store.set(guideWelcomeOpenAtom, false);
 					store.set(guideExportedAtom, false);

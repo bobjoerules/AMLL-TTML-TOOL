@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import {
   fetchUserProfilesWithStats,
+  fetchUserProfileDirect,
   downloadTTMLFile,
   isSongWordSync,
   type UserProfileStats,
@@ -37,6 +38,8 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedUserUid, setSelectedUserUid] = useState<string | null>(initialUserUid || null);
+  const [directProfile, setDirectProfile] = useState<UserProfileStats | null>(null);
+  const [directLoading, setDirectLoading] = useState<boolean>(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
@@ -46,6 +49,12 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
       const data = await fetchUserProfilesWithStats();
       setProfiles(data.profiles);
       setGlobalStats(data.globalStats);
+      if (selectedUserUid) {
+        const direct = await fetchUserProfileDirect(selectedUserUid);
+        if (direct) {
+          setDirectProfile(direct);
+        }
+      }
     } catch (err) {
       console.error('Failed to load community stats:', err);
     } finally {
@@ -56,6 +65,47 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
   useEffect(() => {
     loadStats();
   }, []);
+
+  // Fetch full user profile directly from their user subcollection for 100% parity with app
+  useEffect(() => {
+    if (!selectedUserUid) {
+      setDirectProfile(null);
+      return;
+    }
+
+    let isCancelled = false;
+    setDirectLoading(true);
+
+    fetchUserProfileDirect(selectedUserUid)
+      .then((profile) => {
+        if (!isCancelled && profile) {
+          setDirectProfile(profile);
+          setProfiles((prev) => {
+            const idx = prev.findIndex(
+              (p) => p.uid.toLowerCase() === profile.uid.toLowerCase()
+            );
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = profile;
+              return updated;
+            }
+            return [profile, ...prev];
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load direct user profile:', err);
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setDirectLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedUserUid]);
 
   // Synchronize hash or pathname with selected user
   useEffect(() => {
@@ -129,6 +179,13 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
 
   const selectedProfile = useMemo(() => {
     if (!selectedUserUid) return null;
+    if (
+      directProfile &&
+      (directProfile.uid.toLowerCase() === selectedUserUid.toLowerCase() ||
+        directProfile.displayName.toLowerCase() === selectedUserUid.toLowerCase())
+    ) {
+      return directProfile;
+    }
     return (
       profiles.find(
         (p) =>
@@ -136,7 +193,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
           p.displayName.toLowerCase() === selectedUserUid.toLowerCase(),
       ) || null
     );
-  }, [profiles, selectedUserUid]);
+  }, [profiles, selectedUserUid, directProfile]);
 
   const filteredProfiles = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -205,10 +262,12 @@ export const StatsPage: React.FC<StatsPageProps> = ({ initialUserUid, onNavigate
         </div>
       </div>
 
-      {loading ? (
+      {loading || (selectedUserUid && directLoading && !selectedProfile) ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, gap: 16 }}>
           <Loader2 size={36} className="spin" color="var(--accent-pink)" />
-          <p style={{ color: 'var(--text-muted)' }}>Loading community statistics & creator profiles...</p>
+          <p style={{ color: 'var(--text-muted)' }}>
+            {selectedUserUid ? 'Loading creator profile and public songs...' : 'Loading community statistics & creator profiles...'}
+          </p>
         </div>
       ) : selectedProfile ? (
         /* SINGLE CREATOR PROFILE VIEW */

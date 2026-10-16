@@ -238,4 +238,34 @@ describe("first-class sections", () => {
 		expect(mergeUnassignedBlock(lyrics, 1, "previous")).toBe(true);
 		expect(lyrics.lyricLines[1].sectionId).toBe("verse");
 	});
+
+	it("preserves category sectionId and geniusHeader when a line is split into two", () => {
+		const lyrics = {
+			metadata: [],
+			sections: [{ id: "sec-chorus", label: "[Chorus 1]", category: "chorus" }],
+			lyricLines: [
+				{
+					...line("First part"),
+					sectionId: "sec-chorus",
+					geniusHeader: "[Chorus 1]",
+				},
+			],
+		} as TTMLLyric;
+
+		const original = lyrics.lyricLines[0];
+		const splitNewLine = {
+			...newLyricLine(),
+			sectionId: original.sectionId,
+			geniusHeader: original.geniusHeader,
+			words: [{ ...newLyricWord(), word: "Second part" }],
+		};
+		lyrics.lyricLines.splice(1, 0, splitNewLine);
+		repairSectionIntegrity(lyrics);
+
+		expect(lyrics.lyricLines).toHaveLength(2);
+		expect(lyrics.lyricLines[0].sectionId).toBe("sec-chorus");
+		expect(lyrics.lyricLines[1].sectionId).toBe("sec-chorus");
+		expect(lyrics.lyricLines[1].geniusHeader).toBe("[Chorus 1]");
+	});
 });
+

@@ -1578,6 +1578,11 @@ export const TTMLChecklistDialog = () => {
 											title: cloudDoc.title || "song",
 										},
 									),
+									{
+										autoClose: false,
+										closeButton: false,
+										closeOnClick: false,
+									},
 								);
 								const audioBlob = await downloadCloudAudio(
 									cloudDoc.audioUrl,
@@ -1600,6 +1605,8 @@ export const TTMLChecklistDialog = () => {
 										type: "success",
 										isLoading: false,
 										autoClose: 3000,
+										closeButton: true,
+										closeOnClick: true,
 									});
 								}
 							} catch (audioErr) {
@@ -1621,6 +1628,11 @@ export const TTMLChecklistDialog = () => {
 										'[Beta] Downloading audio for "{title}"…',
 										{ title: cloudDoc.title || "song" },
 									),
+									{
+										autoClose: false,
+										closeButton: false,
+										closeOnClick: false,
+									},
 								);
 								const result = await JooxApi.searchAndGetAudio(
 									cloudDoc.title || "",
@@ -1649,6 +1661,8 @@ export const TTMLChecklistDialog = () => {
 											type: "success",
 											isLoading: false,
 											autoClose: 3000,
+											closeButton: true,
+											closeOnClick: true,
 										});
 									}
 								} else {

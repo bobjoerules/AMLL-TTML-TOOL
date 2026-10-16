@@ -207,4 +207,61 @@ describe("JooxApi", () => {
 		searchSpy.mockRestore();
 		getDetailSpy.mockRestore();
 	});
+
+	it("heavily penalizes clean versions and prefers explicit or original tracks", async () => {
+		const { scoreCandidateTrack } = await import("./client");
+		const originalTrack = {
+			id: "20",
+			index: 1,
+			name: "Wet Dreamz",
+			artist: "J. Cole",
+			source: "JOOX",
+		};
+		const cleanTrack = {
+			id: "21",
+			index: 2,
+			name: "Wet Dreamz (Clean)",
+			artist: "J. Cole",
+			source: "JOOX",
+		};
+		const explicitTrack = {
+			id: "22",
+			index: 3,
+			name: "Wet Dreamz (Explicit)",
+			artist: "J. Cole",
+			source: "JOOX",
+		};
+
+		const scoreOriginal = scoreCandidateTrack(originalTrack, "Wet Dreamz", "J. Cole");
+		const scoreClean = scoreCandidateTrack(cleanTrack, "Wet Dreamz", "J. Cole");
+		const scoreExplicit = scoreCandidateTrack(explicitTrack, "Wet Dreamz", "J. Cole");
+
+		expect(scoreExplicit).toBeGreaterThan(scoreOriginal);
+		expect(scoreOriginal).toBeGreaterThan(scoreClean);
+		expect(scoreOriginal - scoreClean).toBeGreaterThanOrEqual(60);
+	});
+
+	it("rejects wrong song from same artist when candidate title merely contains the target title", async () => {
+		const { scoreCandidateTrack } = await import("./client");
+		const correctSong = {
+			id: "30",
+			index: 1,
+			name: "Hold On",
+			artist: "Drake",
+			source: "JOOX",
+		};
+		const wrongSongSameArtist = {
+			id: "31",
+			index: 2,
+			name: "Hold On, We're Going Home",
+			artist: "Drake",
+			source: "JOOX",
+		};
+
+		const scoreCorrect = scoreCandidateTrack(correctSong, "Hold On", "Drake");
+		const scoreWrong = scoreCandidateTrack(wrongSongSameArtist, "Hold On", "Drake");
+
+		expect(scoreCorrect).toBeGreaterThan(150);
+		expect(scoreWrong).toBe(-1); // Rejected
+	});
 });

@@ -95,6 +95,9 @@ const ToolMenuItems = () => {
 			>
 				{t("topBar.menu.spotMatch", "SpotMatch (Alternate Spotify IDs)...")}
 			</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={menu.onDownloadAudio}>
+				{t("topBar.menu.downloadAudio", "Download Audio...")}
+			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={menu.onOpenLatencyTest}>
 				{t("settingsDialog.common.latencyTest", "Latency Test...")}
 			</DropdownMenu.Item>

@@ -591,6 +591,8 @@
 			"preview": "Preview"
 		},
 		"sidePreview": "Preview Panel",
+		"openInGenius": "Open on Genius",
+		"noSongLoaded": "No song loaded",
 		"boykisser": "boykisser",
 		"appName": "Apple Music-like Lyrics TTML Tool",
 		"menu": {
@@ -632,6 +634,7 @@
 			"grammarCheck": "Grammar and Spelling Check...",
 			"statsAndProfiles": "User Profiles & Stats...",
 			"spotMatch": "SpotMatch (Alternate Spotify IDs)...",
+			"downloadAudio": "Download Audio...",
 			"tool": "Tools",
 			"importLyric": {
 				"import": "Import lyrics",
@@ -1100,6 +1103,7 @@
 		"importButton": "Import Lyrics",
 		"importTitle": "Import Lyrics from Genius",
 		"autoDuet": "Auto Duet by Singer",
+		"splitBackgroundLyrics": "Split Background Vocals (; / Caps)",
 		"searchPlaceholder": "Artist – Song title…",
 		"notFound": "No results found. Try different keywords.",
 		"noResult": "Enter a song name or artist to start."
@@ -1494,6 +1498,9 @@
 		"audioDownloadFailed": "Loaded TTML, but could not download attached audio.",
 		"deletedSuccess": "Deleted \"{title}\" from Cloud.",
 		"confirmDelete": "Are you sure you want to delete \"{title}\" from your Cloud library?",
+		"sortCompletedFirst": "Completed First",
+		"sortInProgressFirst": "In Progress First",
+		"sortLinesDesc": "Most Lines",
 		"onlineProfileTitle": "Online Creator Profile & Community Hub",
 		"onlineProfileDesc": "View your public profile, synced songs catalog, and community leaderboard stats on the web.",
 		"viewOnlineProfile": "View Public Profile",

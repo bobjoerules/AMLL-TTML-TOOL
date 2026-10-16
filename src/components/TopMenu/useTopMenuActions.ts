@@ -47,6 +47,7 @@ import {
 	timeShiftDialogAtom,
 	timeStretchDialogAtom,
 	ttmlChecklistDialogAtom,
+	jooxAudioSearchDialogAtom,
 } from "$/states/dialogs.ts";
 import { grammarCheckDialogAtom } from "$/modules/lyric-editor/modals/GrammarCheckDialog.tsx";
 import {
@@ -732,6 +733,27 @@ export const useTopMenuActions = () => {
 		openAccountSettings();
 	}, [openAccountSettings]);
 
+	const onDownloadAudio = useCallback(() => {
+		const lyrics = store.get(lyricLinesAtom);
+		const titleMeta = lyrics.metadata.find(
+			(m) => m.name.toLowerCase() === "title",
+		);
+		const artistMeta = lyrics.metadata.find(
+			(m) => m.name.toLowerCase() === "artist",
+		);
+		const title =
+			titleMeta?.value[0]?.trim() ||
+			saveFileName.replace(/\.(ttml|lrc|txt)$/i, "").trim() ||
+			"";
+		const artist = artistMeta?.value[0]?.trim() || "";
+
+		store.set(jooxAudioSearchDialogAtom, {
+			open: true,
+			title,
+			artist,
+		});
+	}, [saveFileName, store]);
+
 	return {
 		newFileKey,
 		newWindowKey,
@@ -786,6 +808,7 @@ export const useTopMenuActions = () => {
 		onOpenGrammarCheck,
 		onOpenStatsAndProfiles,
 		onOpenSpotMatch,
+		onDownloadAudio,
 		onOpenGitHub,
 		onOpenWiki,
 	};

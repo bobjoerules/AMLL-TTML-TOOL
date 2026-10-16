@@ -40,6 +40,11 @@ export const autoDuetOnGeniusImportAtom = atomWithStorage<boolean>(
 	false,
 );
 
+export const splitBackgroundLyricsOnGeniusImportAtom = atomWithStorage<boolean>(
+	"splitBackgroundLyricsOnGeniusImport",
+	true,
+);
+
 export const jooxAudioQualityAtom = atomWithStorage<string>(
 	"jooxAudioQuality",
 	"320",

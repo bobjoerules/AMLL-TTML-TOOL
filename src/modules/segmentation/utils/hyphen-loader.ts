@@ -78,8 +78,10 @@ export async function loadHyphenator(
 
 		const func = module.hyphenateSync;
 		if (typeof func === "function") {
-			hyphenatorCache[lang] = func;
-			return func;
+			const wrapped: HyphenatorFunc = (text: string) =>
+				func(text, { minWordLength: 3 });
+			hyphenatorCache[lang] = wrapped;
+			return wrapped;
 		}
 		return null;
 	} catch (error) {

@@ -51,6 +51,44 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v3.2.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 16, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Direct Lyric Import:</b> Skipped the intermediate section review screen when importing lyrics from Genius and plain text, directly establishing sections and auto-duet assignments.
+								</Text>
+								<Text size="2">
+									• <b>Persistent Audio Download Indicator:</b> Made the audio download notification persist on screen until the track is completely downloaded and loaded into the audio engine.
+								</Text>
+								<Text size="2">
+									• <b>Enhanced Syllabification Engine:</b> Added hybrid TeX-based syllable splitting algorithm with customizable rules and restored the Syllable Split button in the segmentation module.
+								</Text>
+								<Text size="2">
+									• <b>Line Split Category Inheritance:</b> Splitting a lyric line now automatically preserves and inherits the original line's category.
+								</Text>
+								<Text size="2">
+									• <b>Genius Background Lyric Splitting:</b> Added an import toggle to automatically split background vocals containing semicolons or capitalized words into separate lines while cleaning punctuation delimiters.
+								</Text>
+								<Text size="2">
+									• <b>TitleBar Genius Shortcut:</b> Added a dedicated Genius button in the title bar to open the song page in the browser, gracefully disabled when no song is loaded.
+								</Text>
+								<Text size="2">
+									• <b>Audio Downloader Accuracy & Menu Item:</b> Improved JOOX/online track search accuracy to avoid wrong songs or clean versions from the same artist, and added a "Download Audio..." item in the Tools menu.
+								</Text>
+								<Text size="2">
+									• <b>Cloud Storage Filter Parity:</b> Aligned cloud storage sort/filter options with the TTML checklist (All, In Progress, Completed).
+								</Text>
+								<Text size="2">
+									• <b>Website Song Statistics:</b> Fixed public song count syncing between the website statistics page and user profiles.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v3.1.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

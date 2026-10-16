@@ -350,13 +350,19 @@ export const ImportAppleTtmlDialog = () => {
 					});
 
 					if (!audioLoaded && (safeTitle || safeArtist)) {
+						let audioToastId: any = null;
 						try {
-							toast.info(
+							audioToastId = toast.loading(
 								t(
 									"joox.downloadingAudio",
 									'[Beta] Downloading audio for "{title}"...',
 									{ title: safeTitle },
 								),
+								{
+									autoClose: false,
+									closeButton: false,
+									closeOnClick: false,
+								},
 							);
 							const result = await JooxApi.searchAndGetAudio(
 								safeTitle,
@@ -372,12 +378,29 @@ export const ImportAppleTtmlDialog = () => {
 								);
 								(audioFile as any).isAutoDownloaded = true;
 								await audioEngine.loadMusic(audioFile, false, true);
-								toast.success(
-									t("joox.audioLoaded", 'Loaded audio for "{title}"', {
+								toast.update(audioToastId, {
+									render: t("joox.audioLoaded", 'Loaded audio for "{title}"', {
 										title: safeTitle,
 									}),
-								);
+									type: "success",
+									isLoading: false,
+									autoClose: 3000,
+									closeButton: true,
+									closeOnClick: true,
+								});
 							} else {
+								toast.update(audioToastId, {
+									render: t(
+										"joox.audioNotFound",
+										'Could not find matching audio for "{title}" on JOOX',
+										{ title: safeTitle },
+									),
+									type: "warning",
+									isLoading: false,
+									autoClose: 4000,
+									closeButton: true,
+									closeOnClick: true,
+								});
 								setJooxAudioSearch({
 									open: true,
 									title: safeTitle,
@@ -386,6 +409,22 @@ export const ImportAppleTtmlDialog = () => {
 							}
 						} catch (apiErr) {
 							console.warn("Failed to auto-fetch audio from API:", apiErr);
+							if (audioToastId) {
+								toast.update(audioToastId, {
+									render: t(
+										"joox.audioFailed",
+										"Could not download audio: {error}",
+										{
+											error: (apiErr as Error)?.message || "Unknown error",
+										},
+									),
+									type: "error",
+									isLoading: false,
+									autoClose: 5000,
+									closeButton: true,
+									closeOnClick: true,
+								});
+							}
 							setJooxAudioSearch({
 								open: true,
 								title: safeTitle,

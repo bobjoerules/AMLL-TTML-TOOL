@@ -250,6 +250,11 @@ export const JooxAudioSearchDialog = () => {
 			t("joox.downloadingAudio", '[Beta] Downloading audio for "{title}"...', {
 				title: track.name,
 			}),
+			{
+				autoClose: false,
+				closeButton: false,
+				closeOnClick: false,
+			},
 		);
 
 		try {
@@ -352,6 +357,8 @@ export const JooxAudioSearchDialog = () => {
 				type: "success",
 				isLoading: false,
 				autoClose: 3000,
+				closeButton: true,
+				closeOnClick: true,
 			});
 
 			handleClose();
@@ -364,6 +371,8 @@ export const JooxAudioSearchDialog = () => {
 				type: "error",
 				isLoading: false,
 				autoClose: 5000,
+				closeButton: true,
+				closeOnClick: true,
 			});
 		} finally {
 			setDownloadingTrackId(null);

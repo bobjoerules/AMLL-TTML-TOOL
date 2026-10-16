@@ -33,6 +33,7 @@ import {
 	getCombineWordSelection,
 } from "../utils/combine-words";
 import { normalizeLineTime } from "../utils/normalize-line-time";
+import { repairSectionIntegrity } from "../utils/section-system";
 
 const selectedLinesSizeAtom = atom((get) => get(selectedLinesAtom).size);
 const selectedWordsSizeAtom = atom((get) => get(selectedWordsAtom).size);
@@ -306,14 +307,20 @@ export const LyricWordMenu = ({
 				});
 				if (deletedAtBounds) normalizeLineTime(line);
 			}
+			const targetLine = state.lyricLines[lineIndex];
 			const newLine = {
 				...newLyricLine(),
-				isBG: state.lyricLines[lineIndex].isBG,
-				isDuet: state.lyricLines[lineIndex].isDuet,
+				isBG: targetLine?.isBG,
+				isDuet: targetLine?.isDuet,
+				agent: targetLine?.agent,
+				role: targetLine?.role,
+				sectionId: targetLine?.sectionId,
+				geniusHeader: targetLine?.geniusHeader,
 			} as LyricLine;
 			newLine.words.push(...selectedWords);
 			normalizeLineTime(newLine);
 			state.lyricLines.splice(lineIndex + 1, 0, newLine);
+			repairSectionIntegrity(state);
 		});
 	}
 
@@ -330,11 +337,16 @@ export const LyricWordMenu = ({
 				...newLyricLine(),
 				isBG: line.isBG,
 				isDuet: line.isDuet,
+				agent: line.agent,
+				role: line.role,
+				sectionId: line.sectionId,
+				geniusHeader: line.geniusHeader,
 			} as LyricLine;
 			newLine.words.push(...wordsToMove);
 			normalizeLineTime(line);
 			normalizeLineTime(newLine);
 			state.lyricLines.splice(lineIndex + 1, 0, newLine);
+			repairSectionIntegrity(state);
 		});
 	}
 };

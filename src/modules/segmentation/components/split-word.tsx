@@ -31,7 +31,10 @@ import type {
 	SegmentationConfig,
 } from "$/modules/segmentation/types";
 import { loadHyphenator } from "$/modules/segmentation/utils/hyphen-loader.ts";
-import { getHyphenationLanguage } from "$/modules/segmentation/utils/syllabification-engines";
+import {
+	getHyphenationLanguage,
+	getSyllabificationEngine,
+} from "$/modules/segmentation/utils/syllabification-engines";
 import {
 	recalculateWordTime,
 	segmentWord,
@@ -295,15 +298,19 @@ export const SplitWordDialog = memo(() => {
 							<Button
 								size="1"
 								variant="soft"
-								disabled={!activeHyphenator || !targetWordText}
+								disabled={!targetWordText}
 								onClick={() => {
-									if (!activeHyphenator || !targetWordText) return;
-									const hyphenated = activeHyphenator(targetWordText);
-									const parts = hyphenated.split("\u00AD");
+									if (!targetWordText) return;
+									const parts = activeHyphenator
+										? activeHyphenator(targetWordText)
+												.split("\u00AD")
+												.filter(Boolean)
+										: getSyllabificationEngine(engine).split(targetWordText);
+									if (parts.length <= 1) return;
 									const indices = new Set<number>();
 									let currentIndex = 0;
 									for (let i = 0; i < parts.length - 1; i++) {
-										currentIndex += parts[i].length;
+										currentIndex += Array.from(parts[i]).length;
 										indices.add(currentIndex);
 									}
 									setSplitIndices(indices);

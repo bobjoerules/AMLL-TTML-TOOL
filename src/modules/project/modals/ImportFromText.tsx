@@ -63,11 +63,7 @@ import {
 } from "$/utils/apostrophe-normalization";
 import { getGeniusHeader } from "$/modules/lyric-editor/utils/genius-sections.ts";
 import { applyReviewedSections } from "$/modules/lyric-editor/utils/section-system.ts";
-import {
-	hasReviewableSections,
-	type ReviewedSection,
-	SectionImportReviewDialog,
-} from "$/modules/lyrics-import/modals/SectionImportReviewDialog";
+import type { ReviewedSection } from "$/modules/lyrics-import/modals/SectionImportReviewDialog";
 import { pluginManager } from "$/modules/plugins/plugin-manager";
 import styles from "./ImportFromText.module.css";
 
@@ -179,8 +175,6 @@ export const ImportFromText = () => {
 	);
 	const setValue = useSetAtom(textValueAtom);
 	const textValue = useAtomValue(textValueAtom);
-	const [sectionReviewOpen, setSectionReviewOpen] = useState(false);
-	const [sectionReviewSubmitted, setSectionReviewSubmitted] = useState(false);
 
 	// Restore headers if the user enables the feature while we have a pending restoration
 	useEffect(() => {
@@ -538,13 +532,10 @@ export const ImportFromText = () => {
 	]);
 
 	return (
-		<>
-			<Dialog.Root
-				open={
-					importFromTextDialog && !sectionReviewOpen && !sectionReviewSubmitted
-				}
-				onOpenChange={setImportFromTextDialog}
-			>
+		<Dialog.Root
+			open={importFromTextDialog}
+			onOpenChange={setImportFromTextDialog}
+		>
 				<Dialog.Content maxWidth="1100px" maxHeight="90vh">
 					<VisuallyHidden>
 						<Dialog.Description>
@@ -601,13 +592,6 @@ export const ImportFromText = () => {
 											onClick={() => {
 												try {
 													const text = store.get(textValueAtom);
-													if (
-														geniusCategorizationEnabled &&
-														hasReviewableSections(text)
-													) {
-														setSectionReviewOpen(true);
-														return;
-													}
 													const importAction = () => {
 														onImport(text);
 														setImportFromTextDialog(false);
@@ -1189,39 +1173,5 @@ export const ImportFromText = () => {
 					</Tabs.Root>
 				</Dialog.Content>
 			</Dialog.Root>
-			<SectionImportReviewDialog
-				open={sectionReviewOpen}
-				sourceText={textValue}
-				onSourceTextChange={setValue}
-				onCancel={() => setSectionReviewOpen(false)}
-				onConfirm={(sections) => {
-					const importAction = () => {
-						onImport(store.get(textValueAtom), sections);
-						setSectionReviewOpen(false);
-						setSectionReviewSubmitted(false);
-						setImportFromTextDialog(false);
-					};
-					if (isDirty) {
-						setSectionReviewSubmitted(true);
-						setSectionReviewOpen(false);
-						setConfirmDialog({
-							open: true,
-							title: t(
-								"confirmDialog.importFile.title",
-								"Confirm lyric import",
-							),
-							description: t(
-								"confirmDialog.importFile.description",
-								"This project has unsaved changes. Importing will replace its lyrics. Continue?",
-							),
-							onConfirm: importAction,
-							onCancel: () => setSectionReviewSubmitted(false),
-						});
-					} else {
-						importAction();
-					}
-				}}
-			/>
-		</>
 	);
 };

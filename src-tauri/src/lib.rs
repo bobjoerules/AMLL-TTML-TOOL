@@ -660,6 +660,13 @@ pub fn run() {
                     true,
                     None::<&str>,
                 )?;
+                let download_audio_item = MenuItem::with_id(
+                    app,
+                    "menu-download-audio",
+                    "Download Audio...",
+                    true,
+                    None::<&str>,
+                )?;
 
                 tools_menu.append(&auto_segment_item)?;
                 tools_menu.append(&segment_menu)?;
@@ -672,6 +679,7 @@ pub fn run() {
                 tools_menu.append(&checklist_item)?;
                 tools_menu.append(&grammar_check_item)?;
                 tools_menu.append(&spotmatch_item)?;
+                tools_menu.append(&download_audio_item)?;
                 tools_menu.append(&latency_item)?;
 
                 // 5. Help menu

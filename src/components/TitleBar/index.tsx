@@ -6,17 +6,19 @@ import {
 	Text,
 	Tooltip,
 } from "@radix-ui/themes";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
 import { type FC, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import WindowControls from "$/components/WindowControls";
+import { openExternal } from "$/utils/openExternal";
 import {
 	boykisserModeAtom,
 	boykisserUnlockedAtom,
 	experimentalFeaturesDialogOpenAtom,
 } from "$/modules/settings/states";
 import {
+	ArrowUpRight16Regular,
 	Beaker24Regular,
 	Edit24Regular,
 	Timer24Regular,
@@ -32,12 +34,15 @@ import {
 	keySwitchSyncModeAtom,
 } from "$/states/keybindings.ts";
 import {
+	lyricLinesAtom,
+	saveFileNameAtom,
 	selectedLinesAtom,
 	selectedWordsAtom,
 	showPreviewPanelAtom,
 	ToolMode,
 	toolModeAtom,
 } from "$/states/main.ts";
+import { loadedAudioFileNameAtom } from "$/modules/audio/states/index.ts";
 import { useKeyBindingAtom } from "$/utils/keybindings.ts";
 import { TopMenu } from "../TopMenu/index.tsx";
 import styles from "./index.module.css";
@@ -64,6 +69,76 @@ export const TitleBar: FC = () => {
 	const setExperimentalDialogOpen = useSetAtom(
 		experimentalFeaturesDialogOpenAtom,
 	);
+
+	const lyricLines = useAtomValue(lyricLinesAtom);
+	const saveFileName = useAtomValue(saveFileNameAtom);
+	const loadedAudioFileName = useAtomValue(loadedAudioFileNameAtom);
+
+	const isSongLoaded = useMemo(() => {
+		if (lyricLines.lyricLines.length > 0) return true;
+		if (loadedAudioFileName) return true;
+		const hasTitle = !!lyricLines.metadata.find(
+			(m) => m.name.toLowerCase() === "title",
+		)?.value[0]?.trim();
+		const hasArtist = !!lyricLines.metadata.find(
+			(m) => m.name.toLowerCase() === "artist",
+		)?.value[0]?.trim();
+		if (hasTitle || hasArtist) return true;
+		const geniusUrlMeta = lyricLines.metadata.find((m) =>
+			m.value.some((v) => v.toLowerCase().includes("genius.com/")),
+		);
+		if (geniusUrlMeta) return true;
+		if (
+			saveFileName &&
+			saveFileName !== "lyric.ttml" &&
+			saveFileName !== "untitled.ttml"
+		) {
+			return true;
+		}
+		return false;
+	}, [lyricLines, loadedAudioFileName, saveFileName]);
+
+	const handleOpenGenius = useCallback(() => {
+		if (!isSongLoaded) return;
+
+		const titleMeta = lyricLines.metadata.find(
+			(m) => m.name.toLowerCase() === "title",
+		);
+		const artistMeta = lyricLines.metadata.find(
+			(m) => m.name.toLowerCase() === "artist",
+		);
+		const geniusUrlMeta = lyricLines.metadata.find((m) =>
+			m.value.some((v) => v.toLowerCase().includes("genius.com/")),
+		);
+
+		if (geniusUrlMeta) {
+			const directUrl = geniusUrlMeta.value.find((v) =>
+				v.toLowerCase().includes("genius.com/"),
+			);
+			if (directUrl) {
+				void openExternal(directUrl.trim());
+				return;
+			}
+		}
+
+		const title =
+			titleMeta?.value[0]?.trim() ||
+			(saveFileName &&
+			saveFileName !== "lyric.ttml" &&
+			saveFileName !== "untitled.ttml"
+				? saveFileName.replace(/\.(ttml|lrc|txt)$/i, "").trim()
+				: "");
+		const artist = artistMeta?.value[0]?.trim() || "";
+
+		if (title || artist) {
+			const query = artist && title ? `${artist} ${title}` : title || artist;
+			void openExternal(
+				`https://genius.com/search?q=${encodeURIComponent(query)}`,
+			);
+		} else {
+			void openExternal("https://genius.com");
+		}
+	}, [isSongLoaded, lyricLines.metadata, saveFileName]);
 
 	const onSwitchEditMode = useCallback(() => {
 		setToolMode(ToolMode.Edit);
@@ -201,6 +276,65 @@ export const TitleBar: FC = () => {
 							</Button>
 						</Tooltip>
 					)}
+
+					<Tooltip
+						content={
+							isSongLoaded
+								? t("topBar.openInGenius", "Open on Genius")
+								: t("topBar.noSongLoaded", "No song loaded")
+						}
+					>
+						<span
+							style={{
+								display: "inline-flex",
+								cursor: isSongLoaded ? undefined : "not-allowed",
+							}}
+						>
+							<Button
+								size="2"
+								variant="soft"
+								color="gray"
+								disabled={!isSongLoaded}
+								onClick={handleOpenGenius}
+								style={{
+									cursor: isSongLoaded ? "pointer" : "not-allowed",
+									fontWeight: 500,
+									display: "inline-flex",
+									alignItems: "center",
+									gap: "5px",
+									opacity: isSongLoaded ? 1 : 0.45,
+									filter: isSongLoaded ? "none" : "grayscale(0.6)",
+									pointerEvents: isSongLoaded ? "auto" : "none",
+								}}
+								aria-label={t("topBar.openInGenius", "Open on Genius")}
+							>
+								<span
+									style={{
+										display: "inline-flex",
+										alignItems: "center",
+										justifyContent: "center",
+										width: "16px",
+										height: "16px",
+										borderRadius: "4px",
+										backgroundColor: isSongLoaded ? "#ffff64" : "#9ca3af",
+										color: "#000000",
+										fontWeight: 900,
+										fontSize: "11px",
+										fontFamily: "system-ui, sans-serif",
+										lineHeight: 1,
+									}}
+								>
+									G
+								</span>
+								<span className={styles.previewPanelLabel}>
+									Genius
+								</span>
+								<ArrowUpRight16Regular
+									style={{ width: "12px", height: "12px", opacity: 0.7 }}
+								/>
+							</Button>
+						</span>
+					</Tooltip>
 
 					{isUnlocked && !window.location.href.includes("spicylyrics.org") && (
 						<button

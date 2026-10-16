@@ -79,7 +79,7 @@ describe("syllabification engines", () => {
 	it("splits compound words with consonant codas correctly (e.g., blindfold, headlights)", () => {
 		const engine = getSyllabificationEngine("prosodic");
 		expect(engine.split("blindfold")).toEqual(["blind", "fold"]);
-		expect(engine.split("blindfolded")).toEqual(["blind", "fol", "ded"]);
+		expect(engine.split("blindfolded")).toEqual(["blind", "fold", "ed"]);
 		expect(engine.split("headlights")).toEqual(["head", "lights"]);
 		expect(engine.split("headlight")).toEqual(["head", "light"]);
 		expect(engine.split("headline")).toEqual(["head", "line"]);
@@ -106,5 +106,51 @@ describe("syllabification engines", () => {
 			"pra",
 			"szam",
 		]);
+	});
+
+	it("accurately splits common lyric words previously mishandled by compromise/prosodic", () => {
+		const engine = getSyllabificationEngine("prosodic");
+		expect(engine.split("forever")).toEqual(["for", "ev", "er"]);
+		expect(engine.split("water")).toEqual(["wa", "ter"]);
+		expect(engine.split("river")).toEqual(["riv", "er"]);
+		expect(engine.split("maybe")).toEqual(["may", "be"]);
+		expect(engine.split("baby")).toEqual(["ba", "by"]);
+		expect(engine.split("crazy")).toEqual(["cra", "zy"]);
+		expect(engine.split("music")).toEqual(["mu", "sic"]);
+		expect(engine.split("brother")).toEqual(["broth", "er"]);
+		expect(engine.split("mother")).toEqual(["moth", "er"]);
+		expect(engine.split("father")).toEqual(["fa", "ther"]);
+		expect(engine.split("sister")).toEqual(["sis", "ter"]);
+		expect(engine.split("different")).toEqual(["dif", "fer", "ent"]);
+
+		// Gerunds & participles
+		expect(engine.split("saying")).toEqual(["say", "ing"]);
+		expect(engine.split("crying")).toEqual(["cry", "ing"]);
+		expect(engine.split("trying")).toEqual(["try", "ing"]);
+		expect(engine.split("flying")).toEqual(["fly", "ing"]);
+		expect(engine.split("playing")).toEqual(["play", "ing"]);
+		expect(engine.split("praying")).toEqual(["pray", "ing"]);
+		expect(engine.split("falling")).toEqual(["fall", "ing"]);
+		expect(engine.split("singing")).toEqual(["sing", "ing"]);
+		expect(engine.split("screaming")).toEqual(["scream", "ing"]);
+		expect(engine.split("breathing")).toEqual(["breath", "ing"]);
+		expect(engine.split("laughing")).toEqual(["laugh", "ing"]);
+
+		// Compound words & morphemes
+		expect(engine.split("takeoff")).toEqual(["take", "off"]);
+		expect(engine.split("without")).toEqual(["with", "out"]);
+		expect(engine.split("within")).toEqual(["with", "in"]);
+		expect(engine.split("fireproof")).toEqual(["fire", "proof"]);
+		expect(engine.split("someone")).toEqual(["some", "one"]);
+		expect(engine.split("everyone")).toEqual(["eve", "ry", "one"]);
+		expect(engine.split("everybody")).toEqual(["eve", "ry", "bod", "y"]);
+
+		// Slang & monosyllables
+		expect(engine.split("gonna")).toEqual(["gon", "na"]);
+		expect(engine.split("wanna")).toEqual(["wan", "na"]);
+		expect(engine.split("gotta")).toEqual(["got", "ta"]);
+		expect(engine.split("cause")).toEqual(["cause"]);
+		expect(engine.split("bout")).toEqual(["bout"]);
+		expect(engine.split("til")).toEqual(["til"]);
 	});
 });

@@ -3,6 +3,7 @@ import nlpSpeech from "compromise-speech";
 import silabas from "silabas";
 import syllabify from "syllabify";
 import syllabifyFr from "syllabify-fr";
+import { hyphenateSync as hyphenateEnUs } from "hyphen/en-us";
 import prosodicDictionary from "../data/prosodic-dict.json";
 import type { SegmentationEngineId } from "../types";
 
@@ -171,25 +172,203 @@ const NEVER_SPLIT_WORDS = new Set([
 	"woah",
 	"whoa",
 	"yeah",
+	"aye",
+	"shh",
+	"psst",
+	"hmm",
 ]);
 
-const prosodicSplit = (word: string) => {
-	const key = word.toLowerCase();
+/**
+ * Curated exceptions and music/lyric morpheme boundaries that standard dictionaries
+ * or speech tokenizers often get wrong (e.g. compound words, gerunds, music slang).
+ */
+const LYRIC_EXCEPTIONS = new Map<string, string[]>(
+	Object.entries({
+		// Music slang and contractions
+		gonna: ["gon", "na"],
+		wanna: ["wan", "na"],
+		gotta: ["got", "ta"],
+		kinda: ["kin", "da"],
+		sorta: ["sor", "ta"],
+		lemme: ["lem", "me"],
+		gimme: ["gim", "me"],
+		coulda: ["could", "a"],
+		shoulda: ["should", "a"],
+		woulda: ["would", "a"],
+		cause: ["cause"],
+		bout: ["bout"],
+		til: ["til"],
+
+		// Common lyric words often left unsplit or awkward
+		forever: ["for", "ev", "er"],
+		forevermore: ["for", "ev", "er", "more"],
+		water: ["wa", "ter"],
+		river: ["riv", "er"],
+		maybe: ["may", "be"],
+		over: ["o", "ver"],
+		into: ["in", "to"],
+		onto: ["on", "to"],
+		upon: ["u", "pon"],
+
+		// Gerunds & participles
+		saying: ["say", "ing"],
+		praying: ["pray", "ing"],
+		crying: ["cry", "ing"],
+		trying: ["try", "ing"],
+		flying: ["fly", "ing"],
+		playing: ["play", "ing"],
+		staying: ["stay", "ing"],
+		dying: ["dy", "ing"],
+		falling: ["fall", "ing"],
+		calling: ["call", "ing"],
+		singing: ["sing", "ing"],
+		screaming: ["scream", "ing"],
+		breathing: ["breath", "ing"],
+		laughing: ["laugh", "ing"],
+
+		// Short 2-syllable -y words
+		baby: ["ba", "by"],
+		crazy: ["cra", "zy"],
+		lady: ["la", "dy"],
+		tiny: ["ti", "ny"],
+		duty: ["du", "ty"],
+		easy: ["ea", "sy"],
+		busy: ["bus", "y"],
+		city: ["cit", "y"],
+		body: ["bod", "y"],
+		holy: ["ho", "ly"],
+		army: ["ar", "my"],
+
+		// Family
+		brother: ["broth", "er"],
+		mother: ["moth", "er"],
+		father: ["fa", "ther"],
+		sister: ["sis", "ter"],
+
+		// Compound words
+		takeoff: ["take", "off"],
+		without: ["with", "out"],
+		within: ["with", "in"],
+		fireproof: ["fire", "proof"],
+		bulletproof: ["bul", "let", "proof"],
+		heartbreak: ["heart", "break"],
+		heartbeat: ["heart", "beat"],
+		sunshine: ["sun", "shine"],
+		moonlight: ["moon", "light"],
+		starlight: ["star", "light"],
+		firefly: ["fire", "fly"],
+		butterfly: ["but", "ter", "fly"],
+		waterfall: ["wa", "ter", "fall"],
+		rainfall: ["rain", "fall"],
+		sunflower: ["sun", "flow", "er"],
+
+		// Indefinite pronouns
+		someone: ["some", "one"],
+		everyone: ["eve", "ry", "one"],
+		everybody: ["eve", "ry", "bod", "y"],
+		everything: ["eve", "ry", "thing"],
+		anything: ["an", "y", "thing"],
+		anybody: ["an", "y", "bod", "y"],
+		anyone: ["an", "y", "one"],
+		anymore: ["an", "y", "more"],
+		nowhere: ["no", "where"],
+		somewhere: ["some", "where"],
+		anywhere: ["an", "y", "where"],
+
+		// Miscellany
+		different: ["dif", "fer", "ent"],
+		flower: ["flow", "er"],
+		power: ["pow", "er"],
+		tower: ["tow", "er"],
+		shower: ["show", "er"],
+	}),
+);
+
+const applySplitsToWord = (word: string, parts: string[]): string[] => {
+	let idx = 0;
+	const result: string[] = [];
+	for (const p of parts) {
+		result.push(word.slice(idx, idx + p.length));
+		idx += p.length;
+	}
+	if (idx < word.length) {
+		result[result.length - 1] += word.slice(idx);
+	}
+	return result.filter(Boolean);
+};
+
+export const enhancedEnglishSplit = (word: string): string[] => {
+	const trimmed = word.trim();
+	if (!trimmed) return [word];
+
+	const key = trimmed.toLowerCase();
 	if (NEVER_SPLIT_WORDS.has(key)) {
 		return [word];
 	}
+
+	// Preserve standard single-word contractions
+	if (/^[\w]+[’'][a-z]+$/i.test(trimmed)) {
+		if (
+			/^(?:we|you|they|who|what|where|there)[’'](?:re|ve|ll|d)$/i.test(trimmed) ||
+			/^(?:i)[’'](?:m|ve|ll|d)$/i.test(trimmed) ||
+			/^(?:it|he|she)[’'](?:s|ll|d)$/i.test(trimmed) ||
+			/^(?:can|don|won|ain|isn|aren|wasn|weren|hasn|haven|hadn|doesn)[’']t$/i.test(trimmed)
+		) {
+			return [word];
+		}
+	}
+
+	// 1. Check curated lyric exceptions & morpheme boundaries
+	const lyricException = LYRIC_EXCEPTIONS.get(key);
+	if (lyricException) {
+		return applySplitsToWord(word, lyricException);
+	}
+
+	// 2. High-precision TeX Hyphenation (minWordLength: 3)
+	try {
+		const hyphenated = hyphenateEnUs(trimmed, { minWordLength: 3 });
+		const texParts = hyphenated.split("\u00AD").filter(Boolean);
+		if (texParts.length > 1) {
+			const repaired = repairEnglishSyllables(texParts);
+			return applySplitsToWord(word, repaired);
+		}
+	} catch {
+		// fallback to dictionary/prosodic
+	}
+
+	// 3. Prosodic Dictionary
 	const entry =
 		dictionary.get(key) ??
 		(key.endsWith("in") ? dictionary.get(`${key}g`) : undefined);
 	if (entry !== undefined) {
 		const parts = splitAtLengths(
-			word,
+			trimmed,
 			typeof entry === "number" ? [entry] : entry,
 		);
-		return repairEnglishSyllables(parts);
+		const repaired = repairEnglishSyllables(parts);
+		return applySplitsToWord(word, repaired);
 	}
-	return repairEnglishSyllables(mergeContractionSuffix(compromiseSplit(word)));
+
+	// 4. Speech/compromise fallback + contraction merging
+	const compromiseParts = repairEnglishSyllables(
+		mergeContractionSuffix(compromiseSplit(trimmed)),
+	);
+	if (compromiseParts.length > 1) {
+		return applySplitsToWord(word, compromiseParts);
+	}
+
+	// 5. Morphological gerund fallback (-ing)
+	if (trimmed.length > 4 && /ing$/i.test(trimmed)) {
+		const stem = trimmed.slice(0, -3);
+		if (/[aeiouy]/i.test(stem)) {
+			return [word.slice(0, stem.length), word.slice(stem.length)];
+		}
+	}
+
+	return [word];
 };
+
+const prosodicSplit = enhancedEnglishSplit;
 
 const isJapaneseCharacter = (char: string | undefined) =>
 	!!char &&
@@ -233,10 +412,10 @@ export const splitJapaneseText = (text: string) => {
 export const SYLLABIFICATION_ENGINES: SyllabificationEngine[] = [
 	{
 		id: "prosodic",
-		name: "English (Prosodic)",
+		name: "English (Enhanced / Lyrics)",
 		description:
-			"Dictionary-backed English syllable boundaries with a speech fallback.",
-		split: prosodicSplit,
+			"High-accuracy lyric hyphenation combining TeX patterns, lyric morphology, and dictionary boundaries.",
+		split: enhancedEnglishSplit,
 	},
 	{
 		id: "basic",
@@ -286,7 +465,12 @@ export const SYLLABIFICATION_ENGINES: SyllabificationEngine[] = [
 		id: `hyphenation-${language}` as SegmentationEngineId,
 		name: `${name}${hasBetterEngine ? " (legacy)" : ""}`,
 		description: `Use the existing ${name} hyphenation patterns.`,
-		split: (word: string) => [word],
+		split: (word: string) => {
+			if (language === "en-us") {
+				return enhancedEnglishSplit(word);
+			}
+			return [word];
+		},
 	})),
 	{
 		id: "none",
