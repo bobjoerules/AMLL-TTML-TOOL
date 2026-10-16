@@ -1,12 +1,10 @@
 import {
 	Button,
 	Flex,
-	IconButton,
 	SegmentedControl,
-	Text,
 	Tooltip,
 } from "@radix-ui/themes";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
 import { type FC, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,17 +13,19 @@ import { openExternal } from "$/utils/openExternal";
 import {
 	boykisserModeAtom,
 	boykisserUnlockedAtom,
-	experimentalFeaturesDialogOpenAtom,
 } from "$/modules/settings/states";
 import {
 	ArrowUpRight16Regular,
-	Beaker24Regular,
 	Edit24Regular,
 	Timer24Regular,
 	Play24Regular,
 	PanelRight24Regular,
 	PanelRight24Filled,
 } from "@fluentui/react-icons";
+import {
+	getIsSongLoaded,
+	resolveGeniusTargetUrl,
+} from "./genius-shortcut";
 import {
 	keyNextTabAtom,
 	keyPrevTabAtom,
@@ -66,79 +66,29 @@ export const TitleBar: FC = () => {
 		return isTauri || isPwa;
 	}, []);
 	const isUnlocked = !isApp || boykisserUnlocked;
-	const setExperimentalDialogOpen = useSetAtom(
-		experimentalFeaturesDialogOpenAtom,
-	);
 
 	const lyricLines = useAtomValue(lyricLinesAtom);
 	const saveFileName = useAtomValue(saveFileNameAtom);
 	const loadedAudioFileName = useAtomValue(loadedAudioFileNameAtom);
 
 	const isSongLoaded = useMemo(() => {
-		if (lyricLines.lyricLines.length > 0) return true;
-		if (loadedAudioFileName) return true;
-		const hasTitle = !!lyricLines.metadata.find(
-			(m) => m.name.toLowerCase() === "title",
-		)?.value[0]?.trim();
-		const hasArtist = !!lyricLines.metadata.find(
-			(m) => m.name.toLowerCase() === "artist",
-		)?.value[0]?.trim();
-		if (hasTitle || hasArtist) return true;
-		const geniusUrlMeta = lyricLines.metadata.find((m) =>
-			m.value.some((v) => v.toLowerCase().includes("genius.com/")),
-		);
-		if (geniusUrlMeta) return true;
-		if (
-			saveFileName &&
-			saveFileName !== "lyric.ttml" &&
-			saveFileName !== "untitled.ttml"
-		) {
-			return true;
-		}
-		return false;
+		return getIsSongLoaded({
+			metadata: lyricLines.metadata,
+			lyricLinesCount: lyricLines.lyricLines.length,
+			loadedAudioFileName,
+			saveFileName,
+		});
 	}, [lyricLines, loadedAudioFileName, saveFileName]);
 
 	const handleOpenGenius = useCallback(() => {
 		if (!isSongLoaded) return;
-
-		const titleMeta = lyricLines.metadata.find(
-			(m) => m.name.toLowerCase() === "title",
-		);
-		const artistMeta = lyricLines.metadata.find(
-			(m) => m.name.toLowerCase() === "artist",
-		);
-		const geniusUrlMeta = lyricLines.metadata.find((m) =>
-			m.value.some((v) => v.toLowerCase().includes("genius.com/")),
-		);
-
-		if (geniusUrlMeta) {
-			const directUrl = geniusUrlMeta.value.find((v) =>
-				v.toLowerCase().includes("genius.com/"),
-			);
-			if (directUrl) {
-				void openExternal(directUrl.trim());
-				return;
-			}
-		}
-
-		const title =
-			titleMeta?.value[0]?.trim() ||
-			(saveFileName &&
-			saveFileName !== "lyric.ttml" &&
-			saveFileName !== "untitled.ttml"
-				? saveFileName.replace(/\.(ttml|lrc|txt)$/i, "").trim()
-				: "");
-		const artist = artistMeta?.value[0]?.trim() || "";
-
-		if (title || artist) {
-			const query = artist && title ? `${artist} ${title}` : title || artist;
-			void openExternal(
-				`https://genius.com/search?q=${encodeURIComponent(query)}`,
-			);
-		} else {
-			void openExternal("https://genius.com");
-		}
-	}, [isSongLoaded, lyricLines.metadata, saveFileName]);
+		const targetUrl = resolveGeniusTargetUrl({
+			metadata: lyricLines.metadata,
+			loadedAudioFileName,
+			saveFileName,
+		});
+		void openExternal(targetUrl);
+	}, [isSongLoaded, lyricLines.metadata, loadedAudioFileName, saveFileName]);
 
 	const onSwitchEditMode = useCallback(() => {
 		setToolMode(ToolMode.Edit);

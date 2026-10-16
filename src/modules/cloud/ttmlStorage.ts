@@ -212,6 +212,10 @@ export async function saveTTMLToCloud(
 	}
 	const isFinished = isPublished || isCompleted;
 
+	const isWordSync =
+		/itunes:timing=["']Word["']/i.test(input.rawTTML) ||
+		/<span\b[^>]*\bbegin=/i.test(input.rawTTML);
+
 	const tags: string[] = [];
 	if (isFinished) tags.push("finished");
 	if (isPublished) tags.push("community");
@@ -241,6 +245,8 @@ export async function saveTTMLToCloud(
 		tags,
 		finished: isFinished,
 		publishedToCommunity: isPublished,
+		isWordSync,
+		timing: isWordSync ? "Word" : "Line",
 	};
 
 	// 1. Save lightweight metadata doc (without rawTTML) so library listings are fast

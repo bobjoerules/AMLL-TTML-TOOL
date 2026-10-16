@@ -51,6 +51,26 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v3.2.1
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 16, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>TitleBar Genius Shortcut Fix:</b> Resolved an issue where clicking the TitleBar Genius button could throw an error or open album artwork instead of the track’s Genius song page.
+								</Text>
+								<Text size="2">
+									• <b>Website Word Sync Display:</b> Fixed word-synced songs displaying as line-synced on the website when payloads are stored separately in the cloud.
+								</Text>
+								<Text size="2">
+									• <b>External Link Navigation:</b> Ensured links in Genius search dialog open directly in the default system web browser.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v3.2.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

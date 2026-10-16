@@ -27,6 +27,8 @@ export interface CloudTTMLMetadata {
 	coverArt?: string | null;
 	publishedToCommunity?: boolean;
 	finished?: boolean;
+	isWordSync?: boolean;
+	timing?: "Word" | "Line";
 }
 
 export interface CloudTTMLDocument extends CloudTTMLMetadata {

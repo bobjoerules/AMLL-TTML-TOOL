@@ -20,6 +20,7 @@ import { isSpotifyUrl, SpotifyResolver } from "$/modules/spotify/client";
 import { geniusSearchDialogAtom } from "$/states/dialogs.ts";
 import { lyricLinesAtom } from "$/states/main.ts";
 import { getGeniusKeyGuideUrl } from "$/utils/genius-guide";
+import { openExternal } from "$/utils/openExternal";
 import { GeniusApi, GeniusResolver, isGeniusSongUrl } from "../api/client";
 import type { GeniusSearchHit } from "../types";
 import { getBetterGeniusCoverArt } from "../utils/image";
@@ -405,6 +406,10 @@ export const GeniusSearchDialog = () => {
 								href="https://genius.com/api-clients"
 								target="_blank"
 								rel="noopener noreferrer"
+								onClick={(e) => {
+									e.preventDefault();
+									void openExternal("https://genius.com/api-clients");
+								}}
 							>
 								Genius
 							</a>
@@ -418,6 +423,12 @@ export const GeniusSearchDialog = () => {
 								href={getGeniusKeyGuideUrl(i18n.resolvedLanguage)}
 								target="_blank"
 								rel="noopener noreferrer"
+								onClick={(e) => {
+									e.preventDefault();
+									void openExternal(
+										getGeniusKeyGuideUrl(i18n.resolvedLanguage),
+									);
+								}}
 							>
 								{t(
 									"metadataDialog.fetchSongwriters.howToGetKey",

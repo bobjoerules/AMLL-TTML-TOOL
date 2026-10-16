@@ -35,6 +35,8 @@ export interface FinishedTTML {
   durationMs?: number;
   tags?: string[];
   rawTTML?: string;
+  isWordSync?: boolean;
+  timing?: string;
   authorUid?: string;
   authorName?: string;
   createdAt?: number;
@@ -202,6 +204,19 @@ function parseTTMLDoc(id: string, data: DocumentData, inferredAuthorUid?: string
     if (artistMatch) artist = artistMatch[1];
   }
 
+  let isWordSync: boolean | undefined = undefined;
+  if (typeof data.isWordSync === "boolean") {
+    isWordSync = data.isWordSync;
+  } else if (typeof data.timing === "string") {
+    isWordSync = data.timing.toLowerCase() === "word";
+  } else if (typeof data.timingMode === "string") {
+    isWordSync = data.timingMode.toLowerCase() === "word";
+  } else if (rawTTML) {
+    isWordSync =
+      /itunes:timing=["']Word["']/i.test(rawTTML) ||
+      /<span\b[^>]*\bbegin=/i.test(rawTTML);
+  }
+
   const createdAt = data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt || Date.now();
   const updatedAt = data.updatedAt?.toMillis ? data.updatedAt.toMillis() : data.updatedAt || createdAt;
 
@@ -215,6 +230,8 @@ function parseTTMLDoc(id: string, data: DocumentData, inferredAuthorUid?: string
     durationMs: data.durationMs || 0,
     tags: data.tags || (data.publishedToCommunity ? ["community"] : (data.finished ? ["finished"] : [])),
     rawTTML,
+    isWordSync,
+    timing: typeof data.timing === "string" ? data.timing : (isWordSync ? "Word" : "Line"),
     authorUid: data.authorUid || data.author_uid || data.userId || inferredAuthorUid || undefined,
     authorName: data.authorName || data.author_name || data.author || undefined,
     createdAt,
@@ -245,6 +262,9 @@ export function deduplicateAndMergeTTMLs(rawDocs: FinishedTTML[]): FinishedTTML[
       if (!merged.rawTTML && existing.rawTTML) {
         merged.rawTTML = existing.rawTTML;
       }
+      if (typeof merged.isWordSync !== "boolean" && typeof existing.isWordSync === "boolean") {
+        merged.isWordSync = existing.isWordSync;
+      }
       latestBySong.set(key, merged);
     } else if (itemTime === existingTime) {
       // Tie-breaker: keep the version with more lyrics or rich metadata
@@ -257,14 +277,25 @@ export function deduplicateAndMergeTTMLs(rawDocs: FinishedTTML[]): FinishedTTML[
         if (!merged.rawTTML && existing.rawTTML) {
           merged.rawTTML = existing.rawTTML;
         }
+        if (typeof merged.isWordSync !== "boolean" && typeof existing.isWordSync === "boolean") {
+          merged.isWordSync = existing.isWordSync;
+        }
         latestBySong.set(key, merged);
-      } else if (!existing.rawTTML && item.rawTTML) {
-        existing.rawTTML = item.rawTTML;
+      } else {
+        if (!existing.rawTTML && item.rawTTML) {
+          existing.rawTTML = item.rawTTML;
+        }
+        if (typeof existing.isWordSync !== "boolean" && typeof item.isWordSync === "boolean") {
+          existing.isWordSync = item.isWordSync;
+        }
       }
     } else {
-      // existingTime > itemTime: ensure existing retains rawTTML if missing
+      // existingTime > itemTime: ensure existing retains rawTTML and isWordSync if missing
       if (!existing.rawTTML && item.rawTTML) {
         existing.rawTTML = item.rawTTML;
+      }
+      if (typeof existing.isWordSync !== "boolean" && typeof item.isWordSync === "boolean") {
+        existing.isWordSync = item.isWordSync;
       }
     }
   }
@@ -524,6 +555,7 @@ export interface CommunityGlobalStats {
 }
 
 export function isSongWordSync(ttml: FinishedTTML): boolean {
+  if (typeof ttml.isWordSync === "boolean") return ttml.isWordSync;
   if (!ttml.rawTTML) return false;
   return (
     /itunes:timing=["']Word["']/i.test(ttml.rawTTML) ||
@@ -610,9 +642,17 @@ export async function fetchUserProfilesWithStats(): Promise<{
       if (songTime > existingTime) {
         const merged = { ...song };
         if (!merged.rawTTML && existing.rawTTML) merged.rawTTML = existing.rawTTML;
+        if (typeof merged.isWordSync !== "boolean" && typeof existing.isWordSync === "boolean") {
+          merged.isWordSync = existing.isWordSync;
+        }
         creator.songMap.set(songKey, merged);
-      } else if (!existing.rawTTML && song.rawTTML) {
-        existing.rawTTML = song.rawTTML;
+      } else {
+        if (!existing.rawTTML && song.rawTTML) {
+          existing.rawTTML = song.rawTTML;
+        }
+        if (typeof existing.isWordSync !== "boolean" && typeof song.isWordSync === "boolean") {
+          existing.isWordSync = song.isWordSync;
+        }
       }
     }
 
@@ -747,6 +787,29 @@ export async function fetchUserProfileDirect(userUid: string): Promise<UserProfi
       return null;
     }
 
+    // For docs where rawTTML was moved to payload/content and isWordSync is not yet stored,
+    // load payload in parallel so word sync status, stats, and download content are accurate.
+    await Promise.all(
+      rawUserDocs.map(async (docItem) => {
+        if (typeof docItem.isWordSync !== "boolean" && !docItem.rawTTML) {
+          try {
+            const payloadRef = doc(db, "users", userUid, "ttmls", docItem.id, "payload", "content");
+            const payloadSnap = await getDoc(payloadRef);
+            if (payloadSnap.exists()) {
+              const pData = payloadSnap.data();
+              const raw = pData.rawTTML || "";
+              docItem.rawTTML = raw;
+              docItem.isWordSync =
+                /itunes:timing=["']Word["']/i.test(raw) ||
+                /<span\b[^>]*\bbegin=/i.test(raw);
+            }
+          } catch {
+            // ignore
+          }
+        }
+      })
+    );
+
     // Group songs per song key (just like groupCloudTTMLs in the app)
     const songMap = new Map<string, FinishedTTML>();
     for (const docItem of rawUserDocs) {
@@ -760,9 +823,17 @@ export async function fetchUserProfileDirect(userUid: string): Promise<UserProfi
         if (docTime > existingTime) {
           const merged = { ...docItem };
           if (!merged.rawTTML && existing.rawTTML) merged.rawTTML = existing.rawTTML;
+          if (typeof merged.isWordSync !== "boolean" && typeof existing.isWordSync === "boolean") {
+            merged.isWordSync = existing.isWordSync;
+          }
           songMap.set(key, merged);
-        } else if (!existing.rawTTML && docItem.rawTTML) {
-          existing.rawTTML = docItem.rawTTML;
+        } else {
+          if (!existing.rawTTML && docItem.rawTTML) {
+            existing.rawTTML = docItem.rawTTML;
+          }
+          if (typeof existing.isWordSync !== "boolean" && typeof docItem.isWordSync === "boolean") {
+            existing.isWordSync = docItem.isWordSync;
+          }
         }
       }
     }
