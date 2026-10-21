@@ -1,4 +1,4 @@
-import { HistoryRegular, CheckmarkCircle24Filled } from "@fluentui/react-icons";
+import { CheckmarkCircle24Filled } from "@fluentui/react-icons";
 import {
 	Badge,
 	Box,
@@ -12,9 +12,8 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getSuggestedTtmlFileName } from "$/modules/project/logic/metadata-filename";
-import { confirmDialogAtom, historyRestoreDialogAtom } from "$/states/dialogs";
+import { confirmDialogAtom } from "$/states/dialogs";
 import {
-	lastSavedTimeAtom,
 	lyricLinesAtom,
 	saveFileNameAtom,
 } from "$/states/main";
@@ -33,16 +32,11 @@ export const HeaderFileInfo = () => {
 	const { t } = useTranslation();
 	const syncProgress = useSyncProgress();
 	const [filename, setFilename] = useAtom(saveFileNameAtom);
-	const lastSavedTime = useAtomValue(lastSavedTimeAtom);
-	const setHistoryDialogOpen = useSetAtom(historyRestoreDialogAtom);
 	const setConfirmDialog = useSetAtom(confirmDialogAtom);
 	const metadata = useAtomValue(lyricLinesAtom).metadata;
 	const [isEditing, setIsEditing] = useState(false);
 	const [draftName, setDraftName] = useState("");
-	const [autoSaveExpanded, setAutoSaveExpanded] = useState(false);
-	const [autoSaveTimeLabel, setAutoSaveTimeLabel] = useState("");
 	const inputRef = useRef<HTMLInputElement>(null);
-	const lastSavedTimeRef = useRef<number | null>(null);
 	const suffix = ".ttml";
 	const suggestedFile = getSuggestedTtmlFileName(metadata);
 
@@ -76,17 +70,7 @@ export const HeaderFileInfo = () => {
 		inputRef.current?.select();
 	}, [filename, getBaseName, isEditing]);
 
-	useEffect(() => {
-		if (!lastSavedTime) return;
-		if (lastSavedTimeRef.current === lastSavedTime) return;
-		lastSavedTimeRef.current = lastSavedTime;
-		setAutoSaveTimeLabel(new Date(lastSavedTime).toLocaleTimeString());
-		setAutoSaveExpanded(true);
-		const timer = window.setTimeout(() => {
-			setAutoSaveExpanded(false);
-		}, 4000);
-		return () => window.clearTimeout(timer);
-	}, [lastSavedTime]);
+
 
 	const handleNameClick = useCallback(() => {
 		const isDefaultName = filename.toLowerCase() === "lyric.ttml";
@@ -114,31 +98,7 @@ export const HeaderFileInfo = () => {
 			gap="2"
 			style={{ maxWidth: "100%", minWidth: 0, flexShrink: 1 }}
 		>
-			<Button
-				variant="soft"
-				onClick={() => setHistoryDialogOpen(true)}
-				style={{
-					justifyContent: "start",
-					overflow: "hidden",
-					whiteSpace: "nowrap",
-					maxWidth: autoSaveExpanded ? 220 : 36,
-					transition: "max-width 0.3s ease",
-					flexShrink: 0,
-				}}
-			>
-				<Flex align="center" gap="1">
-					<Text size="1" style={{ display: "flex" }}>
-						<HistoryRegular />
-					</Text>
-					{autoSaveExpanded && (
-						<Text size="1" color="gray">
-							{t("header.status.autoSavedAt", "Auto-saved at {time}", {
-								time: autoSaveTimeLabel,
-							})}
-						</Text>
-					)}
-				</Flex>
-			</Button>
+
 
 			<Box style={{ minWidth: 0, flexShrink: 1 }}>
 				{isEditing ? (
@@ -215,76 +175,61 @@ export const HeaderFileInfo = () => {
 			</Box>
 
 			{syncProgress.hasLyrics && (
-				<Tooltip
-					content={t(
-						"header.syncProgressTooltip",
-						"Lines Synced: {timedLines}/{totalLines} ({linePercent}%) • Words Synced: {timedWords}/{totalWords} ({wordPercent}%)",
-						{
-							timedLines: syncProgress.timedLines,
-							totalLines: syncProgress.totalLines,
-							linePercent: syncProgress.linePercent,
-							timedWords: syncProgress.timedWords,
-							totalWords: syncProgress.totalWords,
-							wordPercent: syncProgress.wordPercent,
-						},
-					)}
+				<Badge
+					size="1"
+					variant="surface"
+					color={getProgressBadgeColor(syncProgress.linePercent)}
+					style={{
+						cursor: "default",
+						fontWeight: 600,
+						display: "flex",
+						alignItems: "center",
+						gap: "3px",
+						padding: "2px 7px",
+						borderRadius: "12px",
+					}}
 				>
-					<Badge
-						size="1"
-						variant="surface"
-						color={getProgressBadgeColor(syncProgress.linePercent)}
-						style={{
-							cursor: "default",
-							fontWeight: 600,
-							display: "flex",
-							alignItems: "center",
-							gap: "3px",
-							padding: "2px 7px",
-							borderRadius: "12px",
-						}}
-					>
-						{syncProgress.linePercent === 100 ? (
-							<CheckmarkCircle24Filled
-								style={{
-									width: "12px",
-									height: "12px",
-									color: "var(--green-9)",
-								}}
+					{syncProgress.linePercent === 100 ? (
+						<CheckmarkCircle24Filled
+							style={{
+								width: "12px",
+								height: "12px",
+								color: "var(--green-9)",
+							}}
+						/>
+					) : (
+						<svg
+							width="12"
+							height="12"
+							viewBox="0 0 16 16"
+							style={{ transform: "rotate(-90deg)", flexShrink: 0 }}
+						>
+							<circle
+								cx="8"
+								cy="8"
+								r="6"
+								stroke="var(--gray-a6)"
+								strokeWidth="2.4"
+								fill="none"
 							/>
-						) : (
-							<svg
-								width="12"
-								height="12"
-								viewBox="0 0 16 16"
-								style={{ transform: "rotate(-90deg)", flexShrink: 0 }}
-							>
-								<circle
-									cx="8"
-									cy="8"
-									r="6"
-									stroke="var(--gray-a6)"
-									strokeWidth="2.4"
-									fill="none"
-								/>
-								<circle
-									cx="8"
-									cy="8"
-									r="6"
-									stroke="currentColor"
-									strokeWidth="2.4"
-									fill="none"
-									strokeDasharray={2 * Math.PI * 6}
-									strokeDashoffset={
-										2 * Math.PI * 6 * (1 - syncProgress.linePercent / 100)
-									}
-									strokeLinecap="round"
-									style={{ transition: "stroke-dashoffset 0.3s ease" }}
-								/>
-							</svg>
-						)}
-						<span>{syncProgress.linePercent}%</span>
-					</Badge>
-				</Tooltip>
+							<circle
+								cx="8"
+								cy="8"
+								r="6"
+								stroke="currentColor"
+								strokeWidth="2.4"
+								fill="none"
+								strokeDasharray={2 * Math.PI * 6}
+								strokeDashoffset={
+									2 * Math.PI * 6 * (1 - syncProgress.linePercent / 100)
+								}
+								strokeLinecap="round"
+								style={{ transition: "stroke-dashoffset 0.3s ease" }}
+							/>
+						</svg>
+					)}
+					<span>{syncProgress.linePercent}%</span>
+				</Badge>
 			)}
 		</Flex>
 	);

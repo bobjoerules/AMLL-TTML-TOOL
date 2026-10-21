@@ -806,13 +806,13 @@ export const LyricLinesView: FC = forwardRef<HTMLDivElement>((_props, ref) => {
 			</LyricWordSettingsProvider>
 			<IconButton
 				className={styles.locateButton}
-				size="3"
+				size="4"
 				variant="surface"
 				onClick={handleLocate}
 				title={t("lyricEditor.locate", "Locate")}
 				aria-label={t("lyricEditor.locate", "Locate")}
 			>
-				<MyLocation24Regular />
+				<MyLocation24Regular style={{ width: "26px", height: "26px" }} />
 			</IconButton>
 		</Flex>
 	);

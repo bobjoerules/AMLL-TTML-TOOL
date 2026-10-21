@@ -330,6 +330,40 @@ export const SpicyLyrics = memo(
 					?.value.find((value) => value.trim().length > 0) ?? null,
 			[lyrics.metadata],
 		);
+		const songCredits = useMemo(() => {
+			const findMeta = (keys: string[]) => {
+				for (const key of keys) {
+					const entry = lyrics.metadata.find(
+						(m) => m.key.toLowerCase() === key.toLowerCase(),
+					);
+					if (entry && entry.value.length > 0) {
+						const joined = entry.value.filter((v) => v.trim()).join(", ");
+						if (joined) return joined;
+					}
+				}
+				return null;
+			};
+
+			const writers = findMeta([
+				"writers",
+				"writer",
+				"lyricist",
+				"lyricists",
+				"author",
+				"composer",
+			]);
+			const provider = findMeta(["provider", "source"]);
+			const community = findMeta([
+				"transcriber",
+				"synced_by",
+				"sync_by",
+				"contributor",
+				"credit",
+			]);
+
+			if (!writers && !provider && !community) return null;
+			return { writers, provider, community };
+		}, [lyrics.metadata]);
 		const appBackgroundMode = useAtomValue(backgroundModeAtom);
 		const songCoverArt = embeddedCoverArt || coverArtImage || null;
 		const backgroundImage =
@@ -666,6 +700,10 @@ export const SpicyLyrics = memo(
 									`${4 + (letter ? 12 : isDot ? 6 : 2) * currentGlow}px`,
 								);
 								node.style.setProperty(
+									"--text-shadow-blur-radius",
+									`${4 + (letter ? 12 : isDot ? 6 : 2) * currentGlow}px`,
+								);
+								node.style.setProperty(
 									"--shadow-alpha",
 									String(
 										Math.min(
@@ -673,6 +711,10 @@ export const SpicyLyrics = memo(
 											currentGlow * (isDot ? 0.9 : letter ? 1 : 0.35),
 										),
 									),
+								);
+								node.style.setProperty(
+									"--text-shadow-opacity",
+									`${Math.min(100, Math.round(currentGlow * (isDot ? 90 : letter ? 100 : 35)))}%`,
 								);
 								if (isDot) node.style.opacity = String(set.opacity.step(dt));
 							};
@@ -848,8 +890,16 @@ export const SpicyLyrics = memo(
 										`${4 + 12 * currentGlow}px`,
 									);
 									node.style.setProperty(
+										"--text-shadow-blur-radius",
+										`${4 + 12 * currentGlow}px`,
+									);
+									node.style.setProperty(
 										"--shadow-alpha",
 										String(Math.min(1, currentGlow * 1.85)),
+									);
+									node.style.setProperty(
+										"--text-shadow-opacity",
+										`${Math.min(100, Math.round(currentGlow * 185))}%`,
 									);
 								}
 							};
@@ -944,6 +994,7 @@ export const SpicyLyrics = memo(
 					}}
 					className={classNames(
 						className,
+						word.isPartOfWord && styles.partOfWord,
 						wordBoundary && styles.wordBoundary,
 						word.allowInternalWrap && styles.breakableToken,
 						!isWordTimed && styles.tokenUnsynced,
@@ -1075,6 +1126,36 @@ export const SpicyLyrics = memo(
 						</div>
 					);
 				})}
+				{songCredits && (
+					<div className={styles.songCredits}>
+						{songCredits.writers && (
+							<div className={styles.credits}>
+								<span className={styles.creditsLabel}>Written by</span>{" "}
+								<span className={styles.creditsValue}>
+									{songCredits.writers}
+								</span>
+							</div>
+						)}
+						{songCredits.provider && (
+							<div className={styles.lyricsProvider}>
+								<span className={styles.creditsLabel}>Provided by</span>{" "}
+								<span className={styles.creditsValue}>
+									{songCredits.provider}
+								</span>
+							</div>
+						)}
+						{songCredits.community && (
+							<div className={styles.songInfo}>
+								<div className={styles.maker}>
+									<span className={styles.creditsLabel}>Synced by</span>{" "}
+									<span className={styles.creditsValue}>
+										{songCredits.community}
+									</span>
+								</div>
+							</div>
+						)}
+					</div>
+				)}
 			</div>
 		);
 

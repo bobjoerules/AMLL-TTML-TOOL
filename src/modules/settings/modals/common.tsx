@@ -17,6 +17,7 @@ import {
 	Database24Regular,
 	Cloud24Regular,
 	ArrowDownload24Regular,
+	Sparkle24Regular,
 } from "@fluentui/react-icons";
 import {
 	Badge,
@@ -55,8 +56,10 @@ import {
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 	allowConsecutiveBackgroundLinesAtom,
+	openSpotMatchAfterSaveAtom,
 	wrapLyricLinesAtom,
 	keepPlayingWordInViewAtom,
+	highlightUnsyncedWordsInEditorAtom,
 } from "$/modules/settings/states";
 import {
 	autoSegmentOnLineSyncAtom,
@@ -113,6 +116,10 @@ export const SettingsCommonTab = ({
 	const [keepPlayingWordInView, setKeepPlayingWordInView] = useAtom(
 		keepPlayingWordInViewAtom,
 	);
+	const [
+		highlightUnsyncedWordsInEditor,
+		setHighlightUnsyncedWordsInEditor,
+	] = useAtom(highlightUnsyncedWordsInEditorAtom);
 	const [autoSegmentOnLineSync, setAutoSegmentOnLineSync] = useAtom(
 		autoSegmentOnLineSyncAtom,
 	);
@@ -128,6 +135,9 @@ export const SettingsCommonTab = ({
 	);
 	const [allowConsecutiveBackgroundLines, setAllowConsecutiveBackgroundLines] =
 		useAtom(allowConsecutiveBackgroundLinesAtom);
+	const [openSpotMatchAfterSave, setOpenSpotMatchAfterSave] = useAtom(
+		openSpotMatchAfterSaveAtom,
+	);
 	const [geniusCategorizationEnabled, setGeniusCategorizationEnabled] = useAtom(
 		geniusCategorizationEnabledAtom,
 	);
@@ -702,6 +712,35 @@ export const SettingsCommonTab = ({
 					<Card>
 						<Text as="label">
 							<Flex gap="3" align="center">
+								<ContentView24Regular />
+								<Box flexGrow="1">
+									<Flex gap="2" align="center" justify="between">
+										<Flex direction="column" gap="1">
+											<Text>
+												{t(
+													"settings.common.highlightUnsyncedWordsInEditor",
+													"Highlight Unsynced Words in Red",
+												)}
+											</Text>
+											<Text size="1" color="gray">
+												{t(
+													"settings.common.highlightUnsyncedWordsInEditorDesc",
+													"Displays non-synced words with a red tint in the lyric editor tab, matching the preview display.",
+												)}
+											</Text>
+										</Flex>
+										<Switch
+											checked={highlightUnsyncedWordsInEditor}
+											onCheckedChange={setHighlightUnsyncedWordsInEditor}
+										/>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
+					</Card>
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
 								<Timer24Regular />
 								<Box flexGrow="1">
 									<Flex gap="2" align="center" justify="between">
@@ -931,6 +970,36 @@ export const SettingsCommonTab = ({
 											{t(
 												"settings.common.allowConsecutiveBackgroundLinesDesc",
 												"Export consecutive background vocals together and preserve standalone background vocals for Spicy Lyrics compatibility. Other players may not support this structure.",
+											)}
+										</Text>
+									</Flex>
+								</Box>
+							</Flex>
+						</Text>
+					</Card>
+
+					<Card>
+						<Text as="label">
+							<Flex gap="3" align="center">
+								<Sparkle24Regular />
+								<Box flexGrow="1">
+									<Flex direction="column" gap="1">
+										<Flex align="center" justify="between" gap="4">
+											<Text>
+												{t(
+													"settings.common.openSpotMatchAfterSave",
+													"Open SpotMatch after saving",
+												)}
+											</Text>
+											<Switch
+												checked={openSpotMatchAfterSave}
+												onCheckedChange={setOpenSpotMatchAfterSave}
+											/>
+										</Flex>
+										<Text size="1" color="gray">
+											{t(
+												"settings.common.openSpotMatchAfterSaveDesc",
+												"Automatically open the SpotMatch track finder after saving a TTML file with Ctrl+S or Cmd+S.",
 											)}
 										</Text>
 									</Flex>

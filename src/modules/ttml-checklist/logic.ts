@@ -17,6 +17,7 @@ export interface TTMLChecklistEntry {
 	status?: "not-started" | "in-progress" | "completed";
 	favorite?: boolean;
 	uploadedToDatabase?: boolean;
+	sharePublicly?: boolean;
 	createdAt: number;
 }
 
@@ -35,6 +36,7 @@ export type TTMLChecklistEntryInput = {
 	status?: "not-started" | "in-progress" | "completed";
 	favorite?: boolean;
 	uploadedToDatabase?: boolean;
+	sharePublicly?: boolean;
 };
 
 export function isChecklistEntryCompleted(entry: TTMLChecklistEntry): boolean {
@@ -401,6 +403,9 @@ export function mergeChecklistEntries(
 			? { uploadedToDatabase: true }
 			: {}),
 		...(primary.favorite || secondary.favorite ? { favorite: true } : {}),
+		...(primary.sharePublicly || secondary.sharePublicly
+			? { sharePublicly: true }
+			: {}),
 		createdAt: Math.min(
 			primary.createdAt || Date.now(),
 			secondary.createdAt || Date.now(),
@@ -582,6 +587,7 @@ export function normalizeChecklistEntries(
 					? { uploadedToDatabase: true }
 					: {}),
 				...(item.favorite === true ? { favorite: true } : {}),
+				...(item.sharePublicly === true ? { sharePublicly: true } : {}),
 				createdAt:
 					typeof item.createdAt === "number" && Number.isFinite(item.createdAt)
 						? item.createdAt
@@ -620,6 +626,7 @@ export function createChecklistEntry(
 		status: input.status,
 		...(input.uploadedToDatabase ? { uploadedToDatabase: true } : {}),
 		...(input.favorite ? { favorite: true } : {}),
+		...(input.sharePublicly ? { sharePublicly: true } : {}),
 		createdAt,
 	};
 }
@@ -707,6 +714,10 @@ export function updateChecklistEntry(
 							input.uploadedToDatabase !== undefined
 								? input.uploadedToDatabase
 								: entry.uploadedToDatabase,
+						sharePublicly:
+							input.sharePublicly !== undefined
+								? input.sharePublicly
+								: entry.sharePublicly,
 					}
 				: entry,
 		),
@@ -1058,3 +1069,37 @@ export function deleteChecklistEntry(
 ): TTMLChecklistEntry[] {
 	return entries.filter((entry) => entry.id !== id && entry.cloudDocId !== id);
 }
+
+export function setChecklistEntrySharePublicly(
+	entries: TTMLChecklistEntry[],
+	id: string,
+	sharePublicly: boolean,
+): TTMLChecklistEntry[] {
+	return normalizeChecklistEntries(
+		entries.map((entry) =>
+			entry.id === id
+				? {
+						...entry,
+						sharePublicly: sharePublicly ? true : undefined,
+					}
+				: entry,
+		),
+	);
+}
+
+export function toggleChecklistEntrySharePublicly(
+	entries: TTMLChecklistEntry[],
+	id: string,
+): TTMLChecklistEntry[] {
+	return normalizeChecklistEntries(
+		entries.map((entry) =>
+			entry.id === id
+				? {
+						...entry,
+						sharePublicly: !entry.sharePublicly ? true : undefined,
+					}
+				: entry,
+		),
+	);
+}
+

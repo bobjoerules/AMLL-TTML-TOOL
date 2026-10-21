@@ -24,6 +24,7 @@ import {
 } from "@fluentui/react-icons";
 import {
 	getIsSongLoaded,
+	resolveGeniusDirectTargetUrl,
 	resolveGeniusTargetUrl,
 } from "./genius-shortcut";
 import {
@@ -43,6 +44,7 @@ import {
 	toolModeAtom,
 } from "$/states/main.ts";
 import { loadedAudioFileNameAtom } from "$/modules/audio/states/index.ts";
+import { geniusApiKeyAtom } from "$/modules/settings/states";
 import { useKeyBindingAtom } from "$/utils/keybindings.ts";
 import { TopMenu } from "../TopMenu/index.tsx";
 import styles from "./index.module.css";
@@ -70,6 +72,7 @@ export const TitleBar: FC = () => {
 	const lyricLines = useAtomValue(lyricLinesAtom);
 	const saveFileName = useAtomValue(saveFileNameAtom);
 	const loadedAudioFileName = useAtomValue(loadedAudioFileNameAtom);
+	const geniusApiKey = useAtomValue(geniusApiKeyAtom);
 
 	const isSongLoaded = useMemo(() => {
 		return getIsSongLoaded({
@@ -80,15 +83,22 @@ export const TitleBar: FC = () => {
 		});
 	}, [lyricLines, loadedAudioFileName, saveFileName]);
 
-	const handleOpenGenius = useCallback(() => {
+	const handleOpenGenius = useCallback(async () => {
 		if (!isSongLoaded) return;
-		const targetUrl = resolveGeniusTargetUrl({
+		const targetUrl = await resolveGeniusDirectTargetUrl({
 			metadata: lyricLines.metadata,
 			loadedAudioFileName,
 			saveFileName,
+			apiKey: geniusApiKey,
 		});
 		void openExternal(targetUrl);
-	}, [isSongLoaded, lyricLines.metadata, loadedAudioFileName, saveFileName]);
+	}, [
+		isSongLoaded,
+		lyricLines.metadata,
+		loadedAudioFileName,
+		saveFileName,
+		geniusApiKey,
+	]);
 
 	const onSwitchEditMode = useCallback(() => {
 		setToolMode(ToolMode.Edit);

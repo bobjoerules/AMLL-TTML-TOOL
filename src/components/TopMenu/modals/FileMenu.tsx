@@ -72,7 +72,7 @@ const FileMenuItems = () => {
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={menu.onOpenHistoryRestore}>
 				<Trans i18nKey="topBar.menu.restoreFromHistory">
-					Restore from history…
+					Auto-Saves…
 				</Trans>
 			</DropdownMenu.Item>
 			<DropdownMenu.Separator />

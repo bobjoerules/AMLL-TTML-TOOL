@@ -243,6 +243,7 @@ export const TopMenu: FC = () => {
 				"menu-cloud-open": () => menuRef.current.onOpenFromCloud(),
 				"menu-save-file": () => menuRef.current.onSaveFile(),
 				"menu-cloud-save": () => menuRef.current.onSaveToCloud(),
+				"menu-history-restore": () => menuRef.current.onOpenHistoryRestore(),
 				"menu-cloud-auth": () => menuRef.current.onOpenCloudAuth(),
 				"menu-undo": () => menuRef.current.onUndo(),
 				"menu-redo": () => menuRef.current.onRedo(),

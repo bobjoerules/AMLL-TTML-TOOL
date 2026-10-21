@@ -513,6 +513,13 @@ pub fn run() {
                     true,
                     Some("CmdOrCtrl+Shift+S"),
                 )?;
+                let history_restore_item = MenuItem::with_id(
+                    app,
+                    "menu-history-restore",
+                    "Auto-Saves...",
+                    true,
+                    None::<&str>,
+                )?;
                 let metadata_item = MenuItem::with_id(
                     app,
                     "menu-metadata",
@@ -527,6 +534,7 @@ pub fn run() {
                 file_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 file_menu.append(&save_file_item)?;
                 file_menu.append(&save_cloud_item)?;
+                file_menu.append(&history_restore_item)?;
                 file_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 file_menu.append(&metadata_item)?;
 

@@ -37,6 +37,7 @@ import { currentTimeAtom } from "$/modules/audio/states/index.ts";
 import {
 	LayoutMode,
 	keepPlayingWordInViewAtom,
+	highlightUnsyncedWordsInEditorAtom,
 } from "$/modules/settings/states/index.ts";
 import { instantHighlightFadeAtom } from "$/modules/settings/states/preview";
 import { splitWordDialogAtom } from "$/states/dialogs.ts";
@@ -50,11 +51,8 @@ import {
 import { type LyricLine, type LyricWord, newLyricWord } from "$/types/ttml.ts";
 import { msToTimestamp, parseTimespan } from "$/utils/timestamp.ts";
 import { AutoSizeTextField, RubyEditor } from "../tools/RubyEditor.tsx";
-import {
-	buildRubySelectionId,
-	getSynchronizableUnits,
-} from "../utils/lyric-states.ts";
-import { normalizeLineTime } from "../utils/normalize-line-time.ts";
+import { buildRubySelectionId, getSynchronizableUnits } from "../utils/lyric-states.ts";
+import { normalizeLineTime, isWordSynced } from "../utils/normalize-line-time.ts";
 import styles from "./index.module.css";
 import { useLyricWordSettings } from "./lyric-word-settings-context";
 
@@ -497,6 +495,14 @@ const LyricWordViewEditAdvance = ({
 		[currentWord.startTime, currentWord.endTime],
 	);
 
+	const highlightUnsyncedWords = useAtomValue(
+		highlightUnsyncedWordsInEditorAtom,
+	);
+	const isUnsynced = useMemo(
+		() => highlightUnsyncedWords && !isWordSynced(currentWord) && !isWordBlank,
+		[highlightUnsyncedWords, currentWord, isWordBlank],
+	);
+
 	const className = useMemo(
 		() =>
 			classNames(
@@ -506,9 +512,10 @@ const LyricWordViewEditAdvance = ({
 				isWordSelected && styles.selected,
 				isWordBlank && styles.blank,
 				showRubyEditor && styles.rubyEnabled,
+				isUnsynced && styles.unsynced,
 				hasError && toolMode === ToolMode.Edit && styles.error,
 			),
-		[isWordBlank, isWordSelected, showRubyEditor, hasError, toolMode],
+		[isWordBlank, isWordSelected, showRubyEditor, hasError, toolMode, isUnsynced],
 	);
 
 	return (
@@ -652,6 +659,14 @@ const LyricWorldViewEdit = ({
 		[word.startTime, word.endTime],
 	);
 
+	const highlightUnsyncedWords = useAtomValue(
+		highlightUnsyncedWordsInEditorAtom,
+	);
+	const isUnsynced = useMemo(
+		() => highlightUnsyncedWords && !isWordSynced(word) && !isWordBlank,
+		[highlightUnsyncedWords, word, isWordBlank],
+	);
+
 	useEffect(() => {
 		if (editing) setEditingValue(word.word);
 	}, [editing, word.word]);
@@ -665,6 +680,7 @@ const LyricWorldViewEdit = ({
 				isWordBlank && styles.blank,
 				useCompactSpace && styles.compactSpace,
 				showRubyEditor && styles.rubyEnabled,
+				isUnsynced && styles.unsynced,
 				hasError && toolMode === ToolMode.Edit && styles.error,
 			),
 		[
@@ -674,6 +690,7 @@ const LyricWorldViewEdit = ({
 			showRubyEditor,
 			hasError,
 			toolMode,
+			isUnsynced,
 		],
 	);
 	const onEnter = useCallback(

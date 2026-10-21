@@ -111,6 +111,7 @@ import {
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
 	toggleChecklistEntryFavorite,
+	toggleChecklistEntrySharePublicly,
 	toggleChecklistEntryUploadedToDb,
 	type TTMLChecklistEntry,
 	type TTMLChecklistEntryInput,
@@ -164,6 +165,9 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 	);
 	const [uploadedToDatabase, setUploadedToDatabase] = useState(
 		initial?.uploadedToDatabase ?? false,
+	);
+	const [sharePublicly, setSharePublicly] = useState(
+		initial?.sharePublicly ?? false,
 	);
 
 	// Provider Search state
@@ -388,6 +392,7 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 								sourceUrl,
 								notes,
 								uploadedToDatabase,
+								sharePublicly,
 								completed: status === "completed",
 								status,
 							});
@@ -815,6 +820,33 @@ const EntryForm = ({ initial, onCancel, onSubmit }: EntryFormProps) => {
 									)}
 								</Text>
 							</label>
+
+							<label
+								style={{
+									display: "inline-flex",
+									alignItems: "center",
+									gap: "8px",
+									cursor: "pointer",
+									userSelect: "none",
+								}}
+								title={t(
+									"ttmlChecklist.sharePubliclyTooltip",
+									"Share publicly if this song is in progress of being synced or planned",
+								)}
+							>
+								<Checkbox
+									checked={sharePublicly}
+									onCheckedChange={(checked) =>
+										setSharePublicly(!!checked)
+									}
+								/>
+								<Text size="2" color="gray">
+									{t(
+										"ttmlChecklist.sharePublicly",
+										"Share Publicly (Planned / In-Progress)",
+									)}
+								</Text>
+							</label>
 						</Flex>
 
 						<Flex justify="end" gap="2">
@@ -854,6 +886,7 @@ const ChecklistEntryCard = memo(
 		onToggleFavorite,
 		showUploadedToDb,
 		onToggleUploadedToDb,
+		onToggleSharePublicly,
 	}: {
 		entry: TTMLChecklistEntry;
 		onComplete: (id: string, completed: boolean) => void;
@@ -866,6 +899,7 @@ const ChecklistEntryCard = memo(
 		onToggleFavorite?: (id: string) => void;
 		showUploadedToDb?: boolean;
 		onToggleUploadedToDb?: (id: string) => void;
+		onToggleSharePublicly?: (id: string) => void;
 	}) => {
 		const { t } = useTranslation();
 		const [editing, setEditing] = useState(false);
@@ -1031,6 +1065,16 @@ const ChecklistEntryCard = memo(
 									style={{ fontWeight: 600, flexShrink: 0 }}
 								>
 									{t("ttmlChecklist.uploadedToDbBadge", "Uploaded to Database")}
+								</Badge>
+							)}
+							{entry.sharePublicly && (
+								<Badge
+									size="1"
+									color="indigo"
+									variant="surface"
+									style={{ fontWeight: 600, flexShrink: 0 }}
+								>
+									{t("ttmlChecklist.publiclySharedBadge", "🌐 Public")}
 								</Badge>
 							)}
 						</Flex>
@@ -1300,6 +1344,45 @@ const ChecklistEntryCard = memo(
 							</Tooltip>
 						)}
 
+						<Tooltip
+							content={
+								entry.sharePublicly
+									? t(
+											"ttmlChecklist.unmarkSharePublicly",
+											"Stop sharing publicly",
+										)
+									: t(
+											"ttmlChecklist.markSharePublicly",
+											"Share publicly as planned/in-progress",
+										)
+							}
+						>
+							<IconButton
+								size="2"
+								variant={entry.sharePublicly ? "solid" : "soft"}
+								color={entry.sharePublicly ? "indigo" : "gray"}
+								onClick={() => onToggleSharePublicly?.(entry.id)}
+								aria-label={
+									entry.sharePublicly
+										? t(
+												"ttmlChecklist.unmarkSharePublicly",
+												"Stop sharing publicly",
+											)
+										: t(
+												"ttmlChecklist.markSharePublicly",
+												"Share publicly as planned/in-progress",
+											)
+								}
+								style={{
+									borderRadius: "8px",
+									cursor: "pointer",
+									flexShrink: 0,
+								}}
+							>
+								<Globe16Regular />
+							</IconButton>
+						</Tooltip>
+
 						<Tooltip content={t("ttmlChecklist.edit", "Edit checklist item")}>
 							<IconButton
 								size="2"
@@ -1352,7 +1435,7 @@ export const TTMLChecklistDialog = () => {
 	const setJooxAudioSearch = useSetAtom(jooxAudioSearchDialogAtom);
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [filterTab, setFilterTab] = useState<
-		"all" | "pending" | "not-started" | "completed" | "favorites" | "uploaded"
+		"all" | "pending" | "not-started" | "completed" | "favorites" | "uploaded" | "public"
 	>("all");
 	const [searchQuery, setSearchQuery] = useState("");
 	const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -1396,6 +1479,7 @@ export const TTMLChecklistDialog = () => {
 	).length;
 	const favoritesCount = entries.filter((e) => e.favorite).length;
 	const uploadedCount = entries.filter((e) => e.uploadedToDatabase).length;
+	const publicSharedCount = entries.filter((e) => e.sharePublicly).length;
 	const pendingCount = inProgressCount;
 	const progressPercent =
 		totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -1413,6 +1497,8 @@ export const TTMLChecklistDialog = () => {
 			result = result.filter((e) => Boolean(e.favorite));
 		} else if (filterTab === "uploaded") {
 			result = result.filter((e) => Boolean(e.uploadedToDatabase));
+		} else if (filterTab === "public") {
+			result = result.filter((e) => Boolean(e.sharePublicly));
 		}
 
 		const q = deferredSearchQuery.toLowerCase().trim();
@@ -1473,6 +1559,13 @@ export const TTMLChecklistDialog = () => {
 	const handleToggleUploadedToDb = useCallback(
 		(id: string) => {
 			setStoredEntries((prev) => toggleChecklistEntryUploadedToDb(prev, id));
+		},
+		[setStoredEntries],
+	);
+
+	const handleToggleSharePublicly = useCallback(
+		(id: string) => {
+			setStoredEntries((prev) => toggleChecklistEntrySharePublicly(prev, id));
 		},
 		[setStoredEntries],
 	);
@@ -2704,6 +2797,53 @@ export const TTMLChecklistDialog = () => {
 										</button>
 									</Tooltip>
 								)}
+								<Tooltip
+									content={`${t("ttmlChecklist.publicTab", "Publicly Shared")} (${publicSharedCount})`}
+								>
+									<button
+										type="button"
+										onClick={() => setFilterTab("public")}
+										style={{
+											position: "relative",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "6px 12px 9px 12px",
+											borderRadius: "8px",
+											border: "none",
+											background:
+												filterTab === "public"
+													? "var(--color-surface)"
+													: "transparent",
+											color:
+												filterTab === "public"
+													? "var(--indigo-11)"
+													: "var(--gray-10)",
+											cursor: "pointer",
+											transition: "all 0.15s ease",
+											boxShadow:
+												filterTab === "public"
+													? "0 1px 3px rgba(0, 0, 0, 0.2)"
+													: "none",
+										}}
+									>
+										<Globe16Regular style={{ width: 16, height: 16 }} />
+										{filterTab === "public" && (
+											<span
+												style={{
+													position: "absolute",
+													bottom: "3px",
+													left: "6px",
+													right: "6px",
+													height: "2.5px",
+													borderRadius: "2px",
+													backgroundColor: "var(--indigo-9)",
+													boxShadow: "0 0 6px var(--indigo-9)",
+												}}
+											/>
+										)}
+									</button>
+								</Tooltip>
 							</Flex>
 						</Flex>
 
@@ -2770,6 +2910,7 @@ export const TTMLChecklistDialog = () => {
 											onLoadCloud={handleLoadCloudTTML}
 											isLoadingCloud={loadingCloudDocId === entry.cloudDocId}
 											onToggleFavorite={handleToggleFavorite}
+											onToggleSharePublicly={handleToggleSharePublicly}
 										/>
 									)}
 								</ViewportList>

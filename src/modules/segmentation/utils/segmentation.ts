@@ -191,6 +191,15 @@ function postProcess(
 		const firstChar = token.length > 0 ? Array.from(token)[0] : " ";
 		const charType = getCharType(firstChar);
 
+		if (charType === CharType.Whitespace) {
+			if (processedTokens.length > 0) {
+				processedTokens[processedTokens.length - 1] += token;
+			} else {
+				pendingPrefix += token;
+			}
+			continue;
+		}
+
 		if (config.punctuationMode === "merge" && charType === CharType.Other) {
 			let direction = getMergeDirection(token);
 
@@ -424,6 +433,71 @@ export function segmentWord(
 	return distributeTime(word, allTokens, allWeights, grandTotalWeight);
 }
 
+const CJK_REGEX =
+	/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+const LAST_WORD_CHAR = /[\p{L}\p{N}'’\-]$/u;
+const FIRST_WORD_CHAR = /^[\p{L}\p{N}'’\-]/u;
+
+/**
+ * 判断前一个音节和后一个音节是否属于同一个被拆分的西文字词
+ */
+export function isContinuationOfWord(
+	prev: LyricWord | undefined,
+	next: LyricWord | undefined,
+): boolean {
+	if (!prev || !next) return false;
+	if (/\s$/.test(prev.word)) return false;
+	if (!LAST_WORD_CHAR.test(prev.word) || !FIRST_WORD_CHAR.test(next.word))
+		return false;
+	if (CJK_REGEX.test(prev.word) || CJK_REGEX.test(next.word)) return false;
+	if (next.startTime - prev.endTime > 1000) return false;
+	return true;
+}
+
+function mergeWordGroup(group: LyricWord[]): LyricWord {
+	if (group.length === 1) return group[0];
+	const first = group[0];
+	const last = group[group.length - 1];
+	const hasRoman = group.some((w) => w.romanWord);
+	return {
+		...first,
+		word: group.map((w) => w.word).join(""),
+		startTime: first.startTime,
+		endTime: last.endTime,
+		romanWord: hasRoman
+			? group.map((w) => w.romanWord || "").join("")
+			: undefined,
+		obscene: group.some((w) => w.obscene),
+	};
+}
+
+/**
+ * 将被切分为音节的相邻西文字词重新合并为完整单词，以便使用新引擎重新分词
+ */
+export function recombineSplitWords(words: LyricWord[]): LyricWord[] {
+	if (words.length <= 1) return [...words];
+	const result: LyricWord[] = [];
+	let currentGroup: LyricWord[] = [words[0]];
+
+	for (let i = 1; i < words.length; i++) {
+		const prev = currentGroup[currentGroup.length - 1];
+		const curr = words[i];
+
+		if (isContinuationOfWord(prev, curr)) {
+			currentGroup.push(curr);
+		} else {
+			result.push(mergeWordGroup(currentGroup));
+			currentGroup = [curr];
+		}
+	}
+
+	if (currentGroup.length > 0) {
+		result.push(mergeWordGroup(currentGroup));
+	}
+
+	return result;
+}
+
 /**
  * 批量处理歌词行，支持跨词的上下文状态（如引号合并方向）
  *
@@ -438,14 +512,19 @@ export function segmentLyricLines(
 	resetStatePerLine = true,
 ): LyricLine[] {
 	const context: SegmentationContext = { isQuoteOpen: false };
+	const shouldResplit = config.resplitWords ?? true;
 
 	return lines.map((line) => {
 		if (resetStatePerLine) {
 			context.isQuoteOpen = false;
 		}
 
+		const wordsToProcess = shouldResplit
+			? recombineSplitWords(line.words)
+			: line.words;
+
 		const newWords: LyricWord[] = [];
-		for (const word of line.words) {
+		for (const word of wordsToProcess) {
 			const segments = segmentWord(word, config, context);
 			newWords.push(...segments);
 		}

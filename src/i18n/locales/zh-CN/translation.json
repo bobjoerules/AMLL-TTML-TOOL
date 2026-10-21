@@ -247,6 +247,8 @@
 			"keepPlayingWordInViewDesc": "在播放时自动滚动歌词编辑器，确保当前播放的行和单词始终在可视区域内。",
 			"allowConsecutiveBackgroundLines": "允许连续及独立的背景歌词",
 			"allowConsecutiveBackgroundLinesDesc": "将连续的背景歌词一起导出，并保留独立的背景歌词以兼容 Spicy Lyrics。其他播放器可能不支持此结构。",
+			"openSpotMatchAfterSave": "保存后自动打开 SpotMatch",
+			"openSpotMatchAfterSaveDesc": "使用 Ctrl+S 或 Cmd+S 保存 TTML 文件后自动打开 SpotMatch 匹配器。",
 			"autoLoadCloudAudio": "从云端打开时自动加载音频",
 			"autoLoadCloudAudioDesc": "从云端保存恢复项目时，自动下载关联的云端音频或匹配本地音频文件。",
 			"downloadAudioOnLyricImport": "导入歌词时自动下载音频",

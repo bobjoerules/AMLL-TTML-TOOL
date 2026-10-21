@@ -11,55 +11,37 @@
 
 import {
 	Button,
-	Checkbox,
 	Flex,
 	Grid,
-	SegmentedControl,
-	Select,
 	Switch,
-	Text,
-	TextField,
 } from "@radix-ui/themes";
 import { useAtom } from "jotai";
 import { type FC, forwardRef } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import {
-	Play24Regular,
-	Fire24Regular,
+	Eye24Regular,
 	TextT24Regular,
-	TextAlignLeft24Regular,
 	FastForward24Regular,
-	Wrench24Regular,
 	Settings24Regular,
-	DocumentText16Regular,
-	Apps16Regular,
-	MusicNote216Regular,
-	Fire16Regular,
 	Sparkle16Regular,
-	Timer16Regular,
-	LocalLanguage16Regular,
-	Warning16Regular,
-	FontSpaceTrackingOut16Regular,
-	Flash16Regular,
-	ArrowSync16Regular,
-	TopSpeed16Regular,
+	Image16Regular,
 	People16Regular,
+	FullScreenMaximize20Regular,
+	FullScreenMinimize20Regular,
+	LocalLanguage16Regular,
+	Translate16Regular,
+	Warning16Regular,
+	TopSpeed16Regular,
 } from "@fluentui/react-icons";
 import {
+	bgFollowsDuetAtom,
 	hideObsceneWordsAtom,
-	instantHighlightFadeAtom,
-	lyricWordFadeWidthAtom,
-	PreviewModeType,
-	previewModeTypeAtom,
+	previewFullscreenAtom,
+	previewShowAlbumArtworkAtom,
 	showFpsCounterAtom,
 	showRomanLinesAtom,
 	showTranslationLinesAtom,
-	spicyBackgroundModeAtom,
-	spicyForceLineSyncedAtom,
 	spicySimpleLyricsModeAtom,
-	vsyncAtom,
-	bgFollowsDuetAtom,
 } from "$/modules/settings/states/preview";
 import { RibbonFrame, RibbonSection } from "./common";
 import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
@@ -68,138 +50,129 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	HTMLDivElement,
 	{ isSidebar?: boolean }
 >(({ isSidebar }, ref) => {
-	const [previewModeType, setPreviewModeType] = useAtom(previewModeTypeAtom);
 	const [showTranslationLine, setShowTranslationLine] = useAtom(
 		showTranslationLinesAtom,
 	);
 	const [showRomanLine, setShowRomanLine] = useAtom(showRomanLinesAtom);
 	const [hideObsceneWords, setHideObsceneWords] = useAtom(hideObsceneWordsAtom);
-	const [lyricWordFadeWidth, setLyricWordFadeWidth] = useAtom(
-		lyricWordFadeWidthAtom,
-	);
-	const [instantFade, setInstantFade] = useAtom(instantHighlightFadeAtom);
-	const [vsync, setVsync] = useAtom(vsyncAtom);
 	const [showFps, setShowFps] = useAtom(showFpsCounterAtom);
 	const [spicySimpleMode, setSpicySimpleMode] = useAtom(
 		spicySimpleLyricsModeAtom,
 	);
-	const [spicyForceLineSynced, setSpicyForceLineSynced] = useAtom(
-		spicyForceLineSyncedAtom,
-	);
-	const [spicyBackgroundMode, setSpicyBackgroundMode] = useAtom(
-		spicyBackgroundModeAtom,
-	);
 	const [bgFollowsDuet, setBgFollowsDuet] = useAtom(bgFollowsDuetAtom);
-	const { t } = useTranslation();
+	const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
+	const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
 	const [showAdvanced, setShowAdvanced] = useAtom(advancedRibbonControlsAtom);
+	const { t } = useTranslation();
 
 	return (
-		<RibbonFrame ref={ref} isSidebar={isSidebar}>
+		<RibbonFrame ref={ref} isSidebar={isSidebar} reserveControlRows={2}>
+			{/* View / Display Section */}
 			<RibbonSection
 				isSidebar={isSidebar}
 				label={
 					<Flex gap="1" align="center">
-						<Play24Regular />
-						{t("ribbonBar.previewMode.mode", "Mode")}
+						<Eye24Regular />
+						{t("ribbonBar.previewMode.view", "View")}
 					</Flex>
 				}
 			>
-				<Select.Root
-					value={previewModeType}
-					onValueChange={(v) => setPreviewModeType(v as PreviewModeType)}
-					size="2"
+				<Grid
+					columns={isSidebar ? "1" : "2"}
+					gap="1"
+					gapX="2"
+					align="center"
+					style={{ width: isSidebar ? "100%" : undefined }}
 				>
-					<Select.Trigger
+					<Button
+						size="1"
+						variant={spicySimpleMode ? "solid" : "surface"}
+						color={spicySimpleMode ? undefined : "gray"}
+						onClick={() => setSpicySimpleMode((v) => !v)}
 						style={{
-							minWidth: "165px",
-							fontWeight: 500,
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: spicySimpleMode ? 600 : 500,
 						}}
-					/>
-					<Select.Content position="popper" size="2">
-						<Select.Item value={PreviewModeType.Standard}>
-							<Flex align="center" gap="2">
-								<MusicNote216Regular />
-								<Text>{t("ribbonBar.previewMode.standard", "Standard")}</Text>
-							</Flex>
-						</Select.Item>
-						<Select.Item value={PreviewModeType.Spicy}>
-							<Flex align="center" gap="2">
-								<Sparkle16Regular />
-								<Text>SpicyLyrics</Text>
-							</Flex>
-						</Select.Item>
-						<Select.Item value={PreviewModeType.Toxi}>
-							<Flex align="center" gap="2">
-								<MusicNote216Regular />
-								<Text>Toxi (Apple Style)</Text>
-							</Flex>
-						</Select.Item>
-						<Select.Item value={PreviewModeType.Timing}>
-							<Flex align="center" gap="2">
-								<Timer16Regular />
-								<Text>Timing Overview</Text>
-							</Flex>
-						</Select.Item>
-					</Select.Content>
-				</Select.Root>
-			</RibbonSection>
-			{previewModeType === PreviewModeType.Spicy && (
-				<RibbonSection
-					isSidebar={isSidebar}
-					label={
-						<Flex gap="1" align="center">
-							<Fire24Regular />
-							{t("ribbonBar.previewMode.spicy", "Spicy")}
-						</Flex>
-					}
-				>
-					<Grid
-						columns="max-content auto"
-						gap="2"
-						gapY="1"
-						flexGrow="1"
-						align="center"
 					>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.previewMode.simpleLyrics", "Simple lyrics")}
-						</Text>
-						<Checkbox
-							checked={spicySimpleMode}
-							onCheckedChange={(v) => setSpicySimpleMode(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t(
-								"ribbonBar.previewMode.forceLineRendering",
-								"Force line rendering",
-							)}
-						</Text>
-						<Checkbox
-							checked={spicyForceLineSynced}
-							onCheckedChange={(v) => setSpicyForceLineSynced(!!v)}
-						/>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							{t("ribbonBar.previewMode.background", "Background")}
-						</Text>
-						<SegmentedControl.Root
-							value={spicyBackgroundMode}
-							onValueChange={(v) =>
-								setSpicyBackgroundMode(v as typeof spicyBackgroundMode)
-							}
+						<Sparkle16Regular />
+						<span>{t("ribbonBar.previewMode.simpleLyrics", "Simple Lyrics")}</span>
+					</Button>
+
+					<Button
+						size="1"
+						variant={showArtwork ? "solid" : "surface"}
+						color={showArtwork ? undefined : "gray"}
+						onClick={() => setShowArtwork((v) => !v)}
+						style={{
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: showArtwork ? 600 : 500,
+						}}
+					>
+						<Image16Regular />
+						<span>{t("ribbonBar.previewMode.showArtwork", "Album Artwork")}</span>
+					</Button>
+
+					<Button
+						size="1"
+						variant={bgFollowsDuet ? "solid" : "surface"}
+						color={bgFollowsDuet ? undefined : "gray"}
+						onClick={() => setBgFollowsDuet((v) => !v)}
+						style={{
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: bgFollowsDuet ? 600 : 500,
+						}}
+					>
+						<People16Regular />
+						<span>{t("ribbonBar.previewMode.bgFollowsDuet", "Duet Layout")}</span>
+					</Button>
+
+					{!isSidebar && (
+						<Button
 							size="1"
+							variant={isFullscreen ? "solid" : "surface"}
+							color={isFullscreen ? undefined : "gray"}
+							onClick={() => setIsFullscreen((v) => !v)}
+							style={{
+								cursor: "pointer",
+								justifyContent: "flex-start",
+								gap: "6px",
+								paddingLeft: "8px",
+								paddingRight: "10px",
+								height: "26px",
+								fontSize: "12px",
+								fontWeight: isFullscreen ? 600 : 500,
+							}}
 						>
-							<SegmentedControl.Item value="animated">
-								{t("ribbonBar.previewMode.backgroundAnimated", "Animated")}
-							</SegmentedControl.Item>
-							<SegmentedControl.Item value="color">
-								{t("ribbonBar.previewMode.backgroundColor", "Color")}
-							</SegmentedControl.Item>
-							<SegmentedControl.Item value="static">
-								{t("ribbonBar.previewMode.backgroundStatic", "Static")}
-							</SegmentedControl.Item>
-						</SegmentedControl.Root>
-					</Grid>
-				</RibbonSection>
-			)}
+							{isFullscreen ? (
+								<FullScreenMinimize20Regular style={{ width: "16px", height: "16px" }} />
+							) : (
+								<FullScreenMaximize20Regular style={{ width: "16px", height: "16px" }} />
+							)}
+							<span>{t("ribbonBar.previewMode.fullscreen", "Fullscreen")}</span>
+						</Button>
+					)}
+				</Grid>
+			</RibbonSection>
+
+			{/* Lyrics / Subtitles Section */}
 			<RibbonSection
 				isSidebar={isSidebar}
 				label={
@@ -210,106 +183,75 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 				}
 			>
 				<Grid
-					columns="max-content auto"
-					gap="2"
-					gapY="1"
-					flexGrow="1"
+					columns={isSidebar ? "1" : "2"}
+					gap="1"
+					gapX="2"
 					align="center"
+					style={{ width: isSidebar ? "100%" : undefined }}
 				>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<LocalLanguage16Regular />
-							{t("ribbonBar.previewMode.showTranslation", "Show Translation")}
-						</Flex>
-					</Text>
-					<Checkbox
-						checked={showTranslationLine}
-						onCheckedChange={(v) => setShowTranslationLine(!!v)}
-					/>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<LocalLanguage16Regular />
-							{t("ribbonBar.previewMode.showRoman", "Show Romanization")}
-						</Flex>
-					</Text>
-					<Checkbox
-						checked={showRomanLine}
-						onCheckedChange={(v) => setShowRomanLine(!!v)}
-					/>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<Warning16Regular />
-							{t(
-								"ribbonBar.previewMode.maskObsceneWords",
-								"Mask Obscene Words",
-							)}
-						</Flex>
-					</Text>
-					<Checkbox
-						checked={hideObsceneWords}
-						onCheckedChange={(v) => setHideObsceneWords(!!v)}
-					/>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<People16Regular />
-							{t("ribbonBar.previewMode.bgFollowsDuet", "BG Follows Duet")}
-						</Flex>
-					</Text>
-					<Checkbox
-						checked={bgFollowsDuet}
-						onCheckedChange={(v) => setBgFollowsDuet(!!v)}
-					/>
-				</Grid>
-			</RibbonSection>
-			<RibbonSection
-				isSidebar={isSidebar}
-				label={
-					<Flex gap="1" align="center">
-						<TextAlignLeft24Regular />
-						{t("ribbonBar.previewMode.word", "Word")}
-					</Flex>
-				}
-			>
-				<Grid
-					columns="max-content auto"
-					gap="2"
-					gapY="1"
-					flexGrow="1"
-					align="center"
-				>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<FontSpaceTrackingOut16Regular />
-							{t("ribbonBar.previewMode.fadeWidth", "Fade Width")}
-						</Flex>
-					</Text>
-					<TextField.Root
-						min={0}
-						step={0}
+					<Button
 						size="1"
+						variant={showTranslationLine ? "solid" : "surface"}
+						color={showTranslationLine ? undefined : "gray"}
+						onClick={() => setShowTranslationLine((v) => !v)}
 						style={{
-							width: "4em",
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: showTranslationLine ? 600 : 500,
 						}}
-						defaultValue={lyricWordFadeWidth}
-						onBlur={(e) => {
-							const value = Number.parseFloat(e.target.value);
-							if (Number.isFinite(value)) {
-								setLyricWordFadeWidth(value);
-							}
+					>
+						<LocalLanguage16Regular />
+						<span>{t("ribbonBar.previewMode.showTranslation", "Translation")}</span>
+					</Button>
+
+					<Button
+						size="1"
+						variant={showRomanLine ? "solid" : "surface"}
+						color={showRomanLine ? undefined : "gray"}
+						onClick={() => setShowRomanLine((v) => !v)}
+						style={{
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: showRomanLine ? 600 : 500,
 						}}
-					/>
-					<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-						<Flex gap="1" align="center">
-							<Flash16Regular />
-							{t("ribbonBar.previewMode.instantFade", "Instant Fade Out")}
-						</Flex>
-					</Text>
-					<Checkbox
-						checked={instantFade}
-						onCheckedChange={(v) => setInstantFade(!!v)}
-					/>
+					>
+						<Translate16Regular />
+						<span>{t("ribbonBar.previewMode.showRoman", "Romanization")}</span>
+					</Button>
+
+					<Button
+						size="1"
+						variant={hideObsceneWords ? "solid" : "surface"}
+						color={hideObsceneWords ? undefined : "gray"}
+						onClick={() => setHideObsceneWords((v) => !v)}
+						style={{
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: hideObsceneWords ? 600 : 500,
+						}}
+					>
+						<Warning16Regular />
+						<span>{t("ribbonBar.previewMode.maskObsceneWords", "Mask Obscene")}</span>
+					</Button>
 				</Grid>
 			</RibbonSection>
+
+			{/* Advanced Render Section */}
 			{showAdvanced && (
 				<RibbonSection
 					isSidebar={isSidebar}
@@ -320,33 +262,29 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						</Flex>
 					}
 				>
-					<Grid
-						columns="max-content auto"
-						gap="2"
-						gapY="1"
-						flexGrow="1"
-						align="center"
+					<Button
+						size="1"
+						variant={showFps ? "solid" : "surface"}
+						color={showFps ? undefined : "gray"}
+						onClick={() => setShowFps((v) => !v)}
+						style={{
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: showFps ? 600 : 500,
+						}}
 					>
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<ArrowSync16Regular />
-								{"V-Sync"}
-							</Flex>
-						</Text>
-						<Checkbox checked={vsync} onCheckedChange={(v) => setVsync(!!v)} />
-						<Text wrap="nowrap" size="1" style={{ color: "var(--accent-11)" }}>
-							<Flex gap="1" align="center">
-								<TopSpeed16Regular />
-								{t("ribbonBar.previewMode.showFps", "Show FPS")}
-							</Flex>
-						</Text>
-						<Checkbox
-							checked={showFps}
-							onCheckedChange={(v) => setShowFps(!!v)}
-						/>
-					</Grid>
+						<TopSpeed16Regular />
+						<span>{t("ribbonBar.previewMode.showFps", "Show FPS")}</span>
+					</Button>
 				</RibbonSection>
 			)}
+
+			{/* Advanced Switch */}
 			<RibbonSection
 				label={
 					<Flex gap="1" align="center">

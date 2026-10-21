@@ -38,6 +38,59 @@
 	initial-value: -50%;
 }
 
+:root,
+.root {
+	/* ─── Color tokens (Apple HIG / iOS Glass) ───────────────────────── */
+	--color-text-primary: hsla(0, 0%, 100%, 0.92);
+	--color-text-secondary: hsla(0, 0%, 100%, 0.6);
+	--color-text-tertiary: hsla(0, 0%, 100%, 0.35);
+	--color-text-quaternary: hsla(0, 0%, 100%, 0.18);
+	--color-text-on-fill: #000;
+
+	--color-bg-elevated: rgba(28, 28, 32, 0.88);
+	--color-bg-overlay: rgba(0, 0, 0, 0.35);
+
+	/* ─── Materials (Liquid Glass) ───────────────────────────────────── */
+	--material-ultraThin-bg: rgba(0, 0, 0, 0.08);
+	--material-ultraThin-blur: blur(8px) saturate(1.5) brightness(1.04);
+
+	--material-regular-bg: rgba(0, 0, 0, 0.12);
+	--material-regular-blur: blur(12px) saturate(1.6) brightness(1.05);
+
+	--material-thick-bg: rgba(0, 0, 0, 0.16);
+	--material-thick-blur: blur(16px) saturate(1.7) brightness(1.06);
+
+	/* ─── Liquid edges (gloss specular top + refracted underside) ────── */
+	--liquid-edge:
+		inset 0 1px 0 rgba(255, 255, 255, 0.38),
+		inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+	--liquid-edge-strong:
+		inset 0 1px 0 rgba(255, 255, 255, 0.55),
+		inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+
+	/* ─── Ambient liquid cast ────────────────────────────────────────── */
+	--liquid-cast:
+		0 16px 40px -8px rgba(8, 10, 18, 0.55),
+		0 4px 12px -2px rgba(8, 10, 18, 0.35);
+	--liquid-cast-soft:
+		0 10px 24px -6px rgba(8, 10, 18, 0.42),
+		0 2px 6px -1px rgba(8, 10, 18, 0.28);
+
+	/* ─── Radii ──────────────────────────────────────────────────────── */
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-pill: 999px;
+
+	/* ─── Upstream Text Glow Definitions ─────────────────────────────── */
+	--TextGlowDef: rgba(255, 255, 255, 0.15) 0px 0px 6px;
+	--ActiveTextGlowDef: rgba(255, 255, 255, 0.4) 0px 0px 14px;
+	--StrongTextGlowDef: rgba(255, 255, 255, 0.68) 0px 0px 16.4px;
+	--StrongerTextGlowDef: rgba(255, 255, 255, 0.74) 0px 0px 16px;
+}
+
 .root {
 	position: relative;
 	display: flex;
@@ -50,8 +103,12 @@
 	font-family: var(
 		--preview-font-family,
 		"SpicyLyrics",
-		"Noto Sans Georgian",
-		"VazirmatnRegular",
+		-apple-system,
+		BlinkMacSystemFont,
+		"Segoe UI",
+		Roboto,
+		Helvetica,
+		Arial,
 		sans-serif
 	);
 }
@@ -169,29 +226,39 @@
 	pointer-events: none;
 }
 
+/* ── Viewport & Scroll Container ─────────────────────────────── */
 .viewport {
 	position: relative;
 	z-index: 1;
 	flex: 1;
 	overflow-y: auto;
-	padding: clamp(16px, 3cqh, 28px) 15cqw 45cqh;
+	overflow-x: hidden;
+	height: 100%;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 25cqh 15cqw 12cqh;
 	scroll-behavior: smooth;
-	mask-image: linear-gradient(
-		to bottom,
-		transparent,
-		black 20px,
-		black calc(100% - 48px),
-		transparent
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+
+	--ImageMask: linear-gradient(
+		180deg,
+		transparent 0,
+		transparent 16px,
+		#000 64px,
+		#000 calc(100% - 64px),
+		transparent calc(100% - 16px),
+		transparent 100%
 	);
-	-webkit-mask-image: linear-gradient(
-		to bottom,
-		transparent,
-		black 20px,
-		black calc(100% - 48px),
-		transparent
-	);
+	-webkit-mask-image: var(--ImageMask);
+	mask-image: var(--ImageMask);
 }
 
+.lyricsColumn .viewport {
+	padding: 25cqh clamp(20px, 4cqw, 48px) 12cqh clamp(24px, 5cqw, 60px);
+}
+
+/* ── Lyric Lines ─────────────────────────────────────────────── */
 .line {
 	--blur: 0px;
 	--line-size: clamp(1.85rem, 7cqw, 3.5rem);
@@ -202,13 +269,16 @@
 	margin: 1cqw 0;
 	font-size: var(--line-size);
 	font-weight: 700;
-	line-height: 1.1818;
+	line-height: 1.1818181818;
+	letter-spacing: -0.025em;
 	transform-origin: left center;
 	transition:
-		opacity 0.2s ease,
-		transform 0.2s ease;
+		opacity 0.2s cubic-bezier(0.61, 1, 0.88, 1),
+		transform 0.2s cubic-bezier(0.37, 0, 0.63, 1),
+		scale 0.2s cubic-bezier(0.37, 0, 0.63, 1);
 	text-shadow: 0 0 var(--blur) rgba(255, 255, 255, 0.5);
 	cursor: pointer;
+	will-change: transform, opacity;
 }
 
 .line[data-state="not-sung"] {
@@ -221,6 +291,12 @@
 	opacity: 1;
 	--blur: 0px;
 }
+.line:hover {
+	opacity: 1 !important;
+	--blur: 0px !important;
+}
+
+/* Line-synced styles */
 .lineSynced {
 	--line-gradient-position: -20%;
 	--line-shadow-blur: 4px;
@@ -239,6 +315,14 @@
 .lineSynced[data-state="active"]:not(.dotLine) {
 	scale: 1.05;
 }
+
+/* Simple Lyrics Mode adjustments */
+.simple .line[data-state="not-sung"] {
+	opacity: 0.45;
+}
+.simple .line[data-state="sung"] {
+	opacity: 0.35;
+}
 .simple .lineSynced {
 	--line-gradient-position: 100%;
 	background-image: linear-gradient(
@@ -248,15 +332,12 @@
 	);
 	text-shadow: none;
 }
-.simple .line[data-state="not-sung"] {
-	opacity: 0.45;
-}
-.simple .line[data-state="sung"] {
-	opacity: 0.35;
-}
+
+/* ── Duet & RTL Line Layout ──────────────────────────────────── */
 .duet {
 	justify-content: flex-end;
 	text-align: end;
+	column-gap: 0.32ch;
 	transform-origin: right center;
 }
 .rtl {
@@ -271,6 +352,7 @@
 		rgba(255, 255, 255, 0.5) calc(var(--gradient-position) + 20%)
 	);
 }
+
 .hasDuetLines .line:not(.dotLine, .duet) {
 	padding-right: 15cqw;
 }
@@ -285,51 +367,71 @@
 	padding-left: 0;
 	padding-right: 15cqw;
 }
+
+:not(.hasDuetLines) .line:not(.dotLine) {
+	padding-right: 5cqw;
+}
+:not(.hasDuetLines) .line.rtl:not(.dotLine) {
+	padding-left: 5cqw;
+}
+
+/* ── Background Vocal Lines ──────────────────────────────────── */
 .backgroundLine {
+	--font-size: calc(var(--line-size) * 0.75);
+	font-size: var(--font-size) !important;
+	font-weight: 600 !important;
 	margin-top: -1cqw;
 	margin-bottom: 1cqw;
-	font-size: calc(var(--line-size) * 0.75);
-	font-weight: 600;
+	opacity: 0.7;
 }
+.backgroundLine[data-state="active"] {
+	opacity: 0.95;
+}
+.backgroundLine .word,
+.backgroundLine .letter {
+	--gradient-alpha: 0.6;
+	--gradient-alpha-end: 0.3;
+}
+
+/* ── Musical Interlude Dot Line ──────────────────────────────── */
 .dotLine {
 	position: relative;
 	z-index: -1;
-	height: 0;
-	margin: 0;
-	padding: 0;
-	overflow: hidden;
-	line-height: 0;
+	height: 0 !important;
+	line-height: 0 !important;
+	overflow: hidden !important;
+	margin: 0 !important;
+	padding: 0 !important;
 	opacity: 0;
-	font-size: calc(var(--line-size) * 1.3);
+	font-family: inherit;
 	transition:
 		transform 0.14s,
-		opacity 0.14s;
+		opacity 0.14s !important;
 }
 .dotLine:not([data-state="active"]) {
-	/* A collapsed block still prevents the margins of its two lyric neighbours
-	 * from collapsing together. Cancel half of each neighbouring line margin so
-	 * a hidden interlude has exactly the same gap as two adjacent lyric lines. */
-	margin-block: -0.5cqw;
+	margin-block: -0.5cqw !important;
 }
 .dotLine[data-state="active"] {
 	z-index: 0;
-	height: auto;
-	overflow: visible;
-	line-height: 1.1818;
+	height: auto !important;
+	overflow: visible !important;
+	line-height: 1.1818181818 !important;
 	opacity: 1;
 }
 .dotGroup {
+	--dot-gap: clamp(0.005rem, 1.7cqw, 0.18rem);
 	display: flex;
-	gap: clamp(0.005rem, 1.7cqw, 0.18rem);
-	transform-origin: center;
-	transform: scale(1);
-	transition: transform 0.3s;
-	will-change: transform;
+	flex-direction: row;
+	gap: var(--dot-gap);
+	transform-origin: center center;
+	scale: 1;
+	transition: scale 0.3s !important;
+	will-change: transform, scale;
 }
 .dotLine[data-prehidden="true"] .dotGroup,
 .dotLine:not([data-state="active"]) .dotGroup {
-	transform: scale(0);
-	transition: transform 0.4s
+	scale: 0;
+	transition: scale 0.4s
 		linear(
 			0,
 			-0.006 9.4%,
@@ -345,35 +447,61 @@
 			0.238 85%,
 			0.566 92.7%,
 			1
-		);
+		) !important;
 }
 
+/* ── Words, Letters, Syllable Highlights ─────────────────────── */
 .word,
 .letter,
 .dot {
 	--gradient-position: -20%;
+	--gradient-alpha: 0.85;
+	--gradient-alpha-end: 0.5;
+	--text-shadow-blur-radius: 4px;
+	--text-shadow-opacity: 0%;
 	display: inline-block;
 	white-space: pre-wrap;
-	background: linear-gradient(
-		90deg,
-		rgba(255, 255, 255, 0.85) var(--gradient-position),
-		rgba(255, 255, 255, 0.5) calc(var(--gradient-position) + 20%)
-	);
-	-webkit-background-clip: text;
+	cursor: pointer;
+	font-weight: 700 !important;
+	-webkit-text-fill-color: transparent;
 	background-clip: text;
-	color: transparent;
-	text-shadow: 0 0 var(--shadow-blur, 4px)
-		rgba(255, 255, 255, var(--shadow-alpha, 0));
+	-webkit-background-clip: text;
+	position: relative;
+	background-image: linear-gradient(
+		90deg,
+		rgba(255, 255, 255, var(--gradient-alpha)) var(--gradient-position),
+		rgba(255, 255, 255, var(--gradient-alpha-end)) calc(var(--gradient-position) + 20%)
+	);
+	text-shadow: 0 0 var(--text-shadow-blur-radius, var(--shadow-blur, 4px))
+		rgba(255, 255, 255, var(--text-shadow-opacity, var(--shadow-alpha, 0)));
 	will-change: transform, background-position, text-shadow;
 }
+
+.line[data-state="active"] .word,
+.line[data-state="active"] .letter,
+.line[data-state="active"] .letterGroup {
+	opacity: 1;
+}
+
+.line[data-state="sung"] .word,
+.line[data-state="sung"] .letter {
+	--gradient-position: 100% !important;
+}
+
+.line[data-state="not-sung"] .word,
+.line[data-state="not-sung"] .letter {
+	--gradient-position: -20% !important;
+}
+
 .word[dir="rtl"],
 .letter[dir="rtl"] {
 	background-image: linear-gradient(
 		-90deg,
-		rgba(255, 255, 255, 0.85) var(--gradient-position),
-		rgba(255, 255, 255, 0.5) calc(var(--gradient-position) + 20%)
+		rgba(255, 255, 255, var(--gradient-alpha)) var(--gradient-position),
+		rgba(255, 255, 255, var(--gradient-alpha-end)) calc(var(--gradient-position) + 20%)
 	);
 }
+
 .backgroundLine .word,
 .backgroundLine .letter {
 	background-image: linear-gradient(
@@ -382,6 +510,32 @@
 		rgba(255, 255, 255, 0.3) calc(var(--gradient-position) + 20%)
 	);
 }
+
+/* Syllable transform-origin rules matching upstream:
+   First syllable expands from right, middle from center, last from left */
+.word,
+.letterGroup {
+	transform-origin: center center;
+}
+.word.partOfWord,
+.letterGroup.partOfWord {
+	transform-origin: right center;
+}
+.partOfWord + :is(.word.partOfWord, .letterGroup.partOfWord) {
+	transform-origin: center center;
+}
+.partOfWord + :is(.word, .letterGroup):not(.partOfWord) {
+	transform-origin: left center;
+}
+
+.rtl .word.partOfWord,
+.rtl .letterGroup.partOfWord {
+	transform-origin: left center;
+}
+.rtl .partOfWord + :is(.word, .letterGroup):not(.partOfWord) {
+	transform-origin: right center;
+}
+
 .letterGroup {
 	display: inline-block;
 	white-space: nowrap;
@@ -410,12 +564,17 @@
 .wordBoundary {
 	margin-right: 0.32ch;
 }
+.duet .wordBoundary {
+	margin-right: 0;
+}
+
 .dot {
 	--gradient-position: 100%;
 	min-width: 0.5em;
 	text-align: center;
 	line-height: 0.65;
 }
+
 .translation {
 	flex-basis: 100%;
 	display: block;
@@ -428,6 +587,7 @@
 	text-shadow: none;
 }
 
+/* Simple mode gradients */
 .simple .word,
 .simple .letter {
 	--spicy-slm-gradient-position: -50%;
@@ -441,6 +601,37 @@
 .simple .dot {
 	opacity: 0.27;
 	scale: 1;
+}
+
+/* ── Song Credits & Info at end of lyrics ─────────────────────── */
+.songCredits {
+	margin-top: 4cqh;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35em;
+	padding-bottom: 8cqh;
+}
+
+.credits,
+.lyricsProvider,
+.songInfo {
+	font-size: clamp(0.8rem, 3.5cqw, 1.05rem);
+	font-weight: 600;
+	color: white;
+	opacity: 0.6;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.3em;
+}
+
+.creditsLabel::after {
+	content: ":";
+}
+
+.creditsValue {
+	opacity: 0.95;
+	font-weight: 600;
 }
 
 @keyframes spicyAmbientBackground {
@@ -503,7 +694,7 @@
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	padding: clamp(20px, 4vw, 56px);
+	padding: clamp(24px, 4vw, 56px);
 	width: clamp(280px, 38vw, 480px);
 	flex-shrink: 0;
 	z-index: 5;
@@ -515,28 +706,33 @@
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
+	padding: 24px;
+	border-radius: var(--radius-lg, 16px);
+	background: var(--material-ultraThin-bg);
+	-webkit-backdrop-filter: var(--material-ultraThin-blur);
+	backdrop-filter: var(--material-ultraThin-blur);
+	box-shadow: var(--liquid-edge), var(--liquid-cast-soft);
+	transition:
+		box-shadow 0.3s ease,
+		transform 0.3s ease;
 }
 
 .artworkImageWrapper {
 	width: 100%;
 	aspect-ratio: 1 / 1;
-	border-radius: 14px;
+	border-radius: var(--radius-md, 14px);
 	overflow: hidden;
 	position: relative;
-	background: rgba(255, 255, 255, 0.06);
-	box-shadow:
-		0 20px 48px rgba(0, 0, 0, 0.45),
-		0 0 1px rgba(255, 255, 255, 0.15);
+	background: rgba(255, 255, 255, 0.05);
+	box-shadow: var(--liquid-cast), var(--liquid-edge);
 	transition:
-		transform 0.3s ease,
-		box-shadow 0.3s ease;
+		transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+		box-shadow 0.35s ease;
 }
 
 .artworkImageWrapper:hover {
-	transform: scale(1.015);
-	box-shadow:
-		0 24px 56px rgba(0, 0, 0, 0.55),
-		0 0 1px rgba(255, 255, 255, 0.25);
+	transform: scale(1.02);
+	box-shadow: var(--liquid-cast), var(--liquid-edge-strong);
 }
 
 .artworkImage {
@@ -560,97 +756,29 @@
 	color: rgba(255, 255, 255, 0.4);
 }
 
-.playbackRow {
-	width: 100%;
-	margin-top: 18px;
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	user-select: none;
-}
-
-.timeLabel {
-	font-size: 0.82rem;
-	font-weight: 500;
-	font-family: var(--default-font-family, inherit);
-	font-variant-numeric: tabular-nums;
-	color: rgba(255, 255, 255, 0.7);
-	min-width: 36px;
-	text-align: center;
-	white-space: nowrap;
-}
-
-.scrubberContainer {
-	flex: 1;
-	height: 20px;
-	display: flex;
-	align-items: center;
-	cursor: pointer;
-	position: relative;
-}
-
-.scrubberTrack {
-	width: 100%;
-	height: 4px;
-	border-radius: 9999px;
-	background: rgba(255, 255, 255, 0.25);
-	position: relative;
-	overflow: hidden;
-	transition: height 0.15s ease;
-}
-
-.scrubberContainer:hover .scrubberTrack {
-	height: 6px;
-}
-
-.scrubberFill {
-	height: 100%;
-	border-radius: 9999px;
-	background: #ffffff;
-	transition: width 0.05s linear;
-}
-
-.scrubberThumb {
-	position: absolute;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	width: 12px;
-	height: 12px;
-	border-radius: 50%;
-	background: #ffffff;
-	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-	opacity: 0;
-	transition: opacity 0.15s ease;
-	pointer-events: none;
-}
-
-.scrubberContainer:hover .scrubberThumb {
-	opacity: 1;
-}
-
 .trackDetails {
-	margin-top: 14px;
+	margin-top: 16px;
 	width: 100%;
 	text-align: left;
 }
 
 .songTitle {
-	font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+	font-size: clamp(1.25rem, 2.4vw, 1.75rem);
 	font-weight: 800;
-	line-height: 1.25;
-	color: rgba(255, 255, 255, 0.98);
+	line-height: 1.22;
+	color: hsla(0, 0%, 100%, 0.96);
 	margin: 0 0 6px 0;
-	letter-spacing: -0.02em;
+	letter-spacing: -0.025em;
 	word-break: break-word;
-	text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+	text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
 .songArtist {
-	font-size: clamp(0.92rem, 1.4vw, 1.12rem);
+	font-size: clamp(0.92rem, 1.4vw, 1.15rem);
 	font-weight: 500;
-	color: rgba(255, 255, 255, 0.65);
+	color: hsla(0, 0%, 100%, 0.65);
 	margin: 0;
-	letter-spacing: -0.01em;
+	letter-spacing: -0.015em;
 	word-break: break-word;
 	text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }
@@ -664,11 +792,6 @@
 	overflow: hidden;
 	position: relative;
 	container-type: size;
-}
-
-.lyricsColumn .viewport {
-	padding-left: clamp(20px, 4cqw, 48px);
-	padding-right: clamp(24px, 6cqw, 64px);
 }
 
 /* ── Floating Controls ─────────────────────────────────────── */
@@ -692,10 +815,10 @@
 	width: 36px;
 	height: 36px;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.4);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-	border: 1px solid rgba(255, 255, 255, 0.18);
+	background: var(--material-regular-bg);
+	backdrop-filter: var(--material-regular-blur);
+	-webkit-backdrop-filter: var(--material-regular-blur);
+	box-shadow: var(--liquid-edge);
 	color: rgba(255, 255, 255, 0.85);
 	cursor: pointer;
 	transition: all 0.2s ease;
@@ -703,6 +826,7 @@
 
 .floatingBtn:hover {
 	background: rgba(255, 255, 255, 0.22);
+	box-shadow: var(--liquid-edge-strong);
 	color: #ffffff;
 	transform: scale(1.08);
 }
@@ -723,6 +847,7 @@
 		align-items: center;
 	}
 	.artworkCard {
-		max-width: 220px;
+		max-width: 240px;
+		padding: 16px;
 	}
 }

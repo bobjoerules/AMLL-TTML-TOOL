@@ -32,6 +32,10 @@ export const segmentationSplitEnglishAtom = atomWithStorage(
 	"segmentation.splitEnglish",
 	true,
 );
+export const segmentationResplitWordsAtom = atomWithStorage(
+	"segmentation.resplitWords",
+	true,
+);
 export const segmentationEngineAtom = atomWithStorage<SegmentationEngineId>(
 	"segmentation.engine",
 	"prosodic",

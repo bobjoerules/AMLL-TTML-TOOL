@@ -368,7 +368,158 @@ export const enhancedEnglishSplit = (word: string): string[] => {
 	return [word];
 };
 
-const prosodicSplit = enhancedEnglishSplit;
+export const prosodicSplit = (word: string): string[] => {
+	const trimmed = word.trim();
+	if (!trimmed) return [word];
+
+	const key = trimmed.toLowerCase();
+	if (NEVER_SPLIT_WORDS.has(key)) {
+		return [word];
+	}
+
+	const entry =
+		dictionary.get(key) ??
+		(key.endsWith("in") ? dictionary.get(`${key}g`) : undefined);
+	if (entry !== undefined) {
+		const parts = splitAtLengths(
+			trimmed,
+			typeof entry === "number" ? [entry] : entry,
+		);
+		return applySplitsToWord(word, parts);
+	}
+
+	const compromiseParts = mergeContractionSuffix(compromiseSplit(trimmed));
+	return applySplitsToWord(word, compromiseParts);
+};
+
+const SPLIT_VOWELS = new Set("aeiouyàáâäåèéêëìíîïòóôöøùúûü".split(""));
+const SPLIT_DIGRAPHS = ["th", "ch", "sh", "ph", "wh", "gh", "ck", "qu"];
+const HIATUS = new Set(["ia", "io", "iu", "eo", "ua", "uo", "ii"]);
+const isLetter = (c: string | undefined): boolean =>
+	c !== undefined && /\p{L}/u.test(c);
+
+const vowelAt = (lw: string, i: number): boolean => {
+	const c = lw[i];
+	if (!SPLIT_VOWELS.has(c)) return false;
+	if (c === "u" && i > 0 && lw[i - 1] === "q") return false;
+	if (
+		c === "y" &&
+		(i === 0 || !isLetter(lw[i - 1])) &&
+		i + 1 < lw.length &&
+		SPLIT_VOWELS.has(lw[i + 1])
+	) {
+		return false; // yes, you, year
+	}
+	return true;
+};
+
+export const splitShape = (body: string) => {
+	const lw = body.toLowerCase();
+	const n = lw.length;
+	const groups: [number, number][] = [];
+	let i = 0;
+	while (i < n) {
+		if (vowelAt(lw, i)) {
+			let j = i;
+			while (j + 1 < n && vowelAt(lw, j + 1)) j++;
+			groups.push([i, j]);
+			i = j + 1;
+		} else {
+			i++;
+		}
+	}
+	const finalLe =
+		n >= 4 && lw.endsWith("le") && !vowelAt(lw, n - 3) && isLetter(lw[n - 3]);
+	const led =
+		n >= 5 && lw.endsWith("led") && !vowelAt(lw, n - 4) && isLetter(lw[n - 4]);
+	const les =
+		n >= 5 && lw.endsWith("les") && !vowelAt(lw, n - 4) && isLetter(lw[n - 4]);
+	let silent = false;
+	let alt: [number, number][] | null = null;
+	if (groups.length > 1 && !finalLe && !led && !les) {
+		const last = groups[groups.length - 1];
+		if (lw.endsWith("e") && last[0] === n - 1 && last[1] === n - 1) {
+			silent = true;
+		} else if (
+			lw.endsWith("ed") &&
+			n > 3 &&
+			!"td".includes(lw[n - 3]) &&
+			last[0] === n - 2 &&
+			last[1] === n - 2
+		) {
+			silent = true;
+		} else if (
+			lw.endsWith("es") &&
+			n > 3 &&
+			!"sxzcg".includes(lw[n - 3]) &&
+			!["ch", "sh"].includes(lw.slice(n - 4, n - 2)) &&
+			last[0] === n - 2 &&
+			last[1] === n - 2
+		) {
+			silent = true;
+		}
+		if (silent) {
+			if (!lw.endsWith("e")) alt = groups.map((g) => [g[0], g[1]]);
+			groups.pop();
+		}
+	}
+	return { lw, groups, silent, alt };
+};
+
+export const spicyLyricsSplit = (body: string): string[] => {
+	const trimmed = body.trim();
+	if (!trimmed) return [body];
+	const key = trimmed.toLowerCase();
+	if (NEVER_SPLIT_WORDS.has(key)) return [body];
+
+	const { lw, groups } = splitShape(trimmed);
+	const cuts: number[] = [];
+	for (let k = 0; k < groups.length - 1; k++) {
+		const a = groups[k][1] + 1;
+		const b = groups[k + 1][0];
+		const units: number[] = [];
+		let i = a;
+		while (i < b) {
+			const pair = lw.slice(i, i + 2);
+			const step =
+				i + 2 <= b &&
+				SPLIT_DIGRAPHS.includes(pair) &&
+				!(pair === "gh" && i >= 1 && lw[i - 1] === "n")
+					? 2
+					: 1;
+			units.push(i);
+			i += step;
+		}
+		if (!units.length || lw.slice(a, b) === "ng") {
+			cuts.push(b);
+		} else if (units.length === 1) {
+			cuts.push(units[0]);
+		} else {
+			cuts.push(units[Math.floor(units.length / 2)]);
+		}
+	}
+
+	for (const [s, e] of groups) {
+		for (let pos = s + 1; pos <= e; pos++) {
+			if (HIATUS.has(lw.slice(pos - 1, pos + 1))) {
+				cuts.push(pos);
+			}
+		}
+	}
+	cuts.sort((a, b) => a - b);
+
+	const parts: string[] = [];
+	let prev = 0;
+	for (const c of cuts) {
+		if (c > prev) {
+			parts.push(trimmed.slice(prev, c));
+			prev = c;
+		}
+	}
+	parts.push(trimmed.slice(prev));
+
+	return applySplitsToWord(body, parts.filter(Boolean));
+};
 
 const isJapaneseCharacter = (char: string | undefined) =>
 	!!char &&
@@ -412,9 +563,23 @@ export const splitJapaneseText = (text: string) => {
 export const SYLLABIFICATION_ENGINES: SyllabificationEngine[] = [
 	{
 		id: "prosodic",
-		name: "English (Enhanced / Lyrics)",
+		name: "English (Prosodic)",
 		description:
-			"High-accuracy lyric hyphenation combining TeX patterns, lyric morphology, and dictionary boundaries.",
+			"Dictionary-backed English syllable boundaries with a speech fallback (pre-v3.2.0 default).",
+		split: prosodicSplit,
+	},
+	{
+		id: "spicy-lyrics",
+		name: "English (Spicy Lyrics / TTML Review)",
+		description:
+			"Singing syllable heuristics from TTML Review & Spicy Lyrics rules (open syllables, digraph-safe).",
+		split: spicyLyricsSplit,
+	},
+	{
+		id: "enhanced",
+		name: "English (Enhanced / TeX)",
+		description:
+			"TeX pattern hyphenation with repair rules for compound words and lyric exceptions.",
 		split: enhancedEnglishSplit,
 	},
 	{

@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { newLyricWord } from "$/types/ttml";
+import { newLyricLine, newLyricWord } from "$/types/ttml";
 import type { SegmentationConfig } from "../types";
 import { loadHyphenator } from "./hyphen-loader";
-import { segmentWord } from "./segmentation";
+import {
+	recombineSplitWords,
+	segmentLyricLines,
+	segmentWord,
+} from "./segmentation";
 import {
 	getSyllabificationEngine,
 	splitJapaneseText,
@@ -76,8 +80,8 @@ describe("syllabification engines", () => {
 		expect(parts.join("")).toBe(word);
 	});
 
-	it("splits compound words with consonant codas correctly (e.g., blindfold, headlights)", () => {
-		const engine = getSyllabificationEngine("prosodic");
+	it("splits compound words with consonant codas correctly with the enhanced engine", () => {
+		const engine = getSyllabificationEngine("enhanced");
 		expect(engine.split("blindfold")).toEqual(["blind", "fold"]);
 		expect(engine.split("blindfolded")).toEqual(["blind", "fold", "ed"]);
 		expect(engine.split("headlights")).toEqual(["head", "lights"]);
@@ -90,13 +94,37 @@ describe("syllabification engines", () => {
 
 		const wordBlindfold = { ...newLyricWord(), word: "blindfold" };
 		expect(
-			segmentWord(wordBlindfold, prosodicConfig).map((part) => part.word),
+			segmentWord(wordBlindfold, {
+				...prosodicConfig,
+				engine: "enhanced",
+			}).map((part) => part.word),
 		).toEqual(["blind", "fold"]);
+	});
 
-		const wordHeadlights = { ...newLyricWord(), word: "headlights" };
-		expect(
-			segmentWord(wordHeadlights, prosodicConfig).map((part) => part.word),
-		).toEqual(["head", "lights"]);
+	it("splits singing syllables accurately using the spicy-lyrics (TTML Review) engine", () => {
+		const engine = getSyllabificationEngine("spicy-lyrics");
+		expect(engine.split("never")).toEqual(["ne", "ver"]);
+		expect(engine.split("running")).toEqual(["run", "ning"]);
+		expect(engine.split("singing")).toEqual(["sing", "ing"]);
+		expect(engine.split("doctor")).toEqual(["doc", "tor"]);
+		expect(engine.split("monster")).toEqual(["mon", "ster"]);
+		expect(engine.split("candle")).toEqual(["can", "dle"]);
+		expect(engine.split("water")).toEqual(["wa", "ter"]);
+		expect(engine.split("music")).toEqual(["mu", "sic"]);
+		expect(engine.split("baby")).toEqual(["ba", "by"]);
+		expect(engine.split("fire")).toEqual(["fire"]);
+		expect(engine.split("diamond")).toEqual(["di", "a", "mond"]);
+		expect(engine.split("radio")).toEqual(["ra", "di", "o"]);
+		expect(engine.split("together")).toEqual(["to", "ge", "ther"]);
+	});
+
+	it("restores prosodic engine to pre-v3.2.0 dictionary and speech fallback behavior", () => {
+		const engine = getSyllabificationEngine("prosodic");
+		expect(engine.split("never")).toEqual(["ne", "ver"]);
+		expect(engine.split("water")).toEqual(["wa", "ter"]);
+		expect(engine.split("baby")).toEqual(["ba", "by"]);
+		expect(engine.split("running")).toEqual(["run", "ning"]);
+		expect(engine.split("together")).toEqual(["to", "ge", "ther"]);
 	});
 
 	it("loads Polish hyphenation patterns", async () => {
@@ -108,8 +136,8 @@ describe("syllabification engines", () => {
 		]);
 	});
 
-	it("accurately splits common lyric words previously mishandled by compromise/prosodic", () => {
-		const engine = getSyllabificationEngine("prosodic");
+	it("accurately splits common lyric words with the enhanced engine", () => {
+		const engine = getSyllabificationEngine("enhanced");
 		expect(engine.split("forever")).toEqual(["for", "ev", "er"]);
 		expect(engine.split("water")).toEqual(["wa", "ter"]);
 		expect(engine.split("river")).toEqual(["riv", "er"]);
@@ -152,5 +180,78 @@ describe("syllabification engines", () => {
 		expect(engine.split("cause")).toEqual(["cause"]);
 		expect(engine.split("bout")).toEqual(["bout"]);
 		expect(engine.split("til")).toEqual(["til"]);
+	});
+
+	it("recombines already split syllables into full words", () => {
+		const splitWords = [
+			{ ...newLyricWord(), word: "Nev", startTime: 1000, endTime: 1250 },
+			{ ...newLyricWord(), word: "er ", startTime: 1250, endTime: 1600 },
+			{ ...newLyricWord(), word: "gon", startTime: 1600, endTime: 1800 },
+			{ ...newLyricWord(), word: "na ", startTime: 1800, endTime: 2100 },
+			{ ...newLyricWord(), word: "give ", startTime: 2100, endTime: 2500 },
+		];
+
+		const recombined = recombineSplitWords(splitWords);
+		expect(recombined).toHaveLength(3);
+		expect(recombined[0].word).toBe("Never ");
+		expect(recombined[0].startTime).toBe(1000);
+		expect(recombined[0].endTime).toBe(1600);
+		expect(recombined[1].word).toBe("gonna ");
+		expect(recombined[1].startTime).toBe(1600);
+		expect(recombined[1].endTime).toBe(2100);
+		expect(recombined[2].word).toBe("give ");
+	});
+
+	it("does not recombine CJK characters", () => {
+		const cjkWords = [
+			{ ...newLyricWord(), word: "我", startTime: 1000, endTime: 1250 },
+			{ ...newLyricWord(), word: "们", startTime: 1250, endTime: 1600 },
+		];
+		const recombined = recombineSplitWords(cjkWords);
+		expect(recombined).toHaveLength(2);
+		expect(recombined[0].word).toBe("我");
+		expect(recombined[1].word).toBe("们");
+	});
+
+	it("re-splits already split words when resplitWords is true", () => {
+		const line = {
+			...newLyricLine(),
+			words: [
+				// A word previously split typographically as "Nev" + "er "
+				{ ...newLyricWord(), word: "Nev", startTime: 1000, endTime: 1300 },
+				{ ...newLyricWord(), word: "er ", startTime: 1300, endTime: 1800 },
+			],
+		};
+
+		// With spicy-lyrics engine, "Never" is split as "Ne" + "ver "
+		const resplitLines = segmentLyricLines(
+			[line],
+			{
+				...prosodicConfig,
+				engine: "spicy-lyrics",
+				resplitWords: true,
+			},
+			true,
+		);
+
+		expect(resplitLines[0].words).toHaveLength(2);
+		expect(resplitLines[0].words[0].word).toBe("Ne");
+		expect(resplitLines[0].words[1].word).toBe("ver ");
+		expect(resplitLines[0].words[0].startTime).toBe(1000);
+		expect(resplitLines[0].words[1].endTime).toBe(1800);
+
+		// When resplitWords is false, already split words are kept intact
+		const untouchedLines = segmentLyricLines(
+			[line],
+			{
+				...prosodicConfig,
+				engine: "spicy-lyrics",
+				resplitWords: false,
+			},
+			true,
+		);
+		expect(untouchedLines[0].words).toHaveLength(2);
+		expect(untouchedLines[0].words[0].word).toBe("Nev");
+		expect(untouchedLines[0].words[1].word).toBe("er ");
 	});
 });

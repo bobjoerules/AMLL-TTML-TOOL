@@ -665,6 +665,18 @@
 	}
 }
 
+.lyricWord.unsynced:not(.selected) .wordMainText,
+.lyricWord.unsynced:not(.selected) .displayWord {
+	color: rgba(255, 110, 110, 0.78) !important;
+	text-shadow: 0 0 10px rgba(255, 60, 60, 0.25);
+}
+
+.lyricWord.unsynced:not(.selected):hover .wordMainText,
+.lyricWord.unsynced:not(.selected):hover .displayWord {
+	color: rgba(255, 140, 140, 0.95) !important;
+	text-shadow: 0 0 14px rgba(255, 70, 70, 0.45);
+}
+
 .lyricWord.sync.active {
 	background-color: var(--accent-a9);
 	transition: background-color 0s;
@@ -741,7 +753,9 @@
 .locateButton {
 	position: absolute;
 	right: var(--space-7);
-	bottom: var(--space-3);
+	bottom: var(--space-4);
+	width: 50px !important;
+	height: 50px !important;
 	z-index: 5;
 	background-color: var(--color-panel-solid) !important;
 	color: var(--gray-12) !important;

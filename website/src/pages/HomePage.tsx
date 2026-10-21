@@ -128,7 +128,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
-          <span>AMLL TTML Tool v3.2.1 Released</span>
+          <span>AMLL TTML Tool v4.0.1 Released</span>
         </div>
 
         <div className="hero-buttons">
@@ -721,9 +721,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             <div className="feature-icon" style={{ background: 'rgba(255, 255, 255, 0.08)', color: '#f4f4f5' }}>
               <Layers size={24} />
             </div>
-            <h3 className="feature-title">Apple Music & Spicy Visuals</h3>
+            <h3 className="feature-title">Next-Gen Spicy Lyrics Engine</h3>
             <p className="feature-desc">
-              Switch seamlessly between AMLL and SpicyLyrics preview renderers with live backdrop blur, glow animations, and color matching.
+              Experience lyrics with upstream Spicy Lyrics integration, Apple HIG Liquid Glass aesthetics, 3-phase syllable expansion, dynamic glow, and duet layouts.
             </p>
           </div>
 

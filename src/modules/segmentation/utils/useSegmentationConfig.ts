@@ -8,6 +8,7 @@ import {
 	segmentationPunctuationModeAtom,
 	segmentationPunctuationWeightAtom,
 	segmentationRemoveEmptySegmentsAtom,
+	segmentationResplitWordsAtom,
 	segmentationSplitCJKAtom,
 	segmentationSplitEnglishAtom,
 } from "../states";
@@ -18,6 +19,7 @@ import { getHyphenationLanguage } from "./syllabification-engines";
 export const useSegmentationConfig = () => {
 	const splitCJK = useAtomValue(segmentationSplitCJKAtom);
 	const splitEnglish = useAtomValue(segmentationSplitEnglishAtom);
+	const resplitWords = useAtomValue(segmentationResplitWordsAtom);
 	const engine = useAtomValue(segmentationEngineAtom);
 	const punctuationMode = useAtomValue(segmentationPunctuationModeAtom);
 	const punctuationWeightStr = useAtomValue(segmentationPunctuationWeightAtom);
@@ -60,6 +62,7 @@ export const useSegmentationConfig = () => {
 
 		return {
 			engine,
+			resplitWords,
 			splitCJK,
 			splitEnglish,
 			punctuationMode,
@@ -72,6 +75,7 @@ export const useSegmentationConfig = () => {
 		};
 	}, [
 		engine,
+		resplitWords,
 		splitCJK,
 		splitEnglish,
 		punctuationMode,

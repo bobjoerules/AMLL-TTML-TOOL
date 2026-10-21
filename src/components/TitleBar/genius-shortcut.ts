@@ -1,5 +1,11 @@
 import type { TTMLMetadata } from "$/types/ttml";
 
+export const checkIsTauri = (): boolean =>
+	typeof window !== "undefined" &&
+	(!!(window as any).__TAURI__ ||
+		!!(window as any).__TAURI_INTERNALS__ ||
+		!!import.meta.env?.TAURI_ENV_PLATFORM);
+
 export interface SongLoadCheckParams {
 	metadata: TTMLMetadata[];
 	lyricLinesCount: number;
@@ -11,6 +17,11 @@ export interface GeniusTargetResolutionParams {
 	metadata: TTMLMetadata[];
 	loadedAudioFileName?: string | null;
 	saveFileName?: string | null;
+}
+
+export interface GeniusAsyncTargetResolutionParams
+	extends GeniusTargetResolutionParams {
+	apiKey?: string;
 }
 
 /**
@@ -118,14 +129,9 @@ export function getIsSongLoaded(params: SongLoadCheckParams): boolean {
 	return false;
 }
 
-export function resolveGeniusTargetUrl(
+export function getSongSearchQuery(
 	params: GeniusTargetResolutionParams,
-): string {
-	const directUrl = findDirectGeniusPageUrl(params.metadata);
-	if (directUrl) {
-		return directUrl;
-	}
-
+): string | null {
 	const titleMeta = params.metadata?.find((m) => {
 		const key = m.key?.toLowerCase();
 		return key === "musicname" || key === "title" || key === "trackname";
@@ -162,9 +168,116 @@ export function resolveGeniusTargetUrl(
 	}
 
 	if (title || artist) {
-		const query = artist && title ? `${artist} ${title}` : title || artist;
+		return artist && title ? `${artist} ${title}` : title || artist;
+	}
+
+	return null;
+}
+
+async function fetchSafeJson<T = any>(url: string): Promise<T | null> {
+	if (checkIsTauri()) {
+		try {
+			const { invoke } = await import("@tauri-apps/api/core");
+			const raw = await invoke<string>("fetch_url", { url });
+			if (raw) return JSON.parse(raw);
+		} catch (err) {
+			console.warn("fetch_url failed, falling back to fetch:", err);
+		}
+	}
+	try {
+		const res = await fetch(url, {
+			headers: {
+				Accept: "application/json",
+			},
+		});
+		if (res.ok) return await res.json();
+	} catch (err) {
+		console.warn("fetch failed:", err);
+	}
+	return null;
+}
+
+export function resolveGeniusTargetUrl(
+	params: GeniusTargetResolutionParams,
+): string {
+	const directUrl = findDirectGeniusPageUrl(params.metadata);
+	if (directUrl) {
+		return directUrl;
+	}
+
+	const query = getSongSearchQuery(params);
+	if (query) {
 		return `https://genius.com/search?q=${encodeURIComponent(query)}`;
 	}
 
 	return "https://genius.com";
+}
+
+/**
+ * Resolves a song's direct Genius page URL asynchronously by first querying
+ * Genius search endpoints, falling back to the standard search query URL.
+ */
+export async function resolveGeniusDirectTargetUrl(
+	params: GeniusAsyncTargetResolutionParams,
+): Promise<string> {
+	const directUrl = findDirectGeniusPageUrl(params.metadata);
+	if (directUrl) {
+		return directUrl;
+	}
+
+	const query = getSongSearchQuery(params);
+	if (!query) {
+		return "https://genius.com";
+	}
+
+	// 1. Try authenticated official API search if API key is configured
+	if (params.apiKey) {
+		try {
+			const apiUrl = `https://api.genius.com/search?q=${encodeURIComponent(query)}&access_token=${params.apiKey}`;
+			const data = await fetchSafeJson(apiUrl);
+			const hitUrl = data?.response?.hits?.[0]?.result?.url;
+			if (hitUrl && isGeniusSongPageUrl(hitUrl)) {
+				return hitUrl;
+			}
+		} catch {
+			// fallback
+		}
+	}
+
+	// 2. Try Genius public song search API (returns song hits directly)
+	try {
+		const songSearchUrl = `https://genius.com/api/search/song?q=${encodeURIComponent(query)}`;
+		const data = await fetchSafeJson(songSearchUrl);
+		const hits = data?.response?.sections?.[0]?.hits || [];
+		for (const h of hits) {
+			const hitUrl = h?.result?.url;
+			if (hitUrl && isGeniusSongPageUrl(hitUrl)) {
+				return hitUrl;
+			}
+		}
+	} catch {
+		// fallback
+	}
+
+	// 3. Try Genius public multi search API (returns sections for top_hit and song)
+	try {
+		const multiSearchUrl = `https://genius.com/api/search/multi?q=${encodeURIComponent(query)}`;
+		const data = await fetchSafeJson(multiSearchUrl);
+		const sections = data?.response?.sections || [];
+		for (const section of sections) {
+			if (section.type === "song" || section.type === "top_hit") {
+				for (const h of section.hits || []) {
+					const hitUrl = h?.result?.url;
+					if (hitUrl && isGeniusSongPageUrl(hitUrl)) {
+						return hitUrl;
+					}
+				}
+			}
+		}
+	} catch {
+		// fallback
+	}
+
+	// 4. Fallback to web search page if direct page could not be located
+	return `https://genius.com/search?q=${encodeURIComponent(query)}`;
 }

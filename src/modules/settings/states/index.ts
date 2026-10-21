@@ -92,6 +92,11 @@ export const keepPlayingWordInViewAtom = atomWithStorage(
 	false,
 );
 
+export const highlightUnsyncedWordsInEditorAtom = atomWithStorage(
+	"highlightUnsyncedWordsInEditor",
+	false,
+);
+
 export const autosaveEnabledAtom = atomWithStorage("autosaveEnabled", true);
 export const autosaveIntervalAtom = atomWithStorage("autosaveInterval", 10);
 export const autosaveLimitAtom = atomWithStorage("autosaveLimit", 10);
@@ -133,6 +138,10 @@ export const discordRepositoryButtonAtom = atomWithStorage(
 export const discordStatusBadgeAtom = atomWithStorage(
 	"discordStatusBadge",
 	true,
+);
+export const discordIdleTimeoutEnabledAtom = atomWithStorage(
+	"discordIdleTimeoutEnabled",
+	false,
 );
 export const discordIdleTimeoutMinutesAtom = atomWithStorage(
 	"discordIdleTimeoutMinutes",
@@ -380,6 +389,13 @@ export const normalizeCyrillicEsOnImportAtom = atomWithStorage<boolean>(
 
 export const allowConsecutiveBackgroundLinesAtom = atomWithStorage<boolean>(
 	"allowConsecutiveBackgroundLines",
+	false,
+	undefined,
+	{ getOnInit: true },
+);
+
+export const openSpotMatchAfterSaveAtom = atomWithStorage<boolean>(
+	"openSpotMatchAfterSave",
 	false,
 	undefined,
 	{ getOnInit: true },

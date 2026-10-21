@@ -10,6 +10,7 @@ describe("allowConsecutiveBackgroundLinesAtom", () => {
 	it("loads the persisted export setting before any component subscribes", async () => {
 		const values = new Map([
 			["allowConsecutiveBackgroundLines", JSON.stringify(true)],
+			["openSpotMatchAfterSave", JSON.stringify(true)],
 		]);
 		vi.stubGlobal("window", {
 			localStorage: {
@@ -19,9 +20,11 @@ describe("allowConsecutiveBackgroundLinesAtom", () => {
 			},
 		});
 
-		const { allowConsecutiveBackgroundLinesAtom } = await import("./index");
+		const { allowConsecutiveBackgroundLinesAtom, openSpotMatchAfterSaveAtom } =
+			await import("./index");
 		const store = createStore();
 
 		expect(store.get(allowConsecutiveBackgroundLinesAtom)).toBe(true);
+		expect(store.get(openSpotMatchAfterSaveAtom)).toBe(true);
 	});
 });

@@ -31,6 +31,7 @@ import { useSegmentationConfig } from "$/modules/segmentation/utils/useSegmentat
 import {
 	allowConsecutiveBackgroundLinesAtom,
 	lyricTextNormalizationOptionsAtom,
+	openSpotMatchAfterSaveAtom,
 } from "$/modules/settings/states";
 import {
 	advancedSegmentationDialogAtom,
@@ -44,6 +45,7 @@ import {
 	openAccountSettingsAtom,
 	settingsDialogAtom,
 	spotMatchDialogAtom,
+	spotMatchInitialTrackIdAtom,
 	timeShiftDialogAtom,
 	timeStretchDialogAtom,
 	ttmlChecklistDialogAtom,
@@ -272,6 +274,25 @@ export const useTopMenuActions = () => {
 				if (savedName) {
 					setSaveFileName(savedName);
 					store.set(markSavedAtom);
+
+					if (store.get(openSpotMatchAfterSaveAtom)) {
+						const metadata = currentLyrics.metadata || [];
+						const spotifyMeta = metadata.find((m) => {
+							const k = (m.key || (m as any).name || "").toLowerCase();
+							return (
+								k === "spotifyid" ||
+								k === "spotify:track_id" ||
+								k === "spotify"
+							);
+						});
+						const rawId = Array.isArray(spotifyMeta?.value)
+							? spotifyMeta?.value[0]
+							: (spotifyMeta?.value as unknown as string);
+						if (rawId && typeof rawId === "string" && rawId.trim()) {
+							store.set(spotMatchInitialTrackIdAtom, rawId.trim());
+						}
+						store.set(spotMatchDialogAtom, true);
+					}
 				}
 			} catch (e) {
 				error("Failed to save TTML file", e);
@@ -735,17 +756,37 @@ export const useTopMenuActions = () => {
 
 	const onDownloadAudio = useCallback(() => {
 		const lyrics = store.get(lyricLinesAtom);
-		const titleMeta = lyrics.metadata.find(
-			(m) => m.name.toLowerCase() === "title",
-		);
-		const artistMeta = lyrics.metadata.find(
-			(m) => m.name.toLowerCase() === "artist",
-		);
-		const title =
-			titleMeta?.value[0]?.trim() ||
-			saveFileName.replace(/\.(ttml|lrc|txt)$/i, "").trim() ||
-			"";
-		const artist = artistMeta?.value[0]?.trim() || "";
+		const titleMeta = lyrics?.metadata?.find((m) => {
+			const key = (m?.key || (m as any)?.name || "").toLowerCase();
+			return key === "musicname" || key === "title" || key === "trackname";
+		});
+		const artistMeta = lyrics?.metadata?.find((m) => {
+			const key = (m?.key || (m as any)?.name || "").toLowerCase();
+			return key === "artists" || key === "artist" || key === "author";
+		});
+		let title = titleMeta?.value?.[0]?.trim() || "";
+		let artist = artistMeta?.value?.[0]?.trim() || "";
+
+		if (!title && !artist) {
+			const baseFileName = saveFileName
+				? saveFileName
+						.replace(/\.(ttml|lrc|txt|mp3|flac|wav|m4a|ogg|opus|aac)$/i, "")
+						.trim()
+				: "";
+			if (
+				baseFileName &&
+				baseFileName !== "lyric" &&
+				baseFileName !== "untitled"
+			) {
+				if (baseFileName.includes(" - ")) {
+					const parts = baseFileName.split(" - ");
+					artist = parts[0]?.trim() || "";
+					title = parts.slice(1).join(" - ")?.trim() || "";
+				} else {
+					title = baseFileName;
+				}
+			}
+		}
 
 		store.set(jooxAudioSearchDialogAtom, {
 			open: true,

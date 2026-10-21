@@ -311,11 +311,21 @@ export function SpotMatchDialog() {
 					<Box>
 						<Flex align="center" gap="2">
 							<Heading size="5">SpotMatch</Heading>
+							<Badge
+								size="1"
+								color="indigo"
+								variant="soft"
+								style={{ cursor: "pointer" }}
+								onClick={() => handleOpenLink("https://tx24.dev")}
+								title="Original SpotMatch concept & tool by tx24"
+							>
+								by tx24
+							</Badge>
 						</Flex>
 						<Text size="2" color="gray">
 							{t(
 								"spotmatch.subtitle",
-								"Find alternate Spotify IDs for the same recording without an API key.",
+								"Find alternate Spotify IDs for the same recording without an API key. Original tool & algorithm credit to tx24.",
 							)}
 						</Text>
 					</Box>

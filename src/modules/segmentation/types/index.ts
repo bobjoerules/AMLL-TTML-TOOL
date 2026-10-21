@@ -16,6 +16,8 @@ export enum CharType {
 export type HyphenatorFunc = (text: string) => string;
 export type SegmentationEngineId =
 	| "prosodic"
+	| "spicy-lyrics"
+	| "enhanced"
 	| "basic"
 	| "japanese"
 	| "silabas"
@@ -38,6 +40,12 @@ export type SegmentationEngineId =
 export interface SegmentationConfig {
 	/** Selected text-to-syllable engine. */
 	engine: SegmentationEngineId;
+	/**
+	 * Whether to recombine already split syllables back into words and re-split them.
+	 *
+	 * @default true
+	 */
+	resplitWords?: boolean;
 	/**
 	 * 是否对 CJK 字符按字符分词
 	 *

@@ -15,6 +15,7 @@ import {
 	discordIdleBottomTextAtom,
 	discordIdleLargeImageModeAtom,
 	discordIdleSmallImageModeAtom,
+	discordIdleTimeoutEnabledAtom,
 	discordIdleTimeoutMinutesAtom,
 	discordLargeImageModeAtom,
 	discordPlaybackTimelineAtom,
@@ -75,6 +76,7 @@ export function DiscordPresence() {
 	const showProjectElapsed = useAtomValue(discordProjectElapsedAtom);
 	const showRepositoryButton = useAtomValue(discordRepositoryButtonAtom);
 	const showStatusBadge = useAtomValue(discordStatusBadgeAtom);
+	const idleTimeoutEnabled = useAtomValue(discordIdleTimeoutEnabledAtom);
 	const idleTimeoutMinutes = useAtomValue(discordIdleTimeoutMinutesAtom);
 	const privacyPreset = useAtomValue(discordPrivacyPresetAtom);
 	const largeImageMode = useAtomValue(discordLargeImageModeAtom);
@@ -96,7 +98,11 @@ export function DiscordPresence() {
 	const checklistCompleted = checklist?.filter((e) => e.completed).length ?? 0;
 
 	useEffect(() => {
-		if (!checkIsTauri()) return;
+		if (!checkIsTauri() || !idleTimeoutEnabled || idleTimeoutMinutes <= 0) {
+			setInactive(false);
+			tracker.setPaused(false);
+			return;
+		}
 		const timeoutMinutes = Math.min(60, Math.max(1, idleTimeoutMinutes));
 		const timer = new InactivityTimer(
 			timeoutMinutes * 60_000,
@@ -122,7 +128,7 @@ export function DiscordPresence() {
 			window.removeEventListener("pointerdown", markActivity);
 			window.removeEventListener("keydown", markActivity);
 		};
-	}, [idleTimeoutMinutes, inactive, tracker]);
+	}, [idleTimeoutEnabled, idleTimeoutMinutes, inactive, tracker]);
 
 	useEffect(() => {
 		if (!checkIsTauri() || !enabled) return;

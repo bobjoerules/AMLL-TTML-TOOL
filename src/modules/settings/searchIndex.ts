@@ -208,6 +208,14 @@ export const SETTINGS_SEARCH_ITEMS: SettingSearchItem[] = [
 		keywords: ["cyrillic", "homoglyph", "es", "c", "normalize", "character"],
 	},
 	{
+		id: "files-spotmatch-save",
+		title: "Open SpotMatch after saving",
+		description: "Automatically open the SpotMatch track finder after saving a TTML file with Ctrl+S or Cmd+S",
+		tab: "files",
+		tabName: "Files & Storage",
+		keywords: ["spotmatch", "spot match", "spotify", "match", "save", "ctrl+s", "cmd+s", "track finder"],
+	},
+	{
 		id: "files-backup",
 		title: "Data Backup & Restore",
 		description: "Export full backup file or restore all settings, autosaves, and custom themes",

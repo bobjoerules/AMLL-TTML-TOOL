@@ -1,10 +1,11 @@
-import { Button, Dialog, Flex, Select, Text } from "@radix-ui/themes";
+import { Button, Checkbox, Dialog, Flex, Select, Text } from "@radix-ui/themes";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
 	segmentationEngineAtom,
+	segmentationResplitWordsAtom,
 	segmentationSplitEnglishAtom,
 } from "$/modules/segmentation/states";
 import type { SegmentationEngineId } from "$/modules/segmentation/types";
@@ -21,6 +22,7 @@ export const AutoSegmentDialog = () => {
 	const savedEngine = useAtomValue(segmentationEngineAtom);
 	const setEngine = useSetAtom(segmentationEngineAtom);
 	const setSplitEnglish = useSetAtom(segmentationSplitEnglishAtom);
+	const [resplitWords, setResplitWords] = useAtom(segmentationResplitWordsAtom);
 	const editLyricLines = useSetImmerAtom(lyricLinesAtom);
 	const lyrics = useAtomValue(lyricLinesAtom);
 	const { config, isLoading } = useSegmentationConfig();
@@ -50,6 +52,7 @@ export const AutoSegmentDialog = () => {
 				...config,
 				engine: selectedEngine,
 				splitEnglish: selectedEngine !== "none",
+				resplitWords,
 			});
 		});
 		setOpen(false);
@@ -95,6 +98,18 @@ export const AutoSegmentDialog = () => {
 							}
 						</Text>
 					)}
+					<Text as="label" size="2" mt="1">
+						<Flex gap="2" align="center">
+							<Checkbox
+								checked={resplitWords}
+								onCheckedChange={(checked) => setResplitWords(checked === true)}
+							/>
+							{t(
+								"autoSegmentDialog.resplitWords",
+								"Re-split already split words",
+							)}
+						</Flex>
+					</Text>
 				</Flex>
 				<Flex justify="end" gap="3" mt="5">
 					<Dialog.Close>

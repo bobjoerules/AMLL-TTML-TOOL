@@ -277,6 +277,8 @@
 			"keepPlayingWordInViewDesc": "Automatically scrolls the lyric editor during playback to keep the active line and playing word visible.",
 			"allowConsecutiveBackgroundLines": "Allow consecutive and standalone background vocals",
 			"allowConsecutiveBackgroundLinesDesc": "Export consecutive background vocals together and preserve standalone background vocals for Spicy Lyrics compatibility. Other players may not support this structure.",
+			"openSpotMatchAfterSave": "Open SpotMatch after saving",
+			"openSpotMatchAfterSaveDesc": "Automatically open the SpotMatch track finder after saving a TTML file with Ctrl+S or Cmd+S.",
 			"autoLoadCloudAudio": "Load audio when opening cloud saves",
 			"autoLoadCloudAudioDesc": "Automatically load attached audio or match local audio files when loading from cloud saves.",
 			"downloadAudioOnLyricImport": "Download audio when importing lyrics",

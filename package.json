@@ -1,7 +1,7 @@
 {
 	"name": "amll-ttml-tool",
 	"private": true,
-	"version": "3.2.1",
+	"version": "4.0.1",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",

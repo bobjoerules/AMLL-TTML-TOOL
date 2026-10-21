@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	getIsSongLoaded,
 	isGeniusSongPageUrl,
+	resolveGeniusDirectTargetUrl,
 	resolveGeniusTargetUrl,
 } from "./genius-shortcut";
 import type { TTMLMetadata } from "$/types/ttml";
@@ -212,6 +213,71 @@ describe("genius-shortcut helper", () => {
 					loadedAudioFileName: null,
 				}),
 			).toBe("https://genius.com");
+		});
+	});
+
+	describe("resolveGeniusDirectTargetUrl", () => {
+		it("returns direct URL if present in metadata immediately", async () => {
+			const metadata: TTMLMetadata[] = [
+				{
+					key: "genius",
+					value: ["https://genius.com/Coldplay-yellow-lyrics"],
+				},
+			];
+			const url = await resolveGeniusDirectTargetUrl({ metadata });
+			expect(url).toBe("https://genius.com/Coldplay-yellow-lyrics");
+		});
+
+		it("falls back to search query URL if no direct page found", async () => {
+			// Mock global fetch to return 404
+			const originalFetch = globalThis.fetch;
+			globalThis.fetch = vi.fn().mockResolvedValue({
+				ok: false,
+			}) as any;
+
+			try {
+				const metadata: TTMLMetadata[] = [
+					{ key: "musicName", value: ["Yellow"] },
+					{ key: "artists", value: ["Coldplay"] },
+				];
+				const url = await resolveGeniusDirectTargetUrl({ metadata });
+				expect(url).toBe("https://genius.com/search?q=Coldplay%20Yellow");
+			} finally {
+				globalThis.fetch = originalFetch;
+			}
+		});
+
+		it("extracts and returns direct song page URL from song search hits", async () => {
+			const originalFetch = globalThis.fetch;
+			globalThis.fetch = vi.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					response: {
+						sections: [
+							{
+								hits: [
+									{
+										result: {
+											url: "https://genius.com/Coldplay-yellow-lyrics",
+										},
+									},
+								],
+							},
+						],
+					},
+				}),
+			}) as any;
+
+			try {
+				const metadata: TTMLMetadata[] = [
+					{ key: "musicName", value: ["Yellow"] },
+					{ key: "artists", value: ["Coldplay"] },
+				];
+				const url = await resolveGeniusDirectTargetUrl({ metadata });
+				expect(url).toBe("https://genius.com/Coldplay-yellow-lyrics");
+			} finally {
+				globalThis.fetch = originalFetch;
+			}
 		});
 	});
 });

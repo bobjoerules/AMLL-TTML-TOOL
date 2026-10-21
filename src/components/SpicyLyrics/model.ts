@@ -15,6 +15,7 @@ export interface SpicyToken {
 	spaceAfter?: boolean;
 	breakAfter?: boolean;
 	allowInternalWrap?: boolean;
+	isPartOfWord?: boolean;
 }
 
 export interface SpicyTokenLayoutItem {
@@ -72,11 +73,40 @@ export function isRtl(text: string) {
 	}
 	return false;
 }
+
 const isCjk = (text: string) =>
 	/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(
 		text,
 	);
-const graphemes = (text: string) => Array.from(text);
+
+const segmenter =
+	typeof Intl !== "undefined" && "Segmenter" in Intl
+		? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+		: null;
+
+const joinsNextRegex = /[्্੍્୍்్್്්္္‍]$/;
+
+export function splitLetters(text: string): string[] {
+	const graphemes = segmenter
+		? Array.from(segmenter.segment(text), (s) => s.segment)
+		: Array.from(text);
+
+	const letters: string[] = [];
+	for (const grapheme of graphemes) {
+		const last = letters.length - 1;
+		if (
+			last >= 0 &&
+			joinsNextRegex.test(letters[last]) &&
+			grapheme.trim().length > 0
+		) {
+			letters[last] += grapheme;
+		} else {
+			letters.push(grapheme);
+		}
+	}
+	return letters;
+}
+
 const valid = (start: number, end: number) =>
 	Number.isFinite(start) && Number.isFinite(end) && end > start;
 
@@ -118,7 +148,7 @@ function makeToken(
 ): SpicyToken {
 	const usesRomanization = romanized && !!word.romanWord.trim();
 	const text = usesRomanization ? word.romanWord : word.word;
-	const letters = graphemes(text);
+	const letters = splitLetters(text);
 	const allowInternalWrap = usesRomanization || isCjk(word.word) || isCjk(text);
 	const duration = word.endTime - word.startTime;
 	const letterCapable =
@@ -165,6 +195,14 @@ function makeTokens(
 		}
 
 		tokens.push(makeToken(word, simple, romanized, background));
+	}
+
+	for (let i = 0; i < tokens.length; i++) {
+		const current = tokens[i];
+		const next = tokens[i + 1];
+		if (next && !current.spaceAfter && !current.breakAfter) {
+			current.isPartOfWord = true;
+		}
 	}
 
 	return tokens;

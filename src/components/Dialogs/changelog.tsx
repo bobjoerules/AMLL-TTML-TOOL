@@ -51,6 +51,76 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v4.0.1
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 20, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Open SpotMatch After Save:</b> Added a setting in Settings &gt; Files (disabled by default) that automatically launches the SpotMatch track finder after saving a TTML file with Ctrl+S or Cmd+S.
+								</Text>
+								<Text size="2">
+									• <b>Sync Progress Tooltip Removed:</b> Removed the hover tooltip popup over the sync percentage badge in the top bar.
+								</Text>
+								<Text size="2">
+									• <b>File Menu Auto-Save Cleanup:</b> Removed the Auto-Save toggle from the File menu (available in Settings &gt; Files) and simplified the dropdown option to <b>Auto-Saves…</b>.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
+								v4.0.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 20, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Spicy Lyrics Exclusive Preview:</b> Transitioned exclusively to the Spicy Lyrics renderer across fullscreen and side preview panels, retiring legacy AMLL, Toxi, and Timing Overview modes for a unified, modern experience.
+								</Text>
+								<Text size="2">
+									• <b>Modern Spicy Visuals & Liquid Glass:</b> Upgraded the Spicy Lyrics renderer to match upstream <code>spicy-lyrics</code> with Apple HIG design tokens, refined syllable typography and dynamic glow, 3-phase syllable expansion transform physics, interlude dot springs, hover scrub preview, and song credits.
+								</Text>
+								<Text size="2">
+									• <b>Redesigned Preview Toolbar:</b> Rebuilt the preview ribbon bar with clean, modern interactive toggle buttons for View and Lyrics controls, removing legacy clutter.
+								</Text>
+								<Text size="2">
+									• <b>Syllabification & Syllable Splits:</b> Restored original pre-v3.2.0 dictionary-backed prosodic split behavior with speech fallback, and added the singing syllable heuristics engine from TTML Review & Spicy Lyrics (<code>spicy-lyrics</code>).
+								</Text>
+								<Text size="2">
+									• <b>Auto Segment Re-Split Support:</b> Added an option in Auto Segment (enabled by default) to automatically recombine and re-split already segmented words.
+								</Text>
+								<Text size="2">
+									• <b>TTML Checklist Public Status:</b> Added an option in the TTML checklist to mark planned or in-progress songs as shared publicly with the community.
+								</Text>
+								<Text size="2">
+									• <b>TitleBar Genius Direct Navigation:</b> Genius button queries song hits to open the track's Genius lyrics page directly instead of just search results.
+								</Text>
+								<Text size="2">
+									• <b>Download Audio Tool Fix:</b> Fixed Download Audio in the Tools menu failing when reading TTML metadata keys.
+								</Text>
+								<Text size="2">
+									• <b>Discord RPC Idle Timeout:</b> Added an option in Discord RPC settings (disabled by default) to control idle inactivity timeout behavior.
+								</Text>
+								<Text size="2">
+									• <b>Editor Locate Button:</b> Made the editor locate button larger and easier to click.
+								</Text>
+								<Text size="2">
+									• <b>Unsynced Word Highlighting:</b> Added an optional setting (disabled by default) to highlight unsynced words in red in the Editor tab matching the preview view.
+								</Text>
+								<Text size="2">
+									• <b>Menu Auto-Save Options:</b> Relocated auto-save toggle and version history into the File menu and streamlined the top bar.
+								</Text>
+								<Text size="2">
+									• <b>SpotMatch tx24 Credit:</b> Added creator badge and attribution to tx24 in the SpotMatch dialog.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v3.2.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

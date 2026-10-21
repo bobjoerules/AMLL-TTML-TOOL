@@ -148,6 +148,27 @@ export const PreviewProgressBar: React.FC<PreviewProgressBarProps> = memo(
 			window.addEventListener("pointercancel", handlePointerUp);
 		};
 
+		const previewPillRef = useRef<HTMLDivElement>(null);
+
+		const handleScrubberHover = (e: React.PointerEvent<HTMLDivElement>) => {
+			if (!containerRef.current || totalDuration <= 0) return;
+			const rect = containerRef.current.getBoundingClientRect();
+			if (rect.width <= 0) return;
+			const offsetX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+			const targetTime = (offsetX / rect.width) * totalDuration;
+			if (previewPillRef.current) {
+				previewPillRef.current.textContent = formatTime(targetTime);
+				previewPillRef.current.style.left = `${offsetX}px`;
+				previewPillRef.current.classList.add(styles.scrubPreviewVisible);
+			}
+		};
+
+		const handleScrubberLeave = () => {
+			if (!isDraggingRef.current && previewPillRef.current) {
+				previewPillRef.current.classList.remove(styles.scrubPreviewVisible);
+			}
+		};
+
 		return (
 			<div
 				className={classNames(
@@ -163,7 +184,14 @@ export const PreviewProgressBar: React.FC<PreviewProgressBarProps> = memo(
 					className={styles.scrubberContainer}
 					ref={containerRef}
 					onPointerDown={handlePointerDown}
+					onPointerMove={handleScrubberHover}
+					onPointerLeave={handleScrubberLeave}
 				>
+					<div
+						className={styles.scrubPreview}
+						ref={previewPillRef}
+						aria-hidden="true"
+					/>
 					<div className={styles.scrubberTrack}>
 						<div
 							className={styles.scrubberFill}

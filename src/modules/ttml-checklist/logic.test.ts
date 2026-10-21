@@ -9,10 +9,13 @@ import {
 	isChecklistEntryNotStarted,
 	isTTML100PercentCompleted,
 	linkUploadedTTMLToChecklist,
+	mergeChecklistEntries,
 	normalizeChecklistEntries,
 	setChecklistEntryCompleted,
+	setChecklistEntrySharePublicly,
 	setChecklistEntryUploadedToDb,
 	toggleChecklistEntryFavorite,
+	toggleChecklistEntrySharePublicly,
 	toggleChecklistEntryUploadedToDb,
 	updateChecklistEntry,
 } from "./logic";
@@ -575,4 +578,69 @@ describe("TTML checklist", () => {
 			isEntryDeleted({ song: "Stay", artist: "The Kid LAROI" }, cleared),
 		).toBe(false);
 	});
+
+	it("preserves, sets, and toggles sharePublicly status for planned/in-progress songs", () => {
+		const entry1 = addChecklistEntry(
+			[],
+			{
+				song: "Daylight",
+				artist: "David Kushner",
+				notes: "Planned for weekend sync",
+				status: "in-progress",
+				sharePublicly: true,
+			},
+			1000,
+			"entry-daylight",
+		);
+
+		expect(entry1[0].sharePublicly).toBe(true);
+
+		// Toggle off
+		const toggledOff = toggleChecklistEntrySharePublicly(entry1, "entry-daylight");
+		expect(toggledOff[0].sharePublicly).toBeUndefined();
+
+		// Toggle on
+		const toggledOn = toggleChecklistEntrySharePublicly(toggledOff, "entry-daylight");
+		expect(toggledOn[0].sharePublicly).toBe(true);
+
+		// Explicit set
+		const explicitlySet = setChecklistEntrySharePublicly(
+			toggledOn,
+			"entry-daylight",
+			false,
+		);
+		expect(explicitlySet[0].sharePublicly).toBeUndefined();
+
+		// Merging preserves sharePublicly
+		const primary = {
+			id: "p1",
+			song: "Daylight",
+			artist: "David Kushner",
+			notes: "",
+			completed: false,
+			status: "in-progress" as const,
+			sharePublicly: true,
+			createdAt: 100,
+		};
+		const secondary = {
+			id: "s1",
+			song: "Daylight",
+			artist: "David Kushner",
+			notes: "Alt",
+			completed: false,
+			status: "not-started" as const,
+			createdAt: 200,
+		};
+		const merged = mergeChecklistEntries(primary, secondary);
+		expect(merged.sharePublicly).toBe(true);
+
+		// Update entry preserves or overrides sharePublicly
+		const updated = updateChecklistEntry(
+			[primary],
+			"p1",
+			{ song: "Daylight", sharePublicly: false },
+		);
+		expect(updated[0].sharePublicly).toBeFalsy();
+	});
 });
+

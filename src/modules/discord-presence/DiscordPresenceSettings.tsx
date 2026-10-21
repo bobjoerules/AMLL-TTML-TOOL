@@ -34,6 +34,7 @@ import {
 } from "$/modules/audio/states";
 import {
 	discordDetailsTemplateAtom,
+	discordIdleTimeoutEnabledAtom,
 	discordIdleTimeoutMinutesAtom,
 	discordPlaybackTimelineAtom,
 	discordProjectElapsedAtom,
@@ -150,6 +151,9 @@ export function DiscordPresenceSettings() {
 		discordRepositoryButtonAtom,
 	);
 	const [showStatusBadge, setShowStatusBadge] = useAtom(discordStatusBadgeAtom);
+	const [idleTimeoutEnabled, setIdleTimeoutEnabled] = useAtom(
+		discordIdleTimeoutEnabledAtom,
+	);
 	const [idleTimeoutMinutes, setIdleTimeoutMinutes] = useAtom(
 		discordIdleTimeoutMinutesAtom,
 	);
@@ -1177,26 +1181,38 @@ export function DiscordPresenceSettings() {
 						</summary>
 						<Card mt="3" style={{ cursor: "default" }}>
 							<Flex direction="column" gap="3">
-								<Flex align="center" justify="between">
-									<Text size="2">
-										{t("settings.common.discordIdleTimeout", "Inactive after")}
-									</Text>
-									<Text size="2" color="gray">
-										{idleTimeoutMinutes} min
-									</Text>
-								</Flex>
-								<Slider
-									min={1}
-									max={60}
-									value={[Math.min(60, Math.max(1, idleTimeoutMinutes))]}
-									onValueChange={([value]) => setIdleTimeoutMinutes(value)}
-								/>
-								<Text size="1" color="gray">
-									{t(
-										"settings.common.discordIdlePrivacy",
-										"Inactive presence hides project details, buttons, badges, and timers.",
+								<SettingToggle
+									label={t(
+										"settings.common.discordIdleTimeoutEnabled",
+										"Enable idle inactivity timeout",
 									)}
-								</Text>
+									checked={idleTimeoutEnabled}
+									onCheckedChange={setIdleTimeoutEnabled}
+								/>
+								{idleTimeoutEnabled && (
+									<>
+										<Flex align="center" justify="between">
+											<Text size="2">
+												{t("settings.common.discordIdleTimeout", "Inactive after")}
+											</Text>
+											<Text size="2" color="gray">
+												{idleTimeoutMinutes} min
+											</Text>
+										</Flex>
+										<Slider
+											min={1}
+											max={60}
+											value={[Math.min(60, Math.max(1, idleTimeoutMinutes))]}
+											onValueChange={([value]) => setIdleTimeoutMinutes(value)}
+										/>
+										<Text size="1" color="gray">
+											{t(
+												"settings.common.discordIdlePrivacy",
+												"Inactive presence hides project details, buttons, badges, and timers.",
+											)}
+										</Text>
+									</>
+								)}
 
 								<SettingToggle
 									label={t(

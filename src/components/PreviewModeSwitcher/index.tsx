@@ -8,9 +8,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import SuspensePlaceHolder from "$/components/SuspensePlaceHolder";
 import {
-	PreviewModeType,
 	previewFullscreenAtom,
-	previewModeTypeAtom,
 	previewShowAlbumArtworkAtom,
 } from "$/modules/settings/states/preview";
 import { keyPreviewFullscreenAtom } from "$/states/keybindings.ts";
@@ -19,8 +17,6 @@ import { useKeyBindingAtom } from "$/utils/keybindings.ts";
 import { lazy } from "$/utils/lazy.ts";
 import styles from "./index.module.css";
 
-const AMLLWrapper = lazy(() => import("$/components/AMLLWrapper"));
-const TimingOverview = lazy(() => import("$/components/TimingOverview"));
 const SpicyLyrics = lazy(() => import("$/components/SpicyLyrics"));
 
 export interface PreviewModeSwitcherProps {
@@ -30,7 +26,6 @@ export interface PreviewModeSwitcherProps {
 export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 	isPanel = false,
 }) => {
-	const previewModeType = useAtomValue(previewModeTypeAtom);
 	const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
 	const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
 	const [controlsVisible, setControlsVisible] = useState(false);
@@ -139,17 +134,15 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 						}
 					}}
 				>
-					{previewModeType !== PreviewModeType.Timing && (
-						<button
-							type="button"
-							className={styles.floatingBtn}
-							onClick={() => setShowArtwork((prev) => !prev)}
-							title={showArtwork ? "Hide Album Art" : "Show Album Art"}
-							aria-label="Toggle Album Art"
-						>
-							<Image20Regular />
-						</button>
-					)}
+					<button
+						type="button"
+						className={styles.floatingBtn}
+						onClick={() => setShowArtwork((prev) => !prev)}
+						title={showArtwork ? "Hide Album Art" : "Show Album Art"}
+						aria-label="Toggle Album Art"
+					>
+						<Image20Regular />
+					</button>
 					{isFullscreen ? (
 						<button
 							type="button"
@@ -175,17 +168,7 @@ export const PreviewModeSwitcher: React.FC<PreviewModeSwitcherProps> = ({
 				</div>
 			)}
 			<Suspense fallback={<SuspensePlaceHolder />}>
-				{(previewModeType === PreviewModeType.Standard ||
-					previewModeType === PreviewModeType.AMLL) && (
-					<AMLLWrapper variant="standard" isPanel={isPanel} />
-				)}
-				{previewModeType === PreviewModeType.Toxi && (
-					<AMLLWrapper variant="toxi" isPanel={isPanel} />
-				)}
-				{previewModeType === PreviewModeType.Spicy && (
-					<SpicyLyrics isPanel={isPanel} />
-				)}
-				{previewModeType === PreviewModeType.Timing && <TimingOverview />}
+				<SpicyLyrics isPanel={isPanel} />
 			</Suspense>
 		</div>
 	);
