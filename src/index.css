@@ -752,3 +752,52 @@ button.topMenuBarButton:where([data-state="open"], :active) {
 	:is(.rt-DropdownMenuSubTriggerIcon, .rt-BaseMenuSubTriggerIcon) {
 	opacity: 1 !important;
 }
+
+/* ==========================================================================
+   Tooltips & Hover Cards Solid High-Contrast Styling
+   Ensures hover tips on website and desktop have 100% opaque solid backgrounds
+   ========================================================================== */
+
+:is(.rt-TooltipContent, [data-radix-popper-content-wrapper] .rt-TooltipContent) {
+	background-color: #18181c !important;
+	color: #ededef !important;
+	border: 1px solid rgba(255, 255, 255, 0.16) !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+	opacity: 1 !important;
+	z-index: 999999 !important;
+}
+
+:is(.light, .light-theme, [data-theme="light"]) :is(.rt-TooltipContent, [data-radix-popper-content-wrapper] .rt-TooltipContent) {
+	background-color: #202024 !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(0, 0, 0, 0.22) !important;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+
+:is(.rt-TooltipText, [data-radix-popper-content-wrapper] .rt-TooltipText) {
+	color: #ffffff !important;
+	font-weight: 500 !important;
+}
+
+:is(.rt-TooltipArrow, [data-radix-popper-content-wrapper] .rt-TooltipArrow) {
+	fill: #18181c !important;
+}
+
+:is(.light, .light-theme, [data-theme="light"]) :is(.rt-TooltipArrow, [data-radix-popper-content-wrapper] .rt-TooltipArrow) {
+	fill: #202024 !important;
+}
+
+:is(.rt-HoverCardContent, [data-radix-popper-content-wrapper] .rt-HoverCardContent) {
+	background-color: #18181c !important;
+	border: 1px solid rgba(255, 255, 255, 0.14) !important;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+	opacity: 1 !important;
+	z-index: 999999 !important;
+}
+
+:is(.light, .light-theme, [data-theme="light"]) :is(.rt-HoverCardContent, [data-radix-popper-content-wrapper] .rt-HoverCardContent) {
+	background-color: #ffffff !important;
+	border: 1px solid rgba(0, 0, 0, 0.12) !important;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+

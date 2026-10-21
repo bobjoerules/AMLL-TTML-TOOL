@@ -4,7 +4,7 @@ import { GithubIcon } from './GithubIcon';
 import { LiquidPlayerIcon } from './LiquidPlayerIcon';
 
 interface FooterProps {
-  onSelectTab: (tab: 'home' | 'finished' | 'stats' | 'liquid') => void;
+  onSelectTab: (tab: 'home' | 'finished' | 'checklist' | 'stats' | 'liquid') => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
@@ -31,6 +31,9 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
           </button>
           <button className="footer-link" onClick={() => onSelectTab('finished')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             Finished TTMLs
+          </button>
+          <button className="footer-link" onClick={() => onSelectTab('checklist')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+            Public Checklist
           </button>
           <button className="footer-link" onClick={() => onSelectTab('stats')} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             Stats & Profiles

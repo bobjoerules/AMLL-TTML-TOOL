@@ -3,6 +3,8 @@ import { newLyricLine, newLyricWord } from "$/types/ttml";
 import type { SegmentationConfig } from "../types";
 import { loadHyphenator } from "./hyphen-loader";
 import {
+	isWordIgnored,
+	parseIgnoreList,
 	recombineSplitWords,
 	segmentLyricLines,
 	segmentWord,
@@ -254,4 +256,90 @@ describe("syllabification engines", () => {
 		expect(untouchedLines[0].words[0].word).toBe("Nev");
 		expect(untouchedLines[0].words[1].word).toBe("er ");
 	});
+
+	describe("never split words (ignore list)", () => {
+		it("parses ignore list with newlines, commas, and full-width commas with trimming", () => {
+			const parsed = parseIgnoreList(
+				"baby, forever\nsuperman ，  AMLL \n\n,  NaeNae  ",
+			);
+			expect(parsed.has("baby")).toBe(true);
+			expect(parsed.has("forever")).toBe(true);
+			expect(parsed.has("superman")).toBe(true);
+			expect(parsed.has("AMLL")).toBe(true);
+			expect(parsed.has("NaeNae")).toBe(true);
+			expect(parsed.size).toBe(5);
+		});
+
+		it("matches ignored words case-insensitively and with surrounding punctuation", () => {
+			const ignoreList = new Set(["baby", "forever", "don't"]);
+			expect(isWordIgnored("baby", ignoreList)).toBe(true);
+			expect(isWordIgnored("Baby", ignoreList)).toBe(true);
+			expect(isWordIgnored("BABY", ignoreList)).toBe(true);
+			expect(isWordIgnored("(Baby)", ignoreList)).toBe(true);
+			expect(isWordIgnored("baby,", ignoreList)).toBe(true);
+			expect(isWordIgnored("forever!", ignoreList)).toBe(true);
+			expect(isWordIgnored("Don't", ignoreList)).toBe(true);
+			expect(isWordIgnored("other", ignoreList)).toBe(false);
+		});
+
+		it("never splits ignored words regardless of engine or capitalization", () => {
+			const configWithIgnore: SegmentationConfig = {
+				...prosodicConfig,
+				ignoreList: new Set(["everything", "forever", "superman"]),
+			};
+
+			// "everything" would normally be split into 3-4 syllables by prosodic
+			const normalSplit = segmentWord(
+				{ ...newLyricWord(), word: "everything" },
+				prosodicConfig,
+			);
+			expect(normalSplit.length).toBeGreaterThan(1);
+
+			// With ignore list, it must never be split
+			const ignoredSplit = segmentWord(
+				{ ...newLyricWord(), word: "everything" },
+				configWithIgnore,
+			);
+			expect(ignoredSplit).toHaveLength(1);
+			expect(ignoredSplit[0].word).toBe("everything");
+
+			// Capitalized "Everything" also protected
+			const capSplit = segmentWord(
+				{ ...newLyricWord(), word: "Everything" },
+				configWithIgnore,
+			);
+			expect(capSplit).toHaveLength(1);
+			expect(capSplit[0].word).toBe("Everything");
+
+			// With punctuation "(Forever!)" also protected
+			const punctSplit = segmentWord(
+				{ ...newLyricWord(), word: "(Forever!)" },
+				configWithIgnore,
+			);
+			expect(punctSplit).toHaveLength(1);
+			expect(punctSplit[0].word).toBe("(Forever!)");
+		});
+
+		it("never splits ignored words inside segmentLyricLines", () => {
+			const configWithIgnore: SegmentationConfig = {
+				...prosodicConfig,
+				ignoreList: new Set(["forever", "superman"]),
+			};
+
+			const line = {
+				...newLyricLine(),
+				words: [
+					{ ...newLyricWord(), word: "I " },
+					{ ...newLyricWord(), word: "am " },
+					{ ...newLyricWord(), word: "superman " },
+					{ ...newLyricWord(), word: "forever" },
+				],
+			};
+
+			const segmented = segmentLyricLines([line], configWithIgnore)[0];
+			const words = segmented.words.map((w) => w.word);
+			expect(words).toEqual(["I ", "am ", "superman ", "forever"]);
+		});
+	});
 });
+

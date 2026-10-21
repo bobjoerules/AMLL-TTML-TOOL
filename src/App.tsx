@@ -1261,6 +1261,16 @@ function App() {
 			window.removeEventListener("keydown", handleZoomKeys, { capture: true });
 	}, [setUiScale]);
 
+	useEffect(() => {
+		const isDark = effectiveTheme === "dark";
+		const addClass = isDark ? "dark" : "light";
+		const removeClass = isDark ? "light" : "dark";
+		document.documentElement.classList.remove(removeClass);
+		document.documentElement.classList.add(addClass, "radix-themes");
+		document.body.classList.remove(removeClass);
+		document.body.classList.add(addClass, "radix-themes");
+	}, [effectiveTheme]);
+
 	return (
 		<Theme
 			appearance={effectiveTheme}

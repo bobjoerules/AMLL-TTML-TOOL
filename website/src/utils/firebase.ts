@@ -1007,3 +1007,76 @@ export async function fetchCloudSongStats(): Promise<CloudSongStats> {
     };
   }
 }
+
+export interface PublicChecklistSong {
+  id: string;
+  song: string;
+  artist: string;
+  album?: string;
+  status: 'completed' | 'in-progress' | 'not-started';
+  notes?: string;
+  sourceUrl?: string;
+  sharePublicly?: boolean;
+  uploadedToDatabase?: boolean;
+  coverArt?: string | null;
+  updatedAt?: number;
+  authorUid?: string;
+  authorName?: string;
+  authorPhoto?: string | null;
+}
+
+export async function fetchPublicChecklistSongs(): Promise<PublicChecklistSong[]> {
+  if (!db) return [];
+  try {
+    const snap = await getDocs(query(collection(db, "public_checklists"), limit(250)));
+    const songs: PublicChecklistSong[] = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+      const authorUid = data.userId || docSnap.id;
+      const authorName = data.userName || "Anonymous";
+      const authorPhoto = data.userPhoto || null;
+      const updatedAt = data.updatedAt || Date.now();
+      if (Array.isArray(data.entries)) {
+        for (const entry of data.entries) {
+          if (entry && (entry.sharePublicly || entry.sharePublicly === undefined)) {
+            const status: 'completed' | 'in-progress' | 'not-started' =
+              entry.status === 'completed' || entry.completed
+                ? 'completed'
+                : entry.status === 'not-started'
+                ? 'not-started'
+                : 'in-progress';
+            songs.push({
+              id: `${authorUid}_${entry.id || entry.cloudDocId || getSongKey(entry.song || '', entry.artist || '')}`,
+              song: entry.song || 'Untitled',
+              artist: entry.artist || 'Unknown Artist',
+              album: entry.album || undefined,
+              status,
+              notes: entry.notes || '',
+              sourceUrl: entry.sourceUrl || '',
+              sharePublicly: true,
+              uploadedToDatabase: Boolean(entry.uploadedToDatabase),
+              coverArt: entry.coverArt || null,
+              updatedAt: entry.updatedAt || updatedAt,
+              authorUid,
+              authorName,
+              authorPhoto,
+            });
+          }
+        }
+      }
+    });
+
+    songs.sort((a, b) => {
+      const statusWeight = (s: string) => (s === 'in-progress' ? 1 : s === 'not-started' ? 2 : 3);
+      const diff = statusWeight(a.status) - statusWeight(b.status);
+      if (diff !== 0) return diff;
+      return (b.updatedAt || 0) - (a.updatedAt || 0);
+    });
+
+    return songs;
+  } catch (err) {
+    console.warn("Failed to fetch public checklists:", err);
+    return [];
+  }
+}
+

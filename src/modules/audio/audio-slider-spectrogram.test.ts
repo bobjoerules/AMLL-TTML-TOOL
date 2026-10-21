@@ -77,22 +77,21 @@ describe("AudioSlider spectrogram interaction logic", () => {
 		expect(timeS).toBe(90);
 	});
 
-	describe("playhead tracking mode interactions", () => {
-		it("seeks playhead when tracking is on ('snap' or 'follow') rather than manual scroll", () => {
-			const trackingModes = ["snap", "follow"] as const;
+	describe("mouse button interactions (left-click playhead, right-click spectrogram)", () => {
+		it("seeks playhead on left-click (button === 0) across all tracking modes", () => {
+			const trackingModes = ["off", "snap", "follow"] as const;
 
-			for (const mode of trackingModes) {
-				const isTrackingOn = mode !== "off";
-				const e = { shiftKey: false, altKey: false, clientX: 400 };
+			for (const _mode of trackingModes) {
+				const eLeft = { button: 0, altKey: false, clientX: 400 };
 
 				const mockSeekPlayhead = vi.fn();
 				const mockScrollSpectrogram = vi.fn();
 
-				// Interaction logic from AudioSlider
-				if (e.shiftKey || isTrackingOn) {
-					mockSeekPlayhead(e.clientX);
-				} else {
-					mockScrollSpectrogram(e.clientX);
+				// Interaction logic from AudioSlider:
+				if (eLeft.button === 2) {
+					mockScrollSpectrogram(eLeft.clientX);
+				} else if (eLeft.button === 0) {
+					mockSeekPlayhead(eLeft.clientX);
 				}
 
 				expect(mockSeekPlayhead).toHaveBeenCalledWith(400);
@@ -100,36 +99,19 @@ describe("AudioSlider spectrogram interaction logic", () => {
 			}
 		});
 
-		it("scrolls spectrogram when tracking is 'off' on normal click, and seeks on shiftKey", () => {
-			const isTrackingOn = false;
+		it("moves spectrogram area on right-click (button === 2)", () => {
+			const eRight = { button: 2, altKey: false, clientX: 300 };
+			const mockSeekPlayhead = vi.fn();
+			const mockScrollSpectrogram = vi.fn();
 
-			// Normal click with tracking off
-			const eNormal = { shiftKey: false, altKey: false, clientX: 300 };
-			const mockSeekNormal = vi.fn();
-			const mockScrollNormal = vi.fn();
-
-			if (eNormal.shiftKey || isTrackingOn) {
-				mockSeekNormal(eNormal.clientX);
-			} else {
-				mockScrollNormal(eNormal.clientX);
+			if (eRight.button === 2) {
+				mockScrollSpectrogram(eRight.clientX);
+			} else if (eRight.button === 0) {
+				mockSeekPlayhead(eRight.clientX);
 			}
 
-			expect(mockScrollNormal).toHaveBeenCalledWith(300);
-			expect(mockSeekNormal).not.toHaveBeenCalled();
-
-			// Shift+click with tracking off
-			const eShift = { shiftKey: true, altKey: false, clientX: 300 };
-			const mockSeekShift = vi.fn();
-			const mockScrollShift = vi.fn();
-
-			if (eShift.shiftKey || isTrackingOn) {
-				mockSeekShift(eShift.clientX);
-			} else {
-				mockScrollShift(eShift.clientX);
-			}
-
-			expect(mockSeekShift).toHaveBeenCalledWith(300);
-			expect(mockScrollShift).not.toHaveBeenCalled();
+			expect(mockScrollSpectrogram).toHaveBeenCalledWith(300);
+			expect(mockSeekPlayhead).not.toHaveBeenCalled();
 		});
 
 		it("snaps spectrogram view when playhead moves outside current viewport in 'snap' mode", () => {
@@ -183,31 +165,32 @@ describe("AudioSlider spectrogram interaction logic", () => {
 			expect(clampedScroll).toBe(5500);
 		});
 
-		it("bypasses region body dragging when isTrackingOn is true so clicks bubble to seek playhead", () => {
-			const isTrackingOn = true;
+		it("bypasses region body so left-clicks seek playhead and right-clicks move spectrogram", () => {
 			const dragType = "drag";
 
-			let dragHandled = false;
+			for (const button of [0, 2]) {
+				let dragHandled = false;
 
-			// Logic in useAudioRegion handleMouseDown
-			if (isTrackingOn && dragType === "drag") {
-				// return early without preventing/stopping, allowing bubbling to seek playhead
-			} else {
-				dragHandled = true;
+				// Logic in useAudioRegion handleMouseDown:
+				if (button === 2 || dragType === "drag") {
+					// return early without preventing/stopping, allowing bubbling
+				} else {
+					dragHandled = true;
+				}
+
+				expect(dragHandled).toBe(false);
 			}
 
-			expect(dragHandled).toBe(false);
-
-			// When tracking is off, drag is handled
-			const isTrackingOff = false;
-			let dragHandledOff = false;
-			if (isTrackingOff && dragType === "drag") {
+			// Left-clicking resize handles is handled by useAudioRegion
+			let resizeHandled = false;
+			const resizeType = "resizeLeft";
+			const button = 0;
+			if (button === 2 || resizeType === "drag") {
 				// return early
-			} else {
-				dragHandledOff = true;
+			} else if (button === 0) {
+				resizeHandled = true;
 			}
-
-			expect(dragHandledOff).toBe(true);
+			expect(resizeHandled).toBe(true);
 		});
 	});
 });

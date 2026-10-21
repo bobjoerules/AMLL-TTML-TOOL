@@ -25,7 +25,7 @@ import { LiquidPlayerIcon } from '../components/LiquidPlayerIcon';
 import { fetchCloudSongStats, type CloudSongStats } from '../utils/firebase';
 
 interface HomePageProps {
-  onNavigate: (tab: 'home' | 'finished' | 'stats' | 'liquid') => void;
+  onNavigate: (tab: 'home' | 'finished' | 'checklist' | 'stats' | 'liquid') => void;
 }
 
 interface ScreenshotItem {
@@ -128,7 +128,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
-          <span>AMLL TTML Tool v4.0.1 Released</span>
+          <span>AMLL TTML Tool v4.1.0 Released</span>
         </div>
 
         <div className="hero-buttons">
@@ -735,6 +735,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             <p className="feature-desc">
               Organize your sync queue with cover art thumbnails, progress tracking, provider search (Genius, LRCLIB, Lyrically), and 1-click imports.
             </p>
+            <div style={{ marginTop: 14 }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => onNavigate('checklist')}
+                style={{ fontSize: 12, padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <span>View Public Checklist</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
           </div>
 
           <div className="glass-panel feature-card">

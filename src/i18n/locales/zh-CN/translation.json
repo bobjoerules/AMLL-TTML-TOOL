@@ -756,7 +756,12 @@
 			"spectrogram": "频谱图",
 			"backup": "Backup",
 			"dev": "开发"
-		}
+		},
+		"searchResults": "搜索结果",
+		"searchPlaceholder": "搜索设置...",
+		"foundResults": "找到 {count} 个与 \"{query}\" 匹配的设置",
+		"noResults": "未找到与 \"{query}\" 匹配的设置",
+		"noResultsHelp": "尝试使用更通用的搜索词，例如 'audio'、'theme'、'sync'、'font' 或 'offset'。"
 	},
 	"autoSegmentApplied": "Auto-segmented with {engine}",
 	"error": {
@@ -770,8 +775,8 @@
 		"markerDescription": "Description...",
 		"deleteMarker": "Delete Marker",
 		"waveform": "Audio Waveform",
-		"spectrogramBarHint": "点击以居中频谱图。Shift+点击以跳转播放指针。",
-		"spectrogramBarTrackingHint": "点击以跳转播放指针（播放指针跟踪已开启）。",
+		"spectrogramBarHint": "左键点击跳转播放指针，右键点击移动频谱图区域。",
+		"spectrogramBarTrackingHint": "左键点击跳转播放指针，右键点击移动频谱图区域。",
 		"status": {
 			"transcoding": "解码失败，正在尝试转码音频...",
 			"loading": "正在加载音频...",

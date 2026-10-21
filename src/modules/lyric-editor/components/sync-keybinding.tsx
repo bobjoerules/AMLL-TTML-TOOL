@@ -36,8 +36,10 @@ import {
 	segmentationRemoveEmptySegmentsAtom,
 	segmentationSplitCJKAtom,
 } from "$/modules/segmentation/states";
+import { parseIgnoreList } from "$/modules/segmentation/utils/segmentation";
 import { maybeAutoSegmentLine } from "../utils/auto-segment-sync";
 import { normalizeLineTime } from "../utils/normalize-line-time";
+import { calculateJudgeTime } from "../utils/judge-time";
 import {
 	keyMoveFirstWordAndPlayAtom,
 	keyMoveLastWordAndPlayAtom,
@@ -157,9 +159,7 @@ const getAutoSegmentOptions = (store: ReturnType<typeof useStore>) => {
 
 	const weight = parseFloat(punctuationWeightStr);
 	const punctuationWeight = Number.isNaN(weight) ? 0.2 : weight;
-	const ignoreList = new Set(
-		ignoreListText.split("\n").filter((line) => line.trim() !== ""),
-	);
+	const ignoreList = parseIgnoreList(ignoreListText);
 
 	return {
 		enabled: true,
@@ -182,37 +182,15 @@ export const SyncKeyBinding: FC = () => {
 
 	const calcJudgeTime = useCallback(
 		(evt: KeyBindingEvent) => {
-			if (!audioEngine.musicPlaying) {
-				return Math.round(store.get(currentTimeAtom));
-			}
-
-			const syncTimeOffset = store.get(syncTimeOffsetAtom);
-			const processingDelay = performance.now() - evt.triggerTime;
-			const audioTimeNow =
-				audioEngine.interpolatedCurrentTime * 1000 -
-				processingDelay * audioEngine.musicPlayBackRate;
-
-			const syncJudgeMode = store.get(syncJudgeModeAtom);
-			if (syncJudgeMode === SyncJudgeMode.FirstKeyDownTimeLegacy) {
-				return Math.round(
-					Math.max(0, audioTimeNow - evt.downTimeOffset + syncTimeOffset),
-				);
-			}
-			let timeAdjustment = 0;
-			switch (syncJudgeMode) {
-				case SyncJudgeMode.FirstKeyDownTime:
-					timeAdjustment -= evt.downTimeOffset;
-					break;
-				case SyncJudgeMode.LastKeyUpTime:
-					break;
-				case SyncJudgeMode.MiddleKeyTime:
-					timeAdjustment -= evt.downTimeOffset / 2;
-					break;
-			}
-			timeAdjustment *= audioEngine.musicPlayBackRate;
-			return Math.round(
-				Math.max(0, audioTimeNow + timeAdjustment + syncTimeOffset),
-			);
+			return calculateJudgeTime({
+				playheadSeconds: audioEngine.interpolatedCurrentTime,
+				playing: audioEngine.musicPlaying,
+				rate: audioEngine.musicPlayBackRate,
+				processingDelay: performance.now() - evt.triggerTime,
+				downTimeOffset: evt.downTimeOffset,
+				syncOffset: store.get(syncTimeOffsetAtom),
+				mode: store.get(syncJudgeModeAtom),
+			});
 		},
 		[store],
 	);

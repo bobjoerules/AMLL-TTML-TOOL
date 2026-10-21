@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import {
 	collection,
+	deleteDoc,
 	doc,
 	getDoc,
 	getDocs,
@@ -149,6 +150,35 @@ export async function saveChecklistToCloud(
 		// Deep clean to strip all undefined fields which cause Firestore setDoc to throw
 		const cleanData = JSON.parse(JSON.stringify(rawData));
 		await setDoc(docRef, cleanData, { merge: true });
+
+		// Synchronize publicly shared entries to public_checklists/{targetUid}
+		try {
+			const publicEntries = (cleanData.entries as TTMLChecklistEntry[]).filter(
+				(e) => Boolean(e.sharePublicly),
+			);
+			const publicDocRef = doc(db, "public_checklists", targetUid);
+			if (publicEntries.length > 0) {
+				const user =
+					globalStore.get(currentUserAtom) ||
+					getFirebaseAuth()?.currentUser;
+				await setDoc(
+					publicDocRef,
+					{
+						userId: targetUid,
+						userName: user?.displayName || "Anonymous",
+						userPhoto: user?.photoURL || null,
+						entries: publicEntries,
+						updatedAt: Date.now(),
+					},
+					{ merge: true },
+				);
+			} else {
+				await deleteDoc(publicDocRef).catch(() => {});
+			}
+		} catch (pubErr) {
+			console.warn("Could not sync public checklist mirror:", pubErr);
+		}
+
 		return { success: true };
 	} catch (err: any) {
 		console.error("Failed to save checklist to Firebase:", err);

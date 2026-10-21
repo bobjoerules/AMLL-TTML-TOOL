@@ -1,5 +1,6 @@
 .windowControls {
-	display: flex;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 	align-items: center;
 	width: 100%;
 	height: calc(44px * var(--scaling, 1));
@@ -35,9 +36,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex-grow: 0;
-	flex-shrink: 0;
 	z-index: 1;
+	padding: 0 var(--space-2);
 }
 
 .rightSlot {
@@ -50,11 +50,13 @@
 .leftSide,
 .rightSide {
 	display: flex;
-	width: 0;
-	flex: 1 1 0%;
 	min-width: 0;
 	height: 100%;
 	align-items: center;
+}
+
+.leftSide {
+	overflow: hidden;
 }
 
 .rightSide {

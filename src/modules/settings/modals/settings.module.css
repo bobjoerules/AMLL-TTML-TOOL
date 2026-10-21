@@ -171,7 +171,7 @@
 	background-color: var(--gray-a2) !important;
 	box-shadow: none !important;
 	border-radius: 8px !important;
-	margin-bottom: 12px;
+	margin-bottom: 0;
 }
 
 .page :global(.rt-Heading):not(.pageTitle) {

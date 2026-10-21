@@ -16,18 +16,15 @@ import { toast } from "react-toastify";
 import { uid } from "uid";
 
 import { audioEngine } from "$/modules/audio/audio-engine";
-import { convertMp3ToFlac } from "$/modules/audio/utils/mp3-converter";
 import { getProjectList } from "$/modules/project/autosave/autosave";
 import { getSuggestedTtmlFileName } from "$/modules/project/logic/metadata-filename";
 import { isProjectMatch } from "$/modules/project/logic/project-match";
 import { parseLyric as parseTTML } from "$/modules/project/logic/ttml-parser";
 import {
-	Mp3ConversionMode,
-	mp3ConversionModeAtom,
 	normalizeApostrophesOnImportAtom,
 	normalizeCyrillicEsOnImportAtom,
 } from "$/modules/settings/states";
-import { confirmDialogAtom, mp3ConversionDialogAtom } from "$/states/dialogs";
+import { confirmDialogAtom } from "$/states/dialogs";
 import {
 	isDirtyAtom,
 	newLyricLinesAtom,
@@ -71,11 +68,9 @@ export const useFileOpener = () => {
 	const setProjectId = useSetAtom(projectIdAtom);
 	const setSaveFileName = useSetAtom(saveFileNameAtom);
 	const setConfirmDialog = useSetAtom(confirmDialogAtom);
-	const setMp3ConversionDialog = useSetAtom(mp3ConversionDialogAtom);
 	const isDirty = useAtomValue(isDirtyAtom);
 	const { t } = useTranslation();
 
-	const [conversionMode] = useAtom(mp3ConversionModeAtom);
 	const normalizeApostrophesOnImport = useAtomValue(
 		normalizeApostrophesOnImportAtom,
 	);
@@ -109,117 +104,7 @@ export const useFileOpener = () => {
 
 			try {
 				if (AUDIO_EXTENSIONS.has(ext)) {
-					if (ext === "mp3") {
-						if (conversionMode === Mp3ConversionMode.Always) {
-							const fileData = await file.arrayBuffer();
-							const uint8Array = new Uint8Array(fileData);
-
-							try {
-								toast.info(
-									t(
-										"dialog.mp3Conversion.converting",
-										"正在转换 MP3 到 FLAC...",
-									),
-								);
-								const flacData = await convertMp3ToFlac(uint8Array, file.name);
-								const flacArray = new Uint8Array(flacData);
-								const flacBlob = new Blob([flacArray], {
-									type: "audio/flac",
-								});
-								const flacFile = new File(
-									[flacBlob],
-									file.name.replace(/\.mp3$/i, ".flac"),
-									{
-										type: "audio/flac",
-									},
-								);
-								if ((file as any).path) {
-									(flacFile as any).path = (file as any).path;
-								}
-								await audioEngine.loadMusic(flacFile);
-								toast.success(
-									t("dialog.mp3Conversion.success", "Conversion successful"),
-								);
-								return;
-							} catch (e) {
-								toast.error(
-									t(
-										"dialog.mp3Conversion.failed",
-										"Conversion failed: {error}",
-										{
-											error: e instanceof Error ? e.message : String(e),
-										},
-									),
-								);
-								audioEngine.loadMusic(file);
-								return;
-							}
-						}
-
-						if (conversionMode === Mp3ConversionMode.Ask) {
-							const fileData = await file.arrayBuffer();
-							const uint8Array = new Uint8Array(fileData);
-
-							const doConvert = await new Promise<boolean>((resolve) => {
-								setMp3ConversionDialog({
-									open: true,
-									fileName: file.name,
-									onConvert: () => resolve(true),
-									onSkip: () => resolve(false),
-								});
-							});
-
-							if (!doConvert) {
-								audioEngine.loadMusic(file);
-								return;
-							}
-
-							try {
-								toast.info(
-									t(
-										"dialog.mp3Conversion.converting",
-										"正在转换 MP3 到 FLAC...",
-									),
-								);
-								const flacData = await convertMp3ToFlac(uint8Array, file.name);
-								const flacArray = new Uint8Array(flacData);
-								const flacBlob = new Blob([flacArray], {
-									type: "audio/flac",
-								});
-								const flacFile = new File(
-									[flacBlob],
-									file.name.replace(/\.mp3$/i, ".flac"),
-									{
-										type: "audio/flac",
-									},
-								);
-								if ((file as any).path) {
-									(flacFile as any).path = (file as any).path;
-								}
-								await audioEngine.loadMusic(flacFile);
-								toast.success(
-									t("dialog.mp3Conversion.success", "Conversion successful"),
-								);
-								return;
-							} catch (e) {
-								toast.error(
-									t(
-										"dialog.mp3Conversion.failed",
-										"Conversion failed: {error}",
-										{
-											error: e instanceof Error ? e.message : String(e),
-										},
-									),
-								);
-								audioEngine.loadMusic(file);
-								return;
-							}
-						}
-
-						audioEngine.loadMusic(file);
-						return;
-					}
-					audioEngine.loadMusic(file);
+					await audioEngine.loadMusic(file);
 					return;
 				}
 
@@ -290,10 +175,8 @@ export const useFileOpener = () => {
 			setSaveFileName,
 			normalizeLyricLines,
 			t,
-			conversionMode,
 			normalizeApostrophesOnImport,
 			normalizeCyrillicEsOnImport,
-			setMp3ConversionDialog,
 		],
 	);
 

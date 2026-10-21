@@ -62,6 +62,12 @@ service cloud.firestore {
       );
     }
 
+    // Public Checklists Collection (shared planned and in-progress songs)
+    match /public_checklists/{userId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isModerator());
+    }
+
     // Collection group query support across all user ttmls
     match /{path=**}/ttmls/{document} {
       allow read: if true;

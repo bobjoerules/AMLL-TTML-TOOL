@@ -127,8 +127,18 @@ export const useAudioRegion = (
 
 			if (!type) return;
 
-			// When playhead tracking is active, disable dragging the region body so clicks seek the playhead
-			if (isTrackingOn && type === "drag") {
+			// If right-clicked (button === 2), let it bubble to move spectrogram area
+			if (e.button === 2) {
+				return;
+			}
+
+			// Left click on region body: bypass so clicks bubble to seek playhead
+			if (type === "drag") {
+				return;
+			}
+
+			// Only left-click initiates edge resizing
+			if (e.button !== 0) {
 				return;
 			}
 

@@ -97,6 +97,7 @@ const InteractiveHoverOverlay = memo(
 						spectrogramVisible ? styles.interactionOverlayActive : ""
 					}`}
 					onMouseDown={spectrogramVisible ? onMouseDown : undefined}
+					onContextMenu={(e) => e.preventDefault()}
 					title={title}
 				/>
 				<HoverGuide hoverState={hoverState} />
@@ -341,51 +342,25 @@ export const AudioSlider = memo(() => {
 			const onMouseMove = (e: MouseEvent) => {
 				scrollSpectrogramFromClientX(e.clientX);
 			};
+			const preventContextMenu = (e: MouseEvent) => {
+				e.preventDefault();
+			};
 			const onMouseUp = () => {
 				isDraggingRef.current = false;
 				window.removeEventListener("mousemove", onMouseMove);
 				window.removeEventListener("mouseup", onMouseUp);
+				setTimeout(() => {
+					window.removeEventListener("contextmenu", preventContextMenu);
+				}, 50);
 			};
 			window.addEventListener("mousemove", onMouseMove);
 			window.addEventListener("mouseup", onMouseUp);
+			window.addEventListener("contextmenu", preventContextMenu, { capture: true, once: true });
 		},
 		[scrollSpectrogramFromClientX],
 	);
 
-	const handleOverlayMouseDown = useCallback(
-		(e: React.MouseEvent<HTMLDivElement>) => {
-			e.preventDefault();
-			e.stopPropagation();
-
-			if (!wsContainerRef.current || sliderWidthPx <= 0 || currentDuration <= 0) return;
-			const rect = wsContainerRef.current.getBoundingClientRect();
-			if (rect.width <= 0) return;
-			const progress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-			const timeMs = progress * currentDuration;
-
-			if (e.altKey) {
-				toggleMark(timeMs);
-				return;
-			}
-
-			if (e.shiftKey || isTrackingOn) {
-				startSeekPlayheadDrag(e.clientX);
-				return;
-			}
-
-			startSpectrogramScrollDrag(e.clientX);
-		},
-		[
-			currentDuration,
-			isTrackingOn,
-			sliderWidthPx,
-			startSeekPlayheadDrag,
-			startSpectrogramScrollDrag,
-			toggleMark,
-		],
-	);
-
-	const handleContainerMouseDown = useCallback(
+	const handleAudioBarMouseDown = useCallback(
 		(e: React.MouseEvent) => {
 			if (!wsContainerRef.current || sliderWidthPx <= 0 || currentDuration <= 0) return;
 			const rect = wsContainerRef.current.getBoundingClientRect();
@@ -393,44 +368,41 @@ export const AudioSlider = memo(() => {
 			const progress = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
 			const timeMs = progress * currentDuration;
 
-			if (e.altKey) {
+			if (e.altKey && e.button === 0) {
 				e.preventDefault();
 				e.stopPropagation();
 				toggleMark(timeMs);
 				return;
 			}
 
-			if (e.shiftKey) {
+			// Right click (button === 2): Move spectrogram area
+			if (e.button === 2) {
 				e.preventDefault();
 				e.stopPropagation();
-				if (spectrogramVisible) {
-					startSeekPlayheadDrag(e.clientX);
-				} else {
-					toggleMark(timeMs);
-				}
+				startSpectrogramScrollDrag(e.clientX);
 				return;
 			}
 
-			if (spectrogramVisible) {
+			// Left click (button === 0): Move playhead
+			if (e.button === 0) {
 				e.preventDefault();
 				e.stopPropagation();
-				if (isTrackingOn) {
-					startSeekPlayheadDrag(e.clientX);
-				} else {
-					startSpectrogramScrollDrag(e.clientX);
-				}
+				startSeekPlayheadDrag(e.clientX);
+				return;
 			}
 		},
 		[
 			currentDuration,
-			isTrackingOn,
 			sliderWidthPx,
-			spectrogramVisible,
 			startSeekPlayheadDrag,
 			startSpectrogramScrollDrag,
 			toggleMark,
 		],
 	);
+
+	const handleContextMenu = useCallback((e: React.MouseEvent) => {
+		e.preventDefault();
+	}, []);
 
 	const destroyWaveSurfer = useCallback(() => {
 		if (waveSurferRef.current) {
@@ -683,24 +655,20 @@ export const AudioSlider = memo(() => {
 				aria-label={t("audio.waveform", "Audio Waveform")}
 				ref={wsContainerRef}
 				style={{ width: "100%", height: "100%", overflow: "hidden" }}
-				onMouseDown={handleContainerMouseDown}
+				onMouseDown={handleAudioBarMouseDown}
+				onContextMenu={handleContextMenu}
 				onMouseMove={handleContainerMouseMove}
 				onMouseLeave={handleContainerMouseLeave}
 			>
 				<InteractiveHoverOverlay
 					spectrogramVisible={spectrogramVisible}
-					onMouseDown={handleOverlayMouseDown}
+					onMouseDown={handleAudioBarMouseDown}
 					title={
 						spectrogramVisible
-							? isTrackingOn
-								? t(
-										"audio.spectrogramBarTrackingHint",
-										"Click to seek playhead (playhead tracking active).",
-								  )
-								: t(
-										"audio.spectrogramBarHint",
-										"Click to center spectrogram. Shift+click to seek playhead.",
-								  )
+							? t(
+									"audio.spectrogramBarHint",
+									"Left click to seek playhead. Right click to move spectrogram area.",
+							  )
 							: undefined
 					}
 					hoverState={hoverState}

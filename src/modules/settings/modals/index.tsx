@@ -107,6 +107,39 @@ const NavigationItem = ({
 	</Tabs.Trigger>
 );
 
+const COMMON_TAB_IDS = new Set([
+	"general-language",
+	"general-scale",
+	"general-layout",
+	"general-key-trigger",
+	"editor-key-trigger",
+	"general-latency",
+	"editor-sync-judge",
+	"editor-sync-offset",
+	"editor-commit-offset",
+	"editor-smart-first-word",
+	"editor-smart-last-word",
+	"editor-auto-segment",
+	"editor-word-wrap",
+	"editor-upcoming-highlight",
+	"editor-unsynced-highlight",
+	"editor-auto-scroll",
+	"editor-compact-bg",
+	"editor-consecutive-bg",
+	"files-consecutive-bg",
+	"editor-genius-header",
+	"editor-never-split-words",
+	"files-autosave",
+	"files-download-audio",
+	"files-cloud-audio",
+	"files-apostrophe",
+	"files-cyrillic-es",
+	"files-spotmatch-save",
+	"files-checklist",
+	"audio-volume",
+	"audio-playback-rate",
+]);
+
 export const SettingsDialog = memo(() => {
 	const [settingsDialogOpen, setSettingsDialogOpen] =
 		useAtom(settingsDialogAtom);
@@ -120,6 +153,18 @@ export const SettingsDialog = memo(() => {
 		() => filterSettings(searchQuery),
 		[searchQuery],
 	);
+
+	const matchingItemIds = useMemo(() => {
+		return new Set(searchResults.map((item) => item.id));
+	}, [searchResults]);
+
+	const matchingTabs = useMemo(() => {
+		return new Set(searchResults.map((item) => item.tab));
+	}, [searchResults]);
+
+	const hasCommonMatches = useMemo(() => {
+		return searchResults.some((item) => COMMON_TAB_IDS.has(item.id));
+	}, [searchResults]);
 
 	const tabMatchCounts = useMemo(() => {
 		const counts: Record<string, number> = {};
@@ -293,7 +338,7 @@ export const SettingsDialog = memo(() => {
 
 					<main className={styles.contentPane}>
 						{searchQuery.trim() ? (
-							<Flex direction="column" gap="3" className={styles.searchResultsPage}>
+							<Flex direction="column" gap="4" className={styles.page}>
 								<Box className={styles.pageHeader}>
 									<Heading size="6" className={styles.pageTitle}>
 										{t("settingsDialog.searchResults", "Search Results")}
@@ -302,7 +347,7 @@ export const SettingsDialog = memo(() => {
 										{searchResults.length > 0
 											? t(
 													"settingsDialog.foundResults",
-													"Found {{count}} setting(s) matching \"{{query}}\"",
+													'Found {count} setting(s) matching "{query}"',
 													{
 														count: searchResults.length,
 														query: searchQuery,
@@ -310,7 +355,7 @@ export const SettingsDialog = memo(() => {
 											  )
 											: t(
 													"settingsDialog.noResults",
-													"No settings match \"{{query}}\"",
+													'No settings match "{query}"',
 													{
 														query: searchQuery,
 													},
@@ -319,50 +364,95 @@ export const SettingsDialog = memo(() => {
 								</Box>
 
 								{searchResults.length > 0 ? (
-									<Flex direction="column" gap="2" mt="2">
-										{searchResults.map((item: SettingSearchItem) => (
-											<Card
-												key={item.id}
-												className={styles.searchResultCard}
-												onClick={() => {
-													setActiveTab(item.tab);
-													setSearchQuery("");
-												}}
-											>
-												<Flex justify="between" align="center" gap="3">
-													<Box style={{ flex: 1, minWidth: 0 }}>
-														<Flex align="center" gap="2" mb="1" wrap="wrap">
-															<Text
-																weight="bold"
-																size="3"
-																className={styles.searchResultTitle}
-															>
-																{item.title}
-															</Text>
-															<Badge color="blue" variant="soft" size="1">
-																{item.tabName}
-															</Badge>
-														</Flex>
-														{item.description && (
-															<Text
-																size="2"
-																color="gray"
-																className={styles.searchResultDesc}
-															>
-																{item.description}
-															</Text>
-														)}
-													</Box>
-													<Button
-														size="1"
-														variant="soft"
-														style={{ flexShrink: 0, cursor: "pointer" }}
-													>
-														{t("settingsDialog.goToSetting", "Go to setting")} →
-													</Button>
+									<Flex direction="column" gap="4">
+										{hasCommonMatches && (
+											<SettingsCommonTab
+												section="all"
+												filterItemIds={matchingItemIds}
+											/>
+										)}
+
+										{matchingItemIds.has("audio-equalizer") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("settings.group.equalizer", "Graphic Equalizer")}
+												</Heading>
+												<AudioSettingsTab />
+											</Flex>
+										)}
+
+										{matchingItemIds.has("audio-spectrogram") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("settings.group.spectrogram", "Spectrogram Visualizer")}
+												</Heading>
+												<SettingsSpectrogramTab />
+											</Flex>
+										)}
+
+										{matchingItemIds.has("files-backup") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("settings.group.backup", "Data Backup & Restore")}
+												</Heading>
+												<SettingsBackupTab />
+											</Flex>
+										)}
+
+										{matchingTabs.has("account") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("settingsDialog.tab.account", "Account & Cloud")}
+												</Heading>
+												<SettingsAccountTab />
+											</Flex>
+										)}
+
+										{matchingTabs.has("keybinding") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("settingsDialog.tab.keybindings", "Keybindings")}
+												</Heading>
+												<SettingsKeyBindingsDialog />
+											</Flex>
+										)}
+
+										{matchingTabs.has("appearance") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("settingsDialog.tab.appearance", "Appearance")}
+												</Heading>
+												<SettingsAppearanceTab />
+											</Flex>
+										)}
+
+										{import.meta.env.TAURI_ENV_PLATFORM &&
+											matchingTabs.has("discord") && (
+												<Flex direction="column" gap="2">
+													<Heading size="4">
+														{t("settingsDialog.tab.discord", "Discord RPC")}
+													</Heading>
+													<DiscordPresenceSettings />
 												</Flex>
-											</Card>
-										))}
+											)}
+
+										{matchingTabs.has("about") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("common.about", "About")}
+												</Heading>
+												<SettingsAboutTab />
+											</Flex>
+										)}
+
+										{matchingTabs.has("dev") && (
+											<Flex direction="column" gap="2">
+												<Heading size="4">
+													{t("settingsDialog.tab.dev", "Developer")}
+												</Heading>
+												<SettingsDevTab />
+											</Flex>
+										)}
 									</Flex>
 								) : (
 									<Card style={{ padding: "32px 16px", textAlign: "center" }}>

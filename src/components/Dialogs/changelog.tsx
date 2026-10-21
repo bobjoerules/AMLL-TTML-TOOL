@@ -51,6 +51,35 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v4.1.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 21, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Audio Engine Upgrades:</b> Integrated zero-latency audio engine fixes with improved playback synchronization, spectrogram stability, and seamless track handling.
+								</Text>
+								<Text size="2">
+									• <b>Never-Split Words Dictionary:</b> Added a global custom word list in Settings &gt; Syllabification to prevent designated words or proper nouns from ever being split into syllables across any songs.
+								</Text>
+								<Text size="2">
+									• <b>Audio Track Bar Navigation:</b> Left-clicking the bottom audio track bar moves the playback playhead, while right-click moves and scrolls the spectrogram view.
+								</Text>
+								<Text size="2">
+									• <b>Settings Inline Search:</b> Refactored the settings search experience so matching controls, toggles, and inputs appear directly inside the search view.
+								</Text>
+								<Text size="2">
+									• <b>Public Community Checklist:</b> Launched the public song checklist showcase page on the website for browsing community planned, in-progress, and finished TTML projects.
+								</Text>
+								<Text size="2">
+									• <b>Top Bar Centering &amp; UI Polish:</b> Fixed navigation bar centering when logged in, polished search result spacing, and fixed transparent hover tooltips on the website.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v4.0.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

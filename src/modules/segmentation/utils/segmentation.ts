@@ -71,7 +71,8 @@ function autoTokenize(text: string, config: SegmentationConfig): string[] {
 			currentToken.length > 1
 		) {
 			if (
-				/^(?:oh|ooh|ah|ahh|woah|whoa|yeah|eh|uh|um|ha)$/i.test(currentToken)
+				/^(?:oh|ooh|ah|ahh|woah|whoa|yeah|eh|uh|um|ha)$/i.test(currentToken) ||
+				isWordIgnored(currentToken, config.ignoreList)
 			) {
 				tokens.push(currentToken);
 			} else {
@@ -337,6 +338,52 @@ function distributeTime(
 
 	return newWords;
 }
+ 
+/**
+ * @description 解析忽略列表文本，支持换行、半角逗号、全角逗号分隔，并去除首尾空白
+ */
+export function parseIgnoreList(text: string): Set<string> {
+	if (!text) return new Set();
+	const items = text
+		.split(/[\n,，]/)
+		.map((item) => item.trim())
+		.filter((item) => item.length > 0);
+	return new Set(items);
+}
+
+/**
+ * @description 判断某个词或 token 是否匹配用户配置的忽略切分列表（大小写不敏感，且忽略首尾标点）
+ */
+export function isWordIgnored(word: string, ignoreList?: Set<string>): boolean {
+	if (!ignoreList || ignoreList.size === 0) return false;
+	const trimmed = word.trim();
+	if (!trimmed) return false;
+	if (ignoreList.has(trimmed)) return true;
+
+	const lower = trimmed.toLowerCase();
+	for (const item of ignoreList) {
+		const itemTrimmed = item.trim();
+		if (!itemTrimmed) continue;
+		if (itemTrimmed.toLowerCase() === lower) return true;
+	}
+
+	// 剥离首尾符号与标点（例如 "(Baby)" 或 "baby," 也能匹配到 "baby"）
+	const stripped = trimmed
+		.replace(/^[\s\p{P}\p{S}]+|[\s\p{P}\p{S}]+$/gu, "")
+		.toLowerCase();
+	if (stripped) {
+		for (const item of ignoreList) {
+			const itemStripped = item
+				.trim()
+				.replace(/^[\s\p{P}\p{S}]+|[\s\p{P}\p{S}]+$/gu, "")
+				.toLowerCase();
+			if (itemStripped && (itemStripped === stripped || itemStripped === lower)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 /**
  * @description 将单个 LyricWord 拆分为多个
@@ -346,6 +393,11 @@ export function segmentWord(
 	config: SegmentationConfig,
 	context?: SegmentationContext,
 ): LyricWord[] {
+	// 如果词处于全局不切分忽略列表中，无论是否有学习规则或音节规则，都保持不切分
+	if (isWordIgnored(word.word, config.ignoreList)) {
+		return [word];
+	}
+
 	const learnedSegments = applyLearnedRule(word.word, config.learnedRules);
 	if (learnedSegments) {
 		const weights = learnedSegments.map((token) =>
@@ -392,7 +444,7 @@ export function segmentWord(
 		return distributeTime(word, finalTokens, finalWeights, totalWeight);
 	}
 
-	const pattern = new RegExp(`(${sortedPatterns.join("|")})`, "g");
+	const pattern = new RegExp(`(${sortedPatterns.join("|")})`, "gi");
 
 	const parts = word.word.split(pattern);
 
@@ -412,7 +464,7 @@ export function segmentWord(
 				allWeights.push(weight);
 				grandTotalWeight += weight;
 			}
-		} else if (config.ignoreList.has(part)) {
+		} else if (isWordIgnored(part, config.ignoreList)) {
 			const weight = calculateWeight(part, config);
 			allTokens.push(part);
 			allWeights.push(weight);

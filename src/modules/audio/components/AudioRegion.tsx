@@ -56,21 +56,17 @@ export const AudioRegion = ({
 				role="slider"
 				data-drag-type="drag"
 				className={styles.regionBody}
-				style={isTrackingOn ? { cursor: "pointer" } : undefined}
 				onMouseDown={handleMouseDown}
+				onContextMenu={(e) => e.preventDefault()}
 				tabIndex={0}
 				aria-valuenow={startTimeS}
 				aria-valuemin={0}
 				aria-valuemax={durationS}
 				aria-valuetext={msToTimestamp(startTimeMs)}
-				title={
-					isTrackingOn
-						? t(
-								"audio.spectrogramBarTrackingHint",
-								"Click to seek playhead (playhead tracking active).",
-						  )
-						: undefined
-				}
+				title={t(
+					"audio.spectrogramBarHint",
+					"Left click to seek playhead. Right click to move spectrogram area.",
+				)}
 			/>
 			<div
 				role="slider"

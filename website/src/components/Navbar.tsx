@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield, Menu, X, Award } from 'lucide-react';
+import { Download, Globe, ExternalLink, LogIn, User as UserIcon, Shield, Menu, X, Award, ListTodo } from 'lucide-react';
 import type { User } from 'firebase/auth';
 import { GithubIcon } from './GithubIcon';
 import { LiquidPlayerIcon } from './LiquidPlayerIcon';
@@ -8,8 +8,8 @@ import { ProfileModal } from './ProfileModal';
 import { isUserModerator, subscribeToAuth } from '../utils/firebase';
 
 interface NavbarProps {
-  currentTab: 'home' | 'finished' | 'stats' | 'liquid';
-  onSelectTab: (tab: 'home' | 'finished' | 'stats' | 'liquid') => void;
+  currentTab: 'home' | 'finished' | 'checklist' | 'stats' | 'liquid';
+  onSelectTab: (tab: 'home' | 'finished' | 'checklist' | 'stats' | 'liquid') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
@@ -62,6 +62,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                   onClick={() => onSelectTab('finished')}
                 >
                   Finished TTMLs
+                </button>
+              </li>
+              <li>
+                <button
+                  className={`nav-link ${currentTab === 'checklist' ? 'active' : ''}`}
+                  onClick={() => onSelectTab('checklist')}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+                    <ListTodo size={15} color="#e4e4e7" />
+                    Checklist
+                  </span>
                 </button>
               </li>
               <li>
@@ -182,6 +193,18 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
                 }}
               >
                 Finished TTMLs
+              </button>
+              <button
+                className={`nav-mobile-link ${currentTab === 'checklist' ? 'active' : ''}`}
+                onClick={() => {
+                  onSelectTab('checklist');
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <ListTodo size={16} color="#e4e4e7" />
+                  Public Checklist
+                </span>
               </button>
               <button
                 className={`nav-mobile-link ${currentTab === 'stats' ? 'active' : ''}`}

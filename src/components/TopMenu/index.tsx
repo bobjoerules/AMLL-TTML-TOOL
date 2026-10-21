@@ -341,6 +341,8 @@ export const TopMenu: FC = () => {
 			style={{
 				whiteSpace: "nowrap",
 				height: "100%",
+				minWidth: 0,
+				flexShrink: 1,
 			}}
 		>
 			{showHomeButton ? (

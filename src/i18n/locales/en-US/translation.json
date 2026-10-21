@@ -283,6 +283,9 @@
 			"autoLoadCloudAudioDesc": "Automatically load attached audio or match local audio files when loading from cloud saves.",
 			"downloadAudioOnLyricImport": "Download audio when importing lyrics",
 			"downloadAudioOnLyricImportDesc": "Automatically search and download matching audio tracks into the app when importing lyrics.",
+			"neverSplitWords": "Words to Never Split",
+			"neverSplitWordsDesc": "Words listed here will never be split into syllables or segments across all songs in the app. Separate words with newlines or commas.",
+			"neverSplitWordsPlaceholder": "e.g. baby, forever, superman (one word per line or comma-separated)",
 			"syncJudgeMode": "Sync Timestamp Judgment Mode",
 			"syncJudgeModeDesc": "Set how timestamps are judged when syncing. Default is 'First key down'.",
 			"syncJudgeModeOptions": {
@@ -789,7 +792,12 @@
 			"spectrogram": "Spectrogram",
 			"backup": "Backup",
 			"dev": "Dev"
-		}
+		},
+		"searchResults": "Search Results",
+		"searchPlaceholder": "Search settings...",
+		"foundResults": "Found {count} setting(s) matching \"{query}\"",
+		"noResults": "No settings match \"{query}\"",
+		"noResultsHelp": "Try searching with broader terms like 'audio', 'theme', 'sync', 'font', or 'offset'."
 	},
 	"autoSegmentApplied": "Auto-segmented with {engine}",
 	"error": {
@@ -803,8 +811,8 @@
 		"markerDescription": "Description...",
 		"deleteMarker": "Delete Marker",
 		"waveform": "Audio Waveform",
-		"spectrogramBarHint": "Click to center spectrogram. Shift+click to seek playhead.",
-		"spectrogramBarTrackingHint": "Click to seek playhead (playhead tracking active).",
+		"spectrogramBarHint": "Left click to seek playhead. Right click to move spectrogram area.",
+		"spectrogramBarTrackingHint": "Left click to seek playhead. Right click to move spectrogram area.",
 		"status": {
 			"transcoding": "Decoding failed, attempting to transcode audio...",
 			"loading": "Loading audio...",

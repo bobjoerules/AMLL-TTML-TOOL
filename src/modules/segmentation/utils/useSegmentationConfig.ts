@@ -14,6 +14,7 @@ import {
 } from "../states";
 import type { HyphenatorFunc, SegmentationConfig } from "../types";
 import { loadHyphenator } from "../utils/hyphen-loader";
+import { parseIgnoreList } from "./segmentation";
 import { getHyphenationLanguage } from "./syllabification-engines";
 
 export const useSegmentationConfig = () => {
@@ -56,9 +57,7 @@ export const useSegmentationConfig = () => {
 		const weight = parseFloat(punctuationWeightStr);
 		const finalPunctuationWeight = Number.isNaN(weight) ? 0.2 : weight;
 
-		const ignoreList = new Set(
-			ignoreListText.split("\n").filter((line) => line.trim() !== ""),
-		);
+		const ignoreList = parseIgnoreList(ignoreListText);
 
 		return {
 			engine,

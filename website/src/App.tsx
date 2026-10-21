@@ -3,16 +3,19 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { FinishedTTMLsPage } from './pages/FinishedTTMLsPage';
+import { PublicChecklistPage } from './pages/PublicChecklistPage';
 import { StatsPage } from './pages/StatsPage';
 import { LiquidPlayerPage } from './pages/LiquidPlayerPage';
 
 export const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'stats' | 'liquid'>(() => {
+  const [currentTab, setCurrentTab] = useState<'home' | 'finished' | 'checklist' | 'stats' | 'liquid'>(() => {
     if (typeof window === 'undefined') return 'home';
     const hash = window.location.hash.toLowerCase();
     const path = window.location.pathname.toLowerCase();
     if (hash.includes('stats') || hash.includes('user=') || path.includes('/stats') || path.includes('/user/')) {
       return 'stats';
+    } else if (hash.includes('checklist') || path.includes('/checklist')) {
+      return 'checklist';
     } else if (hash.includes('finished') || hash.includes('ttmls') || path.includes('/finished') || path.includes('/song/') || path.includes('/track/') || path.includes('/s/')) {
       return 'finished';
     } else if (hash.includes('liquid') || hash.includes('tinko') || path.includes('/liquid')) {
@@ -35,6 +38,8 @@ export const App: React.FC = () => {
         } else {
           window.history.replaceState(null, '', '/stats');
         }
+      } else if (lowerHash.startsWith('#checklist')) {
+        window.history.replaceState(null, '', '/checklist');
       } else if (lowerHash.startsWith('#finished') || lowerHash.startsWith('#ttmls')) {
         window.history.replaceState(null, '', '/finished');
       } else if (lowerHash.startsWith('#liquid') || lowerHash.startsWith('#tinko')) {
@@ -44,6 +49,8 @@ export const App: React.FC = () => {
       const activePath = window.location.pathname.toLowerCase();
       if (activePath.startsWith('/stats') || activePath.startsWith('/user/') || activePath.startsWith('/u/')) {
         setCurrentTab('stats');
+      } else if (activePath.startsWith('/checklist')) {
+        setCurrentTab('checklist');
       } else if (activePath.startsWith('/finished') || activePath.startsWith('/song/') || activePath.startsWith('/track/') || activePath.startsWith('/s/')) {
         setCurrentTab('finished');
       } else if (activePath.startsWith('/liquid') || activePath.startsWith('/tinko')) {
@@ -69,6 +76,9 @@ export const App: React.FC = () => {
     if (currentTab === 'finished') {
       title = 'Browse Community TTML Lyrics — AMLL TTML Tool';
       desc = 'Search, preview, and download community-synced syllable & line Apple Music TTML lyrics directly.';
+    } else if (currentTab === 'checklist') {
+      title = 'Public TTML Checklist — Planned & In-Progress Lyrics | AMLL TTML Tool';
+      desc = 'Discover songs currently in progress or planned by community synchronizers. Avoid duplicated efforts and see what Apple Music TTML lyrics are on the way.';
     } else if (currentTab === 'stats') {
       const path = window.location.pathname;
       if (!path.startsWith('/user/') && !path.startsWith('/u/')) {
@@ -86,7 +96,7 @@ export const App: React.FC = () => {
     }
   }, [currentTab]);
 
-  const handleSelectTab = (tab: 'home' | 'finished' | 'stats' | 'liquid') => {
+  const handleSelectTab = (tab: 'home' | 'finished' | 'checklist' | 'stats' | 'liquid') => {
     setCurrentTab(tab);
     const targetPath = tab === 'home' ? '/' : `/${tab}`;
     window.history.pushState(null, '', targetPath);
@@ -104,6 +114,7 @@ export const App: React.FC = () => {
       <main style={{ flex: 1 }}>
         {currentTab === 'home' && <HomePage onNavigate={handleSelectTab} />}
         {currentTab === 'finished' && <FinishedTTMLsPage />}
+        {currentTab === 'checklist' && <PublicChecklistPage onNavigateTab={handleSelectTab} />}
         {currentTab === 'stats' && <StatsPage onNavigateTab={handleSelectTab} />}
         {currentTab === 'liquid' && <LiquidPlayerPage />}
       </main>

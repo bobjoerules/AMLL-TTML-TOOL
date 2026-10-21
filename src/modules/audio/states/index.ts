@@ -3,6 +3,7 @@ import { atomWithStorage } from "jotai/utils";
 import { lyricLinesAtom } from "$/states/main.ts";
 
 import { selectAtom } from "jotai/utils";
+import { clampPlaybackRate } from "../utils/playback-rate";
 
 const activeLineIdsBaseAtom = atom((get) => {
 	const currentTime = get(currentTimeAtom);
@@ -44,7 +45,15 @@ export const activeLineIdsAtom = selectAtom(
 
 export const audioBufferAtom = atom<AudioBuffer | null>(null);
 export const volumeAtom = atomWithStorage("volume", 0.5);
-export const playbackRateAtom = atomWithStorage("playbackRate", 1);
+const storedPlaybackRateAtom = atomWithStorage<number>("playbackRate", 1);
+export const playbackRateAtom = atom(
+	(get) => clampPlaybackRate(get(storedPlaybackRateAtom)),
+	(get, set, next: number | ((previous: number) => number)) => {
+		const value =
+			typeof next === "function" ? next(get(playbackRateAtom)) : next;
+		set(storedPlaybackRateAtom, clampPlaybackRate(value));
+	},
+);
 export const preservesPitchAtom = atomWithStorage("preservesPitch", true);
 export const audioPlayingAtom = atom(false);
 export const loadedAudioAtom = atom(new Blob([]));

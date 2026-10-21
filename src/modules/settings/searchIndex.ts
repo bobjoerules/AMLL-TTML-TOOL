@@ -165,6 +165,23 @@ export const SETTINGS_SEARCH_ITEMS: SettingSearchItem[] = [
 		tabName: "Editor & Sync",
 		keywords: ["genius", "header", "verse", "chorus", "bridge", "section", "categorization"],
 	},
+	{
+		id: "editor-never-split-words",
+		title: "Words to Never Split",
+		description: "Configure words that will never be split into syllables or segments across all songs",
+		tab: "editor",
+		tabName: "Editor & Sync",
+		keywords: [
+			"never split",
+			"words to never split",
+			"ignore list",
+			"syllable",
+			"split",
+			"hyphenation",
+			"segmentation",
+			"protect words",
+		],
+	},
 
 	// Files & Storage
 	{
@@ -214,6 +231,14 @@ export const SETTINGS_SEARCH_ITEMS: SettingSearchItem[] = [
 		tab: "files",
 		tabName: "Files & Storage",
 		keywords: ["spotmatch", "spot match", "spotify", "match", "save", "ctrl+s", "cmd+s", "track finder"],
+	},
+	{
+		id: "files-checklist",
+		title: "TTML Checklist Database Status",
+		description: "Show button to mark songs as uploaded to the database in TTML checklist",
+		tab: "files",
+		tabName: "Files & Storage",
+		keywords: ["checklist", "database", "uploaded", "track", "status", "amll db", "mark as uploaded"],
 	},
 	{
 		id: "files-backup",
