@@ -32,6 +32,7 @@ export interface FinishedTTML {
 	album?: string;
 	coverArt?: string;
 	lineCount?: number;
+	wordCount?: number;
 	durationMs?: number;
 	tags?: string[];
 	rawTTML?: string;
@@ -43,6 +44,36 @@ export interface FinishedTTML {
 	updatedAt?: number;
 	downloadUrl?: string;
 	timeSpentSeconds?: number;
+}
+
+export function countWordsInTTML(rawTTML: string): number {
+	if (!rawTTML) return 0;
+	const spanMatches = rawTTML.match(
+		/<span\b[^>]*\bbegin=[^>]*>([\s\S]*?)<\/span>/gi,
+	);
+	if (spanMatches && spanMatches.length > 0) {
+		let count = 0;
+		for (const span of spanMatches) {
+			const text = span.replace(/<[^>]+>/g, "").trim();
+			if (text.length > 0) count++;
+		}
+		if (count > 0) return count;
+	}
+
+	const pMatches = rawTTML.match(/<p\b[^>]*>([\s\S]*?)<\/p>/gi);
+	if (pMatches && pMatches.length > 0) {
+		let totalWords = 0;
+		for (const p of pMatches) {
+			const text = p.replace(/<[^>]+>/g, " ").trim();
+			if (text.length > 0) {
+				const words = text.split(/\s+/).filter(Boolean);
+				totalWords += words.length;
+			}
+		}
+		if (totalWords > 0) return totalWords;
+	}
+
+	return 0;
 }
 
 export const MODERATOR_UIDS = new Set(["s41Sey8PJUSYHQUsS6aLLb7lsf02"]);
@@ -256,17 +287,29 @@ function parseTTMLDoc(
 		? data.updatedAt.toMillis()
 		: data.updatedAt || createdAt;
 
+	const lineCount =
+		data.lineCount ||
+		(data.lines ? data.lines.length : 0) ||
+		rawTTML.match(/<p\b/g)?.length ||
+		0;
+
+	const wordCount =
+		typeof data.wordCount === "number" && data.wordCount > 0
+			? data.wordCount
+			: rawTTML
+				? countWordsInTTML(rawTTML)
+				: lineCount
+					? Math.round(lineCount * 6.5)
+					: 0;
+
 	return {
 		id,
 		title: title || "Untitled",
 		artist: artist || "Unknown Artist",
 		album: album || undefined,
 		coverArt: coverArt || undefined,
-		lineCount:
-			data.lineCount ||
-			(data.lines ? data.lines.length : 0) ||
-			rawTTML.match(/<p\b/g)?.length ||
-			0,
+		lineCount,
+		wordCount,
 		durationMs: data.durationMs || 0,
 		tags:
 			data.tags ||
@@ -330,11 +373,15 @@ export function deduplicateAndMergeTTMLs(
 			) {
 				merged.isWordSync = existing.isWordSync;
 			}
+			if (!merged.wordCount && existing.wordCount) {
+				merged.wordCount = existing.wordCount;
+			}
 			latestBySong.set(key, merged);
 		} else if (itemTime === existingTime) {
 			// Tie-breaker: keep the version with more lyrics or rich metadata
 			const hasBetterContent =
 				(item.lineCount || 0) > (existing.lineCount || 0) ||
+				(item.wordCount || 0) > (existing.wordCount || 0) ||
 				(item.rawTTML?.length || 0) > (existing.rawTTML?.length || 0);
 
 			if (hasBetterContent) {
@@ -348,6 +395,9 @@ export function deduplicateAndMergeTTMLs(
 				) {
 					merged.isWordSync = existing.isWordSync;
 				}
+				if (!merged.wordCount && existing.wordCount) {
+					merged.wordCount = existing.wordCount;
+				}
 				latestBySong.set(key, merged);
 			} else {
 				if (!existing.rawTTML && item.rawTTML) {
@@ -358,6 +408,9 @@ export function deduplicateAndMergeTTMLs(
 					typeof item.isWordSync === "boolean"
 				) {
 					existing.isWordSync = item.isWordSync;
+				}
+				if (!existing.wordCount && item.wordCount) {
+					existing.wordCount = item.wordCount;
 				}
 			}
 		} else {
@@ -370,6 +423,9 @@ export function deduplicateAndMergeTTMLs(
 				typeof item.isWordSync === "boolean"
 			) {
 				existing.isWordSync = item.isWordSync;
+			}
+			if (!existing.wordCount && item.wordCount) {
+				existing.wordCount = item.wordCount;
 			}
 		}
 	}
@@ -654,6 +710,7 @@ export interface UserProfileStats {
 	isModerator: boolean;
 	totalSongs: number;
 	totalLines: number;
+	totalWords: number;
 	totalDurationMs: number;
 	wordSyncSongs: number;
 	lineSyncSongs: number;
@@ -670,6 +727,7 @@ export interface UserProfileStats {
 export interface CommunityGlobalStats {
 	totalSongs: number;
 	totalLines: number;
+	totalWords: number;
 	totalDurationMs: number;
 	totalCreators: number;
 	totalWordSync: number;
@@ -816,6 +874,7 @@ export async function fetchUserProfilesWithStats(): Promise<{
 
 	const allArtistsSet = new Set<string>();
 	let globalTotalLines = 0;
+	let globalTotalWords = 0;
 	let globalTotalDuration = 0;
 	let globalWordSync = 0;
 	let globalTotalSongs = 0;
@@ -828,6 +887,7 @@ export async function fetchUserProfilesWithStats(): Promise<{
 			);
 
 			let cLines = 0;
+			let cWords = 0;
 			let cDuration = 0;
 			let cWordSync = 0;
 			let cLineSync = 0;
@@ -838,6 +898,10 @@ export async function fetchUserProfilesWithStats(): Promise<{
 
 			for (const s of creatorSongs) {
 				cLines += s.lineCount || 0;
+				cWords +=
+					s.wordCount ||
+					(s.rawTTML ? countWordsInTTML(s.rawTTML) : 0) ||
+					(s.lineCount ? Math.round(s.lineCount * 6.5) : 0);
 				cDuration += s.durationMs || 0;
 				const isWord = isSongWordSync(s);
 				if (isWord) {
@@ -859,6 +923,7 @@ export async function fetchUserProfilesWithStats(): Promise<{
 			}
 
 			globalTotalLines += cLines;
+			globalTotalWords += cWords;
 			globalTotalDuration += cDuration;
 			globalWordSync += cWordSync;
 			globalTotalSongs += creatorSongs.length;
@@ -873,6 +938,7 @@ export async function fetchUserProfilesWithStats(): Promise<{
 				isModerator: isUserModerator(c.uid),
 				totalSongs: creatorSongs.length,
 				totalLines: cLines,
+				totalWords: cWords,
 				totalDurationMs: cDuration,
 				wordSyncSongs: cWordSync,
 				lineSyncSongs: cLineSync,
@@ -896,6 +962,7 @@ export async function fetchUserProfilesWithStats(): Promise<{
 	const globalStats: CommunityGlobalStats = {
 		totalSongs: globalTotalSongs,
 		totalLines: globalTotalLines,
+		totalWords: globalTotalWords,
 		totalDurationMs: globalTotalDuration,
 		totalCreators: profiles.length,
 		totalWordSync: globalWordSync,
@@ -1052,6 +1119,7 @@ export async function fetchUserProfileDirect(
 
 		const artistsSet = new Set<string>();
 		let totalLines = 0;
+		let totalWords = 0;
 		let totalDurationMs = 0;
 		let wordSyncSongs = 0;
 		let lineSyncSongs = 0;
@@ -1068,6 +1136,10 @@ export async function fetchUserProfileDirect(
 				artistsSet.add(song.artist.trim());
 			}
 			totalLines += song.lineCount || 0;
+			totalWords +=
+				song.wordCount ||
+				(song.rawTTML ? countWordsInTTML(song.rawTTML) : 0) ||
+				(song.lineCount ? Math.round(song.lineCount * 6.5) : 0);
 			totalDurationMs += song.durationMs || 0;
 			if (isSongWordSync(song)) {
 				wordSyncSongs++;
@@ -1107,6 +1179,7 @@ export async function fetchUserProfileDirect(
 			isModerator: isUserModerator(userUid),
 			totalSongs: uniqueSongs.length,
 			totalLines,
+			totalWords,
 			totalDurationMs,
 			wordSyncSongs,
 			lineSyncSongs,

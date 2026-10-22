@@ -593,23 +593,11 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 							>
 								<Mic2 size={18} />
 								<span style={{ fontSize: 13, fontWeight: 600 }}>
-									Syllable / Word-Sync
+									Total Words Synced
 								</span>
 							</div>
 							<div style={{ fontSize: "2rem", fontWeight: 800 }}>
-								{selectedProfile.totalSongs > 0
-									? `${Math.round((selectedProfile.wordSyncSongs / selectedProfile.totalSongs) * 100)}%`
-									: "0%"}
-							</div>
-							<div
-								style={{
-									fontSize: 12,
-									color: "var(--text-muted)",
-									marginTop: 2,
-								}}
-							>
-								{selectedProfile.wordSyncSongs} of {selectedProfile.totalSongs}{" "}
-								songs
+								{selectedProfile.totalWords.toLocaleString()}
 							</div>
 						</div>
 
@@ -1233,7 +1221,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 												<div
 													style={{ fontSize: 11, color: "var(--text-muted)" }}
 												>
-													Word Sync
+													Words Synced
 												</div>
 												<div
 													style={{
@@ -1242,7 +1230,7 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 														color: "#10b981",
 													}}
 												>
-													{creator.wordSyncSongs}/{creator.totalSongs}
+													{creator.totalWords.toLocaleString()}
 												</div>
 											</div>
 										</div>

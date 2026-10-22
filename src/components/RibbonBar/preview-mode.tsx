@@ -9,12 +9,7 @@
  * https://github.com/bobjoerules/AMLL-TTML-TOOL/blob/main/LICENSE
  */
 
-import {
-	Button,
-	Flex,
-	Grid,
-	Switch,
-} from "@radix-ui/themes";
+import { Button, Flex, Grid } from "@radix-ui/themes";
 import { useAtom } from "jotai";
 import { type FC, forwardRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,7 +17,6 @@ import {
 	Eye24Regular,
 	TextT24Regular,
 	FastForward24Regular,
-	Settings24Regular,
 	Sparkle16Regular,
 	Image16Regular,
 	People16Regular,
@@ -44,7 +38,6 @@ import {
 	spicySimpleLyricsModeAtom,
 } from "$/modules/settings/states/preview";
 import { RibbonFrame, RibbonSection } from "./common";
-import { advancedRibbonControlsAtom } from "$/modules/onboarding/states";
 
 export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	HTMLDivElement,
@@ -62,7 +55,6 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 	const [bgFollowsDuet, setBgFollowsDuet] = useAtom(bgFollowsDuetAtom);
 	const [showArtwork, setShowArtwork] = useAtom(previewShowAlbumArtworkAtom);
 	const [isFullscreen, setIsFullscreen] = useAtom(previewFullscreenAtom);
-	const [showAdvanced, setShowAdvanced] = useAtom(advancedRibbonControlsAtom);
 	const { t } = useTranslation();
 
 	return (
@@ -251,50 +243,35 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 				</Grid>
 			</RibbonSection>
 
-			{/* Advanced Render Section */}
-			{showAdvanced && (
-				<RibbonSection
-					isSidebar={isSidebar}
-					label={
-						<Flex gap="1" align="center">
-							<FastForward24Regular />
-							{t("ribbonBar.previewMode.render", "Render")}
-						</Flex>
-					}
-				>
-					<Button
-						size="1"
-						variant={showFps ? "solid" : "surface"}
-						color={showFps ? undefined : "gray"}
-						onClick={() => setShowFps((v) => !v)}
-						style={{
-							cursor: "pointer",
-							justifyContent: "flex-start",
-							gap: "6px",
-							paddingLeft: "8px",
-							paddingRight: "10px",
-							height: "26px",
-							fontSize: "12px",
-							fontWeight: showFps ? 600 : 500,
-						}}
-					>
-						<TopSpeed16Regular />
-						<span>{t("ribbonBar.previewMode.showFps", "Show FPS")}</span>
-					</Button>
-				</RibbonSection>
-			)}
-
-			{/* Advanced Switch */}
+			{/* Render Section */}
 			<RibbonSection
+				isSidebar={isSidebar}
 				label={
 					<Flex gap="1" align="center">
-						<Settings24Regular />
-						{t("ribbonBar.advanced", "Advanced")}
+						<FastForward24Regular />
+						{t("ribbonBar.previewMode.render", "Render")}
 					</Flex>
 				}
-				isSidebar={isSidebar}
 			>
-				<Switch checked={showAdvanced} onCheckedChange={setShowAdvanced} />
+				<Button
+					size="1"
+					variant={showFps ? "solid" : "surface"}
+					color={showFps ? undefined : "gray"}
+					onClick={() => setShowFps((v) => !v)}
+					style={{
+						cursor: "pointer",
+						justifyContent: "flex-start",
+						gap: "6px",
+						paddingLeft: "8px",
+						paddingRight: "10px",
+						height: "26px",
+						fontSize: "12px",
+						fontWeight: showFps ? 600 : 500,
+					}}
+				>
+					<TopSpeed16Regular />
+					<span>{t("ribbonBar.previewMode.showFps", "Show FPS")}</span>
+				</Button>
 			</RibbonSection>
 		</RibbonFrame>
 	);

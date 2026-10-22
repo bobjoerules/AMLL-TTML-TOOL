@@ -594,6 +594,11 @@
 		"lyricsAndTimings": "Lyrics & Word Timings"
 	},
 	"topBar": {
+		"timer": {
+			"activeTime": "Active Time: {time}",
+			"paused": "Idle",
+			"average": "Avg Sync: {time}"
+		},
 		"modeBtns": {
 			"edit": "Edit",
 			"sync": "Time",
@@ -1530,13 +1535,15 @@
 			"songs": "songs",
 			"totalLines": "Total Synced Lines",
 			"lines": "lines",
+			"totalWords": "Total Words Synced",
+			"words": "words",
 			"wordSyncSongs": "Word-Synced Lyrics",
 			"playtime": "Synced Music Playtime",
 			"uniqueArtists": "Artists Covered",
 			"artist": "artist",
 			"artists": "artists",
 			"averageTTML": "Average TTML Sync",
-			"basedOnSongs": "Across {{count}} completed syncs",
+			"basedOnSongs": "Across {count} completed syncs",
 			"noRecord": "No record yet",
 			"accountCreated": "Account Created",
 			"lastSignIn": "Last Active Sign-In"

@@ -18,6 +18,7 @@ export interface SongGroup {
 	isCompleted: boolean;
 	durationMs: number;
 	maxLines: number;
+	maxWords: number;
 }
 
 const GENERIC_TITLES = new Set([
@@ -251,6 +252,14 @@ export function groupCloudTTMLs(cloudList: CloudTTMLMetadata[]): SongGroup[] {
 		const coverArt =
 			versions.find((v) => v.coverArt)?.coverArt || latest.coverArt;
 		const maxLines = Math.max(...versions.map((v) => v.lineCount || 0));
+		const maxWords = Math.max(
+			...versions.map(
+				(v) =>
+					v.wordCount ||
+					(v.lineCount ? Math.round(v.lineCount * 6.5) : 0),
+			),
+			0,
+		);
 
 		const artist =
 			latest.artist || versions.find((v) => v.artist)?.artist || "";
@@ -273,6 +282,7 @@ export function groupCloudTTMLs(cloudList: CloudTTMLMetadata[]): SongGroup[] {
 				versions.find((v) => v.durationMs)?.durationMs ||
 				0,
 			maxLines,
+			maxWords,
 		});
 	}
 

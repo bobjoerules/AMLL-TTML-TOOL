@@ -30,6 +30,7 @@ export interface CloudTTMLMetadata {
 	isWordSync?: boolean;
 	timing?: "Word" | "Line";
 	timeSpentSeconds?: number;
+	wordCount?: number;
 }
 
 export interface CloudTTMLDocument extends CloudTTMLMetadata {

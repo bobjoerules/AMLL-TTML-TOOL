@@ -54,6 +54,33 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v4.2.1
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 22, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Preview Page Controls Polish:</b> Show FPS is now an
+									unconditionally accessible tool on the preview ribbon bar,
+									and the redundant Advanced toggle switch has been removed.
+								</Text>
+								<Text size="2">
+									• <b>Active Timer Tooltip Fix:</b> Fixed ICU MessageFormat
+									interpolation for the active project timer and average sync
+									tooltips on the top title bar.
+								</Text>
+								<Text size="2">
+									• <b>Total Words Synced:</b> Replaced the old word-synced
+									song ratio with exact Total Words Synced across your lyrics in
+									account statistics and on community web profiles &amp;
+									leaderboards.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v4.2.0
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

@@ -152,22 +152,20 @@ export const SettingsAccountTab = memo(() => {
 	const {
 		uniqueSongCount,
 		totalLinesCount,
+		totalWordsCount,
 		totalDurationMs,
 		uniqueArtistCount,
-		wordSyncSongsCount,
 	} = useMemo(() => {
 		const groups = groupCloudTTMLs(cloudTTMLList);
 		const artists = new Set<string>();
 		let totalLines = 0;
+		let totalWords = 0;
 		let totalDuration = 0;
-		let wordSyncCount = 0;
 
 		for (const g of groups) {
 			totalLines += g.maxLines;
+			totalWords += g.maxWords;
 			totalDuration += g.durationMs;
-			if (g.versions.some((v) => v.isWordSync || v.timing === "Word")) {
-				wordSyncCount++;
-			}
 			const primary =
 				extractArtistTokens(g.artist).primary ||
 				(g.artist || "").trim().toLowerCase();
@@ -179,9 +177,9 @@ export const SettingsAccountTab = memo(() => {
 		return {
 			uniqueSongCount: groups.length,
 			totalLinesCount: totalLines,
+			totalWordsCount: totalWords,
 			totalDurationMs: totalDuration,
 			uniqueArtistCount: artists.size,
-			wordSyncSongsCount: wordSyncCount,
 		};
 	}, [cloudTTMLList]);
 
@@ -845,22 +843,14 @@ export const SettingsAccountTab = memo(() => {
 					<Flex justify="between" align="start">
 						<Flex direction="column" gap="1">
 							<Text size="2" color="gray" weight="medium">
-								{t("cloud.stats.wordSyncSongs", "Word-Synced Lyrics")}
+								{t("cloud.stats.totalWords", "Total Words Synced")}
 							</Text>
 							<Heading size="6">
-								{wordSyncSongsCount}{" "}
+								{totalWordsCount.toLocaleString()}{" "}
 								<Text size="2" color="gray" weight="regular">
-									{wordSyncSongsCount === 1
-										? t("cloud.stats.song", "song")
-										: t("cloud.stats.songs", "songs")}
+									{t("cloud.stats.words", "words")}
 								</Text>
 							</Heading>
-							{uniqueSongCount > 0 && (
-								<Text size="1" color="gray">
-									{Math.round((wordSyncSongsCount / uniqueSongCount) * 100)}% of
-									saved songs
-								</Text>
-							)}
 						</Flex>
 						<Sparkle24Regular
 							style={{ width: 24, height: 24, color: "var(--accent-9)" }}

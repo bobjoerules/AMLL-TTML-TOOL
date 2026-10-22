@@ -38,6 +38,39 @@ export interface SaveCloudTTMLInput {
 	isCompleted?: boolean;
 	projectId?: string;
 	timeSpentSeconds?: number;
+	wordCount?: number;
+}
+
+export function countWordsInTTML(rawTTML: string): number {
+	if (!rawTTML) return 0;
+	// 1. Check for word-timed spans: <span ... begin=...
+	const spanMatches = rawTTML.match(
+		/<span\b[^>]*\bbegin=[^>]*>([\s\S]*?)<\/span>/gi,
+	);
+	if (spanMatches && spanMatches.length > 0) {
+		let count = 0;
+		for (const span of spanMatches) {
+			const text = span.replace(/<[^>]+>/g, "").trim();
+			if (text.length > 0) count++;
+		}
+		if (count > 0) return count;
+	}
+
+	// 2. Fallback to extracting text within <p> tags
+	const pMatches = rawTTML.match(/<p\b[^>]*>([\s\S]*?)<\/p>/gi);
+	if (pMatches && pMatches.length > 0) {
+		let totalWords = 0;
+		for (const p of pMatches) {
+			const text = p.replace(/<[^>]+>/g, " ").trim();
+			if (text.length > 0) {
+				const words = text.split(/\s+/).filter(Boolean);
+				totalWords += words.length;
+			}
+		}
+		if (totalWords > 0) return totalWords;
+	}
+
+	return 0;
 }
 
 export async function uploadAudioToCloud(
@@ -235,12 +268,18 @@ export async function saveTTMLToCloud(
 		}
 	}
 
+	const wordCount =
+		typeof input.wordCount === "number" && input.wordCount > 0
+			? input.wordCount
+			: countWordsInTTML(input.rawTTML);
+
 	const metadata: Omit<CloudTTMLMetadata, "id"> & {
 		coverArt?: string | null;
 		tags?: string[];
 		finished?: boolean;
 		publishedToCommunity?: boolean;
 		timeSpentSeconds?: number;
+		wordCount?: number;
 	} = {
 		title: input.title || "Untitled",
 		artist: input.artist || "",
@@ -263,6 +302,7 @@ export async function saveTTMLToCloud(
 		publishedToCommunity: isPublished,
 		isWordSync,
 		timing: isWordSync ? "Word" : "Line",
+		wordCount,
 		...(typeof timeSpentSeconds === "number" && timeSpentSeconds > 0
 			? { timeSpentSeconds: Math.round(timeSpentSeconds) }
 			: {}),
@@ -390,6 +430,16 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 					updatedAt: d.updatedAt || 0,
 				});
 			}
+			const rawTTML = d.rawTTML || "";
+			const wordCount =
+				typeof d.wordCount === "number" && d.wordCount > 0
+					? d.wordCount
+					: rawTTML
+						? countWordsInTTML(rawTTML)
+						: d.lineCount
+							? Math.round(d.lineCount * 6.5)
+							: 0;
+
 			list.push({
 				id: docSnap.id,
 				title: d.title || "Untitled",
@@ -416,6 +466,13 @@ export async function fetchUserTTMLList(): Promise<CloudTTMLMetadata[]> {
 						(Array.isArray(d.tags) &&
 							(d.tags.includes("finished") || d.tags.includes("completed"))),
 				),
+				isWordSync: Boolean(d.isWordSync || d.timing === "Word"),
+				timing: d.timing || (d.isWordSync ? "Word" : "Line"),
+				wordCount,
+				timeSpentSeconds:
+					typeof d.timeSpentSeconds === "number"
+						? d.timeSpentSeconds
+						: undefined,
 			});
 		}
 

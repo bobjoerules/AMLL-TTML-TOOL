@@ -206,7 +206,7 @@ export const TitleBar: FC = () => {
 						content={
 							<div style={{ textAlign: "left" }}>
 								<div>
-									{t("topBar.timer.activeTime", "Active Time: {{time}}", {
+									{t("topBar.timer.activeTime", "Active Time: {time}", {
 										time: formatTimerDuration(currentProjectTime),
 									})}
 									{isTimerInactive && (
@@ -220,7 +220,7 @@ export const TitleBar: FC = () => {
 										style={{ marginTop: 2, fontSize: "0.85em", opacity: 0.85 }}
 									>
 										⏱️{" "}
-										{t("topBar.timer.average", "Avg Sync: {{time}}", {
+										{t("topBar.timer.average", "Avg Sync: {time}", {
 											time: formatTimerDuration(averageTime),
 										})}
 									</div>
