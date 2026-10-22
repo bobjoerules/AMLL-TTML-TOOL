@@ -36,6 +36,8 @@ export interface SaveCloudTTMLInput {
 	onProgress?: (percent: number) => void;
 	publishToCommunity?: boolean;
 	isCompleted?: boolean;
+	projectId?: string;
+	timeSpentSeconds?: number;
 }
 
 export async function uploadAudioToCloud(
@@ -220,11 +222,25 @@ export async function saveTTMLToCloud(
 	if (isFinished) tags.push("finished");
 	if (isPublished) tags.push("community");
 
+	let timeSpentSeconds = input.timeSpentSeconds;
+	if (typeof timeSpentSeconds !== "number" || timeSpentSeconds <= 0) {
+		try {
+			const { getProjectActiveTime } = await import(
+				"$/modules/project/timer/project-timer"
+			);
+			const pid = input.projectId || docRef.id;
+			timeSpentSeconds = getProjectActiveTime(pid);
+		} catch {
+			// ignore
+		}
+	}
+
 	const metadata: Omit<CloudTTMLMetadata, "id"> & {
 		coverArt?: string | null;
 		tags?: string[];
 		finished?: boolean;
 		publishedToCommunity?: boolean;
+		timeSpentSeconds?: number;
 	} = {
 		title: input.title || "Untitled",
 		artist: input.artist || "",
@@ -247,6 +263,9 @@ export async function saveTTMLToCloud(
 		publishedToCommunity: isPublished,
 		isWordSync,
 		timing: isWordSync ? "Word" : "Line",
+		...(typeof timeSpentSeconds === "number" && timeSpentSeconds > 0
+			? { timeSpentSeconds: Math.round(timeSpentSeconds) }
+			: {}),
 	};
 
 	// 1. Save lightweight metadata doc (without rawTTML) so library listings are fast
@@ -317,6 +336,23 @@ export async function saveTTMLToCloud(
 		void saveChecklistToCloud(linkResult.entries, user.uid);
 	} catch (err) {
 		console.warn("Could not auto-link TTML to checklist:", err);
+	}
+
+	if (typeof timeSpentSeconds === "number" && timeSpentSeconds >= 5) {
+		try {
+			const { recordTTMLCompletion } = await import(
+				"$/modules/project/timer/project-timer"
+			);
+			await recordTTMLCompletion({
+				projectId: input.projectId || docRef.id,
+				title: metadata.title,
+				artist: metadata.artist,
+				lineCount: metadata.lineCount,
+				explicitTimeSpent: timeSpentSeconds,
+			});
+		} catch (err) {
+			console.warn("Could not record TTML completion time:", err);
+		}
 	}
 
 	return docRef.id;

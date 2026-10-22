@@ -53,6 +53,7 @@ export const upcomingWordHighlightColorAtom = atomWithStorage(
 );
 
 export const smartFirstWordActiveIdAtom = atom<string | null>(null);
+export const smartWordActiveIdAtom = atom<string | null>(null);
 
 export const callbackSyncStartAtom = atom(c(() => {}));
 export const callbackSyncNextAtom = atom(c(() => {}));

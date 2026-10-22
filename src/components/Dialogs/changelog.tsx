@@ -23,7 +23,10 @@ export function ChangelogDialog() {
 
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-			<Dialog.Content aria-describedby={undefined} style={{ maxWidth: 650, height: "70vh", maxHeight: 600 }}>
+			<Dialog.Content
+				aria-describedby={undefined}
+				style={{ maxWidth: 650, height: "70vh", maxHeight: 600 }}
+			>
 				<Flex justify="between" align="center" mb="4">
 					<Flex align="center" gap="3">
 						<Dialog.Title mb="0">Changelog & Updates</Dialog.Title>
@@ -51,6 +54,40 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v4.2.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 22, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Smart Word (Any Word) Synchronization:</b> Added a new
+									sync setting allowing the Next Word trigger (<kbd>G</kbd>) on
+									any untimed word to automatically act on its prior word,
+									committing the prior word&apos;s end time and starting the
+									current word seamlessly at the playhead position.
+								</Text>
+								<Text size="2">
+									• <b>Project Active Timer &amp; Average Sync Time:</b>{" "}
+									Implemented a non-idle project timer tracking active work
+									duration per TTML project, calculating rolling average sync
+									duration, syncing to user cloud profiles, and displaying
+									average sync duration on the title bar tooltip, account
+									settings tab, and online community statistics page.
+								</Text>
+								<Text size="2">
+									• <b>Account Settings UI &amp; Statistics Layout Redesign:</b>{" "}
+									Reorganized the account statistics grid into a balanced 6-card
+									layout featuring distinct Fluent icons for all metrics
+									(including Word-Synced lyrics count), and grouped Account
+									Created, Last Active Sign-In, and Unique Account UID into a
+									dedicated Account Information panel.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v4.1.3
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">
@@ -58,25 +95,42 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Default 90% Interface Scale:</b> Updated default application scale from 85% to 90% with seamless migration for existing installations, and added 90% to scale presets.
+									• <b>Default 90% Interface Scale:</b> Updated default
+									application scale from 85% to 90% with seamless migration for
+									existing installations, and added 90% to scale presets.
 								</Text>
 								<Text size="2">
-									• <b>SpotMatch Native Desktop Requests:</b> Fixed 401 unauthorized and 403 preflight proxy errors on Spotify Partner queries in desktop mode by routing authorization headers directly through Tauri&apos;s Rust network client.
+									• <b>SpotMatch Native Desktop Requests:</b> Fixed 401
+									unauthorized and 403 preflight proxy errors on Spotify Partner
+									queries in desktop mode by routing authorization headers
+									directly through Tauri&apos;s Rust network client.
 								</Text>
 								<Text size="2">
-									• <b>Radix Dialog Accessibility Improvements:</b> Resolved missing DialogTitle and aria-describedby console warnings by wrapping headers and descriptions in SpotMatch, Ruby Editor, Checklist, Metadata Editor, and dialog modals.
+									• <b>Radix Dialog Accessibility Improvements:</b> Resolved
+									missing DialogTitle and aria-describedby console warnings by
+									wrapping headers and descriptions in SpotMatch, Ruby Editor,
+									Checklist, Metadata Editor, and dialog modals.
 								</Text>
 								<Text size="2">
-									• <b>IndexedDB Audio Cache Fix:</b> Fixed DataError when storing records in audio_cache by correctly wrapping loaded audio file metadata and safeguarding record key generation.
+									• <b>IndexedDB Audio Cache Fix:</b> Fixed DataError when
+									storing records in audio_cache by correctly wrapping loaded
+									audio file metadata and safeguarding record key generation.
 								</Text>
 								<Text size="2">
-									• <b>Genius Lyric Importer Hardening:</b> Prevented non-numeric track IDs from querying invalid endpoints and added native desktop fetch fallbacks.
+									• <b>Genius Lyric Importer Hardening:</b> Prevented
+									non-numeric track IDs from querying invalid endpoints and
+									added native desktop fetch fallbacks.
 								</Text>
 								<Text size="2">
-									• <b>WebGL Animated Background Texture Stability:</b> Implemented safe bitmap decoding for Kawarp animated background cover art, eliminating texImage2D bad image data errors on blob and data URLs in WebKit.
+									• <b>WebGL Animated Background Texture Stability:</b>{" "}
+									Implemented safe bitmap decoding for Kawarp animated
+									background cover art, eliminating texImage2D bad image data
+									errors on blob and data URLs in WebKit.
 								</Text>
 								<Text size="2">
-									• <b>WebKit Viewport Meta Cleanup:</b> Removed unrecognized interactive-widget parameter to eliminate console errors on WebKit and macOS.
+									• <b>WebKit Viewport Meta Cleanup:</b> Removed unrecognized
+									interactive-widget parameter to eliminate console errors on
+									WebKit and macOS.
 								</Text>
 							</Flex>
 						</Box>
@@ -90,16 +144,26 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Preferences Search Number Cutoff Fix:</b> Resolved an issue where match count badges on sidebar navigation tabs were truncated at the right edge by normalizing inner tab trigger positioning and expanding sidebar clearance.
+									• <b>Preferences Search Number Cutoff Fix:</b> Resolved an
+									issue where match count badges on sidebar navigation tabs were
+									truncated at the right edge by normalizing inner tab trigger
+									positioning and expanding sidebar clearance.
 								</Text>
 								<Text size="2">
-									• <b>Website Top Navigation Bar Overhaul:</b> Fixed action buttons (&quot;Open in Browser&quot; and &quot;GitHub&quot;) overflowing and covering tab buttons by transitioning to a responsive flexbox layout with extended breakpoints.
+									• <b>Website Top Navigation Bar Overhaul:</b> Fixed action
+									buttons (&quot;Open in Browser&quot; and &quot;GitHub&quot;)
+									overflowing and covering tab buttons by transitioning to a
+									responsive flexbox layout with extended breakpoints.
 								</Text>
 								<Text size="2">
-									• <b>Import from Text Auto-Segmentation Fix:</b> Resolved an issue when importing raw text lyrics with auto-segmentation enabled by allowing the lines array to be reassigned.
+									• <b>Import from Text Auto-Segmentation Fix:</b> Resolved an
+									issue when importing raw text lyrics with auto-segmentation
+									enabled by allowing the lines array to be reassigned.
 								</Text>
 								<Text size="2">
-									• <b>Showcase Gallery Enhancements:</b> Updated high-resolution gallery screenshots across all app showcase sections.
+									• <b>Showcase Gallery Enhancements:</b> Updated
+									high-resolution gallery screenshots across all app showcase
+									sections.
 								</Text>
 							</Flex>
 						</Box>
@@ -113,16 +177,27 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Default UI Scale:</b> Set default interface scale to 85% with parameterized reset buttons in preferences.
+									• <b>Default UI Scale:</b> Set default interface scale to 85%
+									with parameterized reset buttons in preferences.
 								</Text>
 								<Text size="2">
-									• <b>Time Tab Unsynced Words Highlighting:</b> Extended the red unsynced word highlighting setting to the Time tab (Sync Mode) for complete parity with the Edit tab and preview mode.
+									• <b>Time Tab Unsynced Words Highlighting:</b> Extended the
+									red unsynced word highlighting setting to the Time tab (Sync
+									Mode) for complete parity with the Edit tab and preview mode.
 								</Text>
 								<Text size="2">
-									• <b>Fullscreen Window Size Recovery:</b> Fixed an issue where exiting preview fullscreen left the application window excessively wide by properly restoring previous window geometry and removing redundant WebKit fullscreen triggers in desktop mode.
+									• <b>Fullscreen Window Size Recovery:</b> Fixed an issue where
+									exiting preview fullscreen left the application window
+									excessively wide by properly restoring previous window
+									geometry and removing redundant WebKit fullscreen triggers in
+									desktop mode.
 								</Text>
 								<Text size="2">
-									• <b>Album Cover Enhancements:</b> Enlarged album artwork thumbnails in Metadata Editor with an interactive high-resolution hover preview, enhanced cloud song cover sizes, and enabled responsive scaling for SpicyLyrics fullscreen album art.
+									• <b>Album Cover Enhancements:</b> Enlarged album artwork
+									thumbnails in Metadata Editor with an interactive
+									high-resolution hover preview, enhanced cloud song cover
+									sizes, and enabled responsive scaling for SpicyLyrics
+									fullscreen album art.
 								</Text>
 							</Flex>
 						</Box>
@@ -136,22 +211,35 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Audio Engine Upgrades:</b> Integrated zero-latency audio engine fixes with improved playback synchronization, spectrogram stability, and seamless track handling.
+									• <b>Audio Engine Upgrades:</b> Integrated zero-latency audio
+									engine fixes with improved playback synchronization,
+									spectrogram stability, and seamless track handling.
 								</Text>
 								<Text size="2">
-									• <b>Never-Split Words Dictionary:</b> Added a global custom word list in Settings &gt; Syllabification to prevent designated words or proper nouns from ever being split into syllables across any songs.
+									• <b>Never-Split Words Dictionary:</b> Added a global custom
+									word list in Settings &gt; Syllabification to prevent
+									designated words or proper nouns from ever being split into
+									syllables across any songs.
 								</Text>
 								<Text size="2">
-									• <b>Audio Track Bar Navigation:</b> Left-clicking the bottom audio track bar moves the playback playhead, while right-click moves and scrolls the spectrogram view.
+									• <b>Audio Track Bar Navigation:</b> Left-clicking the bottom
+									audio track bar moves the playback playhead, while right-click
+									moves and scrolls the spectrogram view.
 								</Text>
 								<Text size="2">
-									• <b>Settings Inline Search:</b> Refactored the settings search experience so matching controls, toggles, and inputs appear directly inside the search view.
+									• <b>Settings Inline Search:</b> Refactored the settings
+									search experience so matching controls, toggles, and inputs
+									appear directly inside the search view.
 								</Text>
 								<Text size="2">
-									• <b>Public Community Checklist:</b> Launched the public song checklist showcase page on the website for browsing community planned, in-progress, and finished TTML projects.
+									• <b>Public Community Checklist:</b> Launched the public song
+									checklist showcase page on the website for browsing community
+									planned, in-progress, and finished TTML projects.
 								</Text>
 								<Text size="2">
-									• <b>Top Bar Centering &amp; UI Polish:</b> Fixed navigation bar centering when logged in, polished search result spacing, and fixed transparent hover tooltips on the website.
+									• <b>Top Bar Centering &amp; UI Polish:</b> Fixed navigation
+									bar centering when logged in, polished search result spacing,
+									and fixed transparent hover tooltips on the website.
 								</Text>
 							</Flex>
 						</Box>
@@ -165,13 +253,19 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Open SpotMatch After Save:</b> Added a setting in Settings &gt; Files (disabled by default) that automatically launches the SpotMatch track finder after saving a TTML file with Ctrl+S or Cmd+S.
+									• <b>Open SpotMatch After Save:</b> Added a setting in
+									Settings &gt; Files (disabled by default) that automatically
+									launches the SpotMatch track finder after saving a TTML file
+									with Ctrl+S or Cmd+S.
 								</Text>
 								<Text size="2">
-									• <b>Sync Progress Tooltip Removed:</b> Removed the hover tooltip popup over the sync percentage badge in the top bar.
+									• <b>Sync Progress Tooltip Removed:</b> Removed the hover
+									tooltip popup over the sync percentage badge in the top bar.
 								</Text>
 								<Text size="2">
-									• <b>File Menu Auto-Save Cleanup:</b> Removed the Auto-Save toggle from the File menu (available in Settings &gt; Files) and simplified the dropdown option to <b>Auto-Saves…</b>.
+									• <b>File Menu Auto-Save Cleanup:</b> Removed the Auto-Save
+									toggle from the File menu (available in Settings &gt; Files)
+									and simplified the dropdown option to <b>Auto-Saves…</b>.
 								</Text>
 							</Flex>
 						</Box>
@@ -185,43 +279,72 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Spicy Lyrics Exclusive Preview:</b> Transitioned exclusively to the Spicy Lyrics renderer across fullscreen and side preview panels, retiring legacy AMLL, Toxi, and Timing Overview modes for a unified, modern experience.
+									• <b>Spicy Lyrics Exclusive Preview:</b> Transitioned
+									exclusively to the Spicy Lyrics renderer across fullscreen and
+									side preview panels, retiring legacy AMLL, Toxi, and Timing
+									Overview modes for a unified, modern experience.
 								</Text>
 								<Text size="2">
-									• <b>Modern Spicy Visuals & Liquid Glass:</b> Upgraded the Spicy Lyrics renderer to match upstream <code>spicy-lyrics</code> with Apple HIG design tokens, refined syllable typography and dynamic glow, 3-phase syllable expansion transform physics, interlude dot springs, hover scrub preview, and song credits.
+									• <b>Modern Spicy Visuals & Liquid Glass:</b> Upgraded the
+									Spicy Lyrics renderer to match upstream{" "}
+									<code>spicy-lyrics</code> with Apple HIG design tokens,
+									refined syllable typography and dynamic glow, 3-phase syllable
+									expansion transform physics, interlude dot springs, hover
+									scrub preview, and song credits.
 								</Text>
 								<Text size="2">
-									• <b>Redesigned Preview Toolbar:</b> Rebuilt the preview ribbon bar with clean, modern interactive toggle buttons for View and Lyrics controls, removing legacy clutter.
+									• <b>Redesigned Preview Toolbar:</b> Rebuilt the preview
+									ribbon bar with clean, modern interactive toggle buttons for
+									View and Lyrics controls, removing legacy clutter.
 								</Text>
 								<Text size="2">
-									• <b>Syllabification & Syllable Splits:</b> Restored original pre-v3.2.0 dictionary-backed prosodic split behavior with speech fallback, and added the singing syllable heuristics engine from TTML Review & Spicy Lyrics (<code>spicy-lyrics</code>).
+									• <b>Syllabification & Syllable Splits:</b> Restored original
+									pre-v3.2.0 dictionary-backed prosodic split behavior with
+									speech fallback, and added the singing syllable heuristics
+									engine from TTML Review & Spicy Lyrics (
+									<code>spicy-lyrics</code>).
 								</Text>
 								<Text size="2">
-									• <b>Auto Segment Re-Split Support:</b> Added an option in Auto Segment (enabled by default) to automatically recombine and re-split already segmented words.
+									• <b>Auto Segment Re-Split Support:</b> Added an option in
+									Auto Segment (enabled by default) to automatically recombine
+									and re-split already segmented words.
 								</Text>
 								<Text size="2">
-									• <b>TTML Checklist Public Status:</b> Added an option in the TTML checklist to mark planned or in-progress songs as shared publicly with the community.
+									• <b>TTML Checklist Public Status:</b> Added an option in the
+									TTML checklist to mark planned or in-progress songs as shared
+									publicly with the community.
 								</Text>
 								<Text size="2">
-									• <b>TitleBar Genius Direct Navigation:</b> Genius button queries song hits to open the track's Genius lyrics page directly instead of just search results.
+									• <b>TitleBar Genius Direct Navigation:</b> Genius button
+									queries song hits to open the track's Genius lyrics page
+									directly instead of just search results.
 								</Text>
 								<Text size="2">
-									• <b>Download Audio Tool Fix:</b> Fixed Download Audio in the Tools menu failing when reading TTML metadata keys.
+									• <b>Download Audio Tool Fix:</b> Fixed Download Audio in the
+									Tools menu failing when reading TTML metadata keys.
 								</Text>
 								<Text size="2">
-									• <b>Discord RPC Idle Timeout:</b> Added an option in Discord RPC settings (disabled by default) to control idle inactivity timeout behavior.
+									• <b>Discord RPC Idle Timeout:</b> Added an option in Discord
+									RPC settings (disabled by default) to control idle inactivity
+									timeout behavior.
 								</Text>
 								<Text size="2">
-									• <b>Editor Locate Button:</b> Made the editor locate button larger and easier to click.
+									• <b>Editor Locate Button:</b> Made the editor locate button
+									larger and easier to click.
 								</Text>
 								<Text size="2">
-									• <b>Unsynced Word Highlighting:</b> Added an optional setting (disabled by default) to highlight unsynced words in red in the Editor tab matching the preview view.
+									• <b>Unsynced Word Highlighting:</b> Added an optional setting
+									(disabled by default) to highlight unsynced words in red in
+									the Editor tab matching the preview view.
 								</Text>
 								<Text size="2">
-									• <b>Menu Auto-Save Options:</b> Relocated auto-save toggle and version history into the File menu and streamlined the top bar.
+									• <b>Menu Auto-Save Options:</b> Relocated auto-save toggle
+									and version history into the File menu and streamlined the top
+									bar.
 								</Text>
 								<Text size="2">
-									• <b>SpotMatch tx24 Credit:</b> Added creator badge and attribution to tx24 in the SpotMatch dialog.
+									• <b>SpotMatch tx24 Credit:</b> Added creator badge and
+									attribution to tx24 in the SpotMatch dialog.
 								</Text>
 							</Flex>
 						</Box>
@@ -235,13 +358,18 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>TitleBar Genius Shortcut Fix:</b> Resolved an issue where clicking the TitleBar Genius button could throw an error or open album artwork instead of the track’s Genius song page.
+									• <b>TitleBar Genius Shortcut Fix:</b> Resolved an issue where
+									clicking the TitleBar Genius button could throw an error or
+									open album artwork instead of the track’s Genius song page.
 								</Text>
 								<Text size="2">
-									• <b>Website Word Sync Display:</b> Fixed word-synced songs displaying as line-synced on the website when payloads are stored separately in the cloud.
+									• <b>Website Word Sync Display:</b> Fixed word-synced songs
+									displaying as line-synced on the website when payloads are
+									stored separately in the cloud.
 								</Text>
 								<Text size="2">
-									• <b>External Link Navigation:</b> Ensured links in Genius search dialog open directly in the default system web browser.
+									• <b>External Link Navigation:</b> Ensured links in Genius
+									search dialog open directly in the default system web browser.
 								</Text>
 							</Flex>
 						</Box>
@@ -255,31 +383,52 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Direct Lyric Import:</b> Skipped the intermediate section review screen when importing lyrics from Genius and plain text, directly establishing sections and auto-duet assignments.
+									• <b>Direct Lyric Import:</b> Skipped the intermediate section
+									review screen when importing lyrics from Genius and plain
+									text, directly establishing sections and auto-duet
+									assignments.
 								</Text>
 								<Text size="2">
-									• <b>Persistent Audio Download Indicator:</b> Made the audio download notification persist on screen until the track is completely downloaded and loaded into the audio engine.
+									• <b>Persistent Audio Download Indicator:</b> Made the audio
+									download notification persist on screen until the track is
+									completely downloaded and loaded into the audio engine.
 								</Text>
 								<Text size="2">
-									• <b>Enhanced Syllabification Engine:</b> Added hybrid TeX-based syllable splitting algorithm with customizable rules and restored the Syllable Split button in the segmentation module.
+									• <b>Enhanced Syllabification Engine:</b> Added hybrid
+									TeX-based syllable splitting algorithm with customizable rules
+									and restored the Syllable Split button in the segmentation
+									module.
 								</Text>
 								<Text size="2">
-									• <b>Line Split Category Inheritance:</b> Splitting a lyric line now automatically preserves and inherits the original line's category.
+									• <b>Line Split Category Inheritance:</b> Splitting a lyric
+									line now automatically preserves and inherits the original
+									line's category.
 								</Text>
 								<Text size="2">
-									• <b>Genius Background Lyric Splitting:</b> Added an import toggle to automatically split background vocals containing semicolons or capitalized words into separate lines while cleaning punctuation delimiters.
+									• <b>Genius Background Lyric Splitting:</b> Added an import
+									toggle to automatically split background vocals containing
+									semicolons or capitalized words into separate lines while
+									cleaning punctuation delimiters.
 								</Text>
 								<Text size="2">
-									• <b>TitleBar Genius Shortcut:</b> Added a dedicated Genius button in the title bar to open the song page in the browser, gracefully disabled when no song is loaded.
+									• <b>TitleBar Genius Shortcut:</b> Added a dedicated Genius
+									button in the title bar to open the song page in the browser,
+									gracefully disabled when no song is loaded.
 								</Text>
 								<Text size="2">
-									• <b>Audio Downloader Accuracy & Menu Item:</b> Improved JOOX/online track search accuracy to avoid wrong songs or clean versions from the same artist, and added a "Download Audio..." item in the Tools menu.
+									• <b>Audio Downloader Accuracy & Menu Item:</b> Improved
+									JOOX/online track search accuracy to avoid wrong songs or
+									clean versions from the same artist, and added a "Download
+									Audio..." item in the Tools menu.
 								</Text>
 								<Text size="2">
-									• <b>Cloud Storage Filter Parity:</b> Aligned cloud storage sort/filter options with the TTML checklist (All, In Progress, Completed).
+									• <b>Cloud Storage Filter Parity:</b> Aligned cloud storage
+									sort/filter options with the TTML checklist (All, In Progress,
+									Completed).
 								</Text>
 								<Text size="2">
-									• <b>Website Song Statistics:</b> Fixed public song count syncing between the website statistics page and user profiles.
+									• <b>Website Song Statistics:</b> Fixed public song count
+									syncing between the website statistics page and user profiles.
 								</Text>
 							</Flex>
 						</Box>
@@ -293,22 +442,38 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Audio Engine Sleep & Wake Recovery:</b> Automatically recovers and resumes the AudioContext hardware clock when the computer sleeps, switches applications, or loses focus, ensuring sound playback never gets permanently silenced.
+									• <b>Audio Engine Sleep & Wake Recovery:</b> Automatically
+									recovers and resumes the AudioContext hardware clock when the
+									computer sleeps, switches applications, or loses focus,
+									ensuring sound playback never gets permanently silenced.
 								</Text>
 								<Text size="2">
-									• <b>Settings Search:</b> Added an integrated search bar in the Settings dialog with real-time keyword indexing, category match counts, and keyboard shortcuts (Cmd/Ctrl+F, Esc).
+									• <b>Settings Search:</b> Added an integrated search bar in
+									the Settings dialog with real-time keyword indexing, category
+									match counts, and keyboard shortcuts (Cmd/Ctrl+F, Esc).
 								</Text>
 								<Text size="2">
-									• <b>Theme & Tool Menu Acrylic Polish:</b> Fixed transparent tool menus in Web and Windows when using the Clear theme with solid and backdrop-blur styling, and added proper surface backgrounds and hover states for the locate button.
+									• <b>Theme & Tool Menu Acrylic Polish:</b> Fixed transparent
+									tool menus in Web and Windows when using the Clear theme with
+									solid and backdrop-blur styling, and added proper surface
+									backgrounds and hover states for the locate button.
 								</Text>
 								<Text size="2">
-									• <b>Line End Time Normalization & Word Preview Sync:</b> Normalized line end times to always match the last synced word instead of leaving them at zero on partially synced lines, keeping word sweep animations active in preview.
+									• <b>Line End Time Normalization & Word Preview Sync:</b>{" "}
+									Normalized line end times to always match the last synced word
+									instead of leaving them at zero on partially synced lines,
+									keeping word sweep animations active in preview.
 								</Text>
 								<Text size="2">
-									• <b>JOOX Artwork Resolution & Fallback:</b> Resolved 404 broken image placeholders across JOOX search results with automatic Apple iTunes artwork enrichment and graceful fallback to music note icons.
+									• <b>JOOX Artwork Resolution & Fallback:</b> Resolved 404
+									broken image placeholders across JOOX search results with
+									automatic Apple iTunes artwork enrichment and graceful
+									fallback to music note icons.
 								</Text>
 								<Text size="2">
-									• <b>Notification Indicator Positioning:</b> Shifted toast indicator pop-ups down below the title bar so the Preview Panel toggle button is never obscured.
+									• <b>Notification Indicator Positioning:</b> Shifted toast
+									indicator pop-ups down below the title bar so the Preview
+									Panel toggle button is never obscured.
 								</Text>
 							</Flex>
 						</Box>
@@ -322,16 +487,26 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Spectrogram Playhead Tracking and Navigation:</b> Clicking the bottom audio slider while the spectrogram is open now moves the playhead and snaps according to playhead tracking mode, preventing unintended viewport displacements.
+									• <b>Spectrogram Playhead Tracking and Navigation:</b>{" "}
+									Clicking the bottom audio slider while the spectrogram is open
+									now moves the playhead and snaps according to playhead
+									tracking mode, preventing unintended viewport displacements.
 								</Text>
 								<Text size="2">
-									• <b>Preview Unsynced Lyric Protection:</b> Clicking unsynced lines or words in preview mode no longer moves the audio playhead.
+									• <b>Preview Unsynced Lyric Protection:</b> Clicking unsynced
+									lines or words in preview mode no longer moves the audio
+									playhead.
 								</Text>
 								<Text size="2">
-									• <b>Checklist Deletion and Cloud Sync:</b> Fixed checklist deletion persistence so removing entries deletes them across local storage and cloud sync rather than reappearing on reload.
+									• <b>Checklist Deletion and Cloud Sync:</b> Fixed checklist
+									deletion persistence so removing entries deletes them across
+									local storage and cloud sync rather than reappearing on
+									reload.
 								</Text>
 								<Text size="2">
-									• <b>UI and Layout Polish:</b> Resolved dropdown menu scrollbar overflow issues, stabilized toggle button widths, and improved lyrics import dialog responsiveness.
+									• <b>UI and Layout Polish:</b> Resolved dropdown menu
+									scrollbar overflow issues, stabilized toggle button widths,
+									and improved lyrics import dialog responsiveness.
 								</Text>
 							</Flex>
 						</Box>
@@ -345,10 +520,16 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Split Background and Main Vocals on Spectrogram:</b> Added a setting and sidebar toggle to separate main vocals into the upper track and background vocals into the lower track on the spectrogram, with simultaneous display for overlapping lines during sync.
+									• <b>Split Background and Main Vocals on Spectrogram:</b>{" "}
+									Added a setting and sidebar toggle to separate main vocals
+									into the upper track and background vocals into the lower
+									track on the spectrogram, with simultaneous display for
+									overlapping lines during sync.
 								</Text>
 								<Text size="2">
-									• <b>Native Menu Labeling Polish:</b> Resolved an issue where native OS menu accelerators stripped the ampersand in Grammar and Spelling Check, creating an unwanted double space.
+									• <b>Native Menu Labeling Polish:</b> Resolved an issue where
+									native OS menu accelerators stripped the ampersand in Grammar
+									and Spelling Check, creating an unwanted double space.
 								</Text>
 							</Flex>
 						</Box>
@@ -362,10 +543,15 @@ export function ChangelogDialog() {
 							</Text>
 							<Flex direction="column" gap="2">
 								<Text size="2">
-									• <b>Auto Duet by Singer on Genius Import:</b> Added an Auto Duet option when downloading lyrics from Genius, automatically assigning sequential voices (v1, v2, etc.) and duet flags based on section vocalist headers.
+									• <b>Auto Duet by Singer on Genius Import:</b> Added an Auto
+									Duet option when downloading lyrics from Genius, automatically
+									assigning sequential voices (v1, v2, etc.) and duet flags
+									based on section vocalist headers.
 								</Text>
 								<Text size="2">
-									• <b>Cloud Save Fix:</b> Resolved a runtime error caused by a missing Firestore updateDoc import when saving projects to Cloud Storage.
+									• <b>Cloud Save Fix:</b> Resolved a runtime error caused by a
+									missing Firestore updateDoc import when saving projects to
+									Cloud Storage.
 								</Text>
 							</Flex>
 						</Box>
@@ -381,19 +567,20 @@ export function ChangelogDialog() {
 								<Text size="2">
 									• <b>Local Audio Path Prioritization:</b> Before attempting to
 									download audio from cloud storage or online providers, the app
-									now checks if the audio file still exists in the local disk location
-									it was in when the TTML was uploaded, loading the original file
-									instantly without re-downloading.
+									now checks if the audio file still exists in the local disk
+									location it was in when the TTML was uploaded, loading the
+									original file instantly without re-downloading.
 								</Text>
 								<Text size="2">
-									• <b>Audio Select Track Dialog Polish:</b> Expanded the track selection
-									dialog to a spacious responsive width, added proper flex truncation
-									for long song titles, and resolved an issue where action buttons were
-									partially pushed off-screen.
+									• <b>Audio Select Track Dialog Polish:</b> Expanded the track
+									selection dialog to a spacious responsive width, added proper
+									flex truncation for long song titles, and resolved an issue
+									where action buttons were partially pushed off-screen.
 								</Text>
 								<Text size="2">
-									• <b>Desktop Release Pipeline Stability:</b> Resolved a release collision
-									race condition across multi-platform desktop build runners in GitHub Actions.
+									• <b>Desktop Release Pipeline Stability:</b> Resolved a
+									release collision race condition across multi-platform desktop
+									build runners in GitHub Actions.
 								</Text>
 							</Flex>
 						</Box>
@@ -408,50 +595,55 @@ export function ChangelogDialog() {
 							<Flex direction="column" gap="2">
 								<Text size="2">
 									• <b>Kuwo Music Provider &amp; Provider Selection:</b> Added
-									Kuwo Music integration alongside JOOX and QQ Music for
-									fast, high-availability track lookup and direct audio downloads,
+									Kuwo Music integration alongside JOOX and QQ Music for fast,
+									high-availability track lookup and direct audio downloads,
 									with selectable provider filtering in the search dialog.
 								</Text>
 								<Text size="2">
-									• <b>Auto-Downloader 30ms Audio Timing Alignment:</b> Automatically
-									compensates for streaming CDN leading silence trimming by offsetting
-									auto-downloaded tracks by 0.03 seconds, ensuring audio starts in
-									exact sync with TTML lyric timestamps while preserving untouched local files.
+									• <b>Auto-Downloader 30ms Audio Timing Alignment:</b>{" "}
+									Automatically compensates for streaming CDN leading silence
+									trimming by offsetting auto-downloaded tracks by 0.03 seconds,
+									ensuring audio starts in exact sync with TTML lyric timestamps
+									while preserving untouched local files.
 								</Text>
 								<Text size="2">
-									• <b>Audio Downloader Beta Indicators:</b> Added <code>[Beta]</code> tags
-									to all audio download progress notifications, download dialog headers,
-									and import toggles across the app.
+									• <b>Audio Downloader Beta Indicators:</b> Added{" "}
+									<code>[Beta]</code> tags to all audio download progress
+									notifications, download dialog headers, and import toggles
+									across the app.
 								</Text>
 								<Text size="2">
-									• <b>Download Percentage Status:</b> Added real-time progress percentage
-									tracking during in-app audio track downloads.
+									• <b>Download Percentage Status:</b> Added real-time progress
+									percentage tracking during in-app audio track downloads.
 								</Text>
 								<Text size="2">
-									• <b>Binary Streaming &amp; IPC Reliability:</b> Optimized Tauri native
-									binary fetching with array buffer conversion, eliminating CORS bottlenecks
-									and download interruptions.
+									• <b>Binary Streaming &amp; IPC Reliability:</b> Optimized
+									Tauri native binary fetching with array buffer conversion,
+									eliminating CORS bottlenecks and download interruptions.
 								</Text>
 								<Text size="2">
-									• <b>Multi-Voice Duet Alignment:</b> Added support for multi-voice
-									singing (odd voices v1, v3, v5 aligned left; even voices v2, v4
-									aligned right) across AMLL and Spicy Lyrics preview modes.
+									• <b>Multi-Voice Duet Alignment:</b> Added support for
+									multi-voice singing (odd voices v1, v3, v5 aligned left; even
+									voices v2, v4 aligned right) across AMLL and Spicy Lyrics
+									preview modes.
 								</Text>
 								<Text size="2">
-									• <b>English Syllabification Engine Enhancements:</b> Fixed syllable
-									boundaries for compound words with consonant codas (e.g. blindfold,
-									headlights, soundtrack) by repairing phonotactically impossible onsets,
-									and improved language detection accuracy for English lyrics.
+									• <b>English Syllabification Engine Enhancements:</b> Fixed
+									syllable boundaries for compound words with consonant codas
+									(e.g. blindfold, headlights, soundtrack) by repairing
+									phonotactically impossible onsets, and improved language
+									detection accuracy for English lyrics.
 								</Text>
 								<Text size="2">
-									• <b>Checklist Audio Auto-Loading:</b> TTML Checklist now seamlessly
-									loads attached cloud audio, searches local matches, or triggers
-									the online audio downloader when opening songs.
+									• <b>Checklist Audio Auto-Loading:</b> TTML Checklist now
+									seamlessly loads attached cloud audio, searches local matches,
+									or triggers the online audio downloader when opening songs.
 								</Text>
 								<Text size="2">
-									• <b>Cloud &amp; Leaderboard Improvements:</b> Added Firestore collection
-									pagination for accurate leaderboard statistics, deduplicated profile counts,
-									and fixed direct cloud storage download routes.
+									• <b>Cloud &amp; Leaderboard Improvements:</b> Added Firestore
+									collection pagination for accurate leaderboard statistics,
+									deduplicated profile counts, and fixed direct cloud storage
+									download routes.
 								</Text>
 							</Flex>
 						</Box>

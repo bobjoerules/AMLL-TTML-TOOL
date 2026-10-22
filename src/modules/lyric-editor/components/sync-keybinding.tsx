@@ -1,9 +1,9 @@
 import { useStore } from "jotai";
 import { type FC, useCallback } from "react";
 import { audioEngine } from "$/modules/audio/audio-engine";
-import { currentTimeAtom } from "$/modules/audio/states";
 import {
 	findNextWord,
+	findOccupiedUnit,
 	getCurrentLineLocation,
 	getCurrentLocation,
 	getFirstSynchronizableUnit,
@@ -11,21 +11,6 @@ import {
 	getSynchronizableUnits,
 	isSynchronizableLine,
 } from "$/modules/lyric-editor/utils/lyric-states";
-import {
-	highlightActiveWordAtom,
-	smartFirstWordAtom,
-	smartLastWordAtom,
-	SyncJudgeMode,
-	syncJudgeModeAtom,
-} from "$/modules/settings/states";
-import {
-	autoSegmentOnLineSyncAtom,
-	autoSegmentSyncModeAtom,
-	smartFirstWordActiveIdAtom,
-	syncLevelModeAtom,
-	syncTimeOffsetAtom,
-	syncCommitOffsetAtom,
-} from "$/modules/settings/states/sync";
 import {
 	segmentationCustomRulesAtom,
 	segmentationEngineAtom,
@@ -37,9 +22,23 @@ import {
 	segmentationSplitCJKAtom,
 } from "$/modules/segmentation/states";
 import { parseIgnoreList } from "$/modules/segmentation/utils/segmentation";
-import { maybeAutoSegmentLine } from "../utils/auto-segment-sync";
-import { normalizeLineTime } from "../utils/normalize-line-time";
-import { calculateJudgeTime } from "../utils/judge-time";
+import {
+	highlightActiveWordAtom,
+	smartFirstWordAtom,
+	smartLastWordAtom,
+	smartWordAnywhereAtom,
+	splitOccupiedWordAtPlayheadAtom,
+	syncJudgeModeAtom,
+} from "$/modules/settings/states";
+import {
+	autoSegmentOnLineSyncAtom,
+	autoSegmentSyncModeAtom,
+	smartFirstWordActiveIdAtom,
+	smartWordActiveIdAtom,
+	syncCommitOffsetAtom,
+	syncLevelModeAtom,
+	syncTimeOffsetAtom,
+} from "$/modules/settings/states/sync";
 import {
 	keyMoveFirstWordAndPlayAtom,
 	keyMoveLastWordAndPlayAtom,
@@ -69,11 +68,17 @@ import {
 	type KeyBindingEvent,
 	useKeyBindingAtom,
 } from "$/utils/keybindings.ts";
+import { maybeAutoSegmentLine } from "../utils/auto-segment-sync";
+import { calculateJudgeTime } from "../utils/judge-time";
+import { normalizeLineTime } from "../utils/normalize-line-time";
 
 const getUnitStartTime = (unit: {
 	word: LyricWord;
 	rubyWord?: LyricWordBase;
 }) => unit.rubyWord?.startTime ?? unit.word.startTime;
+
+const getUnitEndTime = (unit: { word: LyricWord; rubyWord?: LyricWordBase }) =>
+	unit.rubyWord?.endTime ?? unit.word.endTime;
 
 const updateRubyParentTime = (word: LyricWord) => {
 	const ruby = word.ruby;
@@ -339,6 +344,10 @@ export const SyncKeyBinding: FC = () => {
 			if (smartFirstWord && location.isFirstWord) {
 				store.set(smartFirstWordActiveIdAtom, location.word.id);
 			}
+			const smartWordAnywhere = store.get(smartWordAnywhereAtom);
+			if (smartWordAnywhere) {
+				store.set(smartWordActiveIdAtom, location.syncId);
+			}
 
 			store.set(lyricLinesAtom, (prev) => {
 				const state: LyricsState = prev;
@@ -476,9 +485,120 @@ export const SyncKeyBinding: FC = () => {
 				return;
 			}
 
+			const splitOccupiedWord = store.get(splitOccupiedWordAtPlayheadAtom);
+			const occupied = splitOccupiedWord
+				? findOccupiedUnit(
+						store.get(lyricLinesAtom).lyricLines,
+						location.lineIndex,
+						currentTime,
+					)
+				: undefined;
+
+			// 智能单词（任何无开始时间的单词，按 G 作用于前一个单词）
+			let targetPriorWord: {
+				lineIndex: number;
+				wordIndex: number;
+				rubyIndex?: number;
+				syncIndex: number;
+			} | null = null;
+
+			const smartWordAnywhere = store.get(smartWordAnywhereAtom);
+			if (!occupied && smartWordAnywhere) {
+				const activeSmartWordId = store.get(smartWordActiveIdAtom);
+				const isAlreadyActive =
+					activeSmartWordId === location.syncId ||
+					activeSmartWordId === location.word.id;
+
+				const unitStartTime = getUnitStartTime(location);
+				const unitEndTime = getUnitEndTime(location);
+
+				const hasNoStartTime =
+					!isAlreadyActive &&
+					(unitStartTime === undefined ||
+						unitStartTime === null ||
+						Number.isNaN(unitStartTime) ||
+						(unitStartTime <= 0 && (unitEndTime <= 0 || currentTime > 0)));
+
+				if (hasNoStartTime) {
+					const lineUnits = getSynchronizableUnits(location.line);
+					if (location.syncIndex > 0) {
+						const prevUnit = lineUnits[location.syncIndex - 1];
+						targetPriorWord = {
+							lineIndex: location.lineIndex,
+							wordIndex: prevUnit.wordIndex,
+							rubyIndex: prevUnit.rubyIndex,
+							syncIndex: location.syncIndex - 1,
+						};
+					} else {
+						// First word of the line: check if previous line has an unended word
+						const state = store.get(lyricLinesAtom);
+						let prevLineIndex = -1;
+						for (let i = location.lineIndex - 1; i >= 0; i--) {
+							const prevLine = state.lyricLines[i];
+							if (
+								isSynchronizableLine(prevLine) &&
+								getSynchronizableUnits(prevLine).length > 0
+							) {
+								prevLineIndex = i;
+								break;
+							}
+						}
+
+						if (prevLineIndex !== -1) {
+							const prevLine = state.lyricLines[prevLineIndex];
+							const prevLineUnits = getSynchronizableUnits(prevLine);
+							const lastUnit = prevLineUnits[prevLineUnits.length - 1];
+							if (lastUnit && getUnitEndTime(lastUnit) <= 0) {
+								targetPriorWord = {
+									lineIndex: prevLineIndex,
+									wordIndex: lastUnit.wordIndex,
+									rubyIndex: lastUnit.rubyIndex,
+									syncIndex: prevLineUnits.length - 1,
+								};
+							}
+						}
+
+						if (!targetPriorWord) {
+							// No prior word to act on: set start time on current line & word (acts as start)
+							store.set(lyricLinesAtom, (prev) => {
+								const state: LyricsState = prev;
+								const prevLine = state.lyricLines[location.lineIndex];
+								if (!prevLine) return prev;
+
+								const nextLines = state.lyricLines.slice();
+								const nextLine = cloneLineWithWords(prevLine);
+								if (location.isFirstWord) nextLine.startTime = currentTime;
+								setUnitStartTimeCloned(
+									nextLine,
+									location.wordIndex,
+									location.rubyIndex,
+									currentTime,
+								);
+								nextLines[location.lineIndex] = nextLine;
+
+								return { ...state, lyricLines: nextLines };
+							});
+							store.set(smartWordActiveIdAtom, location.syncId);
+							if (location.isFirstWord) {
+								store.set(smartFirstWordActiveIdAtom, location.word.id);
+							}
+							return;
+						}
+					}
+				}
+			}
+			if (!targetPriorWord) {
+				store.set(smartWordActiveIdAtom, null);
+			}
+
 			// 智能首字
 			const smartFirstWord = store.get(smartFirstWordAtom);
-			if (smartFirstWord && location.isFirstWord) {
+			if (
+				!occupied &&
+				!targetPriorWord &&
+				smartFirstWord &&
+				location.isFirstWord
+			) {
 				const activeId = store.get(smartFirstWordActiveIdAtom);
 				if (activeId !== location.word.id) {
 					store.set(lyricLinesAtom, (prev) => {
@@ -507,7 +627,12 @@ export const SyncKeyBinding: FC = () => {
 
 			// 智能尾字
 			const smartLastWord = store.get(smartLastWordAtom);
-			if (smartLastWord && location.isLastWord) {
+			if (
+				!occupied &&
+				!targetPriorWord &&
+				smartLastWord &&
+				location.isLastWord
+			) {
 				store.set(lyricLinesAtom, (prev) => {
 					const state: LyricsState = prev;
 					const prevLine = state.lyricLines[location.lineIndex];
@@ -549,14 +674,45 @@ export const SyncKeyBinding: FC = () => {
 				let curRubyIndex = location.rubyIndex;
 				let curSyncIndex = location.syncIndex;
 
+				if (occupied) {
+					curLineIndex = occupied.lineIndex;
+					curWordIndex = occupied.wordIndex;
+					curRubyIndex = occupied.rubyIndex;
+					curSyncIndex = occupied.syncIndex;
+				} else if (targetPriorWord) {
+					curLineIndex = targetPriorWord.lineIndex;
+					curWordIndex = targetPriorWord.wordIndex;
+					curRubyIndex = targetPriorWord.rubyIndex;
+					curSyncIndex = targetPriorWord.syncIndex;
+				}
+
 				const getLineToEdit = (idx: number) => {
 					nextLines[idx] = cloneLineWithWords(nextLines[idx]);
 					return nextLines[idx];
 				};
 
-				// 1. Commit current word end time
+				// 1. Commit current or occupied word end time
+				const lineToEdit = getLineToEdit(curLineIndex);
+				if (splitOccupiedWord) {
+					const currentUnitStart = getUnitStartTime({
+						word: lineToEdit.words[curWordIndex],
+						rubyWord:
+							curRubyIndex !== undefined && lineToEdit.words[curWordIndex]?.ruby
+								? lineToEdit.words[curWordIndex].ruby[curRubyIndex]
+								: undefined,
+					});
+					if (currentUnitStart > currentTime) {
+						setUnitStartTimeCloned(
+							lineToEdit,
+							curWordIndex,
+							curRubyIndex,
+							currentTime,
+						);
+					}
+				}
+
 				setUnitEndTimeCloned(
-					getLineToEdit(curLineIndex),
+					lineToEdit,
 					curWordIndex,
 					curRubyIndex,
 					currentTime,
@@ -617,6 +773,18 @@ export const SyncKeyBinding: FC = () => {
 							next.unit.rubyIndex,
 							currentTime,
 						);
+						if (splitOccupiedWord) {
+							const nextEnd = getUnitEndTime(next.unit);
+							if (nextEnd > 0 && nextEnd <= currentTime) {
+								setUnitEndTimeCloned(
+									targetLine,
+									next.unit.wordIndex,
+									next.unit.rubyIndex,
+									0,
+								);
+							}
+						}
+						normalizeLineTime(targetLine);
 						targetSelection = { id: next.unit.id, lineId: next.line.id };
 						break;
 					}
@@ -643,6 +811,12 @@ export const SyncKeyBinding: FC = () => {
 				const newLocation = getCurrentLocation(store);
 				if (newLocation?.isFirstWord) {
 					store.set(smartFirstWordActiveIdAtom, newLocation.word.id);
+				}
+			}
+			if (smartWordAnywhere) {
+				const newLocation = getCurrentLocation(store);
+				if (newLocation) {
+					store.set(smartWordActiveIdAtom, newLocation.syncId);
 				}
 			}
 

@@ -239,3 +239,60 @@ export function findNextWord(
 		syncIndex: 0,
 	};
 }
+
+export interface OccupiedUnitLocation {
+	line: LyricLine;
+	lineIndex: number;
+	syncIndex: number;
+	wordIndex: number;
+	rubyIndex?: number;
+	unit: SyncWordUnit;
+}
+
+export function findOccupiedUnit(
+	lyricLines: LyricLine[],
+	preferredLineIndex: number,
+	currentTime: number,
+): OccupiedUnitLocation | undefined {
+	const checkLine = (lineIdx: number): OccupiedUnitLocation | undefined => {
+		const line = lyricLines[lineIdx];
+		if (!line || !isSynchronizableLine(line)) return undefined;
+		const units = getSynchronizableUnits(line);
+		for (let sIdx = 0; sIdx < units.length; sIdx++) {
+			const u = units[sIdx];
+			const start = u.rubyWord?.startTime ?? u.word.startTime;
+			const end = u.rubyWord?.endTime ?? u.word.endTime;
+			// Occupied means unit has valid start/end span and currentTime is within it
+			if (
+				start >= 0 &&
+				end > start &&
+				currentTime > start &&
+				currentTime <= end
+			) {
+				return {
+					line,
+					lineIndex: lineIdx,
+					syncIndex: sIdx,
+					wordIndex: u.wordIndex,
+					rubyIndex: u.rubyIndex,
+					unit: u,
+				};
+			}
+		}
+		return undefined;
+	};
+
+	if (preferredLineIndex >= 0 && preferredLineIndex < lyricLines.length) {
+		const inPreferred = checkLine(preferredLineIndex);
+		if (inPreferred) return inPreferred;
+	}
+
+	for (let i = 0; i < lyricLines.length; i++) {
+		if (i === preferredLineIndex) continue;
+		const found = checkLine(i);
+		if (found) return found;
+	}
+
+	return undefined;
+}
+

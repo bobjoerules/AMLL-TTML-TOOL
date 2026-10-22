@@ -212,7 +212,15 @@ export const enableSyncGlowAnimationAtom = atomWithStorage(
 export const highlightErrorsAtom = atomWithStorage("highlightErrors", true);
 
 export const smartFirstWordAtom = atomWithStorage("smartFirstWord", false);
+export const smartWordAnywhereAtom = atomWithStorage(
+	"smartWordAnywhere",
+	false,
+);
 export const smartLastWordAtom = atomWithStorage("smartLastWord", false);
+export const splitOccupiedWordAtPlayheadAtom = atomWithStorage(
+	"splitOccupiedWordAtPlayhead",
+	true,
+);
 export const compactBGInSyncAtom = atomWithStorage("compactBGInSync", true);
 
 export const accentColorAtom = atomWithStorage<

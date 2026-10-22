@@ -132,6 +132,7 @@ const COMMON_TAB_IDS = new Set([
 	"editor-commit-offset",
 	"editor-smart-first-word",
 	"editor-smart-last-word",
+	"editor-split-occupied-word",
 	"editor-auto-segment",
 	"editor-word-wrap",
 	"editor-upcoming-highlight",

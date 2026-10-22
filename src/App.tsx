@@ -122,6 +122,7 @@ import { SyncKeyBinding } from "./modules/lyric-editor/components/sync-keybindin
 import { UrbanDictionaryKeybinding } from "./modules/lyric-editor/components/urban-dictionary-keybinding.tsx";
 import { LinePropertiesKeybinding } from "./modules/lyric-editor/components/line-properties-keybinding.tsx";
 import { AutosaveManager } from "./modules/project/autosave/AutosaveManager.tsx";
+import { ProjectTimerManager } from "./modules/project/timer/ProjectTimerManager.tsx";
 import exportTTMLText from "./modules/project/logic/ttml-writer.ts";
 import { GlobalDragOverlay } from "./modules/project/modals/GlobalDragOverlay.tsx";
 import {
@@ -1382,6 +1383,7 @@ function App() {
 				)}
 				<div className={styles.appContent}>
 					<AutosaveManager />
+					<ProjectTimerManager />
 					<GlobalDragOverlay />
 					{toolMode === ToolMode.Sync && <SyncKeyBinding />}
 					<UrbanDictionaryKeybinding />

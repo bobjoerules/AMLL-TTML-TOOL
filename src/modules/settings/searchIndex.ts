@@ -102,12 +102,47 @@ export const SETTINGS_SEARCH_ITEMS: SettingSearchItem[] = [
 		keywords: ["smart", "first word", "start time", "lead-in", "prediction"],
 	},
 	{
+		id: "editor-smart-word-anywhere",
+		title: "Smart Word (Any Word in Line)",
+		description:
+			"Pressing G when a word has no start time acts as F to set its start time instead of ending it",
+		tab: "editor",
+		tabName: "Editor & Sync",
+		keywords: [
+			"smart",
+			"smart word",
+			"any word",
+			"g key",
+			"f key",
+			"start time",
+			"sync next",
+			"no start time",
+		],
+	},
+	{
 		id: "editor-smart-last-word",
 		title: "Smart Last Word Timing",
 		description: "Automatically calculate end times for terminal words in lines",
 		tab: "editor",
 		tabName: "Editor & Sync",
 		keywords: ["smart", "last word", "duration", "end time", "terminal"],
+	},
+	{
+		id: "editor-split-occupied-word",
+		title: "Split Word at Playhead on Sync",
+		description:
+			"When pressing Sync Next (G) inside an occupied word, replace its end time with the playhead and start the next word there",
+		tab: "editor",
+		tabName: "Editor & Sync",
+		keywords: [
+			"split",
+			"playhead",
+			"occupied",
+			"sync next",
+			"g key",
+			"timing error",
+			"end before start",
+		],
 	},
 	{
 		id: "editor-auto-segment",

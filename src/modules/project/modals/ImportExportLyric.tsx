@@ -28,7 +28,7 @@ import {
 	jooxImportLyricsDialogAtom,
 	lyricallyImportLyricsDialogAtom,
 } from "$/states/dialogs.ts";
-import { lyricLinesAtom, saveFileNameAtom } from "$/states/main.ts";
+import { lyricLinesAtom, projectIdAtom, saveFileNameAtom } from "$/states/main.ts";
 import { normalizeLyricText } from "$/utils/apostrophe-normalization";
 import { openFileWithDialog } from "$/utils/fileDialog.ts";
 import { saveFile } from "$/utils/fileSystem.ts";
@@ -120,7 +120,7 @@ export const ImportExportLyric = () => {
 			const fileName = `${baseName}.${extension}`;
 			try {
 				const data = stringifier(lyricForExport);
-				await saveFile(data, {
+				const saved = await saveFile(data, {
 					suggestedName: fileName,
 					types: [
 						{
@@ -129,6 +129,28 @@ export const ImportExportLyric = () => {
 						},
 					],
 				});
+				if (saved && extension.toLowerCase() === "ttml") {
+					try {
+						const { recordTTMLCompletion } = await import(
+							"$/modules/project/timer/project-timer"
+						);
+						const title =
+							metadata.find((m) => (m.key || "").toLowerCase() === "title")
+								?.value[0] || baseName;
+						const artist =
+							metadata.find((m) => (m.key || "").toLowerCase() === "artist")
+								?.value[0] || "";
+						const projectId = store.get(projectIdAtom);
+						await recordTTMLCompletion({
+							projectId,
+							title,
+							artist,
+							lineCount: lyric.length,
+						});
+					} catch {
+						// ignore
+					}
+				}
 			} catch (e) {
 				error(`Failed to export lyric with format "${extension}"`, e);
 			}

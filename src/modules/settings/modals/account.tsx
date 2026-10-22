@@ -1,6 +1,8 @@
 import {
 	ArrowClockwise24Regular,
+	CalendarLtr24Regular,
 	Camera24Regular,
+	Clock24Regular,
 	Cloud24Regular,
 	CloudDatabase20Regular,
 	Copy16Regular,
@@ -12,8 +14,10 @@ import {
 	MusicNote224Regular,
 	Open16Regular,
 	Person16Regular,
+	PlayCircle24Regular,
 	Save20Regular,
 	ShieldCheckmarkRegular,
+	Sparkle24Regular,
 	Timer24Regular,
 } from "@fluentui/react-icons";
 import {
@@ -32,9 +36,7 @@ import {
 	TextField,
 	Tooltip,
 } from "@radix-ui/themes";
-import { openExternal } from "$/utils/openExternal";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { autoLoadCloudAudioAtom } from "$/modules/settings/states";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -49,6 +51,7 @@ import {
 	getFirebaseAuth,
 	isFirebaseConfigured,
 } from "$/modules/cloud/firebase";
+import { groupCloudTTMLs } from "$/modules/cloud/songGrouping";
 import {
 	authLoadingAtom,
 	cloudFileManagerInitialTabAtom,
@@ -57,8 +60,14 @@ import {
 	currentUserAtom,
 } from "$/modules/cloud/states";
 import { fetchUserTTMLList } from "$/modules/cloud/ttmlStorage";
-import { groupCloudTTMLs } from "$/modules/cloud/songGrouping";
+import {
+	formatTimerDuration,
+	getStoredCompletedRecords,
+} from "$/modules/project/timer/project-timer";
+import { averageTTMLTimeSecondsAtom } from "$/modules/project/timer/states";
+import { autoLoadCloudAudioAtom } from "$/modules/settings/states";
 import { extractArtistTokens } from "$/modules/ttml-checklist/logic";
+import { openExternal } from "$/utils/openExternal";
 
 const MODERATOR_UIDS = new Set(["s41Sey8PJUSYHQUsS6aLLb7lsf02"]);
 
@@ -145,15 +154,20 @@ export const SettingsAccountTab = memo(() => {
 		totalLinesCount,
 		totalDurationMs,
 		uniqueArtistCount,
+		wordSyncSongsCount,
 	} = useMemo(() => {
 		const groups = groupCloudTTMLs(cloudTTMLList);
 		const artists = new Set<string>();
 		let totalLines = 0;
 		let totalDuration = 0;
+		let wordSyncCount = 0;
 
 		for (const g of groups) {
 			totalLines += g.maxLines;
 			totalDuration += g.durationMs;
+			if (g.versions.some((v) => v.isWordSync || v.timing === "Word")) {
+				wordSyncCount++;
+			}
 			const primary =
 				extractArtistTokens(g.artist).primary ||
 				(g.artist || "").trim().toLowerCase();
@@ -167,8 +181,43 @@ export const SettingsAccountTab = memo(() => {
 			totalLinesCount: totalLines,
 			totalDurationMs: totalDuration,
 			uniqueArtistCount: artists.size,
+			wordSyncSongsCount: wordSyncCount,
 		};
 	}, [cloudTTMLList]);
+
+	const localAverageTime = useAtomValue(averageTTMLTimeSecondsAtom);
+
+	const averageSyncStats = useMemo(() => {
+		let totalTimeSpent = 0;
+		let timedCount = 0;
+
+		for (const item of cloudTTMLList) {
+			if (
+				typeof item.timeSpentSeconds === "number" &&
+				item.timeSpentSeconds >= 5
+			) {
+				totalTimeSpent += item.timeSpentSeconds;
+				timedCount++;
+			}
+		}
+
+		if (timedCount > 0) {
+			return {
+				averageSeconds: Math.round(totalTimeSpent / timedCount),
+				count: timedCount,
+			};
+		}
+
+		if (typeof localAverageTime === "number" && localAverageTime >= 5) {
+			const localRecords = getStoredCompletedRecords();
+			return {
+				averageSeconds: localAverageTime,
+				count: localRecords.length || 1,
+			};
+		}
+
+		return null;
+	}, [cloudTTMLList, localAverageTime]);
 
 	const formatDuration = (ms: number): string => {
 		const totalSeconds = Math.floor(ms / 1000);
@@ -751,7 +800,7 @@ export const SettingsAccountTab = memo(() => {
 			</Card>
 
 			{/* User Statistics Grid */}
-			<Grid columns="2" gap="3">
+			<Grid columns={{ initial: "1", sm: "2" }} gap="3">
 				<Card variant="surface" style={{ padding: 16 }}>
 					<Flex justify="between" align="start">
 						<Flex direction="column" gap="1">
@@ -796,11 +845,38 @@ export const SettingsAccountTab = memo(() => {
 					<Flex justify="between" align="start">
 						<Flex direction="column" gap="1">
 							<Text size="2" color="gray" weight="medium">
+								{t("cloud.stats.wordSyncSongs", "Word-Synced Lyrics")}
+							</Text>
+							<Heading size="6">
+								{wordSyncSongsCount}{" "}
+								<Text size="2" color="gray" weight="regular">
+									{wordSyncSongsCount === 1
+										? t("cloud.stats.song", "song")
+										: t("cloud.stats.songs", "songs")}
+								</Text>
+							</Heading>
+							{uniqueSongCount > 0 && (
+								<Text size="1" color="gray">
+									{Math.round((wordSyncSongsCount / uniqueSongCount) * 100)}% of
+									saved songs
+								</Text>
+							)}
+						</Flex>
+						<Sparkle24Regular
+							style={{ width: 24, height: 24, color: "var(--accent-9)" }}
+						/>
+					</Flex>
+				</Card>
+
+				<Card variant="surface" style={{ padding: 16 }}>
+					<Flex justify="between" align="start">
+						<Flex direction="column" gap="1">
+							<Text size="2" color="gray" weight="medium">
 								{t("cloud.stats.playtime", "Synced Music Playtime")}
 							</Text>
 							<Heading size="6">{formatDuration(totalDurationMs)}</Heading>
 						</Flex>
-						<Timer24Regular
+						<PlayCircle24Regular
 							style={{ width: 24, height: 24, color: "var(--accent-9)" }}
 						/>
 					</Flex>
@@ -828,53 +904,154 @@ export const SettingsAccountTab = memo(() => {
 				</Card>
 
 				<Card variant="surface" style={{ padding: 16 }}>
-					<Flex direction="column" gap="1">
-						<Text size="1" color="gray" weight="medium">
-							{t("cloud.stats.accountCreated", "Account Created")}
-						</Text>
-						<Text size="2" weight="bold">
-							{creationDateFormatted}
-						</Text>
-					</Flex>
-				</Card>
-
-				<Card variant="surface" style={{ padding: 16 }}>
-					<Flex direction="column" gap="1">
-						<Text size="1" color="gray" weight="medium">
-							{t("cloud.stats.lastSignIn", "Last Active Sign-In")}
-						</Text>
-						<Text size="2" weight="bold">
-							{lastLoginFormatted}
-						</Text>
+					<Flex justify="between" align="start">
+						<Flex direction="column" gap="1">
+							<Text size="2" color="gray" weight="medium">
+								{t("cloud.stats.averageTTML", "Average TTML Sync")}
+							</Text>
+							<Heading size="6">
+								{averageSyncStats ? (
+									formatTimerDuration(averageSyncStats.averageSeconds)
+								) : (
+									<Text size="2" color="gray" weight="regular">
+										{t("cloud.stats.noRecord", "No record yet")}
+									</Text>
+								)}
+							</Heading>
+							{averageSyncStats && (
+								<Text size="1" color="gray">
+									{t(
+										"cloud.stats.basedOnSongs",
+										"Across {{count}} completed syncs",
+										{ count: averageSyncStats.count },
+									)}
+								</Text>
+							)}
+						</Flex>
+						<Timer24Regular
+							style={{ width: 24, height: 24, color: "var(--accent-9)" }}
+						/>
 					</Flex>
 				</Card>
 			</Grid>
 
-			{/* User ID & Technical Info */}
-			<Card
-				variant="surface"
-				style={{ padding: 14, background: "var(--accent-a2)" }}
-			>
-				<Flex justify="between" align="center">
-					<Flex direction="column" gap="1">
-						<Text size="1" color="gray" weight="medium">
-							Unique Account UID
-						</Text>
-						<Text size="2" weight="medium" style={{ fontFamily: "monospace" }}>
-							{user.uid}
-						</Text>
-					</Flex>
-					<Button
+			{/* Account Details & Technical Info */}
+			<Card variant="surface" style={{ padding: 16 }}>
+				<Flex direction="column" gap="3">
+					<Text
 						size="1"
-						variant="ghost"
+						weight="bold"
 						color="gray"
-						onClick={() => {
-							navigator.clipboard.writeText(user.uid);
-							toast.info("User ID copied to clipboard!");
-						}}
+						style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}
 					>
-						📋 Copy UID
-					</Button>
+						{t("cloud.accountDetails", "Account Information")}
+					</Text>
+					<Grid columns={{ initial: "1", sm: "3" }} gap="4" align="center">
+						<Flex gap="3" align="center">
+							<Box
+								style={{
+									padding: 8,
+									borderRadius: "var(--radius-3)",
+									background: "var(--accent-a3)",
+									color: "var(--accent-9)",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									flexShrink: 0,
+								}}
+							>
+								<CalendarLtr24Regular style={{ width: 20, height: 20 }} />
+							</Box>
+							<Flex direction="column" gap="0">
+								<Text size="1" color="gray" weight="medium">
+									{t("cloud.stats.accountCreated", "Account Created")}
+								</Text>
+								<Text size="2" weight="bold">
+									{creationDateFormatted}
+								</Text>
+							</Flex>
+						</Flex>
+
+						<Flex gap="3" align="center">
+							<Box
+								style={{
+									padding: 8,
+									borderRadius: "var(--radius-3)",
+									background: "var(--accent-a3)",
+									color: "var(--accent-9)",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									flexShrink: 0,
+								}}
+							>
+								<Clock24Regular style={{ width: 20, height: 20 }} />
+							</Box>
+							<Flex direction="column" gap="0">
+								<Text size="1" color="gray" weight="medium">
+									{t("cloud.stats.lastSignIn", "Last Active Sign-In")}
+								</Text>
+								<Text size="2" weight="bold">
+									{lastLoginFormatted}
+								</Text>
+							</Flex>
+						</Flex>
+
+						<Flex gap="3" align="center">
+							<Box
+								style={{
+									padding: 8,
+									borderRadius: "var(--radius-3)",
+									background: "var(--accent-a3)",
+									color: "var(--accent-9)",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									flexShrink: 0,
+								}}
+							>
+								<ShieldCheckmarkRegular style={{ width: 20, height: 20 }} />
+							</Box>
+							<Flex direction="column" gap="0" style={{ minWidth: 0, flex: 1 }}>
+								<Flex align="center" justify="between" gap="2">
+									<Text size="1" color="gray" weight="medium">
+										Account UID
+									</Text>
+									<Button
+										size="1"
+										variant="ghost"
+										color="gray"
+										style={{
+											height: 18,
+											padding: "0 6px",
+											cursor: "pointer",
+											fontSize: 11,
+										}}
+										onClick={() => {
+											navigator.clipboard.writeText(user.uid);
+											toast.info("User ID copied to clipboard!");
+										}}
+									>
+										<Copy16Regular style={{ width: 12, height: 12 }} />
+										Copy
+									</Button>
+								</Flex>
+								<Text
+									size="2"
+									weight="bold"
+									style={{
+										fontFamily: "monospace",
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+									title={user.uid}
+								>
+									{user.uid}
+								</Text>
+							</Flex>
+						</Flex>
+					</Grid>
 				</Flex>
 			</Card>
 

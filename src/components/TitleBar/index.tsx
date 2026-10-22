@@ -1,32 +1,32 @@
 import {
-	Button,
-	Flex,
-	SegmentedControl,
-	Tooltip,
-} from "@radix-ui/themes";
+	ArrowUpRight16Regular,
+	Edit24Regular,
+	PanelRight24Filled,
+	PanelRight24Regular,
+	Play24Regular,
+	Timer24Regular,
+} from "@fluentui/react-icons";
+import { Button, Flex, SegmentedControl, Tooltip } from "@radix-ui/themes";
 import { useAtom, useAtomValue } from "jotai";
 import { useSetImmerAtom } from "jotai-immer";
 import { type FC, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import WindowControls from "$/components/WindowControls";
-import { openExternal } from "$/utils/openExternal";
+import { loadedAudioFileNameAtom } from "$/modules/audio/states/index.ts";
+import {
+	formatTimerClock,
+	formatTimerDuration,
+} from "$/modules/project/timer/project-timer";
+import {
+	averageTTMLTimeSecondsAtom,
+	currentProjectTimeSecondsAtom,
+	isTimerInactiveAtom,
+} from "$/modules/project/timer/states";
 import {
 	boykisserModeAtom,
 	boykisserUnlockedAtom,
+	geniusApiKeyAtom,
 } from "$/modules/settings/states";
-import {
-	ArrowUpRight16Regular,
-	Edit24Regular,
-	Timer24Regular,
-	Play24Regular,
-	PanelRight24Regular,
-	PanelRight24Filled,
-} from "@fluentui/react-icons";
-import {
-	getIsSongLoaded,
-	resolveGeniusDirectTargetUrl,
-	resolveGeniusTargetUrl,
-} from "./genius-shortcut";
 import {
 	keyNextTabAtom,
 	keyPrevTabAtom,
@@ -43,10 +43,14 @@ import {
 	ToolMode,
 	toolModeAtom,
 } from "$/states/main.ts";
-import { loadedAudioFileNameAtom } from "$/modules/audio/states/index.ts";
-import { geniusApiKeyAtom } from "$/modules/settings/states";
 import { useKeyBindingAtom } from "$/utils/keybindings.ts";
+import { openExternal } from "$/utils/openExternal";
 import { TopMenu } from "../TopMenu/index.tsx";
+import {
+	getIsSongLoaded,
+	resolveGeniusDirectTargetUrl,
+	resolveGeniusTargetUrl,
+} from "./genius-shortcut";
 import styles from "./index.module.css";
 
 export const TitleBar: FC = () => {
@@ -57,6 +61,9 @@ export const TitleBar: FC = () => {
 	const { t } = useTranslation();
 	const [boykisserMode, setBoykisserMode] = useAtom(boykisserModeAtom);
 	const [boykisserUnlocked] = useAtom(boykisserUnlockedAtom);
+	const currentProjectTime = useAtomValue(currentProjectTimeSecondsAtom);
+	const isTimerInactive = useAtomValue(isTimerInactiveAtom);
+	const averageTime = useAtomValue(averageTTMLTimeSecondsAtom);
 	const isApp = useMemo(() => {
 		const isTauri =
 			typeof window !== "undefined" &&
@@ -195,6 +202,55 @@ export const TitleBar: FC = () => {
 			}
 			endChildren={
 				<Flex align="center" gap="2" mr="2">
+					<Tooltip
+						content={
+							<div style={{ textAlign: "left" }}>
+								<div>
+									{t("topBar.timer.activeTime", "Active Time: {{time}}", {
+										time: formatTimerDuration(currentProjectTime),
+									})}
+									{isTimerInactive && (
+										<span style={{ opacity: 0.7, marginLeft: 4 }}>
+											({t("topBar.timer.paused", "Idle")})
+										</span>
+									)}
+								</div>
+								{typeof averageTime === "number" && averageTime > 0 && (
+									<div
+										style={{ marginTop: 2, fontSize: "0.85em", opacity: 0.85 }}
+									>
+										⏱️{" "}
+										{t("topBar.timer.average", "Avg Sync: {{time}}", {
+											time: formatTimerDuration(averageTime),
+										})}
+									</div>
+								)}
+							</div>
+						}
+					>
+						<div
+							style={{
+								display: "inline-flex",
+								alignItems: "center",
+								gap: "5px",
+								padding: "4px 8px",
+								borderRadius: "6px",
+								backgroundColor: isTimerInactive
+									? "var(--gray-a3)"
+									: "var(--accent-a3)",
+								color: isTimerInactive ? "var(--gray-11)" : "var(--accent-11)",
+								fontSize: "12px",
+								fontVariantNumeric: "tabular-nums",
+								fontWeight: 600,
+								userSelect: "none",
+								opacity: isTimerInactive ? 0.7 : 1,
+								transition: "all 0.2s ease",
+							}}
+						>
+							<Timer24Regular style={{ width: "14px", height: "14px" }} />
+							<span>{formatTimerClock(currentProjectTime)}</span>
+						</div>
+					</Tooltip>
 					{toolMode !== ToolMode.Preview && (
 						<Tooltip
 							content={
@@ -286,9 +342,7 @@ export const TitleBar: FC = () => {
 								>
 									G
 								</span>
-								<span className={styles.previewPanelLabel}>
-									Genius
-								</span>
+								<span className={styles.previewPanelLabel}>Genius</span>
 								<ArrowUpRight16Regular
 									style={{ width: "12px", height: "12px", opacity: 0.7 }}
 								/>

@@ -275,6 +275,28 @@ export const useTopMenuActions = () => {
 					setSaveFileName(savedName);
 					store.set(markSavedAtom);
 
+					try {
+						const { recordTTMLCompletion } = await import(
+							"$/modules/project/timer/project-timer"
+						);
+						const metadata = currentLyrics.metadata || [];
+						const title =
+							metadata.find((m) => (m.key || "").toLowerCase() === "title")
+								?.value[0] || savedName.replace(/\.[^.]*$/, "");
+						const artist =
+							metadata.find((m) => (m.key || "").toLowerCase() === "artist")
+								?.value[0] || "";
+						const projectId = store.get(projectIdAtom);
+						await recordTTMLCompletion({
+							projectId,
+							title,
+							artist,
+							lineCount: currentLyrics.lyricLines.length,
+						});
+					} catch {
+						// ignore
+					}
+
 					if (store.get(openSpotMatchAfterSaveAtom)) {
 						const metadata = currentLyrics.metadata || [];
 						const spotifyMeta = metadata.find((m) => {

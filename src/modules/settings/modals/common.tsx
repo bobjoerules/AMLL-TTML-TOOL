@@ -1,23 +1,23 @@
 import resources from "virtual:i18next-loader";
 import {
+	ArrowDownload24Regular,
+	Cloud24Regular,
 	ContentView24Regular,
+	Cut24Regular,
+	Database24Regular,
 	History24Regular,
 	Keyboard12324Regular,
 	LocalLanguage24Regular,
 	PaddingLeft24Regular,
 	PaddingRight24Regular,
 	Save24Regular,
+	Sparkle24Regular,
 	Speaker224Regular,
 	Stack24Regular,
+	TextWrap24Regular,
 	Timer24Regular,
 	TopSpeed24Regular,
 	VideoBackgroundEffect24Regular,
-	TextWrap24Regular,
-	Cut24Regular,
-	Database24Regular,
-	Cloud24Regular,
-	ArrowDownload24Regular,
-	Sparkle24Regular,
 } from "@fluentui/react-icons";
 import {
 	Badge,
@@ -38,42 +38,43 @@ import {
 import { useAtom, useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
 import { playbackRateAtom, volumeAtom } from "$/modules/audio/states";
-import { checklistShowUploadedToDbAtom } from "$/modules/ttml-checklist/states";
 import { segmentationIgnoreListTextAtom } from "$/modules/segmentation/states";
-import { latencyTestDialogAtom } from "$/states/dialogs.ts";
-
 import {
+	allowConsecutiveBackgroundLinesAtom,
 	autoLoadCloudAudioAtom,
-	downloadAudioOnLyricImportAtom,
 	autosaveEnabledAtom,
 	autosaveIntervalAtom,
 	autosaveLimitAtom,
+	compactBGInSyncAtom,
+	downloadAudioOnLyricImportAtom,
+	geniusCategorizationEnabledAtom,
+	highlightUnsyncedWordsInEditorAtom,
+	keepPlayingWordInViewAtom,
 	LayoutMode,
 	layoutModeAtom,
+	normalizeApostrophesOnImportAtom,
+	normalizeCyrillicEsOnImportAtom,
+	openSpotMatchAfterSaveAtom,
 	SyncJudgeMode,
 	smartFirstWordAtom,
 	smartLastWordAtom,
+	smartWordAnywhereAtom,
+	splitOccupiedWordAtPlayheadAtom,
 	syncJudgeModeAtom,
-	compactBGInSyncAtom,
-	geniusCategorizationEnabledAtom,
-	normalizeApostrophesOnImportAtom,
-	normalizeCyrillicEsOnImportAtom,
-	allowConsecutiveBackgroundLinesAtom,
-	openSpotMatchAfterSaveAtom,
 	wrapLyricLinesAtom,
-	keepPlayingWordInViewAtom,
-	highlightUnsyncedWordsInEditorAtom,
 } from "$/modules/settings/states";
 import {
+	type AutoSegmentSyncMode,
 	autoSegmentOnLineSyncAtom,
 	autoSegmentSyncModeAtom,
-	type AutoSegmentSyncMode,
 	enableUpcomingWordHighlightAtom,
-	syncTimeOffsetAtom,
 	syncCommitOffsetAtom,
+	syncTimeOffsetAtom,
 	upcomingWordHighlightColorAtom,
 	upcomingWordHighlightThresholdAtom,
 } from "$/modules/settings/states/sync";
+import { checklistShowUploadedToDbAtom } from "$/modules/ttml-checklist/states";
+import { latencyTestDialogAtom } from "$/states/dialogs.ts";
 import {
 	KeyBindingTriggerMode,
 	keyBindingTriggerModeAtom,
@@ -103,7 +104,13 @@ export const SettingsCommonTab = ({
 		keyBindingTriggerModeAtom,
 	);
 	const [smartFirstWord, setSmartFirstWord] = useAtom(smartFirstWordAtom);
+	const [smartWordAnywhere, setSmartWordAnywhere] = useAtom(
+		smartWordAnywhereAtom,
+	);
 	const [smartLastWord, setSmartLastWord] = useAtom(smartLastWordAtom);
+	const [splitOccupiedWordAtPlayhead, setSplitOccupiedWordAtPlayhead] = useAtom(
+		splitOccupiedWordAtPlayheadAtom,
+	);
 	const [volume, setVolume] = useAtom(volumeAtom);
 	const [playbackRate, setPlaybackRate] = useAtom(playbackRateAtom);
 	const [autosaveEnabled, setAutosaveEnabled] = useAtom(autosaveEnabledAtom);
@@ -128,10 +135,8 @@ export const SettingsCommonTab = ({
 	const [keepPlayingWordInView, setKeepPlayingWordInView] = useAtom(
 		keepPlayingWordInViewAtom,
 	);
-	const [
-		highlightUnsyncedWordsInEditor,
-		setHighlightUnsyncedWordsInEditor,
-	] = useAtom(highlightUnsyncedWordsInEditorAtom);
+	const [highlightUnsyncedWordsInEditor, setHighlightUnsyncedWordsInEditor] =
+		useAtom(highlightUnsyncedWordsInEditorAtom);
 	const [autoSegmentOnLineSync, setAutoSegmentOnLineSync] = useAtom(
 		autoSegmentOnLineSyncAtom,
 	);
@@ -247,6 +252,7 @@ export const SettingsCommonTab = ({
 			shouldShow("editor-commit-offset") ||
 			shouldShow("editor-smart-first-word") ||
 			shouldShow("editor-smart-last-word") ||
+			shouldShow("editor-split-occupied-word") ||
 			shouldShow("editor-auto-segment") ||
 			shouldShow("editor-never-split-words"));
 
@@ -493,7 +499,9 @@ export const SettingsCommonTab = ({
 								<Flex gap="3" align="center">
 									<Timer24Regular />
 									<Flex direction="column" gap="1">
-										<Text>{t("latencyTestDialog.title", "Audio Latency Test")}</Text>
+										<Text>
+											{t("latencyTestDialog.title", "Audio Latency Test")}
+										</Text>
 										<Text size="1" color="gray">
 											{t(
 												"settingsDialog.latencyTestDesc",
@@ -524,6 +532,7 @@ export const SettingsCommonTab = ({
 						shouldShow("editor-commit-offset") ||
 						shouldShow("editor-smart-first-word") ||
 						shouldShow("editor-smart-last-word") ||
+						shouldShow("editor-split-occupied-word") ||
 						shouldShow("editor-auto-segment") ||
 						shouldShow("editor-never-split-words")) && (
 						<Heading size="4">{t("settings.group.timing", "Syncing")}</Heading>
@@ -552,7 +561,9 @@ export const SettingsCommonTab = ({
 
 										<Select.Root
 											value={syncJudgeMode}
-											onValueChange={(v) => setSyncJudgeMode(v as SyncJudgeMode)}
+											onValueChange={(v) =>
+												setSyncJudgeMode(v as SyncJudgeMode)
+											}
 										>
 											<Select.Trigger />
 											<Select.Content>
@@ -574,7 +585,9 @@ export const SettingsCommonTab = ({
 														"Average of Key Down and Key Up Time",
 													)}
 												</Select.Item>
-												<Select.Item value={SyncJudgeMode.FirstKeyDownTimeLegacy}>
+												<Select.Item
+													value={SyncJudgeMode.FirstKeyDownTimeLegacy}
+												>
 													{t(
 														"settings.common.syncJudgeModeOptions.firstKeyDownLegacy",
 														"First Key Down Time (Legacy)",
@@ -588,7 +601,8 @@ export const SettingsCommonTab = ({
 						</Card>
 					)}
 
-					{(shouldShow("general-key-trigger") || shouldShow("editor-key-trigger")) && (
+					{(shouldShow("general-key-trigger") ||
+						shouldShow("editor-key-trigger")) && (
 						<Card>
 							<Flex gap="3" align="center">
 								<Keyboard12324Regular />
@@ -739,6 +753,38 @@ export const SettingsCommonTab = ({
 						</Card>
 					)}
 
+					{shouldShow("editor-smart-word-anywhere") && (
+						<Card>
+							<Text as="label">
+								<Flex gap="3" align="center">
+									<Sparkle24Regular />
+									<Box flexGrow="1">
+										<Flex gap="2" align="center" justify="between">
+											<Flex direction="column" gap="1">
+												<Text>
+													{t(
+														"settings.common.smartWordAnywhere",
+														"Smart Word (Any Word)",
+													)}
+												</Text>
+												<Text size="1" color="gray">
+													{t(
+														"settings.common.smartWordAnywhereDesc",
+														"When syncing any word without a start time, pressing the Next key (G) acts as the Start key (F) to set its start time instead of immediately ending it.",
+													)}
+												</Text>
+											</Flex>
+											<Switch
+												checked={smartWordAnywhere}
+												onCheckedChange={setSmartWordAnywhere}
+											/>
+										</Flex>
+									</Box>
+								</Flex>
+							</Text>
+						</Card>
+					)}
+
 					{shouldShow("editor-smart-last-word") && (
 						<Card>
 							<Text as="label">
@@ -748,7 +794,10 @@ export const SettingsCommonTab = ({
 										<Flex gap="2" align="center" justify="between">
 											<Flex direction="column" gap="1">
 												<Text>
-													{t("settings.common.smartLastWord", "Smart Last Word")}
+													{t(
+														"settings.common.smartLastWord",
+														"Smart Last Word",
+													)}
 												</Text>
 												<Text size="1" color="gray">
 													{t(
@@ -760,6 +809,38 @@ export const SettingsCommonTab = ({
 											<Switch
 												checked={smartLastWord}
 												onCheckedChange={setSmartLastWord}
+											/>
+										</Flex>
+									</Box>
+								</Flex>
+							</Text>
+						</Card>
+					)}
+
+					{shouldShow("editor-split-occupied-word") && (
+						<Card>
+							<Text as="label">
+								<Flex gap="3" align="center">
+									<Cut24Regular />
+									<Box flexGrow="1">
+										<Flex gap="2" align="center" justify="between">
+											<Flex direction="column" gap="1">
+												<Text>
+													{t(
+														"settings.common.splitOccupiedWordAtPlayhead",
+														"Split Word at Playhead on Sync",
+													)}
+												</Text>
+												<Text size="1" color="gray">
+													{t(
+														"settings.common.splitOccupiedWordAtPlayheadDesc",
+														"When pressing the Sync Next trigger (G) while the playhead is inside a timed word, update that word's end time to the playhead and start the next word there to prevent timing errors.",
+													)}
+												</Text>
+											</Flex>
+											<Switch
+												checked={splitOccupiedWordAtPlayhead}
+												onCheckedChange={setSplitOccupiedWordAtPlayhead}
 											/>
 										</Flex>
 									</Box>
@@ -888,7 +969,10 @@ export const SettingsCommonTab = ({
 						shouldShow("editor-unsynced-highlight")) && (
 						<>
 							<Heading size="4">
-								{t("settings.group.timingHighlight", "Visual Timing Cue (Sync)")}
+								{t(
+									"settings.group.timingHighlight",
+									"Visual Timing Cue (Sync)",
+								)}
 							</Heading>
 							<Card>
 								<Text as="label">
@@ -965,7 +1049,10 @@ export const SettingsCommonTab = ({
 												value={upcomingWordHighlightThreshold}
 												onChange={(e) =>
 													setUpcomingWordHighlightThreshold(
-														Math.max(0, Number.parseInt(e.target.value, 10) || 0),
+														Math.max(
+															0,
+															Number.parseInt(e.target.value, 10) || 0,
+														),
 													)
 												}
 											/>
@@ -1221,7 +1308,9 @@ export const SettingsCommonTab = ({
 				<Flex direction="column" gap="2">
 					{(shouldShow("audio-volume") ||
 						shouldShow("audio-playback-rate")) && (
-						<Heading size="4">{t("settings.group.playback", "Playback")}</Heading>
+						<Heading size="4">
+							{t("settings.group.playback", "Playback")}
+						</Heading>
 					)}
 
 					{shouldShow("audio-volume") && (
@@ -1301,7 +1390,10 @@ export const SettingsCommonTab = ({
 										<Box flexGrow="1">
 											<Flex gap="2" align="center" justify="between">
 												<Text>
-													{t("settings.common.autosave.enable", "Enable Auto Save")}
+													{t(
+														"settings.common.autosave.enable",
+														"Enable Auto Save",
+													)}
 												</Text>
 												<Switch
 													checked={autosaveEnabled}
@@ -1324,7 +1416,10 @@ export const SettingsCommonTab = ({
 												style={{ alignSelf: "stretch" }}
 											>
 												<Text>
-													{t("settings.common.autosave.interval", "Save Interval")}
+													{t(
+														"settings.common.autosave.interval",
+														"Save Interval",
+													)}
 												</Text>
 												<Text wrap="nowrap" color="gray" size="1">
 													{autosaveInterval} {t("time.minutes", "min")}
@@ -1343,7 +1438,9 @@ export const SettingsCommonTab = ({
 													<Button
 														key={mins}
 														size="1"
-														variant={autosaveInterval === mins ? "solid" : "soft"}
+														variant={
+															autosaveInterval === mins ? "solid" : "soft"
+														}
 														disabled={!autosaveEnabled}
 														onClick={() => setAutosaveInterval(mins)}
 													>
@@ -1367,7 +1464,10 @@ export const SettingsCommonTab = ({
 												style={{ alignSelf: "stretch" }}
 											>
 												<Text>
-													{t("settings.common.autosave.limit", "Snapshots to keep")}
+													{t(
+														"settings.common.autosave.limit",
+														"Snapshots to keep",
+													)}
 												</Text>
 												<Text wrap="nowrap" color="gray" size="1">
 													{autosaveLimit}
