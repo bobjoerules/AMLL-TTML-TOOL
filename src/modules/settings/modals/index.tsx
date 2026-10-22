@@ -85,7 +85,15 @@ const NavigationItem = ({
 		onClick={onSelect}
 	>
 		{icon}
-		<span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+		<span
+			style={{
+				flex: 1,
+				minWidth: 0,
+				overflow: "hidden",
+				textOverflow: "ellipsis",
+				whiteSpace: "nowrap",
+			}}
+		>
 			{children}
 		</span>
 		{typeof matchCount === "number" && matchCount > 0 && (
@@ -98,7 +106,12 @@ const NavigationItem = ({
 					padding: "0 6px",
 					fontSize: "11px",
 					height: "18px",
+					minWidth: "18px",
+					display: "inline-flex",
+					alignItems: "center",
+					justifyContent: "center",
 					flexShrink: 0,
+					marginLeft: "auto",
 				}}
 			>
 				{matchCount}

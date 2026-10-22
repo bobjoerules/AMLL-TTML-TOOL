@@ -51,6 +51,29 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v4.1.2
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 21, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Preferences Search Number Cutoff Fix:</b> Resolved an issue where match count badges on sidebar navigation tabs were truncated at the right edge by normalizing inner tab trigger positioning and expanding sidebar clearance.
+								</Text>
+								<Text size="2">
+									• <b>Website Top Navigation Bar Overhaul:</b> Fixed action buttons (&quot;Open in Browser&quot; and &quot;GitHub&quot;) overflowing and covering tab buttons by transitioning to a responsive flexbox layout with extended breakpoints.
+								</Text>
+								<Text size="2">
+									• <b>Import from Text Auto-Segmentation Fix:</b> Resolved an issue when importing raw text lyrics with auto-segmentation enabled by allowing the lines array to be reassigned.
+								</Text>
+								<Text size="2">
+									• <b>Showcase Gallery Enhancements:</b> Updated high-resolution gallery screenshots across all app showcase sections.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v4.1.1
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

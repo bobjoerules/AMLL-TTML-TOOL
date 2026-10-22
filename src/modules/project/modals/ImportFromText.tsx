@@ -218,7 +218,7 @@ export const ImportFromText = () => {
 			);
 
 			const lines = text.split("\n");
-			const result: LyricLine[] = [];
+			let result: LyricLine[] = [];
 			let currentGeniusHeader: string | undefined;
 			const consumeGeniusHeader = (value: string) => {
 				if (!geniusCategorizationEnabled) return false;

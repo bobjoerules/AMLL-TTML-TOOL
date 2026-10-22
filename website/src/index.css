@@ -196,13 +196,13 @@ body {
 }
 
 .navbar .container {
-  max-width: 1440px;
+  max-width: 1600px;
 }
 
 .nav-content {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
   width: 100%;
 }
@@ -235,10 +235,10 @@ body {
 }
 
 .nav-desktop-only {
-  justify-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1 1 auto;
 }
 
 .nav-links {
@@ -816,7 +816,7 @@ body {
 }
 
 /* Responsive Styles */
-@media (max-width: 1340px) and (min-width: 1025px) {
+@media (max-width: 1420px) and (min-width: 1025px) {
   .nav-desktop-action-label {
     display: none !important;
   }
