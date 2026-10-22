@@ -107,28 +107,31 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
               rel="noopener noreferrer"
               className="btn btn-secondary btn-sm nav-desktop-action"
               style={{ borderColor: 'rgba(255, 255, 255, 0.2)', background: 'rgba(255, 255, 255, 0.06)' }}
+              title="Open web editor in browser"
             >
               <Globe size={15} color="#f4f4f5" />
-              <span>Open in Browser</span>
-              <ExternalLink size={12} style={{ opacity: 0.7 }} />
+              <span className="nav-desktop-action-label">Open in Browser</span>
+              <ExternalLink size={12} className="nav-desktop-action-label" style={{ opacity: 0.7 }} />
             </a>
             <a
               href="https://github.com/bobjoerules/AMLL-TTML-TOOL"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary btn-sm nav-desktop-action"
+              title="GitHub Repository"
             >
               <GithubIcon size={16} />
-              <span>GitHub</span>
+              <span className="nav-desktop-action-label">GitHub</span>
             </a>
             <a
               href="https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary btn-sm nav-desktop-action"
+              title="Download Desktop App"
             >
               <Download size={16} />
-              <span>Download</span>
+              <span className="nav-desktop-action-label">Download</span>
             </a>
 
             {user ? (
