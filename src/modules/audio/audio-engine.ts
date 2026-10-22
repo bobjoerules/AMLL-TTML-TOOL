@@ -693,7 +693,11 @@ export class AudioEngine extends EventTarget {
 			if ((src as any).path) {
 				globalStore.set(loadedAudioPathAtom, (src as any).path);
 			}
-			void saveAudioToCache(src).catch(() => {});
+			void saveAudioToCache({
+				fileName: src.name,
+				path: (src as any).path || undefined,
+				blob: src,
+			}).catch(() => {});
 		}
 		const generation = this.loadGeneration;
 		const abort = new AbortController();

@@ -572,9 +572,20 @@ export const geniusHeaderDetectionDialogOpenAtom = atom(false);
 
 export const geniusHeaderRestorationTextAtom = atom<string | null>(null);
 
-export const DEFAULT_UI_SCALE = 85;
+export const DEFAULT_UI_SCALE = 90;
 export const MIN_UI_SCALE = 50;
 export const MAX_UI_SCALE = 200;
+
+// Automatically migrate users on the previous default (85%) to 90%
+if (typeof window !== "undefined") {
+	try {
+		const stored = localStorage.getItem("uiScale");
+		if (stored === "85") {
+			localStorage.setItem("uiScale", "90");
+		}
+	} catch {}
+}
+
 export const uiScaleAtom = atomWithStorage<number>("uiScale", DEFAULT_UI_SCALE);
 
 export const wrapLyricLinesAtom = atomWithStorage<boolean>(

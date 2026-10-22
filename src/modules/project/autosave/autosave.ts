@@ -311,24 +311,30 @@ export async function autoSaveProject(
  */
 export async function saveAudioToCache(entry: {
 	projectId?: string;
-	fileName: string;
+	fileName?: string;
+	name?: string;
 	path?: string | null;
-	blob: Blob;
+	blob?: Blob;
 	isAutoDownloaded?: boolean;
 }) {
 	try {
 		const db = await getDB();
-		const id = entry.projectId || entry.fileName;
+		const fileName = entry.fileName || (entry as any).name || "audio";
+		const id = entry.projectId || fileName;
+		if (!id) return;
+		const blob = entry.blob || (entry instanceof Blob ? entry : undefined);
+		if (!blob) return;
 		const isAuto =
 			entry.isAutoDownloaded ??
-			(entry.blob as any).isAutoDownloaded ??
+			(entry as any).isAutoDownloaded ??
+			(blob as any)?.isAutoDownloaded ??
 			false;
 		await db.put("audio_cache", {
 			id,
 			projectId: entry.projectId,
-			fileName: entry.fileName,
+			fileName,
 			path: entry.path || undefined,
-			blob: entry.blob,
+			blob,
 			timestamp: Date.now(),
 			isAutoDownloaded: isAuto,
 		});

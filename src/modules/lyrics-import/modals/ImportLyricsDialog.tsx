@@ -649,9 +649,10 @@ export const ImportLyricsDialog = ({
 								album: track.album,
 								cover: track.cover,
 								fetchLyrics: async () => {
-									if (track.id) {
+									const numericId = Number(track.id);
+									if (Number.isFinite(numericId) && numericId > 0) {
 										try {
-											const l = await GeniusApi.getLyrics(Number(track.id));
+											const l = await GeniusApi.getLyrics(numericId);
 											if (l) return l;
 										} catch (err) {
 											console.warn(

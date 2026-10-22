@@ -5,7 +5,7 @@ import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { DEFAULT_UI_SCALE, uiScaleAtom } from "$/modules/settings/states";
 
-const SCALE_PRESETS = [50, 65, 75, 85, 100, 115, 125, 150, 175, 200];
+const SCALE_PRESETS = [50, 65, 75, 85, 90, 100, 115, 125, 150, 175, 200];
 
 export const UIScaleSetting = memo(() => {
 	const [uiScale, setUiScale] = useAtom(uiScaleAtom);

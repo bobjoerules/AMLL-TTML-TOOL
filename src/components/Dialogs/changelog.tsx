@@ -23,7 +23,7 @@ export function ChangelogDialog() {
 
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-			<Dialog.Content style={{ maxWidth: 650, height: "70vh", maxHeight: 600 }}>
+			<Dialog.Content aria-describedby={undefined} style={{ maxWidth: 650, height: "70vh", maxHeight: 600 }}>
 				<Flex justify="between" align="center" mb="4">
 					<Flex align="center" gap="3">
 						<Dialog.Title mb="0">Changelog & Updates</Dialog.Title>
@@ -49,6 +49,38 @@ export function ChangelogDialog() {
 					style={{ height: "calc(100% - 60px)" }}
 				>
 					<Flex direction="column" gap="5" pr="4">
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
+								v4.1.3
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 22, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Default 90% Interface Scale:</b> Updated default application scale from 85% to 90% with seamless migration for existing installations, and added 90% to scale presets.
+								</Text>
+								<Text size="2">
+									• <b>SpotMatch Native Desktop Requests:</b> Fixed 401 unauthorized and 403 preflight proxy errors on Spotify Partner queries in desktop mode by routing authorization headers directly through Tauri&apos;s Rust network client.
+								</Text>
+								<Text size="2">
+									• <b>Radix Dialog Accessibility Improvements:</b> Resolved missing DialogTitle and aria-describedby console warnings by wrapping headers and descriptions in SpotMatch, Ruby Editor, Checklist, Metadata Editor, and dialog modals.
+								</Text>
+								<Text size="2">
+									• <b>IndexedDB Audio Cache Fix:</b> Fixed DataError when storing records in audio_cache by correctly wrapping loaded audio file metadata and safeguarding record key generation.
+								</Text>
+								<Text size="2">
+									• <b>Genius Lyric Importer Hardening:</b> Prevented non-numeric track IDs from querying invalid endpoints and added native desktop fetch fallbacks.
+								</Text>
+								<Text size="2">
+									• <b>WebGL Animated Background Texture Stability:</b> Implemented safe bitmap decoding for Kawarp animated background cover art, eliminating texImage2D bad image data errors on blob and data URLs in WebKit.
+								</Text>
+								<Text size="2">
+									• <b>WebKit Viewport Meta Cleanup:</b> Removed unrecognized interactive-widget parameter to eliminate console errors on WebKit and macOS.
+								</Text>
+							</Flex>
+						</Box>
+
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
 								v4.1.2

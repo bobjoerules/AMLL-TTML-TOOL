@@ -4,6 +4,7 @@ import type {
 	GeniusSongResponse,
 } from "../types";
 import {
+	checkIsTauri,
 	GeniusResolver,
 	isGeniusAlbumUrl,
 	isGeniusSongUrl,
@@ -224,10 +225,24 @@ export const GeniusApi = {
 	 * @returns Plain-text lyrics string
 	 */
 	async getLyrics(songId: number): Promise<string> {
+		if (!Number.isFinite(songId) || songId <= 0) {
+			throw new Error(`Invalid Genius song ID: ${songId}`);
+		}
+		const url = `https://genius.com/songs/${songId}/embed.js`;
 		try {
-			const response = await fetch(
-				`https://genius.com/songs/${songId}/embed.js`,
-			);
+			if (checkIsTauri()) {
+				try {
+					const { invoke } = await import("@tauri-apps/api/core");
+					const embedJs = await invoke<string>("fetch_url", { url });
+					if (embedJs) {
+						return extractLyricsFromEmbed(embedJs);
+					}
+				} catch {
+					// fallback to browser fetch
+				}
+			}
+
+			const response = await fetch(url);
 			if (!response.ok) {
 				throw new Error(
 					`Genius lyrics request failed: ${response.status} ${response.statusText}`,

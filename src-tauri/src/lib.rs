@@ -335,15 +335,24 @@ fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn fetch_url(url: String) -> Result<String, String> {
+async fn fetch_url(
+    url: String,
+    headers: Option<std::collections::HashMap<String, String>>,
+) -> Result<String, String> {
     let client = reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         .timeout(std::time::Duration::from_secs(20))
         .build()
         .map_err(|e| e.to_string())?;
 
-    let resp = client
-        .get(&url)
+    let mut req = client.get(&url);
+    if let Some(headers_map) = headers {
+        for (k, v) in headers_map {
+            req = req.header(k, v);
+        }
+    }
+
+    let resp = req
         .send()
         .await
         .map_err(|e| format!("Network request failed: {e}"))?;

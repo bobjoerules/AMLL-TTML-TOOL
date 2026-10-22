@@ -238,7 +238,7 @@ async function fetchSafeText(
 		try {
 			const { invoke } = await import("@tauri-apps/api/core");
 			try {
-				return await invoke<string>("fetch_url", { url });
+				return await invoke<string>("fetch_url", { url, headers });
 			} catch {
 				return await invoke<string>("fetch_apple_ttml", { url });
 			}
@@ -247,15 +247,22 @@ async function fetchSafeText(
 		}
 	}
 
-	// Browser / Web mode: route through proxy.bobjoerules.com to bypass CORS
-	try {
-		const proxyUrl = `${SPOTMATCH_WEB_PROXY}${encodeURIComponent(url)}`;
-		const res = await fetch(proxyUrl, { headers });
-		if (res.ok) {
-			return await res.text();
+	// Browser / Web mode: route through proxies to bypass CORS
+	const encoded = encodeURIComponent(url);
+	const proxies = [
+		`${SPOTMATCH_WEB_PROXY}${encoded}`,
+		`https://corsproxy.io/?url=${encoded}`,
+	];
+
+	for (const proxyUrl of proxies) {
+		try {
+			const res = await fetch(proxyUrl, { headers });
+			if (res.ok) {
+				return await res.text();
+			}
+		} catch (proxyErr) {
+			console.warn(`SpotMatch proxy fetch failed for ${proxyUrl}:`, proxyErr);
 		}
-	} catch (proxyErr) {
-		console.warn(`SpotMatch proxy fetch failed for ${url}:`, proxyErr);
 	}
 
 	// Direct fetch fallback

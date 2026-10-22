@@ -663,7 +663,7 @@ export const MetadataEditor = () => {
 			open={metadataEditorDialog}
 			onOpenChange={setMetadataEditorDialog}
 		>
-			<Dialog.Content className={styles.dialogContent}>
+			<Dialog.Content aria-describedby={undefined} className={styles.dialogContent}>
 				<div className={styles.dialogHeader}>
 					<Flex align="center" gap="2" justify="between">
 						<Dialog.Title style={{ margin: 0 }}>

@@ -2013,6 +2013,7 @@ export const TTMLChecklistDialog = () => {
 	return (
 		<Dialog.Root open={open} onOpenChange={setOpen}>
 			<Dialog.Content
+				aria-describedby={undefined}
 				onOpenAutoFocus={(e) => e.preventDefault()}
 				style={{
 					maxWidth: 1000,

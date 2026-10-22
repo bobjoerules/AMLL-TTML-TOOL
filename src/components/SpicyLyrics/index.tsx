@@ -55,6 +55,7 @@ import {
 type KawarpInstance = {
 	dispose(): void;
 	loadImage(url: string): Promise<void>;
+	loadImageElement(source: TexImageSource): void;
 	start(): void;
 	setOptions(options: {
 		animationSpeed?: number;
@@ -216,6 +217,50 @@ function useCoverPalette(imageSource: string | null) {
 	return palette;
 }
 
+async function loadKawarpSafeImage(
+	instance: KawarpInstance,
+	src: string,
+): Promise<void> {
+	if (src.startsWith("blob:") || src.startsWith("data:")) {
+		try {
+			const res = await fetch(src);
+			const blob = await res.blob();
+			if (typeof createImageBitmap === "function") {
+				const bitmap = await createImageBitmap(blob);
+				if (bitmap.width > 0 && bitmap.height > 0) {
+					instance.loadImageElement(bitmap);
+					bitmap.close();
+					return;
+				}
+			}
+		} catch {
+			// Fallback to Image element
+		}
+	}
+
+	await new Promise<void>((resolve, reject) => {
+		const img = new Image();
+		if (!src.startsWith("blob:") && !src.startsWith("data:")) {
+			img.crossOrigin = "anonymous";
+		}
+		img.onload = async () => {
+			try {
+				if ("decode" in img) {
+					await img.decode();
+				}
+				if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+					instance.loadImageElement(img);
+				}
+				resolve();
+			} catch (err) {
+				reject(err);
+			}
+		};
+		img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+		img.src = src;
+	});
+}
+
 function useKawarpBackground(
 	container: RefObject<HTMLDivElement | null>,
 	image: string | null,
@@ -242,7 +287,11 @@ function useKawarpBackground(
 					scale: 1,
 					transitionDuration: 500,
 				}) as KawarpInstance;
-				await instance.loadImage(image);
+				try {
+					await loadKawarpSafeImage(instance, image);
+				} catch {
+					await instance.loadImage(image).catch(() => {});
+				}
 				if (disposed) return;
 				instance.start();
 				const bins = new Uint8Array(audioEngine.analyserNode.frequencyBinCount);

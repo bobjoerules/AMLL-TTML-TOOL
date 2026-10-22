@@ -156,11 +156,10 @@ export async function saveChecklistToCloud(
 			const publicEntries = (cleanData.entries as TTMLChecklistEntry[]).filter(
 				(e) => Boolean(e.sharePublicly),
 			);
+			const authUser = getFirebaseAuth()?.currentUser;
 			const publicDocRef = doc(db, "public_checklists", targetUid);
 			if (publicEntries.length > 0) {
-				const user =
-					globalStore.get(currentUserAtom) ||
-					getFirebaseAuth()?.currentUser;
+				const user = globalStore.get(currentUserAtom) || authUser;
 				await setDoc(
 					publicDocRef,
 					{
@@ -172,7 +171,7 @@ export async function saveChecklistToCloud(
 					},
 					{ merge: true },
 				);
-			} else {
+			} else if (authUser?.uid === targetUid) {
 				await deleteDoc(publicDocRef).catch(() => {});
 			}
 		} catch (pubErr) {

@@ -389,7 +389,7 @@ export const GeniusSearchDialog = () => {
 	if (!geniusApiKey) {
 		return (
 			<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-				<Dialog.Content style={{ maxWidth: 480 }}>
+				<Dialog.Content aria-describedby={undefined} style={{ maxWidth: 480 }}>
 					<Dialog.Title>
 						{t(
 							"metadataDialog.fetchSongwriters.setupTitle",
@@ -469,7 +469,7 @@ export const GeniusSearchDialog = () => {
 
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-			<Dialog.Content className={styles.dialogContent}>
+			<Dialog.Content aria-describedby={undefined} className={styles.dialogContent}>
 				<Dialog.Title>
 					{t(
 						"metadataDialog.fetchSongwriters.button",

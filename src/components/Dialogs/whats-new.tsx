@@ -1,32 +1,37 @@
 import {
-	DismissRegular,
-	StarRegular,
-	FlashRegular,
-	Sparkle24Regular,
-	MusicNote1Regular,
-	SettingsRegular,
 	BoxRegular,
-	TranslateRegular,
-	RecordRegular,
-	InfoRegular,
-	TimerRegular,
 	CheckmarkCircleRegular,
-	ShieldCheckmarkRegular,
+	ClockRegular,
+	CodeTextRegular,
+	DesktopPulseRegular,
+	DismissRegular,
+	FlashRegular,
+	InfoRegular,
+	LayerRegular,
 	LocalLanguageRegular,
+	MusicNote1Regular,
+	RecordRegular,
+	SettingsRegular,
+	ShieldCheckmarkRegular,
+	Sparkle24Regular,
+	StarRegular,
 	TaskListLtrRegular,
+	TimerRegular,
+	TranslateRegular,
+	WindowRegular,
 } from "@fluentui/react-icons";
 import {
 	Box,
 	Button,
+	Card,
 	Dialog,
 	Flex,
+	Grid,
 	Heading,
+	IconButton,
+	Popover,
 	ScrollArea,
 	Text,
-	Card,
-	Grid,
-	Popover,
-	IconButton,
 } from "@radix-ui/themes";
 import { useAtom } from "jotai";
 import { whatsNewDialogAtom } from "$/states/dialogs.ts";
@@ -282,6 +287,41 @@ export function WhatsNewDialog() {
 			color: "gold",
 			info: "Open via the 'Plugins' tab in the Ribbon Bar to expand the tool's import/export capabilities.",
 		},
+		{
+			title: "V-Sync & FPS Tools",
+			description: "Real-time performance monitoring.",
+			icon: <DesktopPulseRegular />,
+			color: "cyan",
+			info: "Real-time performance monitoring with live frame rate tracking and display refresh rate diagnostics.",
+		},
+		{
+			title: "Smart BG Vocal Grouping",
+			description: "Unified scaling for main and background lines.",
+			icon: <LayerRegular />,
+			color: "purple",
+			info: "Harmonious proportional typography and unified scaling for simultaneous main and background vocal lines.",
+		},
+		{
+			title: "Refined .ttml Writer",
+			description: "Optimized metadata handling and cleaner XML output.",
+			icon: <CodeTextRegular />,
+			color: "teal",
+			info: "Generates clean, compliant TTML XML files with optimized metadata handling and streamlined element structure.",
+		},
+		{
+			title: "Modernized UI",
+			description: "Unified glassmorphism and improved layout stability.",
+			icon: <WindowRegular />,
+			color: "pink",
+			info: "Cohesive frosted glass aesthetic, elegant acrylic surfaces, and improved layout stability across all views.",
+		},
+		{
+			title: "Millisecond Timestamps",
+			description: "Support for high-precision 3-digit millisecond output.",
+			icon: <ClockRegular />,
+			color: "orange",
+			info: "Exports high-precision 3-digit millisecond timestamps (00:00.000) for exact sync accuracy across all lyric players.",
+		},
 	] as const;
 
 	return (
@@ -290,9 +330,11 @@ export function WhatsNewDialog() {
 				<Flex justify="between" align="center" mb="4">
 					<Flex direction="column">
 						<Dialog.Title mb="1">What's New in NaeNae's Fork</Dialog.Title>
-						<Text size="2" color="gray">
-							Key improvements over the base AMLL TTML TOOL by stevexmh
-						</Text>
+						<Dialog.Description asChild>
+							<Text size="2" color="gray">
+								Key improvements over the base AMLL TTML TOOL by stevexmh
+							</Text>
+						</Dialog.Description>
 					</Flex>
 					<Dialog.Close>
 						<Button variant="ghost" color="gray">
@@ -363,34 +405,6 @@ export function WhatsNewDialog() {
 								</Card>
 							))}
 						</Grid>
-
-						<Box mt="2" mb="4">
-							<Heading size="3" mb="2">
-								Other Enhancements
-							</Heading>
-							<Flex direction="column" gap="2">
-								<Text size="2">
-									• <strong>V-Sync & FPS Tools</strong>: Real-time performance
-									monitoring.
-								</Text>
-								<Text size="2">
-									• <strong>Smart BG Vocal Grouping</strong>: Unified scaling
-									for main and background lines.
-								</Text>
-								<Text size="2">
-									• <strong>Refined .ttml Writer</strong>: Optimized metadata
-									handling and cleaner XML output.
-								</Text>
-								<Text size="2">
-									• <strong>Modernized UI</strong>: Unified glassmorphism and
-									improved layout stability.
-								</Text>
-								<Text size="2">
-									• <strong>Millisecond Timestamps</strong>: Support for
-									high-precision 3-digit millisecond output.
-								</Text>
-							</Flex>
-						</Box>
 					</Flex>
 				</ScrollArea>
 			</Dialog.Content>

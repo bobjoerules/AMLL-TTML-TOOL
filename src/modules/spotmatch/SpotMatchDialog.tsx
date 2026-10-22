@@ -310,7 +310,9 @@ export function SpotMatchDialog() {
 				<Flex justify="between" align="start" mb="3">
 					<Box>
 						<Flex align="center" gap="2">
-							<Heading size="5">SpotMatch</Heading>
+							<Dialog.Title asChild>
+								<Heading size="5">SpotMatch</Heading>
+							</Dialog.Title>
 							<Badge
 								size="1"
 								color="indigo"
@@ -322,12 +324,14 @@ export function SpotMatchDialog() {
 								by tx24
 							</Badge>
 						</Flex>
-						<Text size="2" color="gray">
-							{t(
-								"spotmatch.subtitle",
-								"Find alternate Spotify IDs for the same recording without an API key. Original tool & algorithm credit to tx24.",
-							)}
-						</Text>
+						<Dialog.Description asChild>
+							<Text size="2" color="gray">
+								{t(
+									"spotmatch.subtitle",
+									"Find alternate Spotify IDs for the same recording without an API key. Original tool & algorithm credit to tx24.",
+								)}
+							</Text>
+						</Dialog.Description>
 					</Box>
 					<Dialog.Close>
 						<IconButton variant="ghost" color="gray">

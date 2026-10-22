@@ -260,18 +260,22 @@ export const RubyEditor = ({
 							}}
 						>
 							<Warning48Color />
-							<Text size="5">
-								{t(
-									"rubyEditor.warning.title",
-									"You are using the experimental Ruby annotation feature",
-								)}
-							</Text>
-							<Text size="4" align="center">
-								{t(
-									"rubyEditor.warning.desc1",
-									"Once you add ruby content, saved files cannot be used by parsers that do not support this structure.",
-								)}
-							</Text>
+							<Dialog.Title asChild>
+								<Text size="5">
+									{t(
+										"rubyEditor.warning.title",
+										"You are using the experimental Ruby annotation feature",
+									)}
+								</Text>
+							</Dialog.Title>
+							<Dialog.Description asChild>
+								<Text size="4" align="center">
+									{t(
+										"rubyEditor.warning.desc1",
+										"Once you add ruby content, saved files cannot be used by parsers that do not support this structure.",
+									)}
+								</Text>
+							</Dialog.Description>
 							<Text size="4" align="center">
 								{t(
 									"rubyEditor.warning.desc2",
