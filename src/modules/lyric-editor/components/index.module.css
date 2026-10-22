@@ -665,14 +665,14 @@
 	}
 }
 
-.lyricWord.unsynced:not(.selected) .wordMainText,
-.lyricWord.unsynced:not(.selected) .displayWord {
+.lyricWord.unsynced:not(.selected):not(.active) .wordMainText,
+.lyricWord.unsynced:not(.selected):not(.active) .displayWord {
 	color: rgba(255, 110, 110, 0.78) !important;
 	text-shadow: 0 0 10px rgba(255, 60, 60, 0.25);
 }
 
-.lyricWord.unsynced:not(.selected):hover .wordMainText,
-.lyricWord.unsynced:not(.selected):hover .displayWord {
+.lyricWord.unsynced:not(.selected):not(.active):hover .wordMainText,
+.lyricWord.unsynced:not(.selected):not(.active):hover .displayWord {
 	color: rgba(255, 140, 140, 0.95) !important;
 	text-shadow: 0 0 14px rgba(255, 70, 70, 0.45);
 }

@@ -24,7 +24,7 @@ import { log, error as logError } from "$/utils/logging.ts";
 import "@radix-ui/themes/styles.css";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, type PhysicalSize } from "@tauri-apps/api/window";
 import { platform, version } from "@tauri-apps/plugin-os";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAtom, useAtomValue, useSetAtom, useStore } from "jotai";
@@ -359,6 +359,8 @@ function App() {
 	);
 	const isPreviewFullscreen =
 		previewFullscreen && toolMode === ToolMode.Preview;
+	const savedPreFullscreenSize = useRef<PhysicalSize | null>(null);
+	const wasMaximizedBeforeFullscreen = useRef<boolean>(false);
 	const showTouchSyncPanel = useAtomValue(showTouchSyncPanelAtom);
 	const showPreviewPanel = useAtomValue(showPreviewPanelAtom);
 	// Preview mode already owns the entire editor area. Keep the sync preview
@@ -1118,6 +1120,31 @@ function App() {
 	}, [toolMode, previewFullscreen, setPreviewFullscreen]);
 
 	useEffect(() => {
+		const isTauri =
+			typeof window !== "undefined" &&
+			(!!(window as any).__TAURI__ || !!import.meta.env.TAURI_ENV_PLATFORM);
+
+		if (isTauri) {
+			let unlisten: (() => void) | undefined;
+			try {
+				getCurrentWindow()
+					.onResized(async () => {
+						try {
+							const fs = await getCurrentWindow().isFullscreen();
+							if (!fs && previewFullscreen) {
+								setPreviewFullscreen(false);
+							}
+						} catch {}
+					})
+					.then((fn) => {
+						unlisten = fn;
+					});
+			} catch {}
+			return () => {
+				unlisten?.();
+			};
+		}
+
 		const handleFullscreenChange = () => {
 			if (!document.fullscreenElement && previewFullscreen) {
 				setPreviewFullscreen(false);
@@ -1130,28 +1157,58 @@ function App() {
 	}, [previewFullscreen, setPreviewFullscreen]);
 
 	useEffect(() => {
+		const isTauri =
+			typeof window !== "undefined" &&
+			(!!(window as any).__TAURI__ || !!import.meta.env.TAURI_ENV_PLATFORM);
+
 		if (isPreviewFullscreen) {
-			if (
-				!document.fullscreenElement &&
-				document.documentElement.requestFullscreen
-			) {
-				document.documentElement.requestFullscreen().catch(() => {});
-			}
-			if (import.meta.env.TAURI_ENV_PLATFORM) {
+			if (isTauri) {
 				try {
 					const win = getCurrentWindow();
-					win.setFullscreen(true).catch(() => {});
+					Promise.all([
+						win.isMaximized().catch(() => false),
+						win.isFullscreen().catch(() => false),
+						win.innerSize().catch(() => null),
+					]).then(([isMax, isFs, size]) => {
+						if (!isFs) {
+							wasMaximizedBeforeFullscreen.current = isMax;
+							if (!isMax && size) {
+								savedPreFullscreenSize.current = size;
+							}
+						}
+						win.setFullscreen(true).catch(() => {});
+					});
 				} catch {}
+			} else {
+				if (
+					!document.fullscreenElement &&
+					document.documentElement.requestFullscreen
+				) {
+					document.documentElement.requestFullscreen().catch(() => {});
+				}
 			}
 		} else {
-			if (document.fullscreenElement && document.exitFullscreen) {
-				document.exitFullscreen().catch(() => {});
-			}
-			if (import.meta.env.TAURI_ENV_PLATFORM) {
+			if (isTauri) {
 				try {
 					const win = getCurrentWindow();
 					win.setFullscreen(false).catch(() => {});
+					const savedSize = savedPreFullscreenSize.current;
+					const wasMax = wasMaximizedBeforeFullscreen.current;
+					if (savedSize && !wasMax) {
+						setTimeout(async () => {
+							try {
+								const currentFs = await win.isFullscreen().catch(() => false);
+								if (!currentFs && savedSize) {
+									await win.setSize(savedSize);
+								}
+							} catch {}
+						}, 350);
+					}
 				} catch {}
+			} else {
+				if (document.fullscreenElement && document.exitFullscreen) {
+					document.exitFullscreen().catch(() => {});
+				}
 			}
 		}
 	}, [isPreviewFullscreen]);

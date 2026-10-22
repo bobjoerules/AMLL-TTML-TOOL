@@ -572,7 +572,7 @@ export const geniusHeaderDetectionDialogOpenAtom = atom(false);
 
 export const geniusHeaderRestorationTextAtom = atom<string | null>(null);
 
-export const DEFAULT_UI_SCALE = 100;
+export const DEFAULT_UI_SCALE = 85;
 export const MIN_UI_SCALE = 50;
 export const MAX_UI_SCALE = 200;
 export const uiScaleAtom = atomWithStorage<number>("uiScale", DEFAULT_UI_SCALE);

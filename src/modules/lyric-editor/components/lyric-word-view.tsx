@@ -1123,6 +1123,18 @@ const LyricSyncWordView: FC<{
 	const setOpenSplitWordDialog = useSetAtom(splitWordDialogAtom);
 	const setEditingWordState = useSetAtom(editingWordStateAtom);
 
+	const highlightUnsyncedWords = useAtomValue(
+		highlightUnsyncedWordsInEditorAtom,
+	);
+	const isUnsynced = useMemo(() => {
+		if (!highlightUnsyncedWords || isWordBlank) return false;
+		const isSynced =
+			rubyIndex >= 0
+				? endTime > 0 && (startTime === 0 || endTime >= startTime)
+				: isWordSynced(word);
+		return !isSynced;
+	}, [highlightUnsyncedWords, isWordBlank, rubyIndex, endTime, startTime, word]);
+
 	// active/animated classes are applied imperatively by the store.sub effect above
 	const className = useMemo(
 		() =>
@@ -1132,6 +1144,7 @@ const LyricSyncWordView: FC<{
 				instantFade && styles.hasInstantFade,
 				isWordSelected && styles.selected,
 				isWordBlank && styles.blank,
+				isUnsynced && styles.unsynced,
 				hasError &&
 					(toolMode === ToolMode.Edit ||
 						(toolMode === ToolMode.Sync &&
@@ -1144,6 +1157,7 @@ const LyricSyncWordView: FC<{
 			instantFade,
 			isWordBlank,
 			isWordSelected,
+			isUnsynced,
 			hasError,
 			toolMode,
 			showTimestamps,

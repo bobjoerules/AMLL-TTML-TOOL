@@ -16,6 +16,7 @@ import {
 	Dialog,
 	DropdownMenu,
 	Flex,
+	HoverCard,
 	IconButton,
 	Text,
 	TextField,
@@ -296,26 +297,54 @@ const MetadataEntry = memo(
 										}
 									/>
 									{entry.key === "cover_art" && vv && (
-										<Box
-											style={{
-												width: "32px",
-												height: "32px",
-												borderRadius: "4px",
-												overflow: "hidden",
-												flexShrink: 0,
-											}}
-										>
-											<img
-												src={getBetterGeniusCoverArt(vv, 100)}
-												alt="Cover"
-												style={{
-													width: "100%",
-													height: "100%",
-													objectFit: "cover",
-												}}
-												referrerPolicy="no-referrer"
-											/>
-										</Box>
+										<HoverCard.Root>
+											<HoverCard.Trigger>
+												<Box
+													style={{
+														width: "48px",
+														height: "48px",
+														borderRadius: "6px",
+														overflow: "hidden",
+														flexShrink: 0,
+														cursor: "pointer",
+														boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+														border: "1px solid var(--gray-a6)",
+													}}
+												>
+													<img
+														src={getBetterGeniusCoverArt(vv, 160)}
+														alt="Cover"
+														style={{
+															width: "100%",
+															height: "100%",
+															objectFit: "cover",
+														}}
+														referrerPolicy="no-referrer"
+													/>
+												</Box>
+											</HoverCard.Trigger>
+											<HoverCard.Content size="1" style={{ maxWidth: 260, padding: 8 }}>
+												<Box
+													style={{
+														width: "240px",
+														height: "240px",
+														borderRadius: "8px",
+														overflow: "hidden",
+													}}
+												>
+													<img
+														src={getBetterGeniusCoverArt(vv, 480)}
+														alt="Cover Preview"
+														style={{
+															width: "100%",
+															height: "100%",
+															objectFit: "cover",
+														}}
+														referrerPolicy="no-referrer"
+													/>
+												</Box>
+											</HoverCard.Content>
+										</HoverCard.Root>
 									)}
 									{isLinkable && (
 										<IconButton

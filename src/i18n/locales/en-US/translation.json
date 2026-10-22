@@ -366,7 +366,7 @@
 			"theme": "Theme",
 			"uiScale": "Interface Scale",
 			"uiScaleDesc": "Adjust the size of text, icons, and elements across the entire app. Use Cmd/Ctrl +/- to zoom anytime.",
-			"resetScale": "Reset (100%)",
+			"resetScale": "Reset ({scale}%)",
 			"useCustomAccent": "Custom Accent Color",
 			"useCustomAccentDesc": "Set Accent color",
 			"glass": "Glassmorphism",

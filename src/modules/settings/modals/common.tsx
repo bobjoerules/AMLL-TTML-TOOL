@@ -906,7 +906,7 @@ export const SettingsCommonTab = ({
 													<Text size="1" color="gray">
 														{t(
 															"settings.common.highlightUnsyncedWordsInEditorDesc",
-															"Displays non-synced words with a red tint in the lyric editor tab, matching the preview display.",
+															"Displays non-synced words with a red tint in the editor and time tabs, matching the preview display.",
 														)}
 													</Text>
 												</Flex>

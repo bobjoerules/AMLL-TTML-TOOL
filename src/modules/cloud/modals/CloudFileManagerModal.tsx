@@ -193,9 +193,9 @@ const SongGroupItem: FC<{
 					{/* Cover Art / Icon */}
 					<Box
 						style={{
-							width: "48px",
-							height: "48px",
-							minWidth: "48px",
+							width: "56px",
+							height: "56px",
+							minWidth: "56px",
 							borderRadius: "10px",
 							overflow: "hidden",
 							backgroundColor: "var(--gray-a4)",

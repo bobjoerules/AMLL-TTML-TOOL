@@ -49,7 +49,11 @@ export const UIScaleSetting = memo(() => {
 								}}
 							>
 								<ArrowReset24Regular style={{ width: 14, height: 14 }} />
-								{t("settings.appearance.resetScale", "Reset (100%)")}
+								{t(
+									"settings.appearance.resetScale",
+									"Reset ({scale}%)",
+									{ scale: DEFAULT_UI_SCALE },
+								)}
 							</Button>
 						</Flex>
 
