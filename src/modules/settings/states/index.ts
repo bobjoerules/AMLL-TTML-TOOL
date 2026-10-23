@@ -219,7 +219,7 @@ export const smartWordAnywhereAtom = atomWithStorage(
 export const smartLastWordAtom = atomWithStorage("smartLastWord", false);
 export const splitOccupiedWordAtPlayheadAtom = atomWithStorage(
 	"splitOccupiedWordAtPlayhead",
-	true,
+	false,
 );
 export const compactBGInSyncAtom = atomWithStorage("compactBGInSync", true);
 

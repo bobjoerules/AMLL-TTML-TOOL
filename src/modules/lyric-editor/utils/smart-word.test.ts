@@ -1,6 +1,9 @@
 import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
-import { smartWordAnywhereAtom } from "$/modules/settings/states";
+import {
+	smartWordAnywhereAtom,
+	splitOccupiedWordAtPlayheadAtom,
+} from "$/modules/settings/states";
 import { smartWordActiveIdAtom } from "$/modules/settings/states/sync";
 import {
 	lyricLinesAtom,
@@ -50,6 +53,7 @@ describe("smartWordAnywhere logic", () => {
 	it("defaults to false", () => {
 		const store = createStore();
 		expect(store.get(smartWordAnywhereAtom)).toBe(false);
+		expect(store.get(splitOccupiedWordAtPlayheadAtom)).toBe(false);
 	});
 
 	it("detects no start time on untimed words in any position", () => {

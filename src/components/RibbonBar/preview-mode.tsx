@@ -16,7 +16,6 @@ import { useTranslation } from "react-i18next";
 import {
 	Eye24Regular,
 	TextT24Regular,
-	FastForward24Regular,
 	Sparkle16Regular,
 	Image16Regular,
 	People16Regular,
@@ -240,38 +239,26 @@ export const PreviewModeRibbonBar: FC<{ isSidebar?: boolean }> = forwardRef<
 						<Warning16Regular />
 						<span>{t("ribbonBar.previewMode.maskObsceneWords", "Mask Obscene")}</span>
 					</Button>
+					<Button
+						size="1"
+						variant={showFps ? "solid" : "surface"}
+						color={showFps ? undefined : "gray"}
+						onClick={() => setShowFps((v) => !v)}
+						style={{
+							cursor: "pointer",
+							justifyContent: "flex-start",
+							gap: "6px",
+							paddingLeft: "8px",
+							paddingRight: "10px",
+							height: "26px",
+							fontSize: "12px",
+							fontWeight: showFps ? 600 : 500,
+						}}
+					>
+						<TopSpeed16Regular />
+						<span>{t("ribbonBar.previewMode.showFps", "Show FPS")}</span>
+					</Button>
 				</Grid>
-			</RibbonSection>
-
-			{/* Render Section */}
-			<RibbonSection
-				isSidebar={isSidebar}
-				label={
-					<Flex gap="1" align="center">
-						<FastForward24Regular />
-						{t("ribbonBar.previewMode.render", "Render")}
-					</Flex>
-				}
-			>
-				<Button
-					size="1"
-					variant={showFps ? "solid" : "surface"}
-					color={showFps ? undefined : "gray"}
-					onClick={() => setShowFps((v) => !v)}
-					style={{
-						cursor: "pointer",
-						justifyContent: "flex-start",
-						gap: "6px",
-						paddingLeft: "8px",
-						paddingRight: "10px",
-						height: "26px",
-						fontSize: "12px",
-						fontWeight: showFps ? 600 : 500,
-					}}
-				>
-					<TopSpeed16Regular />
-					<span>{t("ribbonBar.previewMode.showFps", "Show FPS")}</span>
-				</Button>
 			</RibbonSection>
 		</RibbonFrame>
 	);
