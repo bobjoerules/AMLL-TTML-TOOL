@@ -17,6 +17,13 @@ type HelpMenuProps = {
 	buttonStyle?: CSSProperties;
 };
 
+const isWebsite =
+	!import.meta.env.TAURI_ENV_PLATFORM &&
+	!(
+		typeof window !== "undefined" &&
+		(window as unknown as { __TAURI__?: unknown }).__TAURI__
+	);
+
 const HelpMenuItems = () => {
 	const { t } = useTranslation();
 	const menu = useTopMenuActions();
@@ -43,6 +50,19 @@ const HelpMenuItems = () => {
 			<DropdownMenu.Item onSelect={menu.onOpenWiki}>
 				{t("topBar.menu.helpDoc", "SpicyLyrics Guides")}
 			</DropdownMenu.Item>
+			{isWebsite && (
+				<DropdownMenu.Item
+					onSelect={() =>
+						window.open(
+							"https://github.com/bobjoerules/AMLL-TTML-TOOL/releases/latest",
+							"_blank",
+							"noopener,noreferrer",
+						)
+					}
+				>
+					{t("topBar.menu.downloadApp", "Download Desktop App")}
+				</DropdownMenu.Item>
+			)}
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => setWhatsNewOpen(true)}>
 				What's New

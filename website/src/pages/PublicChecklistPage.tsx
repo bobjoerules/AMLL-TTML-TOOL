@@ -564,7 +564,7 @@ export const PublicChecklistPage: React.FC<PublicChecklistPageProps> = ({ onNavi
         <div style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-secondary)' }}>
           <strong style={{ color: 'var(--text-primary)' }}>Want your planned songs listed here?</strong>
           <br />
-          Open the <strong style={{ color: 'var(--accent-pink)' }}>TTML Checklist</strong> in the AMLL TTML Tool editor (Tools &rarr; TTML Checklist), and click the <strong style={{ color: '#818cf8' }}>🌐 Public</strong> button on any track to share your progress with the community!
+          Open the <strong style={{ color: 'var(--accent-pink)' }}>TTML Checklist</strong> in the TTML Editor (Tools &rarr; TTML Checklist), and click the <strong style={{ color: '#818cf8' }}>🌐 Public</strong> button on any track to share your progress with the community!
         </div>
       </div>
     </div>

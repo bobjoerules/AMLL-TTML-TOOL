@@ -54,6 +54,51 @@ export function ChangelogDialog() {
 					<Flex direction="column" gap="5" pr="4">
 						<Box>
 							<Heading size="4" mb="2" color="indigo">
+								v4.3.0
+							</Heading>
+							<Text as="p" size="2" color="gray" mb="2">
+								October 23, 2026
+							</Text>
+							<Flex direction="column" gap="2">
+								<Text size="2">
+									• <b>Brand Renaming:</b> Renamed user-facing product branding
+									from AMLL TTML Tool to TTML Editor.
+								</Text>
+								<Text size="2">
+									• <b>Line Deletion Exception Fix:</b> Resolved a TypeError
+									accessing unassigned section boundaries when deleting lines
+									from the drop-down menu and ensured section integrity is
+									repaired on line removal.
+								</Text>
+								<Text size="2">
+									• <b>SpotMatch Badge Alignment:</b> Re-aligned the &quot;by
+									tx24&quot; creator badge with the SpotMatch dialog title.
+								</Text>
+								<Text size="2">
+									• <b>Unified Modal Dimensions:</b> Standardized dialog
+									dimensions across Metadata Editor, SpotMatch, Cloud Storage,
+									TTML Checklist, and Settings to use the checklist dimensions.
+								</Text>
+								<Text size="2">
+									• <b>macOS Fullscreen Restoration:</b> Fixed an issue where
+									exiting fullscreen on macOS via the green traffic light button
+									left the window excessively wide by recovering normal window
+									geometry.
+								</Text>
+								<Text size="2">
+									• <b>Desktop App Download Link:</b> Added a direct download link
+									to the desktop app in the Help menu exclusively for the web
+									edition.
+								</Text>
+								<Text size="2">
+									• <b>Profile Sync Badge Cleanup:</b> Removed the Word Sync / Line
+									Sync badge overlay from songs listed on creator profiles.
+								</Text>
+							</Flex>
+						</Box>
+
+						<Box>
+							<Heading size="4" mb="2" color="indigo">
 								v4.2.2
 							</Heading>
 							<Text as="p" size="2" color="gray" mb="2">

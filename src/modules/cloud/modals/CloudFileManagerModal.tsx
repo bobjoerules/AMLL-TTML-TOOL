@@ -1700,8 +1700,8 @@ export const CloudFileManagerModal: FC = () => {
 				aria-describedby={undefined}
 				onOpenAutoFocus={(e) => e.preventDefault()}
 				style={{
-					maxWidth: 960,
-					width: "min(960px, 96vw)",
+					maxWidth: 1000,
+					width: "min(1000px, 96vw)",
 					height: "640px",
 					maxHeight: "88vh",
 					borderRadius: "16px",

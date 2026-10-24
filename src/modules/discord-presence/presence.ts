@@ -241,7 +241,7 @@ export const getTabImageUrl = (mode: ToolMode): string => {
 };
 
 export const getTabImageText = (mode: ToolMode): string => {
-	return modeLabels[mode] || "AMLL TTML Tool";
+	return modeLabels[mode] || "TTML Editor";
 };
 
 const truncateDiscordText = (value: string) =>
@@ -418,7 +418,7 @@ export function createDiscordTemplateContext({
 		projectElapsed: hasFile
 			? formatElapsed(snapshot.projectElapsedSeconds ?? 0)
 			: "",
-		appName: "AMLL TTML Tool",
+		appName: "TTML Editor",
 		username: snapshot.userDisplayName || "AMLL User",
 		checklistCompleted: (snapshot.checklistCompleted ?? 0).toString(),
 		checklistTotal: (snapshot.checklistTotal ?? 0).toString(),
@@ -458,9 +458,9 @@ export function formatNativeDiscordActivity(
 		const getIdleImageText = (
 			mode: "icon" | "profile" | "tab" | "none",
 		): string | undefined => {
-			if (mode === "icon") return "AMLL TTML Tool";
+			if (mode === "icon") return "TTML Editor";
 			if (mode === "profile")
-				return snapshot.userDisplayName || "AMLL TTML Tool";
+				return snapshot.userDisplayName || "TTML Editor";
 			if (mode === "tab") return getTabImageText(snapshot.mode);
 			return undefined;
 		};
@@ -487,7 +487,7 @@ export function formatNativeDiscordActivity(
 		const smallImageText = getIdleImageText(idleSmallMode);
 
 		const payload: DiscordActivityPayload = {
-			details: "AMLL TTML Tool",
+			details: "TTML Editor",
 			state: "No file open",
 			playing: false,
 			...(options.activityType ? { activityType: options.activityType } : {}),
@@ -523,7 +523,7 @@ export function formatNativeDiscordActivity(
 			renderDiscordTemplate(options.stateTemplate, context),
 		);
 	} else if (options.privacyPreset === "minimal") {
-		details = "AMLL TTML Tool";
+		details = "TTML Editor";
 		state = options.generalActivityText || "Working on lyrics";
 		showRepositoryButton = false;
 	} else if (options.privacyPreset === "none") {
@@ -549,11 +549,11 @@ export function formatNativeDiscordActivity(
 	const getImageText = (
 		mode: "icon" | "artwork" | "state" | "tab" | "profile" | "none",
 	): string | undefined => {
-		if (mode === "icon") return "AMLL TTML Tool";
+		if (mode === "icon") return "TTML Editor";
 		if (mode === "artwork")
 			return snapshot.title
 				? `${snapshot.title} - ${snapshot.artist}`
-				: "AMLL TTML Tool";
+				: "TTML Editor";
 		if (mode === "state") return snapshot.playing ? "Playing" : "Paused";
 		if (mode === "tab") return getTabImageText(snapshot.mode);
 		if (mode === "profile") return snapshot.userDisplayName || "Profile";
@@ -640,8 +640,8 @@ export function createInactiveDiscordActivity(
 	const getIdleImageText = (
 		mode: "icon" | "profile" | "tab" | "none",
 	): string | undefined => {
-		if (mode === "icon") return "AMLL TTML Tool";
-		if (mode === "profile") return options?.userDisplayName || "AMLL TTML Tool";
+		if (mode === "icon") return "TTML Editor";
+		if (mode === "profile") return options?.userDisplayName || "TTML Editor";
 		if (mode === "tab") return getTabImageText(options?.mode || ToolMode.Edit);
 		return undefined;
 	};
@@ -656,7 +656,7 @@ export function createInactiveDiscordActivity(
 		: undefined;
 
 	return {
-		details: "AMLL TTML Tool",
+		details: "TTML Editor",
 		state: generalActivityText,
 		playing: false,
 		...(activityType ? { activityType } : {}),
@@ -672,7 +672,7 @@ export function formatDiscordActivity(
 ): DiscordActivityPayload {
 	if (snapshot.hasFile === false) {
 		return {
-			details: "AMLL TTML Tool",
+			details: "TTML Editor",
 			state: "No file open",
 			playing: false,
 			showRepositoryButton: true,

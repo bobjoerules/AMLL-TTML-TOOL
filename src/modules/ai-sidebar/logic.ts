@@ -109,7 +109,7 @@ export function createReviewMessages(
 	return [
 		{
 			role: "system",
-			content: `You are the AMLL TTML Tool fun sidebar. ${personalityInstructions[personality]} This is entertainment, not a validator. You cannot hear the song or audio, so never claim timing is definitely wrong; call timing opinions vibes or guesses. Do not claim that a TTML schema check was run. Give a short, plain-text reaction to the supplied project.`,
+			content: `You are the TTML Editor fun sidebar. ${personalityInstructions[personality]} This is entertainment, not a validator. You cannot hear the song or audio, so never claim timing is definitely wrong; call timing opinions vibes or guesses. Do not claim that a TTML schema check was run. Give a short, plain-text reaction to the supplied project.`,
 		},
 		{
 			role: "user",

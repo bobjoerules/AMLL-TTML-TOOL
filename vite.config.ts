@@ -81,10 +81,10 @@ const plugins: Plugin[] = [
 			navigateFallbackDenylist: [/^\/migration(?:\/|$)/],
 		},
 		manifest: {
-			name: "TTML Tool",
+			name: "TTML Editor",
 			id: "amll-ttml-tool",
-			short_name: "AMLL TTML Tool",
-			description: "A TTML editing tool",
+			short_name: "TTML Editor",
+			description: "A TTML lyrics editor",
 			theme_color: "#18a058",
 			icons: [
 				{

@@ -128,7 +128,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
-          <span>AMLL TTML Tool v4.2.2 Released</span>
+          <span>TTML Editor v4.3.0 Released</span>
         </div>
 
         <div className="hero-buttons">
@@ -790,7 +790,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               Play Synced TTMLs in <span className="text-gradient-liquid">Liquid Player</span>
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: 16, lineHeight: 1.6 }}>
-              Liquid Player is a gorgeous, feature-rich music player and synced lyrics companion built with SwiftUI to render syllable-timed TTML lyrics created with AMLL TTML Tool in full glory.
+              Liquid Player is a gorgeous, feature-rich music player and synced lyrics companion built with SwiftUI to render syllable-timed TTML lyrics created with TTML Editor in full glory.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 14 }}>

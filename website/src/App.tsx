@@ -71,22 +71,22 @@ export const App: React.FC = () => {
 
   // Synchronize document.title and meta description on tab changes
   useEffect(() => {
-    let title = 'AMLL TTML Tool — The Premier Syllable-by-Syllable TTML Lyric Editor & Community Hub';
-    let desc = 'Official community hub for AMLL TTML Tool and Liquid Player. Browse and download community Apple Music syllable TTML lyrics, view creator stats, and get the desktop editor.';
+    let title = 'TTML Editor — The Premier Syllable-by-Syllable TTML Lyric Editor & Community Hub';
+    let desc = 'Official community hub for TTML Editor and Liquid Player. Browse and download community Apple Music syllable TTML lyrics, view creator stats, and get the desktop editor.';
     if (currentTab === 'finished') {
-      title = 'Browse Community TTML Lyrics — AMLL TTML Tool';
+      title = 'Browse Community TTML Lyrics — TTML Editor';
       desc = 'Search, preview, and download community-synced syllable & line Apple Music TTML lyrics directly.';
     } else if (currentTab === 'checklist') {
-      title = 'Public TTML Checklist — Planned & In-Progress Lyrics | AMLL TTML Tool';
+      title = 'Public TTML Checklist — Planned & In-Progress Lyrics | TTML Editor';
       desc = 'Discover songs currently in progress or planned by community synchronizers. Avoid duplicated efforts and see what Apple Music TTML lyrics are on the way.';
     } else if (currentTab === 'stats') {
       const path = window.location.pathname;
       if (!path.startsWith('/user/') && !path.startsWith('/u/')) {
-        title = 'Contributor Stats & Leaderboard — AMLL TTML Tool';
-        desc = 'Explore lyric synchronization leaderboards, contributor rankings, and creator statistics on AMLL TTML Tool.';
+        title = 'Contributor Stats & Leaderboard — TTML Editor';
+        desc = 'Explore lyric synchronization leaderboards, contributor rankings, and creator statistics on TTML Editor.';
       }
     } else if (currentTab === 'liquid') {
-      title = 'Liquid Player — Apple Music Style Fluid Lyrics Canvas | AMLL TTML Tool';
+      title = 'Liquid Player — Apple Music Style Fluid Lyrics Canvas | TTML Editor';
       desc = 'Sleek Apple Music style desktop & mobile player with fluid, glowing lyrics canvas.';
     }
     document.title = title;

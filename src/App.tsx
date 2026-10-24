@@ -349,10 +349,10 @@ function App() {
 			!projectIdentity.isUntitled &&
 			projectIdentity.displayName
 		) {
-			document.title = `${projectIdentity.displayName} — AMLL TTML Tool`;
+			document.title = `${projectIdentity.displayName} — TTML Editor`;
 		} else {
 			document.title =
-				"AMLL TTML Tool — Apple Music Syllable TTML Lyrics Editor";
+				"TTML Editor — Apple Music Syllable TTML Lyrics Editor";
 		}
 	}, [projectIdentity]);
 	const [previewFullscreen, setPreviewFullscreen] = useAtom(
@@ -362,6 +362,7 @@ function App() {
 		previewFullscreen && toolMode === ToolMode.Preview;
 	const savedPreFullscreenSize = useRef<PhysicalSize | null>(null);
 	const wasMaximizedBeforeFullscreen = useRef<boolean>(false);
+	const isCurrentlyFullscreen = useRef<boolean>(false);
 	const showTouchSyncPanel = useAtomValue(showTouchSyncPanelAtom);
 	const showPreviewPanel = useAtomValue(showPreviewPanelAtom);
 	// Preview mode already owns the entire editor area. Keep the sync preview
@@ -1128,18 +1129,60 @@ function App() {
 		if (isTauri) {
 			let unlisten: (() => void) | undefined;
 			try {
-				getCurrentWindow()
-					.onResized(async () => {
-						try {
-							const fs = await getCurrentWindow().isFullscreen();
-							if (!fs && previewFullscreen) {
-								setPreviewFullscreen(false);
+				const win = getCurrentWindow();
+				Promise.all([
+					win.isFullscreen().catch(() => false),
+					win.isMaximized().catch(() => false),
+					win.innerSize().catch(() => null),
+				]).then(([fs, max, size]) => {
+					isCurrentlyFullscreen.current = fs;
+					wasMaximizedBeforeFullscreen.current = max;
+					if (!fs && !max && size && size.width > 0 && size.height > 0) {
+						savedPreFullscreenSize.current = size;
+					}
+				});
+
+				win.onResized(async () => {
+					try {
+						const [fs, max, size] = await Promise.all([
+							win.isFullscreen().catch(() => false),
+							win.isMaximized().catch(() => false),
+							win.innerSize().catch(() => null),
+						]);
+
+						if (fs) {
+							isCurrentlyFullscreen.current = true;
+						} else {
+							if (isCurrentlyFullscreen.current) {
+								isCurrentlyFullscreen.current = false;
+								if (previewFullscreen) {
+									setPreviewFullscreen(false);
+								}
+								const savedSize = savedPreFullscreenSize.current;
+								const wasMax = wasMaximizedBeforeFullscreen.current;
+								if (savedSize && !wasMax) {
+									setTimeout(async () => {
+										try {
+											const currentFs = await win
+												.isFullscreen()
+												.catch(() => false);
+											if (!currentFs && savedSize) {
+												await win.setSize(savedSize);
+											}
+										} catch {}
+									}, 350);
+								}
+							} else {
+								wasMaximizedBeforeFullscreen.current = max;
+								if (!max && size && size.width > 0 && size.height > 0) {
+									savedPreFullscreenSize.current = size;
+								}
 							}
-						} catch {}
-					})
-					.then((fn) => {
-						unlisten = fn;
-					});
+						}
+					} catch {}
+				}).then((fn) => {
+					unlisten = fn;
+				});
 			} catch {}
 			return () => {
 				unlisten?.();

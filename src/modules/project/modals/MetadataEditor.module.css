@@ -34,8 +34,11 @@
 }
 
 .dialogContent {
-	max-width: 680px;
-	max-height: 90vh;
+	max-width: 1000px;
+	width: min(1000px, 96vw);
+	height: 640px;
+	max-height: 88vh;
+	border-radius: 16px;
 	display: flex;
 	flex-direction: column;
 	padding: 0;

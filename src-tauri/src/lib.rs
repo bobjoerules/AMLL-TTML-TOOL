@@ -90,7 +90,7 @@ async fn set_discord_activity(
     if let Some(large_image_text) = payload.large_image_text.as_deref() {
         assets = assets.large_text(large_image_text);
     } else {
-        assets = assets.large_text("AMLL TTML Tool");
+        assets = assets.large_text("TTML Editor");
     }
 
     if let Some(small_image) = payload.small_image.as_deref() {
@@ -290,7 +290,7 @@ fn create_new_window(app: tauri::AppHandle) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
         builder = builder
-            .title("AMLL TTML Tools")
+            .title("TTML Editor")
             .decorations(false)
             .transparent(true)
             .center()
@@ -461,7 +461,7 @@ pub fn run() {
                 let handle = app.handle();
 
                 // 1. App menu
-                let app_menu = Submenu::new(app, "AMLL TTML Tool", true)?;
+                let app_menu = Submenu::new(app, "TTML Editor", true)?;
                 app_menu.append(&PredefinedMenuItem::about(app, None, None)?)?;
                 app_menu.append(&PredefinedMenuItem::separator(app)?)?;
                 let account_item = MenuItem::with_id(
@@ -719,7 +719,7 @@ pub fn run() {
                 let about_item = MenuItem::with_id(
                     app,
                     "menu-about",
-                    "About AMLL TTML Tool",
+                    "About TTML Editor",
                     true,
                     None::<&str>,
                 )?;

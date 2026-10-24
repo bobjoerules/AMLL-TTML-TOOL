@@ -215,7 +215,7 @@ export const SettingsDialog = memo(() => {
 
 	return (
 		<Dialog.Root open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
-			<Dialog.Content maxWidth="980px" className={styles.dialogContent}>
+			<Dialog.Content maxWidth="1000px" className={styles.dialogContent}>
 				<Tabs.Root
 					value={displayedTab}
 					onValueChange={(val) => {

@@ -2,12 +2,12 @@
 
 <img src="./public/logo.svg" align="center" width="256">
 
-# Bobjoerules's Apple Music-like Lyrics TTML Tool Fork
+# TTML Editor
 
 A fork of the word-by-word lyrics editor designed specifically for the [Spicy Lyrics ecosystem](https://spicylyrics.org/).
 
 <p align="center">
-  <img src="./images/preview%20tab.png" alt="AMLL TTML Tool - Apple Music Live Preview" width="100%">
+  <img src="./images/preview%20tab.png" alt="TTML Editor - Apple Music Live Preview" width="100%">
 </p>
 
 </div>

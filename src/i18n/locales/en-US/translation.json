@@ -2,7 +2,7 @@
 	"app": {
 		"error": {
 			"title": "Oops, an error occurred!",
-			"description": "An error occurred while running AMLL TTML Tools",
+			"description": "An error occurred while running TTML Editor",
 			"checkDevTools": "Details can be found in Developer Tools",
 			"saveLyrics": "Try saving current lyrics",
 			"tryRestart": "Try reloading the app",
@@ -634,6 +634,7 @@
 			"uploadToAMLLDB": "Upload to database (CN only)",
 			"file": "File",
 			"helpDoc": "SpicyLyrics Guides",
+			"downloadApp": "Download Desktop App",
 			"help": "Help",
 			"segmentationTools": "Segmentation Tools",
 			"autoSegment": "Auto Segment",

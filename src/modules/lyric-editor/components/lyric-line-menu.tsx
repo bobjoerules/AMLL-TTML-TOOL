@@ -357,6 +357,7 @@ export const LyricLineMenu = ({ lineIndex }: { lineIndex: number }) => {
 								(line) => !selectedLines.has(line.id),
 							);
 						}
+						repairSectionIntegrity(state);
 					});
 				}}
 			>

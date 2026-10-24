@@ -506,17 +506,18 @@ export function UnassignedSectionContextMenuItems({
 	const lyrics = useAtomValue(lyricLinesAtom);
 	const editLyrics = useSetImmerAtom(lyricLinesAtom);
 	const line = lyrics.lyricLines[lineIndex];
+	if (!line) return null;
 	let start = lineIndex;
 	let end = lineIndex + 1;
-	while (start > 0 && !lyrics.lyricLines[start - 1].sectionId) start--;
-	while (end < lyrics.lyricLines.length && !lyrics.lyricLines[end].sectionId)
+	while (start > 0 && !lyrics.lyricLines[start - 1]?.sectionId) start--;
+	while (end < lyrics.lyricLines.length && !lyrics.lyricLines[end]?.sectionId)
 		end++;
 	const previousId =
-		line && !line.sectionId
+		!line.sectionId
 			? lyrics.lyricLines[start - 1]?.sectionId
 			: undefined;
 	const nextId =
-		line && !line.sectionId ? lyrics.lyricLines[end]?.sectionId : undefined;
+		!line.sectionId ? lyrics.lyricLines[end]?.sectionId : undefined;
 	return (
 		<>
 			<ContextMenu.Item

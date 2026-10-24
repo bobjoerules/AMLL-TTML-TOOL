@@ -238,12 +238,12 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 	// Dynamic document title & SEO description for selected creator profile
 	useEffect(() => {
 		if (selectedProfile) {
-			document.title = `${selectedProfile.displayName} — Creator Profile | AMLL TTML Tool`;
+			document.title = `${selectedProfile.displayName} — Creator Profile | TTML Editor`;
 			const metaDesc = document.querySelector('meta[name="description"]');
 			if (metaDesc) {
 				metaDesc.setAttribute(
 					"content",
-					`View sync stats and community TTML lyrics created by ${selectedProfile.displayName} on AMLL TTML Tool. ${selectedProfile.totalSongs} songs and ${selectedProfile.totalLines.toLocaleString()} lines timed.`,
+					`View sync stats and community TTML lyrics created by ${selectedProfile.displayName} on TTML Editor. ${selectedProfile.totalSongs} songs and ${selectedProfile.totalLines.toLocaleString()} lines timed.`,
 				);
 			}
 		}
@@ -708,16 +708,6 @@ export const StatsPage: React.FC<StatsPageProps> = ({
 													</span>
 												</div>
 											)}
-											<span
-												className="ttml-badge"
-												style={{
-													background: isWord
-														? "rgba(168, 85, 247, 0.85)"
-														: undefined,
-												}}
-											>
-												{isWord ? "Word Sync" : "Line Sync"}
-											</span>
 										</div>
 
 										<div

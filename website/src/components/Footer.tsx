@@ -15,10 +15,10 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
           <div className="nav-brand" onClick={() => onSelectTab('home')}>
             <img
               src="/logo.svg"
-              alt="AMLL TTML Tool Logo"
+              alt="TTML Editor Logo"
               style={{ width: 26, height: 26, objectFit: 'contain' }}
             />
-            <span style={{ fontSize: 17 }}>AMLL TTML Tool</span>
+            <span style={{ fontSize: 17 }}>TTML Editor</span>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>
             The premier syllable-by-syllable TTML lyric timing and visual editor.

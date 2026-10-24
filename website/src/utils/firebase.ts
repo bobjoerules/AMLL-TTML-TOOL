@@ -879,8 +879,13 @@ export async function fetchUserProfilesWithStats(): Promise<{
 	let globalWordSync = 0;
 	let globalTotalSongs = 0;
 
-	const profiles: UserProfileStats[] = Array.from(creatorsMap.values()).map(
-		(c) => {
+	const profiles: UserProfileStats[] = Array.from(creatorsMap.values())
+		.filter((c) => {
+			const name = (c.displayName || "").toLowerCase();
+			const uid = (c.uid || "").toLowerCase();
+			return !name.includes("copilot") && !uid.includes("copilot");
+		})
+		.map((c) => {
 			const creatorSongs = Array.from(c.songMap.values()).sort(
 				(a, b) =>
 					(b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0),

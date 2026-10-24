@@ -2,7 +2,7 @@
 	"app": {
 		"error": {
 			"title": "诶呀，出错了！",
-			"description": "AMLL TTML Tools 在运行时出现了错误",
+			"description": "TTML Editor 在运行时出现了错误",
 			"checkDevTools": "具体错误详情可以在开发者工具中查询",
 			"saveLyrics": "尝试保存当前歌词",
 			"tryRestart": "尝试重新进入程序",

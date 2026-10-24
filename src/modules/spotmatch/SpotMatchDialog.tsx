@@ -297,9 +297,10 @@ export function SpotMatchDialog() {
 		<Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
 			<Dialog.Content
 				style={{
-					maxWidth: 780,
-					height: "85vh",
-					maxHeight: 750,
+					maxWidth: 1000,
+					width: "min(1000px, 96vw)",
+					height: "640px",
+					maxHeight: "88vh",
 					display: "flex",
 					flexDirection: "column",
 					padding: "24px",
@@ -310,14 +311,20 @@ export function SpotMatchDialog() {
 				<Flex justify="between" align="start" mb="3">
 					<Box>
 						<Flex align="center" gap="2">
-							<Dialog.Title asChild>
-								<Heading size="5">SpotMatch</Heading>
+							<Dialog.Title asChild style={{ margin: 0 }}>
+								<Heading size="5" style={{ margin: 0, lineHeight: 1 }}>
+									SpotMatch
+								</Heading>
 							</Dialog.Title>
 							<Badge
 								size="1"
 								color="indigo"
 								variant="soft"
-								style={{ cursor: "pointer" }}
+								style={{
+									cursor: "pointer",
+									display: "inline-flex",
+									alignItems: "center",
+								}}
 								onClick={() => handleOpenLink("https://tx24.dev")}
 								title="Original SpotMatch concept & tool by tx24"
 							>
